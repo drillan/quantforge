@@ -1,16 +1,25 @@
-# QuantForge 実装進捗トラッカー
-# 最終更新: 2025-01-25
+# QuantForge 実装進捗追跡
+# 最終更新: 2025-08-25
 
-# ファイル: docs/models/black_scholes.md
+summary:
+  total_items: 39
+  completed: 9
+  partial: 2
+  not_started: 25
+  documented_only: 3
+  completion_rate: 23.1%
+
+# docs/models/black_scholes.md
 black_scholes:
   - title: "Black-Scholesモデル"
     level: 1
     status: partial
+    completion: 40%
     items:
       - title: "理論的背景"
         level: 2
         status: documented_only
-        notes: "理論説明のみ"
+        notes: "理論説明のみ、実装不要"
       
       - title: "Black-Scholes方程式"
         level: 2
@@ -20,17 +29,21 @@ black_scholes:
       - title: "解析解"
         level: 2
         status: partial
+        completion: 50%
         items:
           - title: "ヨーロピアンコール"
             level: 3
-            status: implemented
-            location: "src/models/black_scholes.rs:11-17"
-            tests: "src/models/black_scholes.rs:113-117"
+            status: tested
+            location: "src/models/black_scholes.rs:11-18"
+            tests: "src/models/black_scholes.rs:149-154"
+            notes: "bs_call_price関数として実装済み"
           
           - title: "ヨーロピアンプット"
             level: 3
-            status: not_started
-            notes: "TODO: プット実装"
+            status: tested
+            location: "src/models/black_scholes.rs:28-35"
+            tests: "src/models/black_scholes.rs:223-233"
+            notes: "bs_put_price関数として実装済み"
       
       - title: "グリークス"
         level: 2
@@ -39,18 +52,23 @@ black_scholes:
           - title: "Delta (Δ)"
             level: 3
             status: not_started
+            notes: "テストで数値微分のみ実装"
           - title: "Gamma (Γ)"
             level: 3
             status: not_started
+            notes: "テストで数値微分のみ実装"
           - title: "Vega (ν)"
             level: 3
             status: not_started
+            notes: "テストで数値微分のみ実装"
           - title: "Theta (Θ)"
             level: 3
             status: not_started
+            notes: "テストで数値微分のみ実装"
           - title: "Rho (ρ)"
             level: 3
             status: not_started
+            notes: "テストで数値微分のみ実装"
       
       - title: "実装詳細"
         level: 2
@@ -58,14 +76,15 @@ black_scholes:
         items:
           - title: "高精度累積正規分布"
             level: 3
-            status: implemented
-            location: "src/math/distributions.rs:13-23"
-            tests: "src/math/distributions.rs:47-70"
+            status: tested
+            location: "src/math/distributions.rs:71-103"
+            tests: "src/math/distributions.rs:106-220"
+            notes: "norm_cdf関数として実装、Hart68アルゴリズム使用"
           
           - title: "SIMD最適化版"
             level: 3
             status: not_started
-            notes: "Phase 2で実装予定"
+            notes: "TODO: AVX2/AVX-512実装"
       
       - title: "配当付きモデル"
         level: 2
@@ -81,8 +100,13 @@ black_scholes:
       - title: "数値安定性"
         level: 2
         status: partial
-        notes: "エッジケースのテストは実装済み"
-        location: "src/models/black_scholes.rs:138-153"
+        notes: "基本的な境界チェックのみ実装"
+        items:
+          - title: "極限値での振る舞い"
+            level: 3
+            status: partial
+            location: "src/models/black_scholes.rs:17,34"
+            notes: "Deep OTMでの負値防止のみ実装"
       
       - title: "パフォーマンス特性"
         level: 2
@@ -90,12 +114,16 @@ black_scholes:
         items:
           - title: "バッチ処理"
             level: 3
-            status: implemented
-            location: "src/models/black_scholes.rs:21-38"
-          - title: "並列処理（Rayon）"
+            status: tested
+            location: "src/models/black_scholes.rs:38-55,58-75"
+            tests: "src/models/black_scholes.rs:157-172,236-250"
+            notes: "バッチ処理実装済み"
+          - title: "並列処理"
             level: 3
-            status: implemented
-            location: "src/models/black_scholes_parallel.rs:19-47"
+            status: tested
+            location: "src/models/black_scholes_parallel.rs:20-48,61-89"
+            tests: "src/models/black_scholes_parallel.rs:114-135,175-196"
+            notes: "Rayon並列化実装済み"
           - title: "SIMD（AVX2/AVX-512）"
             level: 3
             status: not_started
@@ -106,11 +134,12 @@ black_scholes:
         items:
           - title: "Put-Callパリティ"
             level: 3
-            status: not_started
+            status: tested
+            location: "src/models/black_scholes.rs:254-269"
           - title: "境界条件テスト"
             level: 3
-            status: implemented
-            location: "src/models/black_scholes.rs:156-173"
+            status: tested
+            location: "src/models/black_scholes.rs:193-210,288-310"
       
       - title: "応用と拡張"
         level: 2
@@ -119,6 +148,7 @@ black_scholes:
           - title: "インプライドボラティリティ"
             level: 3
             status: not_started
+            notes: "Newton-Raphson法未実装"
 
 # ファイル: docs/models/american_options.md
 american_options:
@@ -175,12 +205,14 @@ python_api_pricing:
         items:
           - title: "black_scholes_call()"
             level: 3
-            status: implemented
-            notes: "calculate_call_price()として実装"
-            location: "src/lib.rs:17-23"
+            status: tested
+            location: "src/lib.rs:18-23"
+            notes: "calculate_call_priceとして実装"
           - title: "black_scholes_put()"
             level: 3
-            status: not_started
+            status: tested
+            location: "src/lib.rs:68-73"
+            notes: "calculate_put_priceとして実装"
       
       - title: "配当付きオプション"
         level: 2

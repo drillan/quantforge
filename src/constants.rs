@@ -27,3 +27,21 @@ pub const NUMERICAL_TOLERANCE: f64 = 1e-7;
 /// 後方互換性のため、EPSILONは実務精度を指す。
 /// 新規コードではPRACTICAL_TOLERANCEの使用を推奨。
 pub const EPSILON: f64 = PRACTICAL_TOLERANCE;
+
+/// 数学定数: 1/√(2π)
+///
+/// 標準正規分布の確率密度関数で使用。
+/// 値は高精度計算により導出。
+pub const INV_SQRT_2PI: f64 = 0.3989422804014327;
+
+/// グリークス計算用: 年間日数
+///
+/// Theta計算で1日あたりの時間価値減少を計算する際に使用。
+/// 金融実務では365日を標準とする。
+pub const DAYS_PER_YEAR: f64 = 365.0;
+
+/// グリークス計算用: ベーシスポイント
+///
+/// VegaとRhoの計算で1%変化に対する感応度を表現する際に使用。
+/// 1% = 100ベーシスポイント
+pub const BASIS_POINT_MULTIPLIER: f64 = 100.0;

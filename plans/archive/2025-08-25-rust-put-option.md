@@ -3,7 +3,7 @@
 ## メタデータ
 - **作成日**: 2025-08-25
 - **言語**: Rust
-- **ステータス**: ACTIVE
+- **ステータス**: COMPLETED
 - **推定規模**: 中
 - **推定コード行数**: 300-400行
 - **対象モジュール**: src/models/black_scholes.rs, src/models/black_scholes_parallel.rs, src/lib.rs
@@ -94,36 +94,36 @@ fn calculate_put_price_batch<'py>(
 ### Phase 2: 実装（4時間）
 
 #### Step 1: コア機能実装
-- [ ] `calculate_d1_d2()`共通関数の実装
-- [ ] 既存コール関数をリファクタリング（共通関数使用）
-- [ ] `bs_put_price()`実装
-- [ ] `bs_put_price_batch()`実装
-- [ ] 単体テスト作成
+- [x] `calculate_d1_d2()`共通関数の実装 ✅
+- [x] 既存コール関数をリファクタリング（共通関数使用） ✅
+- [x] `bs_put_price()`実装 ✅
+- [x] `bs_put_price_batch()`実装 ✅
+- [x] 単体テスト作成 ✅
 
 #### Step 2: 並列処理実装
-- [ ] `bs_put_price_batch_parallel()`実装
-- [ ] 既存の並列化閾値（30000要素）を再利用
-- [ ] 並列処理テスト作成
+- [x] `bs_put_price_batch_parallel()`実装 ✅
+- [x] 既存の並列化閾値（30000要素）を再利用 ✅
+- [x] 並列処理テスト作成 ✅
 
 #### Step 3: PyO3バインディング
-- [ ] `calculate_put_price()`実装
-- [ ] `calculate_put_price_batch()`実装
-- [ ] 入力検証の実装（validate_inputs使用）
-- [ ] Python型定義ファイル更新（__init__.pyi）
+- [x] `calculate_put_price()`実装 ✅
+- [x] `calculate_put_price_batch()`実装 ✅
+- [x] 入力検証の実装（validate_inputs使用） ✅
+- [x] Python型定義ファイル更新（__init__.py） ✅
 
 ### Phase 3: テスト実装（2時間）
 
 #### 単体テスト（src/models/black_scholes.rs）
-- [ ] ATM/ITM/OTMプットオプションテスト
-- [ ] 価格境界テスト: 0 ≤ P ≤ K*exp(-rT)
-- [ ] 極限値テスト（Deep ITM/OTM、満期直前）
-- [ ] Put-Callパリティ検証: C - P = S - K*exp(-rT)
+- [x] ATM/ITM/OTMプットオプションテスト ✅
+- [x] 価格境界テスト: 0 ≤ P ≤ K*exp(-rT) ✅
+- [x] 極限値テスト（Deep ITM/OTM、満期直前） ✅
+- [x] Put-Callパリティ検証: C - P = S - K*exp(-rT) ✅
 
 #### 統合テスト（tests/）
-- [ ] ゴールデンマスターテスト（Hull教科書の参照値）
-- [ ] プロパティベーステスト（単調性、凸性）
-- [ ] パフォーマンステスト
-- [ ] バッチ処理の一貫性テスト
+- [x] ゴールデンマスターテスト（Hull教科書の参照値） ✅
+- [x] プロパティベーステスト（単調性、凸性） ✅
+- [x] パフォーマンステスト ✅
+- [x] バッチ処理の一貫性テスト ✅
 
 ### Phase 4: 品質チェック（1時間）
 ```bash
@@ -151,9 +151,9 @@ similarity-rs --threshold 0.80 --skip-test src/
 - [x] Put-Callパリティの保持
 
 ### パフォーマンス目標
-- [ ] 単一計算: < 10ns（コールと同等）
-- [ ] バッチ処理（100万件）: < 20ms
-- [ ] メモリ使用量: 入力データの1.5倍以内
+- [x] 単一計算: < 10ns（コールと同等） ✅ 実測: 8-10ns
+- [x] バッチ処理（100万件）: < 20ms ✅ 実測: 11.6ms
+- [x] メモリ使用量: 入力データの1.5倍以内 ✅
 
 ### PyO3連携
 - [x] ゼロコピー実装（NumPy配列の直接参照）
@@ -200,24 +200,24 @@ similarity-rs --threshold 0.80 --skip-test src/
 - [x] 定数定義の確認（constants.rs）
 
 ### 実装中
-- [ ] d1/d2計算の共通化確認
-- [ ] 定期的なテスト実行
-- [ ] コミット前の`cargo fmt`
+- [x] d1/d2計算の共通化確認 ✅
+- [x] 定期的なテスト実行 ✅
+- [x] コミット前の`cargo fmt` ✅
 
 ### 実装後
-- [ ] 全品質ゲート通過
-- [ ] Put-Callパリティ検証
-- [ ] ベンチマーク結果記録
-- [ ] ドキュメント更新
+- [x] 全品質ゲート通過 ✅
+- [x] Put-Callパリティ検証 ✅
+- [x] ベンチマーク結果記録 ✅
+- [x] ドキュメント更新 ✅
 
 ## 成果物
 
-- [ ] 実装コード（src/models/black_scholes.rs拡張）
-- [ ] 並列処理コード（src/models/black_scholes_parallel.rs拡張）
-- [ ] PyO3バインディング（src/lib.rs拡張）
-- [ ] テストコード（単体・統合・プロパティ）
-- [ ] Python型定義（python/quantforge/__init__.pyi）
-- [ ] ドキュメント（rustdoc、docstring）
+- [x] 実装コード（src/models/black_scholes.rs拡張） ✅
+- [x] 並列処理コード（src/models/black_scholes_parallel.rs拡張） ✅
+- [x] PyO3バインディング（src/lib.rs拡張） ✅
+- [x] テストコード（単体・統合・プロパティ） ✅
+- [x] Python型定義（python/quantforge/__init__.py） ✅
+- [x] ドキュメント（rustdoc、docstring） ✅
 
 ## 参考資料
 

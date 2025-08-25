@@ -239,13 +239,15 @@ scratch/
 *_scratch.py
 *_temp.py
 
-# Progress tracking (auto-generated)
+# Progress tracking
+tracker/data.yaml        # 詳細データ（頻繁更新）
+tracker/*.tmp           # 一時ファイル
+tracker/*.bak          # バックアップファイル
+
+# Legacy progress files (to be removed)
 progress_report.md
 progress_report_*.md
 tracker_temp.yaml
-reports/daily/
-reports/weekly/*.md
-!reports/weekly/README.md
 
 # Performance and benchmarks
 benchmark_results_*.json

@@ -1,4 +1,36 @@
+use crate::constants::INV_SQRT_2PI;
 use libm::erf;
+
+/// 標準正規分布の確率密度関数
+///
+/// 標準正規分布（平均0、分散1）の確率密度関数を計算。
+/// φ(x) = (1/√(2π)) × exp(-x²/2)
+///
+/// # 引数
+/// * `x` - 評価点
+///
+/// # 戻り値
+/// 点xにおける確率密度
+///
+/// # 例
+/// ```
+/// use quantforge::math::distributions::norm_pdf;
+///
+/// let pdf_at_zero = norm_pdf(0.0);
+/// assert!((pdf_at_zero - 0.3989422804014327).abs() < 1e-15);
+/// ```
+pub fn norm_pdf(x: f64) -> f64 {
+    if x.is_nan() {
+        return f64::NAN;
+    }
+
+    // 極値での数値安定性を確保
+    if x.abs() > 40.0 {
+        return 0.0;
+    }
+
+    INV_SQRT_2PI * (-0.5 * x * x).exp()
+}
 
 /// 高精度累積正規分布関数
 ///
@@ -107,5 +139,52 @@ mod tests {
         // ゼロ近傍
         assert_relative_eq!(norm_cdf(1e-10), 0.5, epsilon = NUMERICAL_TOLERANCE);
         assert_relative_eq!(norm_cdf(-1e-10), 0.5, epsilon = NUMERICAL_TOLERANCE);
+    }
+
+    #[test]
+    fn test_norm_pdf_standard_values() {
+        // 標準値でのテスト
+        assert_relative_eq!(norm_pdf(0.0), INV_SQRT_2PI, epsilon = NUMERICAL_TOLERANCE);
+        assert_relative_eq!(
+            norm_pdf(1.0),
+            0.24197072451914337,
+            epsilon = NUMERICAL_TOLERANCE
+        );
+        assert_relative_eq!(
+            norm_pdf(-1.0),
+            0.24197072451914337,
+            epsilon = NUMERICAL_TOLERANCE
+        );
+        assert_relative_eq!(
+            norm_pdf(2.0),
+            0.05399096651318806,
+            epsilon = NUMERICAL_TOLERANCE
+        );
+    }
+
+    #[test]
+    fn test_norm_pdf_symmetry() {
+        // 対称性のテスト: φ(-x) = φ(x)
+        let test_values = vec![0.5, 1.0, 1.5, 2.0, 2.5, 3.0];
+        for x in test_values {
+            assert_relative_eq!(norm_pdf(x), norm_pdf(-x), epsilon = NUMERICAL_TOLERANCE);
+        }
+    }
+
+    #[test]
+    fn test_norm_pdf_extreme_values() {
+        // 極値でのテスト
+        assert_eq!(norm_pdf(50.0), 0.0);
+        assert_eq!(norm_pdf(-50.0), 0.0);
+        assert_eq!(norm_pdf(40.1), 0.0);
+        assert_eq!(norm_pdf(-40.1), 0.0);
+    }
+
+    #[test]
+    fn test_norm_pdf_special_cases() {
+        // 特殊ケースのテスト
+        assert!(norm_pdf(f64::NAN).is_nan());
+        assert_eq!(norm_pdf(f64::INFINITY), 0.0);
+        assert_eq!(norm_pdf(f64::NEG_INFINITY), 0.0);
     }
 }
