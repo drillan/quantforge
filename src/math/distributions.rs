@@ -1,23 +1,23 @@
 use libm::erf;
 
 /// 高精度累積正規分布関数
-/// 
+///
 /// 誤差関数（erf）を使用した業界標準の実装。
 /// 精度: 機械精度レベル（相対誤差 < 1e-15）
-/// 
+///
 /// # 数学的定義
 /// Φ(x) = (1 + erf(x/√2)) / 2
-/// 
+///
 /// # 性能
 /// 約10-12 ns/iter（erfの計算コスト含む）
 pub fn norm_cdf(x: f64) -> f64 {
     if x.is_nan() {
         return f64::NAN;
     }
-    
+
     // 定数定義（CLAUDE.mdの設定値管理原則に従う）
     const SQRT_2: f64 = std::f64::consts::SQRT_2;
-    
+
     // erfベースの高精度実装
     0.5 * (1.0 + erf(x / SQRT_2))
 }
@@ -47,10 +47,26 @@ mod tests {
     fn test_norm_cdf_standard_values() {
         // norm_cdfの実装精度に合わせたテスト（理論精度レベル）
         assert_relative_eq!(norm_cdf(0.0), 0.5, epsilon = THEORETICAL_TOLERANCE);
-        assert_relative_eq!(norm_cdf(1.0), 0.8413447460685429, epsilon = THEORETICAL_TOLERANCE);
-        assert_relative_eq!(norm_cdf(-1.0), 0.15865525393145707, epsilon = THEORETICAL_TOLERANCE);
-        assert_relative_eq!(norm_cdf(2.0), 0.9772498680518208, epsilon = THEORETICAL_TOLERANCE);
-        assert_relative_eq!(norm_cdf(-2.0), 0.022750131948179195, epsilon = THEORETICAL_TOLERANCE);
+        assert_relative_eq!(
+            norm_cdf(1.0),
+            0.8413447460685429,
+            epsilon = THEORETICAL_TOLERANCE
+        );
+        assert_relative_eq!(
+            norm_cdf(-1.0),
+            0.15865525393145707,
+            epsilon = THEORETICAL_TOLERANCE
+        );
+        assert_relative_eq!(
+            norm_cdf(2.0),
+            0.9772498680518208,
+            epsilon = THEORETICAL_TOLERANCE
+        );
+        assert_relative_eq!(
+            norm_cdf(-2.0),
+            0.022750131948179195,
+            epsilon = THEORETICAL_TOLERANCE
+        );
     }
 
     #[test]

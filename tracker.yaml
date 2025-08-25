@@ -1,0 +1,277 @@
+# QuantForge 実装進捗トラッカー
+# 最終更新: 2025-01-25
+
+# ファイル: docs/models/black_scholes.md
+black_scholes:
+  - title: "Black-Scholesモデル"
+    level: 1
+    status: partial
+    items:
+      - title: "理論的背景"
+        level: 2
+        status: documented_only
+        notes: "理論説明のみ"
+      
+      - title: "Black-Scholes方程式"
+        level: 2
+        status: documented_only
+        notes: "理論説明のみ"
+      
+      - title: "解析解"
+        level: 2
+        status: partial
+        items:
+          - title: "ヨーロピアンコール"
+            level: 3
+            status: implemented
+            location: "src/models/black_scholes.rs:11-17"
+            tests: "src/models/black_scholes.rs:113-117"
+          
+          - title: "ヨーロピアンプット"
+            level: 3
+            status: not_started
+            notes: "TODO: プット実装"
+      
+      - title: "グリークス"
+        level: 2
+        status: not_started
+        items:
+          - title: "Delta (Δ)"
+            level: 3
+            status: not_started
+          - title: "Gamma (Γ)"
+            level: 3
+            status: not_started
+          - title: "Vega (ν)"
+            level: 3
+            status: not_started
+          - title: "Theta (Θ)"
+            level: 3
+            status: not_started
+          - title: "Rho (ρ)"
+            level: 3
+            status: not_started
+      
+      - title: "実装詳細"
+        level: 2
+        status: partial
+        items:
+          - title: "高精度累積正規分布"
+            level: 3
+            status: implemented
+            location: "src/math/distributions.rs:13-23"
+            tests: "src/math/distributions.rs:47-70"
+          
+          - title: "SIMD最適化版"
+            level: 3
+            status: not_started
+            notes: "Phase 2で実装予定"
+      
+      - title: "配当付きモデル"
+        level: 2
+        status: not_started
+        items:
+          - title: "連続配当"
+            level: 3
+            status: not_started
+          - title: "離散配当"
+            level: 3
+            status: not_started
+      
+      - title: "数値安定性"
+        level: 2
+        status: partial
+        notes: "エッジケースのテストは実装済み"
+        location: "src/models/black_scholes.rs:138-153"
+      
+      - title: "パフォーマンス特性"
+        level: 2
+        status: partial
+        items:
+          - title: "バッチ処理"
+            level: 3
+            status: implemented
+            location: "src/models/black_scholes.rs:21-38"
+          - title: "並列処理（Rayon）"
+            level: 3
+            status: implemented
+            location: "src/models/black_scholes_parallel.rs:19-47"
+          - title: "SIMD（AVX2/AVX-512）"
+            level: 3
+            status: not_started
+      
+      - title: "検証テスト"
+        level: 2
+        status: partial
+        items:
+          - title: "Put-Callパリティ"
+            level: 3
+            status: not_started
+          - title: "境界条件テスト"
+            level: 3
+            status: implemented
+            location: "src/models/black_scholes.rs:156-173"
+      
+      - title: "応用と拡張"
+        level: 2
+        status: not_started
+        items:
+          - title: "インプライドボラティリティ"
+            level: 3
+            status: not_started
+
+# ファイル: docs/models/american_options.md
+american_options:
+  - title: "アメリカンオプション"
+    level: 1
+    status: not_started
+    items:
+      - title: "Bjerksund-Stensland 2002モデル"
+        level: 2
+        status: not_started
+      - title: "アメリカンプット"
+        level: 2
+        status: not_started
+      - title: "パフォーマンス"
+        level: 2
+        status: documented_only
+
+# ファイル: docs/models/asian_options.md
+asian_options:
+  - title: "アジアンオプション"
+    level: 1
+    status: not_started
+    items:
+      - title: "種類"
+        level: 2
+        status: not_started
+        items:
+          - title: "算術平均アジアンオプション"
+            level: 3
+            status: not_started
+          - title: "幾何平均アジアンオプション"
+            level: 3
+            status: not_started
+      - title: "価格計算"
+        level: 2
+        status: not_started
+      - title: "部分観測アジアン"
+        level: 2
+        status: not_started
+
+# ファイル: docs/api/python/pricing.md
+python_api_pricing:
+  - title: "価格計算API"
+    level: 1
+    status: partial
+    items:
+      - title: "汎用計算関数"
+        level: 2
+        status: not_started
+      
+      - title: "Black-Scholesモデル"
+        level: 2
+        status: partial
+        items:
+          - title: "black_scholes_call()"
+            level: 3
+            status: implemented
+            notes: "calculate_call_price()として実装"
+            location: "src/lib.rs:17-23"
+          - title: "black_scholes_put()"
+            level: 3
+            status: not_started
+      
+      - title: "配当付きオプション"
+        level: 2
+        status: not_started
+      
+      - title: "アメリカンオプション"
+        level: 2
+        status: not_started
+        items:
+          - title: "american_call()"
+            level: 3
+            status: not_started
+          - title: "american_put()"
+            level: 3
+            status: not_started
+          - title: "american_exercise_boundary()"
+            level: 3
+            status: not_started
+      
+      - title: "アジアンオプション"
+        level: 2
+        status: not_started
+      
+      - title: "スプレッドオプション"
+        level: 2
+        status: not_started
+      
+      - title: "バリアオプション"
+        level: 2
+        status: not_started
+      
+      - title: "デジタルオプション"
+        level: 2
+        status: not_started
+      
+      - title: "インプレース計算"
+        level: 2
+        status: not_started
+
+# ファイル: docs/api/python/implied_vol.md (未確認)
+python_api_implied_vol:
+  - title: "インプライドボラティリティAPI"
+    level: 1
+    status: not_started
+
+# ファイル: docs/performance/benchmarks.md (未確認)
+performance_benchmarks:
+  - title: "ベンチマーク"
+    level: 1
+    status: partial
+    notes: "基本的なテストベンチマークは実装済み"
+
+# ファイル: docs/performance/optimization.md (未確認)
+performance_optimization:
+  - title: "最適化"
+    level: 1
+    status: partial
+    notes: "Rayon並列化は実装済み、SIMD未実装"
+
+# サマリー統計
+summary:
+  total_items: 50
+  status_breakdown:
+    not_started: 35  # 70%
+    partial: 8        # 16%
+    implemented: 5    # 10%
+    tested: 0         # 0%
+    documented_only: 2 # 4%
+  
+  completed_features:
+    - "Black-Scholes European Call価格計算"
+    - "高精度累積正規分布関数（norm_cdf）"
+    - "バッチ処理（シングルスレッド）"
+    - "Rayon並列バッチ処理"
+    - "NumPy配列ゼロコピー連携"
+    - "入力検証とエラーハンドリング"
+    - "定数管理システム"
+  
+  in_progress_features:
+    - "Black-Scholesモデル（プットオプション待ち）"
+    - "数値安定性（エッジケース処理済み）"
+    - "パフォーマンス最適化（Rayon完了、SIMD待ち）"
+  
+  not_started_features:
+    - "グリークス（Delta, Gamma, Vega, Theta, Rho）"
+    - "配当付きオプション"
+    - "アメリカンオプション（BS2002モデル）"
+    - "アジアンオプション"
+    - "バリアオプション"
+    - "スプレッドオプション"
+    - "デジタルオプション"
+    - "インプライドボラティリティ計算"
+    - "SIMD最適化（AVX2/AVX-512）"
+    - "Put-Callパリティテスト"

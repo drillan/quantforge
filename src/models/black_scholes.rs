@@ -17,6 +17,23 @@ pub fn bs_call_price(s: f64, k: f64, t: f64, r: f64, v: f64) -> f64 {
     (s * norm_cdf(d1) - k * (-r * t).exp() * norm_cdf(d2)).max(0.0)
 }
 
+/// ヨーロピアンプットオプション価格計算
+///
+/// # Arguments
+/// * `s` - スポット価格
+/// * `k` - 権利行使価格
+/// * `t` - 満期までの時間（年）
+/// * `r` - リスクフリーレート
+/// * `v` - インプライドボラティリティ
+pub fn bs_put_price(s: f64, k: f64, t: f64, r: f64, v: f64) -> f64 {
+    let sqrt_t = t.sqrt();
+    let d1 = (s.ln() - k.ln() + (r + v * v / 2.0) * t) / (v * sqrt_t);
+    let d2 = d1 - v * sqrt_t;
+
+    // Deep OTMで数値誤差による負値を防ぐ
+    (k * (-r * t).exp() * norm_cdf(-d2) - s * norm_cdf(-d1)).max(0.0)
+}
+
 /// バッチ処理用（将来のSIMD最適化対応）
 pub fn bs_call_price_batch(spots: &[f64], k: f64, t: f64, r: f64, v: f64) -> Vec<f64> {
     // 共通項の事前計算
@@ -37,10 +54,30 @@ pub fn bs_call_price_batch(spots: &[f64], k: f64, t: f64, r: f64, v: f64) -> Vec
         .collect()
 }
 
+/// プットオプションのバッチ処理用
+pub fn bs_put_price_batch(spots: &[f64], k: f64, t: f64, r: f64, v: f64) -> Vec<f64> {
+    // 共通項の事前計算
+    let sqrt_t = t.sqrt();
+    let v_sqrt_t = v * sqrt_t;
+    let exp_neg_rt = (-r * t).exp();
+    let half_v_squared_t = (r + v * v / 2.0) * t;
+    let k_ln = k.ln();
+
+    spots
+        .iter()
+        .map(|&s| {
+            let d1 = (s.ln() - k_ln + half_v_squared_t) / v_sqrt_t;
+            let d2 = d1 - v_sqrt_t;
+            // Deep OTMで数値誤差による負値を防ぐ
+            (k * exp_neg_rt * norm_cdf(-d2) - s * norm_cdf(-d1)).max(0.0)
+        })
+        .collect()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::constants::{PRACTICAL_TOLERANCE, NUMERICAL_TOLERANCE};
+    use crate::constants::{NUMERICAL_TOLERANCE, PRACTICAL_TOLERANCE};
     use approx::assert_relative_eq;
 
     /// テストヘルパー: オプションパラメータ構造体
@@ -179,5 +216,96 @@ mod tests {
 
         let intrinsic = option.spot - option.strike * (-option.rate * option.time).exp();
         option.assert_price_near(intrinsic, 0.01);
+    }
+
+    #[test]
+    fn test_bs_put_price_atm() {
+        // At-the-money put option
+        let s = 100.0;
+        let k = 100.0;
+        let t = 1.0;
+        let r = 0.05;
+        let v = 0.2;
+
+        let put_price = bs_put_price(s, k, t, r, v);
+        // 期待値は参考実装から計算: scipy.stats.norm.cdf(-d1), norm.cdf(-d2)を使用
+        assert_relative_eq!(put_price, 5.573526022657734, epsilon = PRACTICAL_TOLERANCE);
+    }
+
+    #[test]
+    fn test_bs_put_price_batch() {
+        let spots = vec![90.0, 100.0, 110.0];
+        let k = 100.0;
+        let t = 1.0;
+        let r = 0.05;
+        let v = 0.2;
+
+        let prices = bs_put_price_batch(&spots, k, t, r, v);
+        assert_eq!(prices.len(), 3);
+
+        // バッチ結果と単一計算の一致を確認
+        for (i, &spot) in spots.iter().enumerate() {
+            let single_price = bs_put_price(spot, k, t, r, v);
+            assert_relative_eq!(prices[i], single_price, epsilon = NUMERICAL_TOLERANCE);
+        }
+    }
+
+    #[test]
+    fn test_put_call_parity() {
+        // Put-Call パリティの検証: C - P = S - K*exp(-r*T)
+        let s = 100.0;
+        let k = 100.0;
+        let t = 1.0;
+        let r = 0.05;
+        let v = 0.2;
+
+        let call = bs_call_price(s, k, t, r, v);
+        let put = bs_put_price(s, k, t, r, v);
+
+        let parity_lhs = call - put;
+        let parity_rhs = s - k * (-r * t).exp();
+
+        assert_relative_eq!(parity_lhs, parity_rhs, epsilon = NUMERICAL_TOLERANCE);
+    }
+
+    #[test]
+    fn test_bs_put_price_edge_cases() {
+        // Deep ITM Put (S << K)
+        let deep_itm_put = bs_put_price(50.0, 100.0, 1.0, 0.05, 0.2);
+        let intrinsic = 100.0 * (-0.05_f64).exp() - 50.0;
+        assert!(deep_itm_put > intrinsic * 0.99); // ほぼ内在価値
+
+        // Deep OTM Put (S >> K)
+        let deep_otm_put = bs_put_price(200.0, 100.0, 1.0, 0.05, 0.2);
+        assert!(deep_otm_put < 0.01); // ほぼゼロ
+
+        // 満期直前のITM Put
+        let near_expiry_put = bs_put_price(90.0, 100.0, 0.001, 0.05, 0.2);
+        assert!(near_expiry_put > 9.9 && near_expiry_put < 10.1); // ほぼ内在価値
+    }
+
+    #[test]
+    fn test_bs_put_price_bounds() {
+        // プット価格境界のテスト: max(K*e^(-rt) - S, 0) <= P <= K*e^(-rt)
+        let test_cases = vec![
+            (100.0, 100.0, 1.0, 0.05, 0.2),
+            (80.0, 100.0, 0.5, 0.05, 0.25),
+            (120.0, 100.0, 2.0, 0.05, 0.3),
+        ];
+
+        for (s, k, t, r, v) in test_cases {
+            let put_price = bs_put_price(s, k, t, r, v);
+            let lower_bound = (k * (-r * t).exp() - s).max(0.0);
+            let upper_bound = k * (-r * t).exp();
+
+            assert!(
+                put_price >= lower_bound,
+                "Put price {put_price} below lower bound {lower_bound}"
+            );
+            assert!(
+                put_price <= upper_bound,
+                "Put price {put_price} above upper bound {upper_bound}"
+            );
+        }
     }
 }

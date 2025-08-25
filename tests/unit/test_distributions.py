@@ -69,12 +69,12 @@ class TestNormCDF:
         """価格計算を通じた対称性の検証."""
         # Black-Scholesモデルにおける対称的な価格関係をテスト
         # 金利r=0の場合、ln(S/K)が対称な２つのオプションは特定の関係を持つ
-        
+
         s = 100.0
         t = 1.0
         r = 0.0  # 金利0で対称性を検証
         v = 0.2
-        
+
         test_values = [0.5, 1.0, 1.5, 2.0]
         for x_val in test_values:
             # 対称的なストライク価格の設定
@@ -82,14 +82,14 @@ class TestNormCDF:
             # ln(s/k_high) = -x_val * v * sqrt(t)
             k_low = s * np.exp(-x_val * v * np.sqrt(t))
             k_high = s * np.exp(x_val * v * np.sqrt(t))
-            
+
             price_low = calculate_call_price(s, k_low, t, r, v)
             price_high = calculate_call_price(s, k_high, t, r, v)
-            
+
             # r=0の場合、価格の対称的な関係を検証
             # C(S,K1) + C(S,K2) ≈ S（K1*K2 = S^2の場合）
             price_sum = price_low + price_high
-            
+
             # 近似的な対称性の検証（数値誤差を考慮）
             # 完全な対称性は成立しないが、特定の関係が成立することを確認
             assert price_sum > 0, f"価格の和が負: {x_val}"
@@ -171,7 +171,7 @@ class TestNormCDFEdgeCases:
         k = 100.0
         with pytest.raises(ValueError):
             calculate_call_price(s, k, t, r, v_too_small)
-        
+
         # バリデーション範囲内の最小ボラティリティ
         v_small = 0.005  # 最小許容値
         price_small_vol = calculate_call_price(s, k, t, r, v_small)
