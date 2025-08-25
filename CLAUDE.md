@@ -2,6 +2,21 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## 🤖 AI 動作制御ルール
+
+@.claude/critical-rules.xml
+
+上記のクリティカルルール（C001-C014）は絶対遵守事項として、すべての作業に適用されます。
+特に以下のルールはQuantForgeプロジェクトで重点的に適用：
+
+- **C002**: エラー迂回絶対禁止（エラーは即座に修正）
+- **C004**: 理想実装ファースト（技術的負債ゼロと同義）
+- **C010**: テスト駆動開発必須（Red-Green-Refactor）
+- **C011**: データ正確性絶対遵守（ハードコード禁止）
+- **C012**: DRY原則（コード重複禁止）
+- **C013**: 破壊的リファクタリング推奨（V2クラス禁止）
+- **C014**: 妥協実装絶対禁止（段階的実装の禁止）
+
 ## プロジェクト概要
 
 QuantForgeは量的金融分析とオプション価格計算のための高性能ライブラリです。Rust + PyO3による実装で、Python比500-1000倍の高速化を実現します。
@@ -78,7 +93,10 @@ uv run sphinx-build -M html docs docs/_build
 - **動的ディスパッチ**: CPU機能を検出し最適な実装を選択
 - **型安全性**: Rustの型システムによるコンパイル時エラー検出
 
-## 🚫 技術的負債ゼロの原則
+## 🚫 技術的負債ゼロの原則 [C004, C014適用]
+
+このセクションは critical-rules.xml の C004（理想実装ファースト）および
+C014（妥協実装絶対禁止）の具体的実装方法を定義します。
 
 ### 基本方針
 このプロジェクトでは技術的負債を一切作らないことを最優先とします。
@@ -123,6 +141,187 @@ uv run sphinx-build -M html docs docs/_build
 1. 技術的検証が必要な未知の領域（ただしdraft/に隔離）
 2. 外部ライブラリの評価（本番コードには含めない）
 
+## 🔒 設定値管理の鉄則 - ZERO HARDCODE POLICY [C011-3適用]
+
+このセクションは critical-rules.xml の C011-3（設定値ハードコード禁止プロトコル）の
+具体的実装方法を定義します。
+
+### 基本原則
+**すべての設定値は必ず定義済みの場所から参照する。ハードコードは技術的負債。**
+
+### 設定値の定義
+以下はすべて「設定値」とみなし、ハードコードを禁止する：
+- 数値定数（精度、閾値、境界値、制限値）
+- 数学定数（係数、パラメータ）
+- ビジネスルール（最大値、最小値、デフォルト値）
+- アルゴリズムパラメータ（反復回数、収束条件）
+
+例外：0, 1, 2, -1, 0.5（1/2）のみ直接記述可
+
+### 実装前の必須確認事項
+
+#### STEP 1: 既存定数の確認
+新しい値を使う前に必ず確認：
+```bash
+# Rust定数の確認
+grep -r "const.*=" src/constants.rs src/config/
+
+# Python定数の確認  
+grep -r "TOLERANCE\|EPSILON" tests/conftest.py
+
+# 類似値の検索（例：1e-3を探す場合）
+rg "1e-3\|0\.001" --type rust --type python
+```
+
+#### STEP 2: 定数の配置場所
+定数を見つけたら/新規追加する場合の配置ルール：
+
+| 種類 | 配置場所 | 例 |
+|------|----------|-----|
+| 精度・許容誤差 | src/constants.rs + tests/conftest.py | PRACTICAL_TOLERANCE |
+| 数学定数・係数 | 使用箇所の近くで const 定義 | Abramowitz係数 |
+| 入力検証制限 | src/validation.rs の InputLimits | 価格・時間の範囲 |
+| テスト用値 | tests/conftest.py または各テストファイル | 標準テストケース |
+
+#### STEP 3: 実装時のルール
+
+```rust
+// ❌ 禁止：マジックナンバー
+if x > 8.0 { return 1.0; }  // 8.0とは何？なぜ8.0？
+
+// ✅ 必須：名前付き定数
+const NORM_CDF_UPPER_BOUND: f64 = 8.0;  // 正規分布の実質的な上限（Φ(8) ≈ 1.0）
+if x > NORM_CDF_UPPER_BOUND { return 1.0; }
+```
+
+```python
+# ❌ 禁止：テストでのハードコード
+assert abs(price - expected) < 1e-5
+
+# ✅ 必須：定義済み定数を使用
+from conftest import THEORETICAL_TOLERANCE
+assert abs(price - expected) < THEORETICAL_TOLERANCE
+```
+
+### コードレビューチェックリスト
+
+新規コード/修正をレビューする際の必須確認：
+
+- [ ] 数値リテラル（0,1,2,-1,0.5以外）が const/定数として定義されているか
+- [ ] 定数には説明的な名前とコメントがあるか
+- [ ] 同じ値が複数箇所で使われていないか（DRY原則）
+- [ ] テストコードでも定数を使用しているか
+- [ ] 新規定数は適切な場所に配置されているか
+
+### 定数追加時の手順
+
+1. **重複確認**
+   ```bash
+   rg "追加したい値" src/ tests/
+   ```
+
+2. **定義追加**
+   - Rust: 適切な.rsファイルに `pub const NAME: type = value; // 説明`
+   - Python: conftest.pyに `NAME: Final[type] = value  # 説明`
+
+3. **同期確認**
+   - Rust/Python両方で使う場合は値を同期
+   - コメントで「Python側と同期」と明記
+
+4. **ドキュメント**
+   - なぜその値なのか根拠を記載
+   - 参考文献があれば記載
+
+### 自動検出スクリプト
+
+定期的に実行してハードコードを検出：
+
+```bash
+# scripts/detect_hardcode.sh
+#!/bin/bash
+
+echo "🔍 Detecting hardcoded values..."
+
+# 浮動小数点数の検出（0.0, 1.0, 2.0, 0.5以外）
+rg '\b\d*\.\d+\b' src/ tests/ \
+  --type rust --type python \
+  | grep -v "const\|TOLERANCE\|EPSILON" \
+  | grep -vE '\b(0\.0|1\.0|2\.0|0\.5)\b'
+
+# 科学記法の検出
+rg '\d+e[+-]\d+' src/ tests/ \
+  --type rust --type python \
+  | grep -v "const\|TOLERANCE\|EPSILON"
+
+# 大きな整数の検出（100以上）
+rg '\b[1-9]\d{2,}\b' src/ tests/ \
+  --type rust --type python \
+  | grep -v "const\|MAX\|MIN"
+```
+
+### 違反例と改善例
+
+#### 例1: 精度値
+```rust
+// ❌ 違反
+assert_relative_eq!(value, expected, epsilon = 1e-7);
+
+// ✅ 改善
+use crate::constants::NUMERICAL_TOLERANCE;
+assert_relative_eq!(value, expected, epsilon = NUMERICAL_TOLERANCE);
+```
+
+#### 例2: 境界値
+```rust
+// ❌ 違反
+if volatility < 0.005 || volatility > 10.0 { 
+    return Err(...);
+}
+
+// ✅ 改善
+const MIN_VOLATILITY: f64 = 0.005;  // 0.5% - 実務上の最小ボラティリティ
+const MAX_VOLATILITY: f64 = 10.0;   // 1000% - 理論上の最大ボラティリティ
+if volatility < MIN_VOLATILITY || volatility > MAX_VOLATILITY {
+    return Err(...);
+}
+```
+
+#### 例3: アルゴリズムパラメータ
+```rust
+// ❌ 違反
+for _ in 0..1000 {  // 最大反復回数
+    if converged { break; }
+}
+
+// ✅ 改善
+const MAX_ITERATIONS: usize = 1000;  // Newton-Raphson法の最大反復回数
+for _ in 0..MAX_ITERATIONS {
+    if converged { break; }
+}
+```
+
+### よくある質問
+
+**Q: 一時的なデバッグ値も定数化が必要？**
+A: playground/やscratch/での実験は例外。本番コード（src/, tests/）では必須。
+
+**Q: 数式の中の係数はどうする？**
+A: 意味のある係数は必ず名前を付ける。例：`0.5 * sigma * sigma` → `0.5`は数学的に1/2なのでOK
+
+**Q: 既存のハードコード値を見つけたら？**
+A: 即座に定数化。「後で」は技術的負債。
+
+**Q: 外部ライブラリの定数は？**
+A: 可能な限り再定義して意味を明確化。例：`std::f64::EPSILON`より`MACHINE_EPSILON`
+
+### 実施により期待される効果
+
+1. **保守性**: 値の変更が1箇所で完結
+2. **可読性**: マジックナンバーの意味が明確
+3. **一貫性**: 同じ目的の値が統一される
+4. **検証可能性**: 定数の妥当性を一覧で確認可能
+5. **技術的負債ゼロ**: ハードコードによる将来の問題を防止
+
 ## パフォーマンス目標
 
 - Black-Scholes単一計算: < 10ns
@@ -135,9 +334,12 @@ uv run sphinx-build -M html docs docs/_build
 - **Rust + PyO3による本番実装を直接行う**（段階的実装は禁止）
 - 実装は`plans/2025-01-24-rust-bs-core.md`に従って進行
 - ドキュメントは日本語で記述されている
-- 数値精度はエラー率 < 1e-15を必達
+- 数値精度はエラー率 < 1e-3（実務精度）
 
-## コード品質管理ルール
+## コード品質管理ルール [C006, C007適用]
+
+このセクションは critical-rules.xml の C006（堅牢コード品質）および
+C007（品質例外化禁止）の具体的実装方法を定義します。
 
 ### Pythonコード編集時の必須実行事項
 

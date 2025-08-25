@@ -36,10 +36,10 @@ pub fn validate_inputs(s: f64, k: f64, t: f64, r: f64, v: f64) -> Result<(), Qua
 
     // 価格チェック
     if s <= 0.0 || s < limits.min_price || s > limits.max_price {
-        return Err(QuantForgeError::InvalidPrice(s));
+        return Err(QuantForgeError::InvalidSpotPrice(s));
     }
     if k <= 0.0 || k < limits.min_price || k > limits.max_price {
-        return Err(QuantForgeError::InvalidPrice(k));
+        return Err(QuantForgeError::InvalidStrikePrice(k));
     }
 
     // 時間チェック

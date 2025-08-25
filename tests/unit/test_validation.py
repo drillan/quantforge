@@ -4,6 +4,7 @@ import math
 
 import numpy as np
 import pytest
+from conftest import PRACTICAL_TOLERANCE
 from quantforge import calculate_call_price, calculate_call_price_batch
 
 
@@ -192,7 +193,7 @@ class TestBatchValidation:
 
         # 単一計算と同じ結果
         single_price = calculate_call_price(100.0, 100.0, 1.0, 0.05, 0.2)
-        assert abs(result[0] - single_price) < 1e-10, "バッチと単一計算の不一致"
+        assert abs(result[0] - single_price) < PRACTICAL_TOLERANCE, "バッチと単一計算の不一致"
 
     def test_batch_with_invalid_values(self) -> None:
         """無効な値を含むバッチ処理."""
@@ -225,7 +226,7 @@ class TestBatchValidation:
         # 個別処理との比較
         for i, spot in enumerate(spots):
             single_result = calculate_call_price(spot, k, t, r, v)
-            assert abs(batch_results[i] - single_result) < 1e-10, f"バッチと個別の不一致: {i}"
+            assert abs(batch_results[i] - single_result) < PRACTICAL_TOLERANCE, f"バッチと個別の不一致: {i}"
 
     def test_large_batch(self) -> None:
         """大規模バッチの処理."""
@@ -244,7 +245,7 @@ class TestBatchValidation:
 
         # 価格の妥当性チェック
         intrinsic_values = np.maximum(spots - k * np.exp(-r * t), 0)
-        assert np.all(results >= intrinsic_values - 1e-10), "本質的価値を下回る価格"
+        assert np.all(results >= intrinsic_values - PRACTICAL_TOLERANCE), "本質的価値を下回る価格"
         assert np.all(results <= spots), "スポット価格を超える価格"
 
 

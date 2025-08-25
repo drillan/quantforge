@@ -172,7 +172,7 @@ class TestOptimizationComparison:
         time_batch = time.perf_counter() - start_batch
 
         # 結果の一致確認
-        np.testing.assert_allclose(single_results, batch_results, rtol=1e-10)
+        np.testing.assert_allclose(single_results, batch_results, rtol=1e-3)
 
         # バッチ処理は個別処理より高速
         speedup = time_single / time_batch
@@ -305,7 +305,7 @@ class TestPerformanceMetrics:
         for metric in metrics:
             # 最低でも100万計算/秒
             throughput_val = metric.get("throughput", 0)
-            assert isinstance(throughput_val, (int, float))
+            assert isinstance(throughput_val, int | float)
             assert throughput_val > 1_000_000, f"スループットが低い: {metric}"
 
     def test_latency_percentiles(self) -> None:

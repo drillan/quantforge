@@ -6,8 +6,11 @@ pub enum QuantForgeError {
     #[error("Invalid input: {0}")]
     InvalidInput(String),
 
-    #[error("Price must be positive, got {0}")]
-    InvalidPrice(f64),
+    #[error("Spot price must be positive, got {0}")]
+    InvalidSpotPrice(f64),
+
+    #[error("Strike price must be positive, got {0}")]
+    InvalidStrikePrice(f64),
 
     #[error("Time to maturity must be positive, got {0}")]
     InvalidTime(f64),

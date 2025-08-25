@@ -13,7 +13,8 @@ pub fn bs_call_price(s: f64, k: f64, t: f64, r: f64, v: f64) -> f64 {
     let d1 = (s.ln() - k.ln() + (r + v * v / 2.0) * t) / (v * sqrt_t);
     let d2 = d1 - v * sqrt_t;
 
-    s * norm_cdf(d1) - k * (-r * t).exp() * norm_cdf(d2)
+    // Deep OTMで数値誤差による負値を防ぐ
+    (s * norm_cdf(d1) - k * (-r * t).exp() * norm_cdf(d2)).max(0.0)
 }
 
 /// バッチ処理用（将来のSIMD最適化対応）
@@ -30,7 +31,8 @@ pub fn bs_call_price_batch(spots: &[f64], k: f64, t: f64, r: f64, v: f64) -> Vec
         .map(|&s| {
             let d1 = (s.ln() - k_ln + half_v_squared_t) / v_sqrt_t;
             let d2 = d1 - v_sqrt_t;
-            s * norm_cdf(d1) - k * exp_neg_rt * norm_cdf(d2)
+            // Deep OTMで数値誤差による負値を防ぐ
+            (s * norm_cdf(d1) - k * exp_neg_rt * norm_cdf(d2)).max(0.0)
         })
         .collect()
 }
@@ -38,6 +40,7 @@ pub fn bs_call_price_batch(spots: &[f64], k: f64, t: f64, r: f64, v: f64) -> Vec
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::constants::{PRACTICAL_TOLERANCE, NUMERICAL_TOLERANCE};
     use approx::assert_relative_eq;
 
     /// テストヘルパー: オプションパラメータ構造体
@@ -110,7 +113,7 @@ mod tests {
     fn test_bs_call_price_atm() {
         // At-the-money option using helper
         let option = TestOption::atm();
-        option.assert_price_near(10.450583572185565, 1e-3);
+        option.assert_price_near(10.450583572185565, PRACTICAL_TOLERANCE);
     }
 
     #[test]
@@ -124,10 +127,10 @@ mod tests {
         let prices = bs_call_price_batch(&spots, k, t, r, v);
         assert_eq!(prices.len(), 3);
 
-        // バッチ結果と単一計算の一致を確認
+        // バッチ結果と単一計算の一致を確認（高精度で検証）
         for (i, &spot) in spots.iter().enumerate() {
             let single_price = bs_call_price(spot, k, t, r, v);
-            assert_relative_eq!(prices[i], single_price, epsilon = 1e-10);
+            assert_relative_eq!(prices[i], single_price, epsilon = NUMERICAL_TOLERANCE);
         }
     }
 

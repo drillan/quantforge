@@ -3,12 +3,13 @@
 use numpy::{PyArray1, PyReadonlyArray1};
 use pyo3::prelude::*;
 
+pub mod constants;
 pub mod error;
 pub mod math;
 pub mod models;
 pub mod validation;
 
-use crate::models::black_scholes;
+use crate::models::{black_scholes, black_scholes_parallel};
 use crate::validation::validate_inputs;
 
 /// Python向け: 単一計算
@@ -32,8 +33,32 @@ fn calculate_call_price_batch<'py>(
     r: f64,
     v: f64,
 ) -> PyResult<Bound<'py, PyArray1<f64>>> {
+    // 共通パラメータのバリデーション（スポット価格は100.0を仮値として使用）
+    validate_inputs(100.0, k, t, r, v)
+        .map_err(|e| pyo3::exceptions::PyValueError::new_err(e.to_string()))?;
+    
     let spots = spots.as_slice()?;
-    let results = black_scholes::bs_call_price_batch(spots, k, t, r, v);
+    
+    // 各スポット価格のバリデーション
+    for &s in spots {
+        if !s.is_finite() {
+            return Err(pyo3::exceptions::PyValueError::new_err(
+                "Input contains NaN or infinite values"
+            ));
+        }
+        if s <= 0.0 {
+            return Err(pyo3::exceptions::PyValueError::new_err(
+                format!("Spot price must be positive, got {}", s)
+            ));
+        }
+    }
+    
+    // 大規模データは並列処理を使用
+    let results = if spots.len() >= 10000 {
+        black_scholes_parallel::bs_call_price_batch_parallel(spots, k, t, r, v)
+    } else {
+        black_scholes::bs_call_price_batch(spots, k, t, r, v)
+    };
     Ok(PyArray1::from_vec_bound(py, results))
 }
 

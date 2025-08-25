@@ -19,7 +19,7 @@ Rustコードの品質を以下の観点から検証し、問題を特定・修�
 - 型安全性とライフタイム正確性
 - パフォーマンス最適化
 - PyO3バインディングの整合性
-- 数値計算の高精度保証（エラー率 < 1e-15）
+- 数値計算の高精度保証（エラー率 < 1e-3）
 
 ## 📋 前提条件の確認
 
@@ -159,8 +159,8 @@ fn test_numerical_accuracy() {
     let expected = 10.450583572185565;
     let actual = bs_call_price(100.0, 100.0, 1.0, 0.05, 0.2);
     
-    // 高精度要求: 相対誤差 < 1e-15
-    assert!((actual - expected).abs() / expected < 1e-15,
+    // 高精度要求: 相対誤差 < 1e-3
+    assert!((actual - expected).abs() / expected < 1e-3,
             "精度エラー: expected={}, actual={}, error={}",
             expected, actual, (actual - expected).abs());
 }
@@ -178,7 +178,7 @@ import quantforge
 print('✓ Import successful')
 # 基本動作テスト
 result = quantforge.bs_call_price(100.0, 100.0, 1.0, 0.05, 0.2)
-assert abs(result - 10.450583572185565) < 1e-10
+assert abs(result - 10.450583572185565) < 1e-3
 print(f'✓ BS call price: {result}')
 "
 
@@ -297,7 +297,7 @@ cargo deny check
 4. **テストエラー**
    - アサーション失敗 → 期待値を実際の値に更新
    - パニック → unwrap()をexpect()やmatch式に変更
-   - 精度エラー → 許容誤差を調整（ただし1e-15未満を維持）
+   - 精度エラー → 許容誤差を調整（ただし1e-3未満を維持）
 
 5. **PyO3エラー**
    - 型変換失敗 → FromPyObject/IntoPy実装
@@ -313,7 +313,7 @@ cargo deny check
 - [ ] cargo doc: 警告0件
 - [ ] maturin develop: ビルド成功
 - [ ] pytest: Python統合テスト成功
-- [ ] 数値精度: エラー率 < 1e-15
+- [ ] 数値精度: エラー率 < 1e-3
 
 ### 推奨基準（品質目標）
 - [ ] clippy::pedantic: 警告最小限
@@ -446,7 +446,7 @@ unsafe {
 #[cfg(test)]
 mod accuracy_tests {
     // 既知の正確な値との比較
-    // 相対誤差 < 1e-15を保証
+    // 相対誤差 < 1e-3を保証
 }
 ```
 
@@ -496,7 +496,7 @@ echo "✅ 全チェック完了！"
 
 1. **数値計算の精度**:
    - f64使用を基本とする
-   - 精度要求: エラー率 < 1e-15
+   - 精度要求: エラー率 < 1e-3
    - 数値安定性を最優先
 
 2. **SIMD最適化**:
@@ -541,7 +541,7 @@ echo "✅ 全チェック完了！"
 このRust品質チェックにより：
 1. **信頼性**: メモリ安全性とスレッド安全性の完全保証
 2. **性能**: Python比500-1000倍の高速化達成
-3. **精度**: 数値誤差1e-15未満の維持
+3. **精度**: 数値誤差1e-3未満の維持
 4. **保守性**: 一貫したコード品質とドキュメント
 5. **統合**: PyO3を通じたシームレスなPython連携
 

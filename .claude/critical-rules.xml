@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<critical_rules>
+  <cache_control>{"max_age": 86400, "stale_while_revalidate": 604800}</cache_control>
+  
+  <rule id="C001" priority="CRITICAL">
+    <name>ルール歪曲禁止・最上位命令遵守</name>
+    <description>ルールを歪曲・解釈変更してはならず、最上位命令として遵守する</description>
+  </rule>
+
+  <rule id="C002" priority="CRITICAL">
+    <name>エラー迂回絶対禁止・主観判断排除</name>
+    <description>エラー発生時は一切迂回禁止、「軽微」「十分」等の主観的判断は一切認めず、修正可能なものは即座に修正、対応不可能なものは作業を完全停止して次の計画を提示し確認を取る</description>
+    <subrules>
+      <subrule id="C002-1">ログファイル優先確認原則</subrule>
+    </subrules>
+  </rule>
+
+  <rule id="C003" priority="CRITICAL">
+    <name>冒頭表示必須</name>
+    <description>チャットの冒頭にはこの原則を逐語的に必ず画面出力してから対応する</description>
+  </rule>
+
+  <rule id="C004" priority="CRITICAL">
+    <name>理想実装ファースト原則</name>
+    <description>計画・設計を立てる際は、最初から理想の実装を設計し、妥協や段階的改善を一切排除する</description>
+    <subrules>
+      <subrule id="C004-1">Extended Thinking適用による理想設計の追求</subrule>
+      <subrule id="C004-2">簡易版・暫定版の作成禁止</subrule>
+      <subrule id="C004-3">「後で改善」思考の完全排除</subrule>
+      <subrule id="C004-4">実装工程は明確化するが、実装自体は理想形で一括実施</subrule>
+    </subrules>
+  </rule>
+
+  <rule id="C005" priority="CRITICAL">
+    <name>記録管理徹底</name>
+    <description>記録を残す（即座記録、知見管理システム活用）</description>
+  </rule>
+
+  <rule id="C006" priority="CRITICAL">
+    <name>堅牢コード品質</name>
+    <description>堅牢なコードを書く（品質基準完全遵守、コミット時チェック必須）</description>
+  </rule>
+
+  <rule id="C007" priority="CRITICAL">
+    <name>品質例外化禁止</name>
+    <description>品質基準例外化禁止（時間制約・進捗圧力・緊急性を理由とした品質妥協は一切認めない）</description>
+  </rule>
+
+  <rule id="C008" priority="CRITICAL">
+    <name>ドキュメント整合性絶対遵守</name>
+    <description>実装前の仕様確認必須、ドキュメント変更時のユーザー承認必須、ドキュメント更新完了後の実装着手</description>
+    <subrules>
+      <subrule id="C008-1">仕様曖昧性検出プロトコル</subrule>
+      <subrule id="C008-2">仕様確認必須チェックリスト</subrule>
+    </subrules>
+  </rule>
+
+  <rule id="C009" priority="CRITICAL">
+    <name>実装計画ブランチ作成必須</name>
+    <description>main/masterブランチでの直接作業禁止、plan/PLAN-YYYY-MM-DD-XXX形式のブランチ作成必須</description>
+  </rule>
+
+  <rule id="C010" priority="CRITICAL">
+    <name>テスト駆動開発必須</name>
+    <description>ドキュメント仕様準拠テスト優先実装</description>
+    <subrules>
+      <subrule id="C010-1">実装前テスト作成プロトコル（Red-Green-Refactor）</subrule>
+      <subrule id="C010-2">仕様不明瞭時のテスト作成停止</subrule>
+    </subrules>
+  </rule>
+
+  <rule id="C011" priority="CRITICAL">
+    <name>データ正確性絶対遵守</name>
+    <description>一次データ推測禁止、フォールバック禁止、設定値ハードコード禁止</description>
+    <subrules>
+      <subrule id="C011-1">一次データ推測禁止プロトコル</subrule>
+      <subrule id="C011-2">フォールバック禁止プロトコル</subrule>
+      <subrule id="C011-3">設定値ハードコード禁止プロトコル</subrule>
+    </subrules>
+  </rule>
+
+  <rule id="C012" priority="CRITICAL">
+    <name>DRY原則絶対遵守</name>
+    <description>Don't Repeat Yourself・コード重複実装禁止</description>
+    <subrules>
+      <subrule id="C012-1">事前調査必須プロトコル</subrule>
+      <subrule id="C012-2">共通パターン認識必須</subrule>
+      <subrule id="C012-3">重複実装時の強制停止条件</subrule>
+      <subrule id="C012-4">実装前チェックリスト必須</subrule>
+      <subrule id="C012-5">ドキュメント駆動DRY原則プロトコル</subrule>
+    </subrules>
+  </rule>
+
+  <rule id="C013" priority="CRITICAL">
+    <name>破壊的リファクタリング推奨</name>
+    <description>V2クラス作成禁止・既存クラス修正優先</description>
+    <subrules>
+      <subrule id="C013-1">既存クラス修正優先プロトコル</subrule>
+      <subrule id="C013-2">V2クラス作成禁止プロトコル</subrule>
+      <subrule id="C013-3">破壊的変更推奨条件</subrule>
+      <subrule id="C013-4">リファクタリング前チェックリスト</subrule>
+    </subrules>
+  </rule>
+
+  <rule id="C014" priority="CRITICAL">
+    <name>妥協実装絶対禁止原則</name>
+    <description>簡易版・暫定版・段階的改善を前提とした実装を完全禁止し、最初から最高品質の実装のみを許可する</description>
+    <subrules>
+      <subrule id="C014-1">「とりあえず動く」実装の禁止</subrule>
+      <subrule id="C014-2">技術的負債を前提とした設計の禁止</subrule>
+      <subrule id="C014-3">リファクタリング前提の初期実装禁止</subrule>
+      <subrule id="C014-4">理想実装が不明な場合は設計段階で停止</subrule>
+    </subrules>
+  </rule>
+
+  <enforcement>
+    <format>
+      <header>[Active Rules: C001-C014]</header>
+      <summary>**CRITICAL原則**: ルール歪曲禁止・エラー迂回禁止・理想実装ファースト・記録管理・品質基準遵守・ドキュメント整合性・TDD必須・DRY原則・破壊的リファクタリング推奨・妥協実装絶対禁止</summary>
+    </format>
+  </enforcement>
+</critical_rules>

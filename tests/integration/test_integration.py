@@ -47,7 +47,7 @@ def test_invalid_inputs() -> None:
     from quantforge import calculate_call_price
 
     # 負の価格
-    with pytest.raises(ValueError, match="Price must be positive"):
+    with pytest.raises(ValueError, match="Spot price must be positive"):
         calculate_call_price(-100.0, 100.0, 1.0, 0.05, 0.2)
 
     # 負の時間

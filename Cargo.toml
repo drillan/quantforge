@@ -12,6 +12,8 @@ pyo3 = { version = "0.22", features = ["extension-module", "abi3-py39"] }
 numpy = "0.22"
 ndarray = "0.16"
 thiserror = "2.0"
+libm = "0.2"
+rayon = "1.10"
 
 [dev-dependencies]
 approx = "0.5"
