@@ -40,18 +40,77 @@ mod tests {
     use super::*;
     use approx::assert_relative_eq;
 
+    /// テストヘルパー: オプションパラメータ構造体
+    struct TestOption {
+        spot: f64,
+        strike: f64,
+        time: f64,
+        rate: f64,
+        vol: f64,
+    }
+
+    impl TestOption {
+        /// ATMオプションのデフォルトパラメータ
+        fn atm() -> Self {
+            Self {
+                spot: 100.0,
+                strike: 100.0,
+                time: 1.0,
+                rate: 0.05,
+                vol: 0.2,
+            }
+        }
+
+        /// スポット価格を変更
+        fn with_spot(mut self, spot: f64) -> Self {
+            self.spot = spot;
+            self
+        }
+
+        /// ボラティリティを変更
+        fn with_vol(mut self, vol: f64) -> Self {
+            self.vol = vol;
+            self
+        }
+
+        /// 満期までの時間を変更
+        fn with_time(mut self, time: f64) -> Self {
+            self.time = time;
+            self
+        }
+
+        /// オプション価格を計算
+        fn price(&self) -> f64 {
+            bs_call_price(self.spot, self.strike, self.time, self.rate, self.vol)
+        }
+
+        /// 価格アサーション（相対誤差チェック）
+        fn assert_price_near(&self, expected: f64, epsilon: f64) {
+            let actual = self.price();
+            assert_relative_eq!(actual, expected, epsilon = epsilon);
+        }
+
+        /// 価格境界チェック
+        fn assert_price_in_bounds(&self) {
+            let price = self.price();
+            let lower_bound = (self.spot - self.strike * (-self.rate * self.time).exp()).max(0.0);
+            assert!(
+                price >= lower_bound,
+                "Price {price} below lower bound {lower_bound}"
+            );
+            assert!(
+                price <= self.spot,
+                "Price {price} above spot price {}",
+                self.spot
+            );
+        }
+    }
+
     #[test]
     fn test_bs_call_price_atm() {
-        // At-the-money option
-        let s = 100.0;
-        let k = 100.0;
-        let t = 1.0;
-        let r = 0.05;
-        let v = 0.2;
-
-        let price = bs_call_price(s, k, t, r, v);
-        // 金融計算に十分な精度（約0.01%）
-        assert_relative_eq!(price, 10.450583572185565, epsilon = 1e-3);
+        // At-the-money option using helper
+        let option = TestOption::atm();
+        option.assert_price_near(10.450583572185565, 1e-3);
     }
 
     #[test]
@@ -75,16 +134,18 @@ mod tests {
     #[test]
     fn test_bs_call_price_edge_cases() {
         // Deep ITM (In-The-Money)
-        let deep_itm = bs_call_price(200.0, 100.0, 1.0, 0.05, 0.2);
-        let intrinsic = 200.0 - 100.0 * (-0.05_f64).exp();
+        let deep_itm_option = TestOption::atm().with_spot(200.0);
+        let intrinsic =
+            deep_itm_option.spot - deep_itm_option.strike * (-deep_itm_option.rate).exp();
+        let deep_itm = deep_itm_option.price();
         assert!(deep_itm > intrinsic * 0.99); // ほぼ内在価値
 
         // Deep OTM (Out-of-The-Money)
-        let deep_otm = bs_call_price(50.0, 100.0, 1.0, 0.05, 0.2);
+        let deep_otm = TestOption::atm().with_spot(50.0).price();
         assert!(deep_otm < 1.0); // ほぼゼロ
 
         // 満期直前
-        let near_expiry = bs_call_price(110.0, 100.0, 0.001, 0.05, 0.2);
+        let near_expiry = TestOption::atm().with_spot(110.0).with_time(0.001).price();
         assert!(near_expiry > 9.9 && near_expiry < 10.1); // ほぼ内在価値
     }
 
@@ -92,30 +153,28 @@ mod tests {
     fn test_bs_call_price_bounds() {
         // 価格境界のテスト: max(S - K*e^(-rt), 0) <= C <= S
         let test_cases = vec![
-            (100.0, 100.0, 1.0, 0.05, 0.2),
-            (80.0, 100.0, 0.5, 0.03, 0.25),
-            (120.0, 100.0, 2.0, 0.02, 0.3),
+            TestOption::atm(),
+            TestOption::atm()
+                .with_spot(80.0)
+                .with_time(0.5)
+                .with_vol(0.25),
+            TestOption::atm()
+                .with_spot(120.0)
+                .with_time(2.0)
+                .with_vol(0.3),
         ];
 
-        for (s, k, t, r, v) in test_cases {
-            let price = bs_call_price(s, k, t, r, v);
-            let lower_bound = (s - k * (-r * t).exp()).max(0.0);
-            assert!(price >= lower_bound);
-            assert!(price <= s);
+        for option in test_cases {
+            option.assert_price_in_bounds();
         }
     }
 
     #[test]
     fn test_bs_call_price_zero_volatility() {
         // ボラティリティゼロの場合は内在価値に収束
-        let s = 110.0;
-        let k = 100.0;
-        let t = 1.0;
-        let r = 0.05;
-        let v = 0.001; // 非常に小さなボラティリティ
+        let option = TestOption::atm().with_spot(110.0).with_vol(0.001); // 非常に小さなボラティリティ
 
-        let price = bs_call_price(s, k, t, r, v);
-        let intrinsic = s - k * (-r * t).exp();
-        assert_relative_eq!(price, intrinsic, epsilon = 0.01);
+        let intrinsic = option.spot - option.strike * (-option.rate * option.time).exp();
+        option.assert_price_near(intrinsic, 0.01);
     }
 }
