@@ -45,7 +45,10 @@ htmlcov/
 .cache
 nosetests.xml
 coverage.xml
+coverage.json
+coverage*.md
 *.cover
+*.py,cover
 *.py.cover
 .hypothesis/
 .pytest_cache/
@@ -235,3 +238,15 @@ scratch/
 *.tmp.py
 *_scratch.py
 *_temp.py
+
+# Progress tracking (auto-generated)
+progress_report.md
+progress_report_*.md
+tracker_temp.yaml
+reports/daily/
+reports/weekly/*.md
+!reports/weekly/README.md
+
+# Performance and benchmarks
+benchmark_results_*.json
+perf_*.log

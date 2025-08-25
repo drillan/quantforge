@@ -1,0 +1,305 @@
+# QuantForge 実装進捗追跡テンプレート
+# 
+# このファイルはドキュメント構造と実装状況を追跡するためのテンプレートです。
+# 各ドキュメントファイルごとに、見出し階層と実装状況を記録します。
+
+metadata:
+  last_updated: "2025-01-25"
+  total_items: 0
+  completed: 0
+  in_progress: 0
+  not_started: 0
+
+# ステータス定義:
+# - not_started: 未着手
+# - partial: 部分実装
+# - implemented: 実装完了（テスト待ち）
+# - tested: テスト済み
+# - documented_only: ドキュメントのみ（実装不要）
+
+documents:
+  docs/models/black_scholes.md:
+    - title: "Black-Scholesモデル"
+      level: 1
+      status: partial
+      progress_percentage: 40
+      items:
+        - title: "理論的背景"
+          level: 2
+          status: documented_only
+          notes: "理論説明セクション"
+          
+        - title: "Black-Scholes方程式"
+          level: 2
+          status: documented_only
+          notes: "数式と境界条件の説明"
+          
+        - title: "解析解"
+          level: 2
+          status: partial
+          progress_percentage: 50
+          items:
+            - title: "ヨーロピアンコール"
+              level: 3
+              status: tested
+              location: "src/models/black_scholes.rs:11-17"
+              tests: 
+                - "src/models/black_scholes.rs:44-55"
+                - "tests/test_golden_master.py"
+              
+            - title: "ヨーロピアンプット"
+              level: 3
+              status: not_started
+              priority: high
+              notes: "Phase 2で実装予定"
+        
+        - title: "グリークス"
+          level: 2
+          status: not_started
+          progress_percentage: 0
+          priority: high
+          items:
+            - title: "Delta (Δ)"
+              level: 3
+              status: not_started
+              expected_location: "src/models/greeks.rs"
+              
+            - title: "Gamma (Γ)"
+              level: 3
+              status: not_started
+              expected_location: "src/models/greeks.rs"
+              
+            - title: "Vega (ν)"
+              level: 3
+              status: not_started
+              expected_location: "src/models/greeks.rs"
+              
+            - title: "Theta (Θ)"
+              level: 3
+              status: not_started
+              expected_location: "src/models/greeks.rs"
+              
+            - title: "Rho (ρ)"
+              level: 3
+              status: not_started
+              expected_location: "src/models/greeks.rs"
+        
+        - title: "実装詳細"
+          level: 2
+          status: partial
+          items:
+            - title: "高精度累積正規分布"
+              level: 3
+              status: implemented
+              location: "src/math/distributions.rs:3-37"
+              tests: "src/math/distributions.rs:59-107"
+              notes: "精度1e-7達成、目標は1e-15"
+              
+            - title: "SIMD最適化版"
+              level: 3
+              status: not_started
+              priority: medium
+              notes: "Phase 2で実装予定"
+        
+        - title: "配当付きモデル"
+          level: 2
+          status: not_started
+          priority: low
+          items:
+            - title: "連続配当"
+              level: 3
+              status: not_started
+              
+            - title: "離散配当"
+              level: 3
+              status: not_started
+
+  docs/models/american_options.md:
+    - title: "アメリカンオプション"
+      level: 1
+      status: not_started
+      progress_percentage: 0
+      priority: medium
+      phase: 3
+      items:
+        - title: "Bjerksund-Stensland 2002"
+          level: 2
+          status: not_started
+          expected_location: "src/models/american.rs"
+          
+        - title: "早期行使境界"
+          level: 2
+          status: not_started
+
+  docs/models/asian_options.md:
+    - title: "アジアンオプション"
+      level: 1
+      status: not_started
+      progress_percentage: 0
+      priority: low
+      phase: 3
+
+  docs/api/python/pricing.md:
+    - title: "価格計算API"
+      level: 1
+      status: partial
+      progress_percentage: 25
+      items:
+        - title: "基本関数"
+          level: 2
+          status: partial
+          items:
+            - title: "calculate_call_price"
+              level: 3
+              status: tested
+              location: "src/lib.rs:16-22"
+              python_binding: "python/quantforge/__init__.py:3"
+              
+            - title: "calculate_put_price"
+              level: 3
+              status: not_started
+              
+        - title: "バッチ処理"
+          level: 2
+          status: partial
+          items:
+            - title: "calculate_call_price_batch"
+              level: 3
+              status: implemented
+              location: "src/lib.rs:27-38"
+              python_binding: "python/quantforge/__init__.py:3"
+
+  docs/performance/benchmarks.md:
+    - title: "ベンチマーク"
+      level: 1
+      status: not_started
+      progress_percentage: 0
+      priority: low
+      phase: 6
+      items:
+        - title: "単一計算ベンチマーク"
+          level: 2
+          status: not_started
+          expected_location: "benches/benchmark.rs"
+          
+        - title: "バッチ処理ベンチマーク"
+          level: 2
+          status: not_started
+
+  docs/performance/optimization.md:
+    - title: "最適化戦略"
+      level: 1
+      status: partial
+      progress_percentage: 20
+      items:
+        - title: "SIMD最適化"
+          level: 2
+          status: not_started
+          phase: 2
+          items:
+            - title: "AVX2実装"
+              level: 3
+              status: not_started
+              
+            - title: "AVX-512実装"
+              level: 3
+              status: not_started
+        
+        - title: "並列処理"
+          level: 2
+          status: not_started
+          phase: 4
+          items:
+            - title: "Rayon統合"
+              level: 3
+              status: not_started
+              
+            - title: "階層的並列化"
+              level: 3
+              status: not_started
+
+# 実装フェーズマッピング
+phases:
+  phase_1:
+    name: "基盤構築"
+    weeks: "1-2"
+    status: partial
+    items:
+      - "プロジェクト初期化"
+      - "PyO3/Maturin環境"
+      - "高精度累積正規分布"
+      - "エラーハンドリング"
+      - "SIMDインフラ"
+    
+  phase_2:
+    name: "Black-Scholesエンジン"
+    weeks: "3-4"
+    status: partial
+    items:
+      - "スカラー版Black-Scholes"
+      - "全グリークス"
+      - "AVX2最適化"
+      - "AVX-512実装"
+    
+  phase_3:
+    name: "高度な価格モデル"
+    weeks: "5-6"
+    status: not_started
+    items:
+      - "アメリカンオプション"
+      - "アジアンオプション"
+      - "スプレッドオプション"
+    
+  phase_4:
+    name: "並列処理統合"
+    weeks: "7-8"
+    status: not_started
+    items:
+      - "Rayon統合"
+      - "階層的並列化"
+      - "ゼロコピーNumPy連携"
+    
+  phase_5:
+    name: "PyO3インテグレーション"
+    weeks: "9-10"
+    status: partial
+    items:
+      - "Python基本API"
+      - "NumPy統合"
+      - "型スタブ生成"
+    
+  phase_6:
+    name: "品質保証"
+    weeks: "11-12"
+    status: partial
+    items:
+      - "単体テスト"
+      - "プロパティベーステスト"
+      - "統合テスト"
+      - "ベンチマーク"
+    
+  phase_7:
+    name: "プロダクション準備"
+    weeks: "13-14"
+    status: not_started
+    items:
+      - "APIドキュメント"
+      - "PyPIパッケージング"
+      - "プラットフォーム別wheel"
+
+# 優先度定義
+priorities:
+  high:
+    - "プットオプション実装"
+    - "グリークス計算"
+    - "SIMD最適化"
+    
+  medium:
+    - "アメリカンオプション"
+    - "並列処理"
+    - "ベンチマーク"
+    
+  low:
+    - "アジアンオプション"
+    - "配当モデル"
+    - "エキゾチックオプション"

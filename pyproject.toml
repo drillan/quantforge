@@ -29,8 +29,15 @@ dev = [
     "mypy>=1.17.1",
     "pytest>=8.4.1",
     "pytest-benchmark>=5.1.0",
+    "pytest-cov>=6.0.0",
+    "pytest-xdist>=3.6.1",
+    "pytest-timeout>=2.3.1",
+    "pytest-mock>=3.14.0",
+    "hypothesis>=6.100.0",
     "ruff>=0.12.10",
     "scipy>=1.16.1",
+    "types-pyyaml>=6.0.12.20250822",
+    "scipy-stubs>=1.16.1.1",
 ]
 
 [tool.ruff]
@@ -67,6 +74,27 @@ line-ending = "auto"
 features = ["pyo3/extension-module"]
 python-source = "python"
 module-name = "quantforge.quantforge"
+
+[tool.pytest.ini_options]
+minversion = "8.0"
+testpaths = ["tests"]
+addopts = [
+    "--cov=quantforge",
+    "--cov-report=term-missing",
+    "--cov-report=html",
+    "--cov-fail-under=90",
+    "-v",
+    "--tb=short",
+    "--strict-markers",
+]
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+    "benchmark: marks tests as benchmark tests",
+    "integration: marks tests as integration tests",
+    "unit: marks tests as unit tests",
+    "property: marks tests as property-based tests",
+    "golden: marks tests as golden master tests",
+]
 
 [tool.mypy]
 python_version = "3.12"
