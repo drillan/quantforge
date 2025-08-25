@@ -20,4 +20,20 @@ pub enum QuantForgeError {
 
     #[error("Input contains NaN or infinite values")]
     InvalidNumericValue,
+
+    // インプライドボラティリティ関連エラー
+    #[error("Price violates no-arbitrage bounds")]
+    NoArbitrageBreach,
+
+    #[error("Failed to converge after {0} iterations")]
+    ConvergenceFailed(usize),
+
+    #[error("Invalid market price: {0}")]
+    InvalidMarketPrice(f64),
+
+    #[error("Numerical instability detected (Vega too small)")]
+    NumericalInstability,
+
+    #[error("Failed to find valid bracket for root finding")]
+    BracketingFailed,
 }

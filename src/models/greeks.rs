@@ -548,7 +548,11 @@ mod tests {
     fn test_delta_put_standard() {
         // ATMオプション
         let delta = delta_put(100.0, 100.0, 1.0, 0.05, 0.2);
-        assert_relative_eq!(delta, -0.363_169_348_290_311_7, epsilon = NUMERICAL_TOLERANCE);
+        assert_relative_eq!(
+            delta,
+            -0.363_169_348_290_311_7,
+            epsilon = NUMERICAL_TOLERANCE
+        );
 
         // ITMプット（S < K）
         let delta_itm = delta_put(90.0, 100.0, 1.0, 0.05, 0.2);

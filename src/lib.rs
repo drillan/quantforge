@@ -9,7 +9,9 @@ pub mod math;
 pub mod models;
 pub mod validation;
 
-use crate::models::{black_scholes, black_scholes_parallel, greeks, greeks_parallel};
+use crate::models::{
+    black_scholes, black_scholes_parallel, greeks, greeks_parallel, implied_volatility,
+};
 use crate::validation::validate_inputs;
 use std::collections::HashMap;
 
@@ -347,6 +349,66 @@ fn calculate_gamma_batch<'py>(
     Ok(PyArray1::from_vec_bound(py, results))
 }
 
+/// インプライドボラティリティ計算（コール）
+#[pyfunction]
+#[pyo3(signature = (price, s, k, t, r))]
+fn calculate_implied_volatility_call(price: f64, s: f64, k: f64, t: f64, r: f64) -> PyResult<f64> {
+    implied_volatility::implied_volatility_call(price, s, k, t, r)
+        .map_err(|e| pyo3::exceptions::PyValueError::new_err(e.to_string()))
+}
+
+/// インプライドボラティリティ計算（プット）
+#[pyfunction]
+#[pyo3(signature = (price, s, k, t, r))]
+fn calculate_implied_volatility_put(price: f64, s: f64, k: f64, t: f64, r: f64) -> PyResult<f64> {
+    implied_volatility::implied_volatility_put(price, s, k, t, r)
+        .map_err(|e| pyo3::exceptions::PyValueError::new_err(e.to_string()))
+}
+
+/// インプライドボラティリティバッチ計算
+#[pyfunction]
+#[pyo3(signature = (prices, spots, strikes, times, rates, is_calls))]
+fn calculate_implied_volatility_batch<'py>(
+    py: Python<'py>,
+    prices: PyReadonlyArray1<f64>,
+    spots: PyReadonlyArray1<f64>,
+    strikes: PyReadonlyArray1<f64>,
+    times: PyReadonlyArray1<f64>,
+    rates: PyReadonlyArray1<f64>,
+    is_calls: PyReadonlyArray1<bool>,
+) -> PyResult<Bound<'py, PyArray1<f64>>> {
+    let prices = prices.as_slice()?;
+    let spots = spots.as_slice()?;
+    let strikes = strikes.as_slice()?;
+    let times = times.as_slice()?;
+    let rates = rates.as_slice()?;
+    let is_calls = is_calls.as_slice()?;
+
+    // 長さチェック
+    let len = prices.len();
+    if spots.len() != len
+        || strikes.len() != len
+        || times.len() != len
+        || rates.len() != len
+        || is_calls.len() != len
+    {
+        return Err(pyo3::exceptions::PyValueError::new_err(
+            "All input arrays must have the same length",
+        ));
+    }
+
+    // 並列化の閾値判定
+    let results = if len > 1000 {
+        implied_volatility::implied_volatility_batch_parallel(
+            prices, spots, strikes, times, rates, is_calls,
+        )
+    } else {
+        implied_volatility::implied_volatility_batch(prices, spots, strikes, times, rates, is_calls)
+    };
+
+    Ok(PyArray1::from_vec_bound(py, results))
+}
+
 /// A Python module implemented in Rust.
 #[pymodule]
 fn quantforge(m: &Bound<'_, PyModule>) -> PyResult<()> {
@@ -370,6 +432,11 @@ fn quantforge(m: &Bound<'_, PyModule>) -> PyResult<()> {
     // グリークスバッチ計算
     m.add_function(wrap_pyfunction!(calculate_delta_call_batch, m)?)?;
     m.add_function(wrap_pyfunction!(calculate_gamma_batch, m)?)?;
+
+    // インプライドボラティリティ計算
+    m.add_function(wrap_pyfunction!(calculate_implied_volatility_call, m)?)?;
+    m.add_function(wrap_pyfunction!(calculate_implied_volatility_put, m)?)?;
+    m.add_function(wrap_pyfunction!(calculate_implied_volatility_batch, m)?)?;
 
     Ok(())
 }

@@ -111,5 +111,6 @@ exclude = [
     "playground/",  # 一時的な検証スクリプトは除外
     "scratch/",  # テンポラリファイルは除外
     "tests/integration/test_put_options.py",  # 型スタブ未対応のため一時除外
+    "tests/unit/test_implied_volatility.py",  # PyO3バインディングの型情報不完全
     "draft/",  # 参考実装・プロトタイプは除外
 ]
