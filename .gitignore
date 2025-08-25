@@ -228,3 +228,10 @@ Cargo.lock
 # Working directories
 work/
 draft/
+
+# Temporary and experimental files
+playground/
+scratch/
+*.tmp.py
+*_scratch.py
+*_temp.py

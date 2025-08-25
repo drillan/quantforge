@@ -1,10 +1,16 @@
+[build-system]
+requires = ["maturin>=1.7,<2.0"]
+build-backend = "maturin"
+
 [project]
 name = "quantforge"
 version = "0.1.0"
-description = "Add your description here"
+description = "高性能オプション価格計算エンジン - Rust + PyO3実装"
 readme = "README.md"
-requires-python = ">=3.12"
-dependencies = []
+requires-python = ">=3.11"
+dependencies = [
+    "numpy>=1.20",
+]
 [project.optional-dependencies]
 docs = [
     "sphinx>=8.2.3",
@@ -15,4 +21,66 @@ docs = [
     "sphinxcontrib-mermaid>=1.0.0",
     "sphinx-copybutton>=0.5.2",
     "sphinx-tabs>=3.4.7",
+]
+
+[dependency-groups]
+dev = [
+    "maturin>=1.9.3",
+    "mypy>=1.17.1",
+    "pytest>=8.4.1",
+    "pytest-benchmark>=5.1.0",
+    "ruff>=0.12.10",
+    "scipy>=1.16.1",
+]
+
+[tool.ruff]
+target-version = "py312"
+line-length = 120
+indent-width = 4
+exclude = [
+    "playground/",
+    "scratch/",
+    "draft/",
+]
+
+[tool.ruff.lint]
+select = [
+    "E",    # pycodestyle errors
+    "W",    # pycodestyle warnings
+    "F",    # pyflakes
+    "I",    # isort
+    "B",    # flake8-bugbear
+    "C4",   # flake8-comprehensions
+    "UP",   # pyupgrade
+    "SIM",  # flake8-simplify
+    "TCH",  # flake8-type-checking
+]
+ignore = []
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"
+
+[tool.maturin]
+features = ["pyo3/extension-module"]
+python-source = "python"
+module-name = "quantforge.quantforge"
+
+[tool.mypy]
+python_version = "3.12"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+disallow_any_unimported = true
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_unreachable = true
+strict_equality = true
+exclude = [
+    "playground/",  # 一時的な検証スクリプトは除外
+    "scratch/",  # テンポラリファイルは除外
+    "draft/",  # 参考実装・プロトタイプは除外
 ]

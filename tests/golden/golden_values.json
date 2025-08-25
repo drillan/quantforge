@@ -1,0 +1,4755 @@
+{
+  "version": "1.0.0",
+  "generated_at": "2025-08-25T01:02:52.380142Z",
+  "source": "GBS_2025.py (MIT License) - Davis William Edwards",
+  "description": "Golden master reference values for QuantForge option pricing tests",
+  "test_cases": [
+    {
+      "id": "BS_001",
+      "category": "black_scholes",
+      "description": "Moneyness=0.8, T=0.01Y, Vol=5%",
+      "inputs": {
+        "s": 100.0,
+        "k": 125.0,
+        "t": 0.01,
+        "r": 0.05,
+        "v": 0.05
+      },
+      "outputs": {
+        "call_price": 0.0,
+        "call_delta": 0.0,
+        "call_gamma": 0.0,
+        "call_theta": -0.0,
+        "call_vega": 0.0,
+        "call_rho": 0.0,
+        "put_price": 24.937515622396162,
+        "put_delta": -1.0,
+        "put_gamma": 0.0,
+        "put_theta": 6.246875781119808,
+        "put_vega": 0.0,
+        "put_rho": -1.2493751562239617
+      },
+      "metadata": {
+        "moneyness": 0.8,
+        "moneyness_category": "OTM"
+      }
+    },
+    {
+      "id": "BS_002",
+      "category": "black_scholes",
+      "description": "Moneyness=0.8, T=0.01Y, Vol=10%",
+      "inputs": {
+        "s": 100.0,
+        "k": 125.0,
+        "t": 0.01,
+        "r": 0.05,
+        "v": 0.1
+      },
+      "outputs": {
+        "call_price": 2.0474141399719333e-111,
+        "call_delta": 4.5777413483903476e-110,
+        "call_gamma": 1.0210240321839293e-108,
+        "call_theta": -5.127998630590898e-107,
+        "call_vega": 1.0210240321839294e-107,
+        "call_rho": 4.5756939342503756e-110,
+        "put_price": 24.937515622396162,
+        "put_delta": -1.0,
+        "put_gamma": 1.0210240321839293e-108,
+        "put_theta": 6.246875781119808,
+        "put_vega": 1.0210240321839294e-107,
+        "put_rho": -1.2493751562239617
+      },
+      "metadata": {
+        "moneyness": 0.8,
+        "moneyness_category": "OTM"
+      }
+    },
+    {
+      "id": "BS_003",
+      "category": "black_scholes",
+      "description": "Moneyness=0.8, T=0.01Y, Vol=20%",
+      "inputs": {
+        "s": 100.0,
+        "k": 125.0,
+        "t": 0.01,
+        "r": 0.05,
+        "v": 0.2
+      },
+      "outputs": {
+        "call_price": 8.646092644765627e-30,
+        "call_delta": 4.892700926491375e-29,
+        "call_gamma": 2.7425276316621207e-28,
+        "call_theta": -5.509475537493474e-26,
+        "call_vega": 5.4850552633242414e-27,
+        "call_rho": 4.88405483384661e-29,
+        "put_price": 24.937515622396162,
+        "put_delta": -1.0,
+        "put_gamma": 2.7425276316621207e-28,
+        "put_theta": 6.246875781119808,
+        "put_vega": 5.4850552633242414e-27,
+        "put_rho": -1.2493751562239617
+      },
+      "metadata": {
+        "moneyness": 0.8,
+        "moneyness_category": "OTM"
+      }
+    },
+    {
+      "id": "BS_004",
+      "category": "black_scholes",
+      "description": "Moneyness=0.8, T=0.01Y, Vol=30%",
+      "inputs": {
+        "s": 100.0,
+        "k": 125.0,
+        "t": 0.01,
+        "r": 0.05,
+        "v": 0.3
+      },
+      "outputs": {
+        "call_price": 2.5294276527661864e-14,
+        "call_delta": 6.486172392734421e-14,
+        "call_gamma": 1.6295304686192267e-13,
+        "call_theta": -7.365191499367554e-11,
+        "call_vega": 4.88859140585768e-12,
+        "call_rho": 6.460878116206759e-14,
+        "put_price": 24.937515622396177,
+        "put_delta": -0.9999999999999352,
+        "put_gamma": 1.6295304686192267e-13,
+        "put_theta": 6.246875781046156,
+        "put_vega": 4.88859140585768e-12,
+        "put_rho": -1.249375156223897
+      },
+      "metadata": {
+        "moneyness": 0.8,
+        "moneyness_category": "OTM"
+      }
+    },
+    {
+      "id": "BS_005",
+      "category": "black_scholes",
+      "description": "Moneyness=0.8, T=0.01Y, Vol=50%",
+      "inputs": {
+        "s": 100.0,
+        "k": 125.0,
+        "t": 0.01,
+        "r": 0.05,
+        "v": 0.5
+      },
+      "outputs": {
+        "call_price": 4.879895658902139e-06,
+        "call_delta": 4.758388820329788e-06,
+        "call_gamma": 4.411051955265845e-06,
+        "call_theta": -0.005537362893401011,
+        "call_vega": 0.00022055259776329226,
+        "call_rho": 4.709589863740767e-06,
+        "put_price": 24.937520502291818,
+        "put_delta": -0.9999952416111797,
+        "put_gamma": 4.411051955265845e-06,
+        "put_theta": 6.241338418226407,
+        "put_vega": 0.00022055259776329226,
+        "put_rho": -1.249370446634098
+      },
+      "metadata": {
+        "moneyness": 0.8,
+        "moneyness_category": "OTM"
+      }
+    },
+    {
+      "id": "BS_006",
+      "category": "black_scholes",
+      "description": "Moneyness=0.8, T=0.10Y, Vol=5%",
+      "inputs": {
+        "s": 100.0,
+        "k": 125.0,
+        "t": 0.1,
+        "r": 0.05,
+        "v": 0.05
+      },
+      "outputs": {
+        "call_price": 1.6895252331546118e-44,
+        "call_delta": 1.4903353429703326e-43,
+        "call_gamma": 1.3064487422238748e-42,
+        "call_theta": -1.7074932186667025e-41,
+        "call_vega": 6.532243711119374e-41,
+        "call_rho": 1.488645817737178e-42,
+        "put_price": 24.376559899085294,
+        "put_delta": -1.0,
+        "put_gamma": 1.3064487422238748e-42,
+        "put_theta": 6.218827994954265,
+        "put_vega": 6.532243711119374e-41,
+        "put_rho": -12.43765598990853
+      },
+      "metadata": {
+        "moneyness": 0.8,
+        "moneyness_category": "OTM"
+      }
+    },
+    {
+      "id": "BS_007",
+      "category": "black_scholes",
+      "description": "Moneyness=0.8, T=0.10Y, Vol=10%",
+      "inputs": {
+        "s": 100.0,
+        "k": 125.0,
+        "t": 0.1,
+        "r": 0.05,
+        "v": 0.1
+      },
+      "outputs": {
+        "call_price": 1.2937231280312866e-12,
+        "call_delta": 2.940694506598976e-12,
+        "call_gamma": 6.530165724413179e-12,
+        "call_theta": -3.411470725972523e-10,
+        "call_vega": 6.53016572441318e-10,
+        "call_rho": 2.9277572753186633e-11,
+        "put_price": 24.376559899086587,
+        "put_delta": -0.9999999999970594,
+        "put_gamma": 6.530165724413179e-12,
+        "put_theta": 6.218827994613118,
+        "put_vega": 6.53016572441318e-10,
+        "put_rho": -12.437655989879254
+      },
+      "metadata": {
+        "moneyness": 0.8,
+        "moneyness_category": "OTM"
+      }
+    },
+    {
+      "id": "BS_008",
+      "category": "black_scholes",
+      "description": "Moneyness=0.8, T=0.10Y, Vol=20%",
+      "inputs": {
+        "s": 100.0,
+        "k": 125.0,
+        "t": 0.1,
+        "r": 0.05,
+        "v": 0.2
+      },
+      "outputs": {
+        "call_price": 0.0005041474253337057,
+        "call_delta": 0.00031596108910545616,
+        "call_gamma": 0.0001835299649443884,
+        "call_theta": -0.038260591063138276,
+        "call_vega": 0.03670599298887768,
+        "call_rho": 0.003109196148521191,
+        "put_price": 24.377064046510625,
+        "put_delta": -0.9996840389108945,
+        "put_gamma": 0.0001835299649443884,
+        "put_theta": 6.180567403891127,
+        "put_vega": 0.03670599298887768,
+        "put_rho": -12.434546793760008
+      },
+      "metadata": {
+        "moneyness": 0.8,
+        "moneyness_category": "OTM"
+      }
+    },
+    {
+      "id": "BS_009",
+      "category": "black_scholes",
+      "description": "Moneyness=0.8, T=0.10Y, Vol=30%",
+      "inputs": {
+        "s": 100.0,
+        "k": 125.0,
+        "t": 0.1,
+        "r": 0.05,
+        "v": 0.3
+      },
+      "outputs": {
+        "call_price": 0.038768583162879455,
+        "call_delta": 0.012161111829920083,
+        "call_gamma": 0.0033306190492209723,
+        "call_theta": -1.557645702140894,
+        "call_vega": 0.9991857147662917,
+        "call_rho": 0.1177342599829129,
+        "put_price": 24.41532848224817,
+        "put_delta": -0.9878388881700799,
+        "put_gamma": 0.0033306190492209723,
+        "put_theta": 4.661182292813371,
+        "put_vega": 0.9991857147662917,
+        "put_rho": -12.319921729925618
+      },
+      "metadata": {
+        "moneyness": 0.8,
+        "moneyness_category": "OTM"
+      }
+    },
+    {
+      "id": "BS_010",
+      "category": "black_scholes",
+      "description": "Moneyness=0.8, T=0.10Y, Vol=50%",
+      "inputs": {
+        "s": 100.0,
+        "k": 125.0,
+        "t": 0.1,
+        "r": 0.05,
+        "v": 0.5
+      },
+      "outputs": {
+        "call_price": 0.6746166611335944,
+        "call_delta": 0.09669701575321044,
+        "call_gamma": 0.010829792303071604,
+        "call_theta": -13.98699462454888,
+        "call_vega": 5.414896151535802,
+        "call_rho": 0.8995084914187449,
+        "put_price": 25.05117656021889,
+        "put_delta": -0.9033029842467896,
+        "put_gamma": 0.010829792303071604,
+        "put_theta": -7.768166629594614,
+        "put_vega": 5.414896151535802,
+        "put_rho": -11.538147498489785
+      },
+      "metadata": {
+        "moneyness": 0.8,
+        "moneyness_category": "OTM"
+      }
+    },
+    {
+      "id": "BS_011",
+      "category": "black_scholes",
+      "description": "Moneyness=0.8, T=0.25Y, Vol=5%",
+      "inputs": {
+        "s": 100.0,
+        "k": 125.0,
+        "t": 0.25,
+        "r": 0.05,
+        "v": 0.05
+      },
+      "outputs": {
+        "call_price": 5.752509764551926e-18,
+        "call_delta": 1.9941537951666722e-17,
+        "call_gamma": 6.803222508709827e-17,
+        "call_theta": -9.498228778588343e-16,
+        "call_vega": 8.504028135887284e-15,
+        "call_rho": 4.9710032135053e-16,
+        "put_price": 23.447225061735182,
+        "put_delta": -1.0,
+        "put_gamma": 6.803222508709827e-17,
+        "put_theta": 6.172361253086758,
+        "put_vega": 8.504028135887284e-15,
+        "put_rho": -30.861806265433795
+      },
+      "metadata": {
+        "moneyness": 0.8,
+        "moneyness_category": "OTM"
+      }
+    },
+    {
+      "id": "BS_012",
+      "category": "black_scholes",
+      "description": "Moneyness=0.8, T=0.25Y, Vol=10%",
+      "inputs": {
+        "s": 100.0,
+        "k": 125.0,
+        "t": 0.25,
+        "r": 0.05,
+        "v": 0.1
+      },
+      "outputs": {
+        "call_price": 1.5128100886388756e-05,
+        "call_delta": 1.4079172499737845e-05,
+        "call_gamma": 1.2403792168900536e-05,
+        "call_theta": -0.0006898290658993965,
+        "call_vega": 0.003100948042225134,
+        "call_rho": 0.00034819728727184896,
+        "put_price": 23.447240189836066,
+        "put_delta": -0.9999859208275003,
+        "put_gamma": 1.2403792168900536e-05,
+        "put_theta": 6.171671424020859,
+        "put_vega": 0.003100948042225134,
+        "put_rho": -30.861458068146522
+      },
+      "metadata": {
+        "moneyness": 0.8,
+        "moneyness_category": "OTM"
+      }
+    },
+    {
+      "id": "BS_013",
+      "category": "black_scholes",
+      "description": "Moneyness=0.8, T=0.25Y, Vol=20%",
+      "inputs": {
+        "s": 100.0,
+        "k": 125.0,
+        "t": 0.25,
+        "r": 0.05,
+        "v": 0.2
+      },
+      "outputs": {
+        "call_price": 0.07052975167608144,
+        "call_delta": 0.019870278077264297,
+        "call_gamma": 0.004815154552796725,
+        "call_theta": -1.0588558133618624,
+        "call_vega": 2.4075772763983627,
+        "call_rho": 0.47912451401258704,
+        "put_price": 23.51775481341126,
+        "put_delta": -0.9801297219227357,
+        "put_gamma": 0.004815154552796725,
+        "put_theta": 5.1135054397248965,
+        "put_vega": 2.4075772763983627,
+        "put_rho": -30.38268175142121
+      },
+      "metadata": {
+        "moneyness": 0.8,
+        "moneyness_category": "OTM"
+      }
+    },
+    {
+      "id": "BS_014",
+      "category": "black_scholes",
+      "description": "Moneyness=0.8, T=0.25Y, Vol=30%",
+      "inputs": {
+        "s": 100.0,
+        "k": 125.0,
+        "t": 0.25,
+        "r": 0.05,
+        "v": 0.3
+      },
+      "outputs": {
+        "call_price": 0.6041557192846767,
+        "call_delta": 0.09187609967106275,
+        "call_gamma": 0.01099301573413126,
+        "call_theta": -5.376029792750146,
+        "call_vega": 8.244761800598445,
+        "call_rho": 2.1458635619553994,
+        "put_price": 24.051380781019873,
+        "put_delta": -0.9081239003289372,
+        "put_gamma": 0.01099301573413126,
+        "put_theta": 0.7963314603366127,
+        "put_vega": 8.244761800598445,
+        "put_rho": -28.715942703478397
+      },
+      "metadata": {
+        "moneyness": 0.8,
+        "moneyness_category": "OTM"
+      }
+    },
+    {
+      "id": "BS_015",
+      "category": "black_scholes",
+      "description": "Moneyness=0.8, T=0.25Y, Vol=50%",
+      "inputs": {
+        "s": 100.0,
+        "k": 125.0,
+        "t": 0.25,
+        "r": 0.05,
+        "v": 0.5
+      },
+      "outputs": {
+        "call_price": 3.081163408547688,
+        "call_delta": 0.23650993355112,
+        "call_gamma": 0.01233554029597055,
+        "call_theta": -16.4479168672914,
+        "call_vega": 15.419425369963186,
+        "call_rho": 5.142457486641078,
+        "put_price": 26.528388470282877,
+        "put_delta": -0.76349006644888,
+        "put_gamma": 0.01233554029597055,
+        "put_theta": -10.275555614204642,
+        "put_vega": 15.419425369963186,
+        "put_rho": -25.719348778792718
+      },
+      "metadata": {
+        "moneyness": 0.8,
+        "moneyness_category": "OTM"
+      }
+    },
+    {
+      "id": "BS_016",
+      "category": "black_scholes",
+      "description": "Moneyness=0.8, T=0.50Y, Vol=5%",
+      "inputs": {
+        "s": 100.0,
+        "k": 125.0,
+        "t": 0.5,
+        "r": 0.05,
+        "v": 0.05
+      },
+      "outputs": {
+        "call_price": 6.876210301498819e-09,
+        "call_delta": 1.1573362435471902e-08,
+        "call_gamma": 1.884093198385125e-08,
+        "call_theta": -2.9303465146042515e-07,
+        "call_vega": 4.710232995962812e-06,
+        "call_rho": 5.752300166228457e-07,
+        "put_price": 21.913739010417785,
+        "put_delta": -0.9999999884266375,
+        "put_gamma": 1.884093198385125e-08,
+        "put_theta": 6.095686657142427,
+        "put_vega": 4.710232995962812e-06,
+        "put_rho": -60.95686892654077
+      },
+      "metadata": {
+        "moneyness": 0.8,
+        "moneyness_category": "OTM"
+      }
+    },
+    {
+      "id": "BS_017",
+      "category": "black_scholes",
+      "description": "Moneyness=0.8, T=0.50Y, Vol=10%",
+      "inputs": {
+        "s": 100.0,
+        "k": 125.0,
+        "t": 0.5,
+        "r": 0.05,
+        "v": 0.1
+      },
+      "outputs": {
+        "call_price": 0.005895825543744848,
+        "call_delta": 0.0028303205181413357,
+        "call_gamma": 0.001227728023523985,
+        "call_theta": -0.07524321248971869,
+        "call_vega": 0.6138640117619926,
+        "call_rho": 0.13856811313519435,
+        "put_price": 21.919634829085325,
+        "put_delta": -0.9971696794818586,
+        "put_gamma": 0.001227728023523985,
+        "put_theta": 6.02044373768736,
+        "put_vega": 0.6138640117619926,
+        "put_rho": -60.8183013886356
+      },
+      "metadata": {
+        "moneyness": 0.8,
+        "moneyness_category": "OTM"
+      }
+    },
+    {
+      "id": "BS_018",
+      "category": "black_scholes",
+      "description": "Moneyness=0.8, T=0.50Y, Vol=20%",
+      "inputs": {
+        "s": 100.0,
+        "k": 125.0,
+        "t": 0.5,
+        "r": 0.05,
+        "v": 0.2
+      },
+      "outputs": {
+        "call_price": 0.5701934883303199,
+        "call_delta": 0.09169724033717308,
+        "call_gamma": 0.011643035207559625,
+        "call_theta": -2.7585835687812743,
+        "call_vega": 11.643035207559626,
+        "call_rho": 4.299765272693494,
+        "put_price": 22.483932491871897,
+        "put_delta": -0.9083027596628269,
+        "put_gamma": 0.011643035207559625,
+        "put_theta": 3.337103381395805,
+        "put_vega": 11.643035207559626,
+        "put_rho": -56.6571042290773
+      },
+      "metadata": {
+        "moneyness": 0.8,
+        "moneyness_category": "OTM"
+      }
+    },
+    {
+      "id": "BS_019",
+      "category": "black_scholes",
+      "description": "Moneyness=0.8, T=0.50Y, Vol=30%",
+      "inputs": {
+        "s": 100.0,
+        "k": 125.0,
+        "t": 0.5,
+        "r": 0.05,
+        "v": 0.3
+      },
+      "outputs": {
+        "call_price": 2.2013975852929555,
+        "call_delta": 0.20383761681428747,
+        "call_gamma": 0.013348551476193874,
+        "call_theta": -6.915966369094032,
+        "call_vega": 20.022827214290814,
+        "call_rho": 9.091182048067896,
+        "put_price": 24.11513658883453,
+        "put_delta": -0.7961623831857125,
+        "put_gamma": 0.013348551476193874,
+        "put_theta": -0.8202794189169529,
+        "put_vega": 20.022827214290814,
+        "put_rho": -51.86568745370289
+      },
+      "metadata": {
+        "moneyness": 0.8,
+        "moneyness_category": "OTM"
+      }
+    },
+    {
+      "id": "BS_020",
+      "category": "black_scholes",
+      "description": "Moneyness=0.8, T=0.50Y, Vol=50%",
+      "inputs": {
+        "s": 100.0,
+        "k": 125.0,
+        "t": 0.5,
+        "r": 0.05,
+        "v": 0.5
+      },
+      "outputs": {
+        "call_price": 6.960857917359409,
+        "call_delta": 0.35061601001323495,
+        "call_gamma": 0.010483165015316447,
+        "call_theta": -14.50899342334376,
+        "call_vega": 26.20791253829112,
+        "call_rho": 14.050371541982043,
+        "put_price": 28.874596920900984,
+        "put_delta": -0.649383989986765,
+        "put_gamma": 0.010483165015316447,
+        "put_theta": -8.413306473166681,
+        "put_vega": 26.20791253829112,
+        "put_rho": -46.906497959788744
+      },
+      "metadata": {
+        "moneyness": 0.8,
+        "moneyness_category": "OTM"
+      }
+    },
+    {
+      "id": "BS_021",
+      "category": "black_scholes",
+      "description": "Moneyness=0.8, T=1.00Y, Vol=5%",
+      "inputs": {
+        "s": 100.0,
+        "k": 125.0,
+        "t": 1.0,
+        "r": 0.05,
+        "v": 0.05
+      },
+      "outputs": {
+        "call_price": 0.00036926171877180863,
+        "call_delta": 0.00029315344143708355,
+        "call_gamma": 0.00021651406607238956,
+        "call_theta": -0.004153729947151697,
+        "call_vega": 0.10825703303619479,
+        "call_rho": 0.028946082424936546,
+        "put_price": 18.904047324308024,
+        "put_delta": -0.9997068465585629,
+        "put_gamma": 0.00021651406607238956,
+        "put_theta": 5.941030173182311,
+        "put_vega": 0.10825703303619479,
+        "put_rho": -118.87473198016431
+      },
+      "metadata": {
+        "moneyness": 0.8,
+        "moneyness_category": "OTM"
+      }
+    },
+    {
+      "id": "BS_022",
+      "category": "black_scholes",
+      "description": "Moneyness=0.8, T=1.00Y, Vol=10%",
+      "inputs": {
+        "s": 100.0,
+        "k": 125.0,
+        "t": 1.0,
+        "r": 0.05,
+        "v": 0.1
+      },
+      "outputs": {
+        "call_price": 0.1844628574815177,
+        "call_delta": 0.04633917619446515,
+        "call_gamma": 0.009704784005349194,
+        "call_theta": -0.7077119383657096,
+        "call_vega": 9.704784005349195,
+        "call_rho": 4.449454761964997,
+        "put_price": 19.088140920070785,
+        "put_delta": -0.9536608238055349,
+        "put_gamma": 0.009704784005349194,
+        "put_theta": 5.2374719647637535,
+        "put_vega": 9.704784005349195,
+        "put_rho": -114.45422330062426
+      },
+      "metadata": {
+        "moneyness": 0.8,
+        "moneyness_category": "OTM"
+      }
+    },
+    {
+      "id": "BS_023",
+      "category": "black_scholes",
+      "description": "Moneyness=0.8, T=1.00Y, Vol=20%",
+      "inputs": {
+        "s": 100.0,
+        "k": 125.0,
+        "t": 1.0,
+        "r": 0.05,
+        "v": 0.2
+      },
+      "outputs": {
+        "call_price": 2.324274466015229,
+        "call_delta": 0.2219221296481797,
+        "call_gamma": 0.0148785805373503,
+        "call_theta": -3.969113032410197,
+        "call_vega": 29.7571610747006,
+        "call_rho": 19.86793849880274,
+        "put_price": 21.227952528604476,
+        "put_delta": -0.7780778703518203,
+        "put_gamma": 0.0148785805373503,
+        "put_theta": 1.9760708707192665,
+        "put_vega": 29.7571610747006,
+        "put_rho": -99.0357395637865
+      },
+      "metadata": {
+        "moneyness": 0.8,
+        "moneyness_category": "OTM"
+      }
+    },
+    {
+      "id": "BS_024",
+      "category": "black_scholes",
+      "description": "Moneyness=0.8, T=1.00Y, Vol=30%",
+      "inputs": {
+        "s": 100.0,
+        "k": 125.0,
+        "t": 1.0,
+        "r": 0.05,
+        "v": 0.3
+      },
+      "outputs": {
+        "call_price": 5.691524187581624,
+        "call_delta": 0.3346367968823574,
+        "call_gamma": 0.012138629227495635,
+        "call_theta": -6.850990927405741,
+        "call_vega": 36.415887682486904,
+        "call_rho": 27.77215550065412,
+        "put_price": 24.59520225017087,
+        "put_delta": -0.6653632031176426,
+        "put_gamma": 0.012138629227495635,
+        "put_theta": -0.9058070242762781,
+        "put_vega": 36.415887682486904,
+        "put_rho": -91.13152256193513
+      },
+      "metadata": {
+        "moneyness": 0.8,
+        "moneyness_category": "OTM"
+      }
+    },
+    {
+      "id": "BS_025",
+      "category": "black_scholes",
+      "description": "Moneyness=0.8, T=1.00Y, Vol=50%",
+      "inputs": {
+        "s": 100.0,
+        "k": 125.0,
+        "t": 1.0,
+        "r": 0.05,
+        "v": 0.5
+      },
+      "outputs": {
+        "call_price": 13.407648589625062,
+        "call_delta": 0.4616462770513536,
+        "call_gamma": 0.007941944442520799,
+        "call_theta": -11.565279508926515,
+        "call_vega": 39.709722212604,
+        "call_rho": 32.7569791155103,
+        "put_price": 32.311326652214326,
+        "put_delta": -0.5383537229486464,
+        "put_gamma": 0.007941944442520799,
+        "put_theta": -5.620095605797052,
+        "put_vega": 39.709722212604,
+        "put_rho": -86.14669894707896
+      },
+      "metadata": {
+        "moneyness": 0.8,
+        "moneyness_category": "OTM"
+      }
+    },
+    {
+      "id": "BS_026",
+      "category": "black_scholes",
+      "description": "Moneyness=0.8, T=2.00Y, Vol=5%",
+      "inputs": {
+        "s": 100.0,
+        "k": 125.0,
+        "t": 2.0,
+        "r": 0.05,
+        "v": 0.05
+      },
+      "outputs": {
+        "call_price": 0.12415057804340801,
+        "call_delta": 0.04398938289655591,
+        "call_gamma": 0.013161798697423548,
+        "call_theta": -0.3782618692984035,
+        "call_vega": 13.16179869742355,
+        "call_rho": 8.549575423224367,
+        "put_price": 13.228827832538357,
+        "put_delta": -0.956010617103444,
+        "put_gamma": 0.013161798697423548,
+        "put_theta": 5.2769719934263435,
+        "put_vega": 13.16179869742355,
+        "put_rho": -217.65977908576554
+      },
+      "metadata": {
+        "moneyness": 0.8,
+        "moneyness_category": "OTM"
+      }
+    },
+    {
+      "id": "BS_027",
+      "category": "black_scholes",
+      "description": "Moneyness=0.8, T=2.00Y, Vol=10%",
+      "inputs": {
+        "s": 100.0,
+        "k": 125.0,
+        "t": 2.0,
+        "r": 0.05,
+        "v": 0.1
+      },
+      "outputs": {
+        "call_price": 1.5907780966241987,
+        "call_delta": 0.21184215302180653,
+        "call_gamma": 0.020483536837484426,
+        "call_theta": -2.0038487021520437,
+        "call_vega": 40.96707367496885,
+        "call_rho": 39.18687441111291,
+        "put_price": 14.69545535111915,
+        "put_delta": -0.7881578469781935,
+        "put_gamma": 0.020483536837484426,
+        "put_theta": 3.6513851605727035,
+        "put_vega": 40.96707367496885,
+        "put_rho": -187.022480097877
+      },
+      "metadata": {
+        "moneyness": 0.8,
+        "moneyness_category": "OTM"
+      }
+    },
+    {
+      "id": "BS_028",
+      "category": "black_scholes",
+      "description": "Moneyness=0.8, T=2.00Y, Vol=20%",
+      "inputs": {
+        "s": 100.0,
+        "k": 125.0,
+        "t": 2.0,
+        "r": 0.05,
+        "v": 0.2
+      },
+      "outputs": {
+        "call_price": 6.539791016798791,
+        "call_delta": 0.3843954400400734,
+        "call_gamma": 0.01350831698431214,
+        "call_theta": -4.2966510462228555,
+        "call_vega": 54.03326793724856,
+        "call_rho": 63.79950597441711,
+        "put_price": 19.644468271293732,
+        "put_delta": -0.6156045599599266,
+        "put_gamma": 0.01350831698431214,
+        "put_theta": 1.3585828165018916,
+        "put_vega": 54.03326793724856,
+        "put_rho": -162.40984853457277
+      },
+      "metadata": {
+        "moneyness": 0.8,
+        "moneyness_category": "OTM"
+      }
+    },
+    {
+      "id": "BS_029",
+      "category": "black_scholes",
+      "description": "Moneyness=0.8, T=2.00Y, Vol=30%",
+      "inputs": {
+        "s": 100.0,
+        "k": 125.0,
+        "t": 2.0,
+        "r": 0.05,
+        "v": 0.3
+      },
+      "outputs": {
+        "call_price": 12.084468694005821,
+        "call_delta": 0.4688662594327033,
+        "call_gamma": 0.00937451089084969,
+        "call_theta": -5.958637763345585,
+        "call_vega": 56.24706534509814,
+        "call_rho": 69.60431449852902,
+        "put_price": 25.189145948500766,
+        "put_delta": -0.5311337405672967,
+        "put_gamma": 0.00937451089084969,
+        "put_theta": -0.30340390062083866,
+        "put_vega": 56.24706534509814,
+        "put_rho": -156.60504001046087
+      },
+      "metadata": {
+        "moneyness": 0.8,
+        "moneyness_category": "OTM"
+      }
+    },
+    {
+      "id": "BS_030",
+      "category": "black_scholes",
+      "description": "Moneyness=0.8, T=2.00Y, Vol=50%",
+      "inputs": {
+        "s": 100.0,
+        "k": 125.0,
+        "t": 2.0,
+        "r": 0.05,
+        "v": 0.5
+      },
+      "outputs": {
+        "call_price": 23.31732356004114,
+        "call_delta": 0.5711890127181044,
+        "call_gamma": 0.0055518299353600606,
+        "call_theta": -8.62986630478854,
+        "call_vega": 55.518299353600604,
+        "call_rho": 67.60315542353861,
+        "put_price": 36.42200081453608,
+        "put_delta": -0.4288109872818956,
+        "put_gamma": 0.0055518299353600606,
+        "put_theta": -2.9746324420637937,
+        "put_vega": 55.518299353600604,
+        "put_rho": -158.60619908545127
+      },
+      "metadata": {
+        "moneyness": 0.8,
+        "moneyness_category": "OTM"
+      }
+    },
+    {
+      "id": "BS_031",
+      "category": "black_scholes",
+      "description": "Moneyness=0.9, T=0.01Y, Vol=5%",
+      "inputs": {
+        "s": 100.0,
+        "k": 111.11111111111111,
+        "t": 0.01,
+        "r": 0.05,
+        "v": 0.05
+      },
+      "outputs": {
+        "call_price": 1.4748512633870467e-99,
+        "call_delta": 6.214824879829825e-98,
+        "call_gamma": 2.612349027509505e-96,
+        "call_theta": -3.296503034529713e-95,
+        "call_vega": 1.3061745137547525e-95,
+        "call_rho": 6.213350028566439e-98,
+        "put_price": 11.055569442129922,
+        "put_delta": -1.0,
+        "put_gamma": 2.612349027509505e-96,
+        "put_theta": 5.552778472106497,
+        "put_vega": 1.3061745137547525e-95,
+        "put_rho": -1.1105556944212993
+      },
+      "metadata": {
+        "moneyness": 0.9,
+        "moneyness_category": "OTM"
+      }
+    },
+    {
+      "id": "BS_032",
+      "category": "black_scholes",
+      "description": "Moneyness=0.9, T=0.01Y, Vol=10%",
+      "inputs": {
+        "s": 100.0,
+        "k": 111.11111111111111,
+        "t": 0.01,
+        "r": 0.05,
+        "v": 0.1
+      },
+      "outputs": {
+        "call_price": 4.9435488654297346e-27,
+        "call_delta": 5.278168755452889e-26,
+        "call_gamma": 5.581557332773646e-25,
+        "call_theta": -2.81714479241976e-23,
+        "call_vega": 5.581557332773646e-24,
+        "call_rho": 5.27322520658746e-26,
+        "put_price": 11.055569442129922,
+        "put_delta": -1.0,
+        "put_gamma": 5.581557332773646e-25,
+        "put_theta": 5.552778472106497,
+        "put_vega": 5.581557332773646e-24,
+        "put_rho": -1.1105556944212993
+      },
+      "metadata": {
+        "moneyness": 0.9,
+        "moneyness_category": "OTM"
+      }
+    },
+    {
+      "id": "BS_033",
+      "category": "black_scholes",
+      "description": "Moneyness=0.9, T=0.01Y, Vol=20%",
+      "inputs": {
+        "s": 100.0,
+        "k": 111.11111111111111,
+        "t": 0.01,
+        "r": 0.05,
+        "v": 0.2
+      },
+      "outputs": {
+        "call_price": 2.9773953659811535e-08,
+        "call_delta": 8.337873411100748e-08,
+        "call_gamma": 2.2563095023659784e-07,
+        "call_theta": -4.554159502019161e-05,
+        "call_vega": 4.5126190047319564e-06,
+        "call_rho": 8.308099457440936e-08,
+        "put_price": 11.055569471903866,
+        "put_delta": -0.9999999166212659,
+        "put_gamma": 2.2563095023659784e-07,
+        "put_theta": 5.5527329305114765,
+        "put_vega": 4.5126190047319564e-06,
+        "put_rho": -1.1105556113403048
+      },
+      "metadata": {
+        "moneyness": 0.9,
+        "moneyness_category": "OTM"
+      }
+    },
+    {
+      "id": "BS_034",
+      "category": "black_scholes",
+      "description": "Moneyness=0.9, T=0.01Y, Vol=30%",
+      "inputs": {
+        "s": 100.0,
+        "k": 111.11111111111111,
+        "t": 0.01,
+        "r": 0.05,
+        "v": 0.3
+      },
+      "outputs": {
+        "call_price": 0.0001883172649345989,
+        "call_delta": 0.00025037908260089873,
+        "call_gamma": 0.00031154377509398456,
+        "call_theta": -0.14143717834205077,
+        "call_vega": 0.009346313252819536,
+        "call_rho": 0.0002484959099515528,
+        "put_price": 11.05575775939485,
+        "put_delta": -0.999749620917399,
+        "put_gamma": 0.00031154377509398456,
+        "put_theta": 5.411341293764447,
+        "put_vega": 0.009346313252819536,
+        "put_rho": -1.1103071985113477
+      },
+      "metadata": {
+        "moneyness": 0.9,
+        "moneyness_category": "OTM"
+      }
+    },
+    {
+      "id": "BS_035",
+      "category": "black_scholes",
+      "description": "Moneyness=0.9, T=0.01Y, Vol=50%",
+      "inputs": {
+        "s": 100.0,
+        "k": 111.11111111111111,
+        "t": 0.01,
+        "r": 0.05,
+        "v": 0.5
+      },
+      "outputs": {
+        "call_price": 0.03433743140918044,
+        "call_delta": 0.019122916021590525,
+        "call_gamma": 0.009321756180840945,
+        "call_theta": -11.746092934588676,
+        "call_vega": 0.4660878090420473,
+        "call_rho": 0.018779541707498723,
+        "put_price": 11.089906873539107,
+        "put_delta": -0.9808770839784094,
+        "put_gamma": 0.009321756180840945,
+        "put_theta": -6.193314462482179,
+        "put_vega": 0.4660878090420473,
+        "put_rho": -1.0917761527138006
+      },
+      "metadata": {
+        "moneyness": 0.9,
+        "moneyness_category": "OTM"
+      }
+    },
+    {
+      "id": "BS_036",
+      "category": "black_scholes",
+      "description": "Moneyness=0.9, T=0.10Y, Vol=5%",
+      "inputs": {
+        "s": 100.0,
+        "k": 111.11111111111111,
+        "t": 0.1,
+        "r": 0.05,
+        "v": 0.05
+      },
+      "outputs": {
+        "call_price": 2.741184452551913e-11,
+        "call_delta": 1.1529293757825479e-10,
+        "call_gamma": 4.73248215054243e-10,
+        "call_theta": -6.490696783843037e-09,
+        "call_vega": 2.366241075271215e-08,
+        "call_rho": 1.150188191329996e-09,
+        "put_price": 10.556942132547675,
+        "put_delta": -0.9999999998847071,
+        "put_gamma": 4.73248215054243e-10,
+        "put_theta": 5.527847100135316,
+        "put_vega": 2.366241075271215e-08,
+        "put_rho": -11.05569421210184
+      },
+      "metadata": {
+        "moneyness": 0.9,
+        "moneyness_category": "OTM"
+      }
+    },
+    {
+      "id": "BS_037",
+      "category": "black_scholes",
+      "description": "Moneyness=0.9, T=0.10Y, Vol=10%",
+      "inputs": {
+        "s": 100.0,
+        "k": 111.11111111111111,
+        "t": 0.1,
+        "r": 0.05,
+        "v": 0.1
+      },
+      "outputs": {
+        "call_price": 0.0006788365284715742,
+        "call_delta": 0.0007946408474660688,
+        "call_gamma": 0.00086196803235338,
+        "call_theta": -0.047037664028575774,
+        "call_vega": 0.08619680323533802,
+        "call_rho": 0.00787852482181353,
+        "put_price": 10.557620969048727,
+        "put_delta": -0.999205359152534,
+        "put_gamma": 0.00086196803235338,
+        "put_theta": 5.480809442597437,
+        "put_vega": 0.08619680323533802,
+        "put_rho": -11.047815688430212
+      },
+      "metadata": {
+        "moneyness": 0.9,
+        "moneyness_category": "OTM"
+      }
+    },
+    {
+      "id": "BS_038",
+      "category": "black_scholes",
+      "description": "Moneyness=0.9, T=0.10Y, Vol=20%",
+      "inputs": {
+        "s": 100.0,
+        "k": 111.11111111111111,
+        "t": 0.1,
+        "r": 0.05,
+        "v": 0.2
+      },
+      "outputs": {
+        "call_price": 0.15936133017087517,
+        "call_delta": 0.05994728098846729,
+        "call_gamma": 0.01882203275453808,
+        "call_theta": -4.056174889341409,
+        "call_vega": 3.7644065509076166,
+        "call_rho": 0.5835366768675855,
+        "put_price": 10.71630346269113,
+        "put_delta": -0.9400527190115328,
+        "put_gamma": 0.01882203275453808,
+        "put_theta": 1.4716722172846048,
+        "put_vega": 3.7644065509076166,
+        "put_rho": -10.472157536384442
+      },
+      "metadata": {
+        "moneyness": 0.9,
+        "moneyness_category": "OTM"
+      }
+    },
+    {
+      "id": "BS_039",
+      "category": "black_scholes",
+      "description": "Moneyness=0.9, T=0.10Y, Vol=30%",
+      "inputs": {
+        "s": 100.0,
+        "k": 111.11111111111111,
+        "t": 0.1,
+        "r": 0.05,
+        "v": 0.3
+      },
+      "outputs": {
+        "call_price": 0.742880099411181,
+        "call_delta": 0.15613782258059344,
+        "call_gamma": 0.02523920810843721,
+        "call_theta": -12.101188756729153,
+        "call_vega": 7.5717624325311625,
+        "call_rho": 1.4870902158648165,
+        "put_price": 11.299822231931444,
+        "put_delta": -0.8438621774194066,
+        "put_gamma": 0.02523920810843721,
+        "put_theta": -6.5733416501031385,
+        "put_vega": 7.5717624325311625,
+        "put_rho": -9.56860399738721
+      },
+      "metadata": {
+        "moneyness": 0.9,
+        "moneyness_category": "OTM"
+      }
+    },
+    {
+      "id": "BS_040",
+      "category": "black_scholes",
+      "description": "Moneyness=0.9, T=0.10Y, Vol=50%",
+      "inputs": {
+        "s": 100.0,
+        "k": 111.11111111111111,
+        "t": 0.1,
+        "r": 0.05,
+        "v": 0.5
+      },
+      "outputs": {
+        "call_price": 2.6446036994057494,
+        "call_delta": 0.2892152628775954,
+        "call_gamma": 0.021621687947981853,
+        "call_theta": -28.340956064395005,
+        "call_vega": 10.810843973990925,
+        "call_rho": 2.627692258835379,
+        "put_price": 13.201545831926026,
+        "put_delta": -0.7107847371224045,
+        "put_gamma": 0.021621687947981853,
+        "put_theta": -22.81310895776899,
+        "put_vega": 10.810843973990925,
+        "put_rho": -8.428001954416647
+      },
+      "metadata": {
+        "moneyness": 0.9,
+        "moneyness_category": "OTM"
+      }
+    },
+    {
+      "id": "BS_041",
+      "category": "black_scholes",
+      "description": "Moneyness=0.9, T=0.25Y, Vol=5%",
+      "inputs": {
+        "s": 100.0,
+        "k": 111.11111111111111,
+        "t": 0.25,
+        "r": 0.05,
+        "v": 0.05
+      },
+      "outputs": {
+        "call_price": 6.392100570408975e-05,
+        "call_delta": 0.00010698678178072237,
+        "call_gamma": 0.00016870862780390164,
+        "call_theta": -0.002640595706167178,
+        "call_vega": 0.021088578475487705,
+        "call_rho": 0.002658689293092037,
+        "put_price": 9.730930642548088,
+        "put_delta": -0.9998930132182193,
+        "put_gamma": 0.00016870862780390164,
+        "put_theta": 5.4839027403709535,
+        "put_vega": 0.021088578475487705,
+        "put_rho": -27.430057991092504
+      },
+      "metadata": {
+        "moneyness": 0.9,
+        "moneyness_category": "OTM"
+      }
+    },
+    {
+      "id": "BS_042",
+      "category": "black_scholes",
+      "description": "Moneyness=0.9, T=0.25Y, Vol=10%",
+      "inputs": {
+        "s": 100.0,
+        "k": 111.11111111111111,
+        "t": 0.25,
+        "r": 0.05,
+        "v": 0.1
+      },
+      "outputs": {
+        "call_price": 0.06464211024412503,
+        "call_delta": 0.033460046471663334,
+        "call_gamma": 0.014892854252171722,
+        "call_theta": -0.9087108394546966,
+        "call_vega": 3.7232135630429304,
+        "call_rho": 0.820340634230552,
+        "put_price": 9.79550883178652,
+        "put_delta": -0.9665399535283367,
+        "put_gamma": 0.014892854252171722,
+        "put_theta": 4.577832496622424,
+        "put_vega": 3.7232135630429304,
+        "put_rho": -26.612376046155045
+      },
+      "metadata": {
+        "moneyness": 0.9,
+        "moneyness_category": "OTM"
+      }
+    },
+    {
+      "id": "BS_043",
+      "category": "black_scholes",
+      "description": "Moneyness=0.9, T=0.25Y, Vol=20%",
+      "inputs": {
+        "s": 100.0,
+        "k": 111.11111111111111,
+        "t": 0.25,
+        "r": 0.05,
+        "v": 0.2
+      },
+      "outputs": {
+        "call_price": 0.9972464672550636,
+        "call_delta": 0.18980769945372383,
+        "call_gamma": 0.027119638740364754,
+        "call_theta": -6.323103921978817,
+        "call_vega": 13.559819370182376,
+        "call_rho": 4.49588086952933,
+        "put_price": 10.728113188797437,
+        "put_delta": -0.8101923005462761,
+        "put_gamma": 0.027119638740364754,
+        "put_theta": -0.8365605859016974,
+        "put_vega": 13.559819370182376,
+        "put_rho": -22.936835810856262
+      },
+      "metadata": {
+        "moneyness": 0.9,
+        "moneyness_category": "OTM"
+      }
+    },
+    {
+      "id": "BS_044",
+      "category": "black_scholes",
+      "description": "Moneyness=0.9, T=0.25Y, Vol=30%",
+      "inputs": {
+        "s": 100.0,
+        "k": 111.11111111111111,
+        "t": 0.25,
+        "r": 0.05,
+        "v": 0.3
+      },
+      "outputs": {
+        "call_price": 2.56517792030888,
+        "call_delta": 0.2931966159805641,
+        "call_gamma": 0.02293720822808067,
+        "call_theta": -11.659467886523679,
+        "call_vega": 17.2029061710605,
+        "call_rho": 6.688620919436883,
+        "put_price": 12.296044641851267,
+        "put_delta": -0.7068033840194359,
+        "put_gamma": 0.02293720822808067,
+        "put_theta": -6.1729245504465595,
+        "put_vega": 17.2029061710605,
+        "put_rho": -20.744095760948714
+      },
+      "metadata": {
+        "moneyness": 0.9,
+        "moneyness_category": "OTM"
+      }
+    },
+    {
+      "id": "BS_045",
+      "category": "black_scholes",
+      "description": "Moneyness=0.9, T=0.25Y, Vol=50%",
+      "inputs": {
+        "s": 100.0,
+        "k": 111.11111111111111,
+        "t": 0.25,
+        "r": 0.05,
+        "v": 0.5
+      },
+      "outputs": {
+        "call_price": 6.273337076114444,
+        "call_delta": 0.4026700243860992,
+        "call_gamma": 0.015480390219041412,
+        "call_theta": -21.05017104192654,
+        "call_vega": 19.350487773801763,
+        "call_rho": 8.49841634062387,
+        "put_price": 16.004203797656828,
+        "put_delta": -0.5973299756139008,
+        "put_gamma": 0.015480390219041412,
+        "put_theta": -15.563627705849417,
+        "put_vega": 19.350487773801763,
+        "put_rho": -18.934300339761727
+      },
+      "metadata": {
+        "moneyness": 0.9,
+        "moneyness_category": "OTM"
+      }
+    },
+    {
+      "id": "BS_046",
+      "category": "black_scholes",
+      "description": "Moneyness=0.9, T=0.50Y, Vol=5%",
+      "inputs": {
+        "s": 100.0,
+        "k": 111.11111111111111,
+        "t": 0.5,
+        "r": 0.05,
+        "v": 0.05
+      },
+      "outputs": {
+        "call_price": 0.014581643061155836,
+        "call_delta": 0.012058477004419997,
+        "call_gamma": 0.008871566974347319,
+        "call_theta": -0.1704578900483837,
+        "call_vega": 2.2178917435868297,
+        "call_rho": 0.5956330286904219,
+        "put_price": 8.38234964620922,
+        "put_delta": -0.98794152299558,
+        "put_gamma": 0.008871566974347319,
+        "put_theta": 5.24793051010902,
+        "put_vega": 2.2178917435868297,
+        "put_rho": -53.588250972883614
+      },
+      "metadata": {
+        "moneyness": 0.9,
+        "moneyness_category": "OTM"
+      }
+    },
+    {
+      "id": "BS_047",
+      "category": "black_scholes",
+      "description": "Moneyness=0.9, T=0.50Y, Vol=10%",
+      "inputs": {
+        "s": 100.0,
+        "k": 111.11111111111111,
+        "t": 0.5,
+        "r": 0.05,
+        "v": 0.1
+      },
+      "outputs": {
+        "call_price": 0.4695445647844636,
+        "call_delta": 0.13542352836125998,
+        "call_gamma": 0.030771202019039972,
+        "call_theta": -2.192200514519075,
+        "call_vega": 15.385601009519988,
+        "call_rho": 6.536404135670767,
+        "put_price": 8.837312567932528,
+        "put_delta": -0.8645764716387401,
+        "put_gamma": 0.030771202019039972,
+        "put_theta": 3.2261878856383293,
+        "put_vega": 15.385601009519988,
+        "put_rho": -47.64747986590327
+      },
+      "metadata": {
+        "moneyness": 0.9,
+        "moneyness_category": "OTM"
+      }
+    },
+    {
+      "id": "BS_048",
+      "category": "black_scholes",
+      "description": "Moneyness=0.9, T=0.50Y, Vol=20%",
+      "inputs": {
+        "s": 100.0,
+        "k": 111.11111111111111,
+        "t": 0.5,
+        "r": 0.05,
+        "v": 0.2
+      },
+      "outputs": {
+        "call_price": 2.6104758837933133,
+        "call_delta": 0.3094097993303583,
+        "call_gamma": 0.02492554069303873,
+        "call_theta": -6.401633341069871,
+        "call_vega": 24.92554069303873,
+        "call_rho": 14.165252024621257,
+        "put_price": 10.978243886941385,
+        "put_delta": -0.6905902006696417,
+        "put_gamma": 0.02492554069303873,
+        "put_theta": -0.9832449409124671,
+        "put_vega": 24.92554069303873,
+        "put_rho": -40.018631976952776
+      },
+      "metadata": {
+        "moneyness": 0.9,
+        "moneyness_category": "OTM"
+      }
+    },
+    {
+      "id": "BS_049",
+      "category": "black_scholes",
+      "description": "Moneyness=0.9, T=0.50Y, Vol=30%",
+      "inputs": {
+        "s": 100.0,
+        "k": 111.11111111111111,
+        "t": 0.5,
+        "r": 0.05,
+        "v": 0.3
+      },
+      "outputs": {
+        "call_price": 5.237793358031503,
+        "call_delta": 0.3925199745349214,
+        "call_gamma": 0.018119609330579062,
+        "call_theta": -9.85453440353361,
+        "call_vega": 27.179413995868593,
+        "call_rho": 17.007102047730317,
+        "put_price": 13.605561361179568,
+        "put_delta": -0.6074800254650786,
+        "put_gamma": 0.018119609330579062,
+        "put_theta": -4.436146003376206,
+        "put_vega": 27.179413995868593,
+        "put_rho": -37.176781953843715
+      },
+      "metadata": {
+        "moneyness": 0.9,
+        "moneyness_category": "OTM"
+      }
+    },
+    {
+      "id": "BS_050",
+      "category": "black_scholes",
+      "description": "Moneyness=0.9, T=0.50Y, Vol=50%",
+      "inputs": {
+        "s": 100.0,
+        "k": 111.11111111111111,
+        "t": 0.5,
+        "r": 0.05,
+        "v": 0.5
+      },
+      "outputs": {
+        "call_price": 10.806654394240404,
+        "call_delta": 0.47985513481178105,
+        "call_gamma": 0.011269402824149864,
+        "call_theta": -15.945696484534215,
+        "call_vega": 28.173507060374664,
+        "call_rho": 18.58942954346885,
+        "put_price": 19.17442239738847,
+        "put_delta": -0.520144865188219,
+        "put_gamma": 0.011269402824149864,
+        "put_theta": -10.527308084376811,
+        "put_vega": 28.173507060374664,
+        "put_rho": -35.59445445810518
+      },
+      "metadata": {
+        "moneyness": 0.9,
+        "moneyness_category": "OTM"
+      }
+    },
+    {
+      "id": "BS_051",
+      "category": "black_scholes",
+      "description": "Moneyness=0.9, T=1.00Y, Vol=5%",
+      "inputs": {
+        "s": 100.0,
+        "k": 111.11111111111111,
+        "t": 1.0,
+        "r": 0.05,
+        "v": 0.05
+      },
+      "outputs": {
+        "call_price": 0.3476567118353202,
+        "call_delta": 0.13957954345990092,
+        "call_gamma": 0.04442441707458882,
+        "call_theta": -1.2358200951400988,
+        "call_vega": 22.212208537294412,
+        "call_rho": 13.610297634154772,
+        "put_price": 6.039814989692445,
+        "put_delta": -0.860420456540099,
+        "put_gamma": 0.04442441707458882,
+        "put_theta": 4.048787818752756,
+        "put_vega": 22.212208537294412,
+        "put_rho": -92.08186064370234
+      },
+      "metadata": {
+        "moneyness": 0.9,
+        "moneyness_category": "OTM"
+      }
+    },
+    {
+      "id": "BS_052",
+      "category": "black_scholes",
+      "description": "Moneyness=0.9, T=1.00Y, Vol=10%",
+      "inputs": {
+        "s": 100.0,
+        "k": 111.11111111111111,
+        "t": 1.0,
+        "r": 0.05,
+        "v": 0.1
+      },
+      "outputs": {
+        "call_price": 1.8673728113810775,
+        "call_delta": 0.30726943411770846,
+        "call_gamma": 0.035142898929154016,
+        "call_theta": -3.200123476477189,
+        "call_vega": 35.142898929154015,
+        "call_rho": 28.85957060038977,
+        "put_price": 7.559531089238192,
+        "put_delta": -0.6927305658822915,
+        "put_gamma": 0.035142898929154016,
+        "put_theta": 2.084484437415667,
+        "put_vega": 35.142898929154015,
+        "put_rho": -76.83258767746734
+      },
+      "metadata": {
+        "moneyness": 0.9,
+        "moneyness_category": "OTM"
+      }
+    },
+    {
+      "id": "BS_053",
+      "category": "black_scholes",
+      "description": "Moneyness=0.9, T=1.00Y, Vol=20%",
+      "inputs": {
+        "s": 100.0,
+        "k": 111.11111111111111,
+        "t": 1.0,
+        "r": 0.05,
+        "v": 0.2
+      },
+      "outputs": {
+        "call_price": 5.6569134209083884,
+        "call_delta": 0.42983173188954316,
+        "call_gamma": 0.019637772821694086,
+        "call_theta": -5.793867552741114,
+        "call_vega": 39.27554564338817,
+        "call_rho": 37.32625976804593,
+        "put_price": 11.349071698765506,
+        "put_delta": -0.5701682681104568,
+        "put_gamma": 0.019637772821694086,
+        "put_theta": -0.5092596388482575,
+        "put_vega": 39.27554564338817,
+        "put_rho": -68.36589850981119
+      },
+      "metadata": {
+        "moneyness": 0.9,
+        "moneyness_category": "OTM"
+      }
+    },
+    {
+      "id": "BS_054",
+      "category": "black_scholes",
+      "description": "Moneyness=0.9, T=1.00Y, Vol=30%",
+      "inputs": {
+        "s": 100.0,
+        "k": 111.11111111111111,
+        "t": 1.0,
+        "r": 0.05,
+        "v": 0.3
+      },
+      "outputs": {
+        "call_price": 9.623394655395188,
+        "call_delta": 0.48622524570116227,
+        "call_gamma": 0.013290148270382189,
+        "call_theta": -7.930523217408037,
+        "call_vega": 39.87044481114657,
+        "call_rho": 38.99912991472104,
+        "put_price": 15.315552933252299,
+        "put_delta": -0.5137747542988378,
+        "put_gamma": 0.013290148270382189,
+        "put_theta": -2.645915303515181,
+        "put_vega": 39.87044481114657,
+        "put_rho": -66.69302836313608
+      },
+      "metadata": {
+        "moneyness": 0.9,
+        "moneyness_category": "OTM"
+      }
+    },
+    {
+      "id": "BS_055",
+      "category": "black_scholes",
+      "description": "Moneyness=0.9, T=1.00Y, Vol=50%",
+      "inputs": {
+        "s": 100.0,
+        "k": 111.11111111111111,
+        "t": 1.0,
+        "r": 0.05,
+        "v": 0.5
+      },
+      "outputs": {
+        "call_price": 17.578753106812577,
+        "call_delta": 0.5553851457769257,
+        "call_gamma": 0.0079018303680161,
+        "call_theta": -11.775276033564126,
+        "call_vega": 39.509151840080506,
+        "call_rho": 37.95976147087999,
+        "put_price": 23.270911384669695,
+        "put_delta": -0.4446148542230744,
+        "put_gamma": 0.0079018303680161,
+        "put_theta": -6.49066811967127,
+        "put_vega": 39.509151840080506,
+        "put_rho": -67.73239680697714
+      },
+      "metadata": {
+        "moneyness": 0.9,
+        "moneyness_category": "OTM"
+      }
+    },
+    {
+      "id": "BS_056",
+      "category": "black_scholes",
+      "description": "Moneyness=0.9, T=2.00Y, Vol=5%",
+      "inputs": {
+        "s": 100.0,
+        "k": 111.11111111111111,
+        "t": 2.0,
+        "r": 0.05,
+        "v": 0.05
+      },
+      "outputs": {
+        "call_price": 2.567313298027571,
+        "call_delta": 0.48386566940823633,
+        "call_gamma": 0.05637281214323218,
+        "call_theta": -2.9956228339302053,
+        "call_vega": 56.37281214323218,
+        "call_rho": 91.63850728559213,
+        "put_price": 3.1048041909119704,
+        "put_delta": -0.5161343305917636,
+        "put_gamma": 0.05637281214323218,
+        "put_theta": 2.0312517107140144,
+        "put_vega": 56.37281214323218,
+        "put_rho": -109.43647450017666
+      },
+      "metadata": {
+        "moneyness": 0.9,
+        "moneyness_category": "OTM"
+      }
+    },
+    {
+      "id": "BS_057",
+      "category": "black_scholes",
+      "description": "Moneyness=0.9, T=2.00Y, Vol=10%",
+      "inputs": {
+        "s": 100.0,
+        "k": 111.11111111111111,
+        "t": 2.0,
+        "r": 0.05,
+        "v": 0.1
+      },
+      "outputs": {
+        "call_price": 5.387655308387011,
+        "call_delta": 0.5130853964795306,
+        "call_gamma": 0.02819430316552844,
+        "call_theta": -3.705759375254724,
+        "call_vega": 56.388606331056884,
+        "call_rho": 91.84176867913209,
+        "put_price": 5.925146201271403,
+        "put_delta": -0.4869146035204695,
+        "put_gamma": 0.02819430316552844,
+        "put_theta": 1.321115169389496,
+        "put_vega": 56.388606331056884,
+        "put_rho": -109.23321310663671
+      },
+      "metadata": {
+        "moneyness": 0.9,
+        "moneyness_category": "OTM"
+      }
+    },
+    {
+      "id": "BS_058",
+      "category": "black_scholes",
+      "description": "Moneyness=0.9, T=2.00Y, Vol=20%",
+      "inputs": {
+        "s": 100.0,
+        "k": 111.11111111111111,
+        "t": 2.0,
+        "r": 0.05,
+        "v": 0.2
+      },
+      "outputs": {
+        "call_price": 11.009781721090285,
+        "call_delta": 0.54873623047717,
+        "call_gamma": 0.013999359033163117,
+        "call_theta": -4.99306387296396,
+        "call_vega": 55.997436132652474,
+        "call_rho": 87.72768265325344,
+        "put_price": 11.547272613974677,
+        "put_delta": -0.45126376952283,
+        "put_gamma": 0.013999359033163117,
+        "put_theta": 0.033810671680260196,
+        "put_vega": 55.997436132652474,
+        "put_rho": -113.34729913251535
+      },
+      "metadata": {
+        "moneyness": 0.9,
+        "moneyness_category": "OTM"
+      }
+    },
+    {
+      "id": "BS_059",
+      "category": "black_scholes",
+      "description": "Moneyness=0.9, T=2.00Y, Vol=30%",
+      "inputs": {
+        "s": 100.0,
+        "k": 111.11111111111111,
+        "t": 2.0,
+        "r": 0.05,
+        "v": 0.3
+      },
+      "outputs": {
+        "call_price": 16.577324323843357,
+        "call_delta": 0.579063074605449,
+        "call_gamma": 0.009217890468370507,
+        "call_theta": -6.2144998676018055,
+        "call_vega": 55.30734281022304,
+        "call_rho": 82.65796627340309,
+        "put_price": 17.11481521672774,
+        "put_delta": -0.420936925394551,
+        "put_gamma": 0.009217890468370507,
+        "put_theta": -1.1876253229575853,
+        "put_vega": 55.30734281022304,
+        "put_rho": -118.4170155123657
+      },
+      "metadata": {
+        "moneyness": 0.9,
+        "moneyness_category": "OTM"
+      }
+    },
+    {
+      "id": "BS_060",
+      "category": "black_scholes",
+      "description": "Moneyness=0.9, T=2.00Y, Vol=50%",
+      "inputs": {
+        "s": 100.0,
+        "k": 111.11111111111111,
+        "t": 2.0,
+        "r": 0.05,
+        "v": 0.5
+      },
+      "outputs": {
+        "call_price": 27.438918561046755,
+        "call_delta": 0.635318300323697,
+        "call_gamma": 0.005314142552260412,
+        "call_theta": -8.447323763891662,
+        "call_vega": 53.14142552260412,
+        "call_rho": 72.18582294264588,
+        "put_price": 27.976409453931154,
+        "put_delta": -0.36468169967630304,
+        "put_gamma": 0.005314142552260412,
+        "put_theta": -3.420449219247442,
+        "put_vega": 53.14142552260412,
+        "put_rho": -128.8891588431229
+      },
+      "metadata": {
+        "moneyness": 0.9,
+        "moneyness_category": "OTM"
+      }
+    },
+    {
+      "id": "BS_061",
+      "category": "black_scholes",
+      "description": "Moneyness=1.0, T=0.01Y, Vol=5%",
+      "inputs": {
+        "s": 100.0,
+        "k": 100.0,
+        "t": 0.01,
+        "r": 0.05,
+        "v": 0.05
+      },
+      "outputs": {
+        "call_price": 0.22541110138502063,
+        "call_delta": 0.5408200935748513,
+        "call_gamma": 0.7937041631583666,
+        "call_theta": -12.614131952284588,
+        "call_vega": 3.968520815791833,
+        "call_rho": 0.5385659825610011,
+        "put_price": 0.17542359930195062,
+        "put_delta": -0.4591799064251487,
+        "put_gamma": 0.7937041631583666,
+        "put_theta": -7.61663132738874,
+        "put_vega": 3.968520815791833,
+        "put_rho": -0.4609341424181682
+      },
+      "metadata": {
+        "moneyness": 1.0,
+        "moneyness_category": "ATM"
+      }
+    },
+    {
+      "id": "BS_062",
+      "category": "black_scholes",
+      "description": "Moneyness=1.0, T=0.01Y, Vol=10%",
+      "inputs": {
+        "s": 100.0,
+        "k": 100.0,
+        "t": 0.01,
+        "r": 0.05,
+        "v": 0.1
+      },
+      "outputs": {
+        "call_price": 0.42433310209415254,
+        "call_delta": 0.5219307681028235,
+        "call_gamma": 0.39833933629375107,
+        "call_theta": -22.505404000096963,
+        "call_vega": 3.9833933629375107,
+        "call_rho": 0.5176874370818819,
+        "put_price": 0.3743456000110754,
+        "put_delta": -0.47806923189717654,
+        "put_gamma": 0.39833933629375107,
+        "put_theta": -17.507903375201117,
+        "put_vega": 3.9833933629375107,
+        "put_rho": -0.48181268789728726
+      },
+      "metadata": {
+        "moneyness": 1.0,
+        "moneyness_category": "ATM"
+      }
+    },
+    {
+      "id": "BS_063",
+      "category": "black_scholes",
+      "description": "Moneyness=1.0, T=0.01Y, Vol=20%",
+      "inputs": {
+        "s": 100.0,
+        "k": 100.0,
+        "t": 0.01,
+        "r": 0.05,
+        "v": 0.2
+      },
+      "outputs": {
+        "call_price": 0.8229148471651584,
+        "call_delta": 0.5139601295627583,
+        "call_gamma": 0.19934900153612786,
+        "call_theta": -42.39845521268111,
+        "call_vega": 3.9869800307225574,
+        "call_rho": 0.5057309810911067,
+        "put_price": 0.7729273450820955,
+        "put_delta": -0.4860398704372417,
+        "put_gamma": 0.19934900153612786,
+        "put_theta": -37.400954587785264,
+        "put_vega": 3.9869800307225574,
+        "put_rho": -0.49376914388806264
+      },
+      "metadata": {
+        "moneyness": 1.0,
+        "moneyness_category": "ATM"
+      }
+    },
+    {
+      "id": "BS_064",
+      "category": "black_scholes",
+      "description": "Moneyness=1.0, T=0.01Y, Vol=30%",
+      "inputs": {
+        "s": 100.0,
+        "k": 100.0,
+        "t": 0.01,
+        "r": 0.05,
+        "v": 0.3
+      },
+      "outputs": {
+        "call_price": 1.2216427539086823,
+        "call_delta": 0.5126310611528675,
+        "call_gamma": 0.13291410177052163,
+        "call_theta": -62.31341896480363,
+        "call_vega": 3.9874230531156485,
+        "call_rho": 0.5004146336137806,
+        "put_price": 1.1716552518256051,
+        "put_delta": -0.4873689388471325,
+        "put_gamma": 0.13291410177052163,
+        "put_theta": -57.31591833990778,
+        "put_vega": 3.9874230531156485,
+        "put_rho": -0.4990854913653886
+      },
+      "metadata": {
+        "moneyness": 1.0,
+        "moneyness_category": "ATM"
+      }
+    },
+    {
+      "id": "BS_065",
+      "category": "black_scholes",
+      "description": "Moneyness=1.0, T=0.01Y, Vol=50%",
+      "inputs": {
+        "s": 100.0,
+        "k": 100.0,
+        "t": 0.01,
+        "r": 0.05,
+        "v": 0.5
+      },
+      "outputs": {
+        "call_price": 2.0190985674695625,
+        "call_delta": 0.5139601295627583,
+        "call_gamma": 0.07973960061445115,
+        "call_theta": -102.14334648750425,
+        "call_vega": 3.9869800307225574,
+        "call_rho": 0.49376914388806264,
+        "put_price": 1.9691110653864996,
+        "put_delta": -0.4860398704372417,
+        "put_gamma": 0.07973960061445115,
+        "put_theta": -97.1458458626084,
+        "put_vega": 3.9869800307225574,
+        "put_rho": -0.5057309810911067
+      },
+      "metadata": {
+        "moneyness": 1.0,
+        "moneyness_category": "ATM"
+      }
+    },
+    {
+      "id": "BS_066",
+      "category": "black_scholes",
+      "description": "Moneyness=1.0, T=0.10Y, Vol=5%",
+      "inputs": {
+        "s": 100.0,
+        "k": 100.0,
+        "t": 0.1,
+        "r": 0.05,
+        "v": 0.05
+      },
+      "outputs": {
+        "call_price": 0.909779471511996,
+        "call_delta": 0.6270815021574012,
+        "call_gamma": 0.23940103821218467,
+        "call_theta": -6.082431514863715,
+        "call_vega": 11.970051910609234,
+        "call_rho": 6.179837074422812,
+        "put_price": 0.41102739078024086,
+        "put_delta": -0.37291849784259873,
+        "put_gamma": 0.23940103821218467,
+        "put_theta": -1.1073691189003032,
+        "put_vega": 11.970051910609234,
+        "put_rho": -3.7702877175040115
+      },
+      "metadata": {
+        "moneyness": 1.0,
+        "moneyness_category": "ATM"
+      }
+    },
+    {
+      "id": "BS_067",
+      "category": "black_scholes",
+      "description": "Moneyness=1.0, T=0.10Y, Vol=10%",
+      "inputs": {
+        "s": 100.0,
+        "k": 100.0,
+        "t": 0.1,
+        "r": 0.05,
+        "v": 0.1
+      },
+      "outputs": {
+        "call_price": 1.5234393853405948,
+        "call_delta": 0.5690379041614373,
+        "call_gamma": 0.12426286480319788,
+        "call_theta": -8.98216079170005,
+        "call_vega": 12.426286480319789,
+        "call_rho": 5.538035103080313,
+        "put_price": 1.0246873046088396,
+        "put_delta": -0.4309620958385627,
+        "put_gamma": 0.12426286480319788,
+        "put_theta": -4.007098395736639,
+        "put_vega": 12.426286480319789,
+        "put_rho": -4.412089688846511
+      },
+      "metadata": {
+        "moneyness": 1.0,
+        "moneyness_category": "ATM"
+      }
+    },
+    {
+      "id": "BS_068",
+      "category": "black_scholes",
+      "description": "Moneyness=1.0, T=0.10Y, Vol=20%",
+      "inputs": {
+        "s": 100.0,
+        "k": 100.0,
+        "t": 0.1,
+        "r": 0.05,
+        "v": 0.2
+      },
+      "outputs": {
+        "call_price": 2.7736541464188775,
+        "call_delta": 0.5440648351212303,
+        "call_gamma": 0.06269313918221042,
+        "call_theta": -15.120269304727293,
+        "call_vega": 12.538627836442085,
+        "call_rho": 5.163282936570414,
+        "put_price": 2.2749020656871153,
+        "put_delta": -0.4559351648787697,
+        "put_gamma": 0.06269313918221042,
+        "put_theta": -10.145206908763882,
+        "put_vega": 12.538627836442085,
+        "put_rho": -4.786841855356409
+      },
+      "metadata": {
+        "moneyness": 1.0,
+        "moneyness_category": "ATM"
+      }
+    },
+    {
+      "id": "BS_069",
+      "category": "black_scholes",
+      "description": "Moneyness=1.0, T=0.10Y, Vol=30%",
+      "inputs": {
+        "s": 100.0,
+        "k": 100.0,
+        "t": 0.1,
+        "r": 0.05,
+        "v": 0.3
+      },
+      "outputs": {
+        "call_price": 4.028457742720072,
+        "call_delta": 0.5398829309595473,
+        "call_gamma": 0.041841891293034644,
+        "call_theta": -21.326842849527324,
+        "call_vega": 12.552567387910393,
+        "call_rho": 4.995983535323465,
+        "put_price": 3.5297056619883165,
+        "put_delta": -0.4601170690404527,
+        "put_gamma": 0.041841891293034644,
+        "put_theta": -16.35178045356391,
+        "put_vega": 12.552567387910393,
+        "put_rho": -4.954141256603358
+      },
+      "metadata": {
+        "moneyness": 1.0,
+        "moneyness_category": "ATM"
+      }
+    },
+    {
+      "id": "BS_070",
+      "category": "black_scholes",
+      "description": "Moneyness=1.0, T=0.10Y, Vol=50%",
+      "inputs": {
+        "s": 100.0,
+        "k": 100.0,
+        "t": 0.1,
+        "r": 0.05,
+        "v": 0.5
+      },
+      "outputs": {
+        "call_price": 6.538064958558934,
+        "call_delta": 0.5440648351212303,
+        "call_gamma": 0.02507725567288417,
+        "call_theta": -33.73999051878342,
+        "call_vega": 12.538627836442085,
+        "call_rho": 4.786841855356409,
+        "put_price": 6.039312877827179,
+        "put_delta": -0.4559351648787697,
+        "put_gamma": 0.02507725567288417,
+        "put_theta": -28.764928122820006,
+        "put_vega": 12.538627836442085,
+        "put_rho": -5.163282936570416
+      },
+      "metadata": {
+        "moneyness": 1.0,
+        "moneyness_category": "ATM"
+      }
+    },
+    {
+      "id": "BS_071",
+      "category": "black_scholes",
+      "description": "Moneyness=1.0, T=0.25Y, Vol=5%",
+      "inputs": {
+        "s": 100.0,
+        "k": 100.0,
+        "t": 0.25,
+        "r": 0.05,
+        "v": 0.05
+      },
+      "outputs": {
+        "call_price": 1.7336108325230128,
+        "call_delta": 0.6958494398471201,
+        "call_gamma": 0.1399377791118263,
+        "call_theta": -5.141788896507279,
+        "call_vega": 17.49222238897829,
+        "call_rho": 16.96283328804725,
+        "put_price": 0.4913908819111512,
+        "put_delta": -0.3041505601528799,
+        "put_gamma": 0.1399377791118263,
+        "put_theta": -0.20389989403787223,
+        "put_vega": 17.49222238897829,
+        "put_rho": -7.726611724299785
+      },
+      "metadata": {
+        "moneyness": 1.0,
+        "moneyness_category": "ATM"
+      }
+    },
+    {
+      "id": "BS_072",
+      "category": "black_scholes",
+      "description": "Moneyness=1.0, T=0.25Y, Vol=10%",
+      "inputs": {
+        "s": 100.0,
+        "k": 100.0,
+        "t": 0.25,
+        "r": 0.05,
+        "v": 0.1
+      },
+      "outputs": {
+        "call_price": 2.6648322216391875,
+        "call_delta": 0.6083418808463948,
+        "call_gamma": 0.07682778306114096,
+        "call_theta": -6.749856946207063,
+        "call_vega": 19.20694576528524,
+        "call_rho": 14.542338965750075,
+        "put_price": 1.422612271027333,
+        "put_delta": -0.39165811915360516,
+        "put_gamma": 0.07682778306114096,
+        "put_theta": -1.8119679437376561,
+        "put_vega": 19.20694576528524,
+        "put_rho": -10.147106046596962
+      },
+      "metadata": {
+        "moneyness": 1.0,
+        "moneyness_category": "ATM"
+      }
+    },
+    {
+      "id": "BS_073",
+      "category": "black_scholes",
+      "description": "Moneyness=1.0, T=0.25Y, Vol=20%",
+      "inputs": {
+        "s": 100.0,
+        "k": 100.0,
+        "t": 0.25,
+        "r": 0.05,
+        "v": 0.2
+      },
+      "outputs": {
+        "call_price": 4.614997129602855,
+        "call_delta": 0.5694601832076737,
+        "call_gamma": 0.03928800094473793,
+        "call_theta": -10.474151248505812,
+        "call_vega": 19.644000472368965,
+        "call_rho": 13.082755297791127,
+        "put_price": 3.372777178991008,
+        "put_delta": -0.43053981679232634,
+        "put_gamma": 0.03928800094473793,
+        "put_theta": -5.536262246036404,
+        "put_vega": 19.644000472368965,
+        "put_rho": -11.60668971455591
+      },
+      "metadata": {
+        "moneyness": 1.0,
+        "moneyness_category": "ATM"
+      }
+    },
+    {
+      "id": "BS_074",
+      "category": "black_scholes",
+      "description": "Moneyness=1.0, T=0.25Y, Vol=30%",
+      "inputs": {
+        "s": 100.0,
+        "k": 100.0,
+        "t": 0.25,
+        "r": 0.05,
+        "v": 0.3
+      },
+      "outputs": {
+        "call_price": 6.583084497992466,
+        "call_delta": 0.5629029283920401,
+        "call_gamma": 0.02626485733014476,
+        "call_theta": -14.30454621562572,
+        "call_vega": 19.69864299760857,
+        "call_rho": 12.426802085302887,
+        "put_price": 5.340864547380619,
+        "put_delta": -0.43709707160795985,
+        "put_gamma": 0.02626485733014476,
+        "put_theta": -9.366657213156312,
+        "put_vega": 19.69864299760857,
+        "put_rho": -12.262642927044151
+      },
+      "metadata": {
+        "moneyness": 1.0,
+        "moneyness_category": "ATM"
+      }
+    },
+    {
+      "id": "BS_075",
+      "category": "black_scholes",
+      "description": "Moneyness=1.0, T=0.25Y, Vol=50%",
+      "inputs": {
+        "s": 100.0,
+        "k": 100.0,
+        "t": 0.25,
+        "r": 0.05,
+        "v": 0.5
+      },
+      "outputs": {
+        "call_price": 10.519259462543722,
+        "call_delta": 0.5694601832076737,
+        "call_gamma": 0.015715200377895172,
+        "call_theta": -21.965338415280147,
+        "call_vega": 19.644000472368965,
+        "call_rho": 11.60668971455591,
+        "put_price": 9.277039511931875,
+        "put_delta": -0.43053981679232634,
+        "put_gamma": 0.015715200377895172,
+        "put_theta": -17.02744941281074,
+        "put_vega": 19.644000472368965,
+        "put_rho": -13.082755297791127
+      },
+      "metadata": {
+        "moneyness": 1.0,
+        "moneyness_category": "ATM"
+      }
+    },
+    {
+      "id": "BS_076",
+      "category": "black_scholes",
+      "description": "Moneyness=1.0, T=0.50Y, Vol=5%",
+      "inputs": {
+        "s": 100.0,
+        "k": 100.0,
+        "t": 0.5,
+        "r": 0.05,
+        "v": 0.05
+      },
+      "outputs": {
+        "call_price": 2.961868246803391,
+        "call_delta": 0.7657078617852431,
+        "call_gamma": 0.08677305729224223,
+        "call_theta": -4.765109112739075,
+        "call_vega": 21.69326432306056,
+        "call_rho": 36.80445896586046,
+        "put_price": 0.4928594496366472,
+        "put_delta": -0.23429213821475686,
+        "put_gamma": 0.08677305729224223,
+        "put_theta": 0.11144044740258896,
+        "put_vega": 21.69326432306056,
+        "put_rho": -11.961036635556166
+      },
+      "metadata": {
+        "moneyness": 1.0,
+        "moneyness_category": "ATM"
+      }
+    },
+    {
+      "id": "BS_077",
+      "category": "black_scholes",
+      "description": "Moneyness=1.0, T=0.50Y, Vol=10%",
+      "inputs": {
+        "s": 100.0,
+        "k": 100.0,
+        "t": 0.5,
+        "r": 0.05,
+        "v": 0.1
+      },
+      "outputs": {
+        "call_price": 4.192269618686353,
+        "call_delta": 0.6513281678875203,
+        "call_gamma": 0.05230961738936567,
+        "call_theta": -5.662508227971568,
+        "call_vega": 26.154808694682835,
+        "call_rho": 30.470273585032842,
+        "put_price": 1.7232608215196166,
+        "put_delta": -0.34867183211247965,
+        "put_gamma": 0.05230961738936567,
+        "put_theta": -0.7859586678299044,
+        "put_vega": 26.154808694682835,
+        "put_rho": -18.29522201638379
+      },
+      "metadata": {
+        "moneyness": 1.0,
+        "moneyness_category": "ATM"
+      }
+    },
+    {
+      "id": "BS_078",
+      "category": "black_scholes",
+      "description": "Moneyness=1.0, T=0.50Y, Vol=20%",
+      "inputs": {
+        "s": 100.0,
+        "k": 100.0,
+        "t": 0.5,
+        "r": 0.05,
+        "v": 0.2
+      },
+      "outputs": {
+        "call_price": 6.888728577680624,
+        "call_delta": 0.5977344689084383,
+        "call_gamma": 0.027358658565220986,
+        "call_theta": -8.115967628702357,
+        "call_vega": 27.35865856522099,
+        "call_rho": 26.442359156581603,
+        "put_price": 4.41971978051388,
+        "put_delta": -0.40226553109156177,
+        "put_gamma": 0.027358658565220986,
+        "put_theta": -3.239418068560694,
+        "put_vega": 27.35865856522099,
+        "put_rho": -22.32313644483503
+      },
+      "metadata": {
+        "moneyness": 1.0,
+        "moneyness_category": "ATM"
+      }
+    },
+    {
+      "id": "BS_079",
+      "category": "black_scholes",
+      "description": "Moneyness=1.0, T=0.50Y, Vol=30%",
+      "inputs": {
+        "s": 100.0,
+        "k": 100.0,
+        "t": 0.5,
+        "r": 0.05,
+        "v": 0.3
+      },
+      "outputs": {
+        "call_price": 9.634876628449184,
+        "call_delta": 0.5885891135975726,
+        "call_gamma": 0.0183407160648456,
+        "call_theta": -10.714523965745924,
+        "call_vega": 27.511074097268402,
+        "call_rho": 24.612017365654037,
+        "put_price": 7.165867831282455,
+        "put_delta": -0.41141088640242746,
+        "put_gamma": 0.0183407160648456,
+        "put_theta": -5.83797440560426,
+        "put_vega": 27.511074097268402,
+        "put_rho": -24.1534782357626
+      },
+      "metadata": {
+        "moneyness": 1.0,
+        "moneyness_category": "ATM"
+      }
+    },
+    {
+      "id": "BS_080",
+      "category": "black_scholes",
+      "description": "Moneyness=1.0, T=0.50Y, Vol=50%",
+      "inputs": {
+        "s": 100.0,
+        "k": 100.0,
+        "t": 0.5,
+        "r": 0.05,
+        "v": 0.5
+      },
+      "outputs": {
+        "call_price": 15.12717400117377,
+        "call_delta": 0.5977344689084383,
+        "call_gamma": 0.010943463426088394,
+        "call_theta": -15.911642927093995,
+        "call_vega": 27.35865856522099,
+        "call_rho": 22.32313644483503,
+        "put_price": 12.658165204007027,
+        "put_delta": -0.40226553109156177,
+        "put_gamma": 0.010943463426088394,
+        "put_theta": -11.035093366952331,
+        "put_vega": 27.35865856522099,
+        "put_rho": -26.442359156581603
+      },
+      "metadata": {
+        "moneyness": 1.0,
+        "moneyness_category": "ATM"
+      }
+    },
+    {
+      "id": "BS_081",
+      "category": "black_scholes",
+      "description": "Moneyness=1.0, T=1.00Y, Vol=5%",
+      "inputs": {
+        "s": 100.0,
+        "k": 100.0,
+        "t": 1.0,
+        "r": 0.05,
+        "v": 0.05
+      },
+      "outputs": {
+        "call_price": 5.283268987649905,
+        "call_delta": 0.8473184061668896,
+        "call_gamma": 0.047184541735374515,
+        "call_theta": -4.562235353144134,
+        "call_vega": 23.592270867687258,
+        "call_rho": 79.44857162903905,
+        "put_price": 0.40621143772130885,
+        "put_delta": -0.15268159383311042,
+        "put_gamma": 0.047184541735374515,
+        "put_theta": 0.1939117693594361,
+        "put_vega": 23.592270867687258,
+        "put_rho": -15.674370821032351
+      },
+      "metadata": {
+        "moneyness": 1.0,
+        "moneyness_category": "ATM"
+      }
+    },
+    {
+      "id": "BS_082",
+      "category": "black_scholes",
+      "description": "Moneyness=1.0, T=1.00Y, Vol=10%",
+      "inputs": {
+        "s": 100.0,
+        "k": 100.0,
+        "t": 1.0,
+        "r": 0.05,
+        "v": 0.1
+      },
+      "outputs": {
+        "call_price": 6.804957708822144,
+        "call_delta": 0.7088403132116536,
+        "call_gamma": 0.03429438550193839,
+        "call_theta": -4.918672955714081,
+        "call_vega": 34.29438550193839,
+        "call_rho": 64.07907361234322,
+        "put_price": 1.92790015889355,
+        "put_delta": -0.29115968678834636,
+        "put_gamma": 0.03429438550193839,
+        "put_theta": -0.16252583321051017,
+        "put_vega": 34.29438550193839,
+        "put_rho": -31.043868837728187
+      },
+      "metadata": {
+        "moneyness": 1.0,
+        "moneyness_category": "ATM"
+      }
+    },
+    {
+      "id": "BS_083",
+      "category": "black_scholes",
+      "description": "Moneyness=1.0, T=1.00Y, Vol=20%",
+      "inputs": {
+        "s": 100.0,
+        "k": 100.0,
+        "t": 1.0,
+        "r": 0.05,
+        "v": 0.2
+      },
+      "outputs": {
+        "call_price": 10.450583572185565,
+        "call_delta": 0.6368306511756191,
+        "call_gamma": 0.018762017345846895,
+        "call_theta": -6.414027546438196,
+        "call_vega": 37.52403469169379,
+        "call_rho": 53.232481545376345,
+        "put_price": 5.573526022256971,
+        "put_delta": -0.3631693488243809,
+        "put_gamma": 0.018762017345846895,
+        "put_theta": -1.6578804239346256,
+        "put_vega": 37.52403469169379,
+        "put_rho": -41.89046090469506
+      },
+      "metadata": {
+        "moneyness": 1.0,
+        "moneyness_category": "ATM"
+      }
+    },
+    {
+      "id": "BS_084",
+      "category": "black_scholes",
+      "description": "Moneyness=1.0, T=1.00Y, Vol=30%",
+      "inputs": {
+        "s": 100.0,
+        "k": 100.0,
+        "t": 1.0,
+        "r": 0.05,
+        "v": 0.3
+      },
+      "outputs": {
+        "call_price": 14.231254785985819,
+        "call_delta": 0.6242517279060125,
+        "call_gamma": 0.012647764437231512,
+        "call_theta": -8.101189896984952,
+        "call_vega": 37.94329331169454,
+        "call_rho": 48.193918004615426,
+        "put_price": 9.354197236057232,
+        "put_delta": -0.37574827209398753,
+        "put_gamma": 0.012647764437231512,
+        "put_theta": -3.3450427744813815,
+        "put_vega": 37.94329331169454,
+        "put_rho": -46.92902444545599
+      },
+      "metadata": {
+        "moneyness": 1.0,
+        "moneyness_category": "ATM"
+      }
+    },
+    {
+      "id": "BS_085",
+      "category": "black_scholes",
+      "description": "Moneyness=1.0, T=1.00Y, Vol=50%",
+      "inputs": {
+        "s": 100.0,
+        "k": 100.0,
+        "t": 1.0,
+        "r": 0.05,
+        "v": 0.5
+      },
+      "outputs": {
+        "call_price": 21.79260421286685,
+        "call_delta": 0.6368306511756191,
+        "call_gamma": 0.007504806938338758,
+        "call_theta": -11.475531718158201,
+        "call_vega": 37.52403469169379,
+        "call_rho": 41.89046090469506,
+        "put_price": 16.915546662938254,
+        "put_delta": -0.3631693488243809,
+        "put_gamma": 0.007504806938338758,
+        "put_theta": -6.719384595654631,
+        "put_vega": 37.52403469169379,
+        "put_rho": -53.232481545376345
+      },
+      "metadata": {
+        "moneyness": 1.0,
+        "moneyness_category": "ATM"
+      }
+    },
+    {
+      "id": "BS_086",
+      "category": "black_scholes",
+      "description": "Moneyness=1.0, T=2.00Y, Vol=5%",
+      "inputs": {
+        "s": 100.0,
+        "k": 100.0,
+        "t": 2.0,
+        "r": 0.05,
+        "v": 0.05
+      },
+      "outputs": {
+        "call_price": 9.755170148707677,
+        "call_delta": 0.9264106132841862,
+        "call_gamma": 0.019730787697083082,
+        "call_theta": -4.390929405199086,
+        "call_vega": 19.730787697083084,
+        "call_rho": 165.77178235942188,
+        "put_price": 0.23891195230361983,
+        "put_delta": -0.07358938671581382,
+        "put_gamma": 0.019730787697083082,
+        "put_theta": 0.13325768498071155,
+        "put_vega": 19.730787697083084,
+        "put_rho": -15.195701247770003
+      },
+      "metadata": {
+        "moneyness": 1.0,
+        "moneyness_category": "ATM"
+      }
+    },
+    {
+      "id": "BS_087",
+      "category": "black_scholes",
+      "description": "Moneyness=1.0, T=2.00Y, Vol=10%",
+      "inputs": {
+        "s": 100.0,
+        "k": 100.0,
+        "t": 2.0,
+        "r": 0.05,
+        "v": 0.1
+      },
+      "outputs": {
+        "call_price": 11.412614831692593,
+        "call_delta": 0.7816616831625545,
+        "call_gamma": 0.020845916182286442,
+        "call_theta": -4.379973483342464,
+        "call_vega": 41.69183236457288,
+        "call_rho": 133.50710696912572,
+        "put_price": 1.8963566352885408,
+        "put_delta": -0.21833831683744553,
+        "put_gamma": 0.020845916182286442,
+        "put_theta": 0.14421360683733275,
+        "put_vega": 41.69183236457288,
+        "put_rho": -47.46037663806619
+      },
+      "metadata": {
+        "moneyness": 1.0,
+        "moneyness_category": "ATM"
+      }
+    },
+    {
+      "id": "BS_088",
+      "category": "black_scholes",
+      "description": "Moneyness=1.0, T=2.00Y, Vol=20%",
+      "inputs": {
+        "s": 100.0,
+        "k": 100.0,
+        "t": 2.0,
+        "r": 0.05,
+        "v": 0.2
+      },
+      "outputs": {
+        "call_price": 16.126779724978633,
+        "call_delta": 0.6896910267811551,
+        "call_gamma": 0.012478546401807622,
+        "call_theta": -5.137825428018369,
+        "call_vega": 49.91418560723049,
+        "call_rho": 105.68464590627377,
+        "put_price": 6.610521528574566,
+        "put_delta": -0.3103089732188449,
+        "put_gamma": 0.012478546401807622,
+        "put_theta": -0.6136383378385717,
+        "put_vega": 49.91418560723049,
+        "put_rho": -75.28283770091811
+      },
+      "metadata": {
+        "moneyness": 1.0,
+        "moneyness_category": "ATM"
+      }
+    },
+    {
+      "id": "BS_089",
+      "category": "black_scholes",
+      "description": "Moneyness=1.0, T=2.00Y, Vol=30%",
+      "inputs": {
+        "s": 100.0,
+        "k": 100.0,
+        "t": 2.0,
+        "r": 0.05,
+        "v": 0.3
+      },
+      "outputs": {
+        "call_price": 21.193735255280203,
+        "call_delta": 0.6728636045956926,
+        "call_gamma": 0.008505967670678788,
+        "call_theta": -6.132316712019907,
+        "call_vega": 51.03580602407273,
+        "call_rho": 92.18525040857813,
+        "put_price": 11.677477058876157,
+        "put_delta": -0.32713639540430733,
+        "put_gamma": 0.008505967670678788,
+        "put_theta": -1.6081296218401095,
+        "put_vega": 51.03580602407273,
+        "put_rho": -88.78223319861378
+      },
+      "metadata": {
+        "moneyness": 1.0,
+        "moneyness_category": "ATM"
+      }
+    },
+    {
+      "id": "BS_090",
+      "category": "black_scholes",
+      "description": "Moneyness=1.0, T=2.00Y, Vol=50%",
+      "inputs": {
+        "s": 100.0,
+        "k": 100.0,
+        "t": 2.0,
+        "r": 0.05,
+        "v": 0.5
+      },
+      "outputs": {
+        "call_price": 31.327683827656465,
+        "call_delta": 0.6896910267811551,
+        "call_gamma": 0.004991418560723049,
+        "call_theta": -8.121344143426763,
+        "call_vega": 49.91418560723049,
+        "call_rho": 75.28283770091811,
+        "put_price": 21.811425631252405,
+        "put_delta": -0.3103089732188449,
+        "put_gamma": 0.004991418560723049,
+        "put_theta": -3.597157053246966,
+        "put_vega": 49.91418560723049,
+        "put_rho": -105.68464590627379
+      },
+      "metadata": {
+        "moneyness": 1.0,
+        "moneyness_category": "ATM"
+      }
+    },
+    {
+      "id": "BS_091",
+      "category": "black_scholes",
+      "description": "Moneyness=1.1, T=0.01Y, Vol=5%",
+      "inputs": {
+        "s": 100.0,
+        "k": 90.9090909090909,
+        "t": 0.01,
+        "r": 0.05,
+        "v": 0.05
+      },
+      "outputs": {
+        "call_price": 9.136352274620975,
+        "call_delta": 1.0,
+        "call_gamma": 1.4067706933097846e-80,
+        "call_theta": -4.543182386268952,
+        "call_vega": 7.033853466548923e-80,
+        "call_rho": 0.9086364772537903,
+        "put_price": 9.500904278312027e-84,
+        "put_delta": -3.660332079062617e-82,
+        "put_gamma": 1.4067706933097846e-80,
+        "put_theta": -1.7401569557897785e-79,
+        "put_vega": 7.033853466548923e-80,
+        "put_rho": -3.661282169490448e-82
+      },
+      "metadata": {
+        "moneyness": 1.1,
+        "moneyness_category": "ITM"
+      }
+    },
+    {
+      "id": "BS_092",
+      "category": "black_scholes",
+      "description": "Moneyness=1.1, T=0.01Y, Vol=10%",
+      "inputs": {
+        "s": 100.0,
+        "k": 90.9090909090909,
+        "t": 0.01,
+        "r": 0.05,
+        "v": 0.1
+      },
+      "outputs": {
+        "call_price": 9.136352274620975,
+        "call_delta": 1.0,
+        "call_gamma": 4.4347802215754804e-21,
+        "call_theta": -4.543182386268952,
+        "call_vega": 4.43478022157548e-20,
+        "call_rho": 0.9086364772537903,
+        "put_price": 4.6812464443305795e-23,
+        "put_delta": -4.577516039887038e-22,
+        "put_gamma": 4.4347802215754804e-21,
+        "put_theta": -2.194479124356083e-19,
+        "put_vega": 4.43478022157548e-20,
+        "put_rho": -4.582197286331368e-22
+      },
+      "metadata": {
+        "moneyness": 1.1,
+        "moneyness_category": "ITM"
+      }
+    },
+    {
+      "id": "BS_093",
+      "category": "black_scholes",
+      "description": "Moneyness=1.1, T=0.01Y, Vol=20%",
+      "inputs": {
+        "s": 100.0,
+        "k": 90.9090909090909,
+        "t": 0.01,
+        "r": 0.05,
+        "v": 0.2
+      },
+      "outputs": {
+        "call_price": 9.13635258161085,
+        "call_delta": 0.9999992086856494,
+        "call_gamma": 1.9758161660576183e-06,
+        "call_theta": -4.543573577580916,
+        "call_vega": 3.951632332115237e-05,
+        "call_rho": 0.9086356828695409,
+        "put_price": 3.0698987185757086e-07,
+        "put_delta": -7.913143505958134e-07,
+        "put_gamma": 1.9758161660576183e-06,
+        "put_theta": -0.00039119131196495174,
+        "put_vega": 3.951632332115237e-05,
+        "put_rho": -7.943842493143891e-07
+      },
+      "metadata": {
+        "moneyness": 1.1,
+        "moneyness_category": "ITM"
+      }
+    },
+    {
+      "id": "BS_094",
+      "category": "black_scholes",
+      "description": "Moneyness=1.1, T=0.01Y, Vol=30%",
+      "inputs": {
+        "s": 100.0,
+        "k": 90.9090909090909,
+        "t": 0.01,
+        "r": 0.05,
+        "v": 0.3
+      },
+      "outputs": {
+        "call_price": 9.136894536947068,
+        "call_delta": 0.999333253919964,
+        "call_gamma": 0.0007729154133257575,
+        "call_theta": -4.887633478749057,
+        "call_vega": 0.023187462399772724,
+        "call_rho": 0.9079643085504933,
+        "put_price": 0.0005422623260893655,
+        "put_delta": -0.0006667460800360223,
+        "put_gamma": 0.0007729154133257575,
+        "put_theta": -0.3444510924801063,
+        "put_vega": 0.023187462399772724,
+        "put_rho": -0.0006721687032969159
+      },
+      "metadata": {
+        "moneyness": 1.1,
+        "moneyness_category": "ITM"
+      }
+    },
+    {
+      "id": "BS_095",
+      "category": "black_scholes",
+      "description": "Moneyness=1.1, T=0.01Y, Vol=50%",
+      "inputs": {
+        "s": 100.0,
+        "k": 90.9090909090909,
+        "t": 0.01,
+        "r": 0.05,
+        "v": 0.5
+      },
+      "outputs": {
+        "call_price": 9.186849293390466,
+        "call_delta": 0.9738832064416314,
+        "call_gamma": 0.012124681065651337,
+        "call_theta": -19.565924899602805,
+        "call_vega": 0.6062340532825669,
+        "call_rho": 0.8820147135077268,
+        "put_price": 0.050497018769486424,
+        "put_delta": -0.026116793558368632,
+        "put_gamma": 0.012124681065651337,
+        "put_theta": -15.022742513333855,
+        "put_vega": 0.6062340532825669,
+        "put_rho": -0.026621763746063495
+      },
+      "metadata": {
+        "moneyness": 1.1,
+        "moneyness_category": "ITM"
+      }
+    },
+    {
+      "id": "BS_096",
+      "category": "black_scholes",
+      "description": "Moneyness=1.1, T=0.10Y, Vol=5%",
+      "inputs": {
+        "s": 100.0,
+        "k": 90.9090909090909,
+        "t": 0.1,
+        "r": 0.05,
+        "v": 0.05
+      },
+      "outputs": {
+        "call_price": 9.54432007341785,
+        "call_delta": 0.9999999998937876,
+        "call_gamma": 4.3680485187115774e-10,
+        "call_theta": -4.522784001258106,
+        "call_vega": 2.1840242593557888e-08,
+        "call_rho": 9.04556799159609,
+        "put_price": 2.5324716393091353e-11,
+        "put_delta": -1.0621242701040044e-10,
+        "put_gamma": 4.3680485187115774e-10,
+        "put_theta": -4.927732277517815e-09,
+        "put_vega": 2.1840242593557888e-08,
+        "put_rho": -1.0646567417433134e-09
+      },
+      "metadata": {
+        "moneyness": 1.1,
+        "moneyness_category": "ITM"
+      }
+    },
+    {
+      "id": "BS_097",
+      "category": "black_scholes",
+      "description": "Moneyness=1.1, T=0.10Y, Vol=10%",
+      "inputs": {
+        "s": 100.0,
+        "k": 90.9090909090909,
+        "t": 0.1,
+        "r": 0.05,
+        "v": 0.1
+      },
+      "outputs": {
+        "call_price": 9.544937716615095,
+        "call_delta": 0.9992834440902718,
+        "call_gamma": 0.0007836271256470422,
+        "call_theta": -4.558351690902955,
+        "call_vega": 0.07836271256470423,
+        "call_rho": 9.038340669241206,
+        "put_price": 0.0006176432225943468,
+        "put_delta": -0.0007165559097281952,
+        "put_gamma": 0.0007836271256470422,
+        "put_theta": -0.035567694572581424,
+        "put_vega": 0.07836271256470423,
+        "put_rho": -0.007227323419541388
+      },
+      "metadata": {
+        "moneyness": 1.1,
+        "moneyness_category": "ITM"
+      }
+    },
+    {
+      "id": "BS_098",
+      "category": "black_scholes",
+      "description": "Moneyness=1.1, T=0.10Y, Vol=20%",
+      "inputs": {
+        "s": 100.0,
+        "k": 90.9090909090909,
+        "t": 0.1,
+        "r": 0.05,
+        "v": 0.2
+      },
+      "outputs": {
+        "call_price": 9.688737351036238,
+        "call_delta": 0.9471326993106792,
+        "call_gamma": 0.017046679043853583,
+        "call_theta": -7.660562437772301,
+        "call_vega": 3.4093358087707166,
+        "call_rho": 8.502453258003168,
+        "put_price": 0.14441727764372558,
+        "put_delta": -0.05286730068932072,
+        "put_gamma": 0.017046679043853583,
+        "put_theta": -3.1377784414419265,
+        "put_vega": 3.4093358087707166,
+        "put_rho": -0.5431147346575798
+      },
+      "metadata": {
+        "moneyness": 1.1,
+        "moneyness_category": "ITM"
+      }
+    },
+    {
+      "id": "BS_099",
+      "category": "black_scholes",
+      "description": "Moneyness=1.1, T=0.10Y, Vol=30%",
+      "inputs": {
+        "s": 100.0,
+        "k": 90.9090909090909,
+        "t": 0.1,
+        "r": 0.05,
+        "v": 0.3
+      },
+      "outputs": {
+        "call_price": 10.216974687127475,
+        "call_delta": 0.865376068043435,
+        "call_gamma": 0.022842537505354327,
+        "call_theta": -14.095173483270248,
+        "call_vega": 6.852761251606298,
+        "call_rho": 7.632063211721602,
+        "put_price": 0.6726546137349807,
+        "put_delta": -0.13462393195656497,
+        "put_gamma": 0.022842537505354327,
+        "put_theta": -9.572389486939874,
+        "put_vega": 6.852761251606298,
+        "put_rho": -1.4135047809391474
+      },
+      "metadata": {
+        "moneyness": 1.1,
+        "moneyness_category": "ITM"
+      }
+    },
+    {
+      "id": "BS_100",
+      "category": "black_scholes",
+      "description": "Moneyness=1.1, T=0.10Y, Vol=50%",
+      "inputs": {
+        "s": 100.0,
+        "k": 90.9090909090909,
+        "t": 0.1,
+        "r": 0.05,
+        "v": 0.5
+      },
+      "outputs": {
+        "call_price": 11.93771098006539,
+        "call_delta": 0.7622238207847034,
+        "call_gamma": 0.019561504004508037,
+        "call_theta": -27.666113560555292,
+        "call_vega": 9.780752002254017,
+        "call_rho": 6.428467109840496,
+        "put_price": 2.3933909066728702,
+        "put_delta": -0.2377761792152966,
+        "put_gamma": 0.019561504004508037,
+        "put_theta": -23.143329564224917,
+        "put_vega": 9.780752002254017,
+        "put_rho": -2.617100882820253
+      },
+      "metadata": {
+        "moneyness": 1.1,
+        "moneyness_category": "ITM"
+      }
+    },
+    {
+      "id": "BS_101",
+      "category": "black_scholes",
+      "description": "Moneyness=1.1, T=0.25Y, Vol=5%",
+      "inputs": {
+        "s": 100.0,
+        "k": 90.9090909090909,
+        "t": 0.25,
+        "r": 0.05,
+        "v": 0.05
+      },
+      "outputs": {
+        "call_price": 10.220204006795939,
+        "call_delta": 0.9999923701953899,
+        "call_gamma": 1.3844252747473434e-05,
+        "call_theta": -4.489124703796497,
+        "call_vega": 0.0017305315934341792,
+        "call_rho": 22.444758253185764,
+        "put_price": 4.051694245783832e-06,
+        "put_delta": -7.629804610111613e-06,
+        "put_gamma": 1.3844252747473434e-05,
+        "put_theta": -0.00013470155158057067,
+        "put_vega": 0.0017305315934341792,
+        "put_rho": -0.0001917580388142363
+      },
+      "metadata": {
+        "moneyness": 1.1,
+        "moneyness_category": "ITM"
+      }
+    },
+    {
+      "id": "BS_102",
+      "category": "black_scholes",
+      "description": "Moneyness=1.1, T=0.25Y, Vol=10%",
+      "inputs": {
+        "s": 100.0,
+        "k": 90.9090909090909,
+        "t": 0.25,
+        "r": 0.05,
+        "v": 0.1
+      },
+      "outputs": {
+        "call_price": 10.2463974192475,
+        "call_delta": 0.985415819515011,
+        "call_gamma": 0.007393152762975098,
+        "call_theta": -4.784416864761435,
+        "call_vega": 1.8482881907437747,
+        "call_rho": 22.0737961330634,
+        "put_price": 0.02619746414580626,
+        "put_delta": -0.014584180484988976,
+        "put_gamma": 0.007393152762975098,
+        "put_theta": -0.29542686251651973,
+        "put_vega": 1.8482881907437747,
+        "put_rho": -0.37115387816117595
+      },
+      "metadata": {
+        "moneyness": 1.1,
+        "moneyness_category": "ITM"
+      }
+    },
+    {
+      "id": "BS_103",
+      "category": "black_scholes",
+      "description": "Moneyness=1.1, T=0.25Y, Vol=20%",
+      "inputs": {
+        "s": 100.0,
+        "k": 90.9090909090909,
+        "t": 0.25,
+        "r": 0.05,
+        "v": 0.2
+      },
+      "outputs": {
+        "call_price": 10.898481385873666,
+        "call_delta": 0.8703615350552978,
+        "call_gamma": 0.021113757018143997,
+        "call_theta": -8.029635009611605,
+        "call_vega": 10.556878509071998,
+        "call_rho": 19.03441802991403,
+        "put_price": 0.6782814307719782,
+        "put_delta": -0.12963846494470216,
+        "put_gamma": 0.021113757018143997,
+        "put_theta": -3.54064500736669,
+        "put_vega": 10.556878509071998,
+        "put_rho": -3.4105319813105486
+      },
+      "metadata": {
+        "moneyness": 1.1,
+        "moneyness_category": "ITM"
+      }
+    },
+    {
+      "id": "BS_104",
+      "category": "black_scholes",
+      "description": "Moneyness=1.1, T=0.25Y, Vol=30%",
+      "inputs": {
+        "s": 100.0,
+        "k": 90.9090909090909,
+        "t": 0.25,
+        "r": 0.05,
+        "v": 0.3
+      },
+      "outputs": {
+        "call_price": 12.184117827609228,
+        "call_delta": 0.7863250037185613,
+        "call_gamma": 0.019409435057400278,
+        "call_theta": -12.05666490304247,
+        "call_vega": 14.557076293050208,
+        "call_rho": 16.612095636061724,
+        "put_price": 1.963917872507544,
+        "put_delta": -0.2136749962814387,
+        "put_gamma": 0.019409435057400278,
+        "put_theta": -7.567674900797554,
+        "put_vega": 14.557076293050208,
+        "put_rho": -5.832854375162854
+      },
+      "metadata": {
+        "moneyness": 1.1,
+        "moneyness_category": "ITM"
+      }
+    },
+    {
+      "id": "BS_105",
+      "category": "black_scholes",
+      "description": "Moneyness=1.1, T=0.25Y, Vol=50%",
+      "inputs": {
+        "s": 100.0,
+        "k": 90.9090909090909,
+        "t": 0.25,
+        "r": 0.05,
+        "v": 0.5
+      },
+      "outputs": {
+        "call_price": 15.40823406957989,
+        "call_delta": 0.7109768468259213,
+        "call_gamma": 0.013670483944551925,
+        "call_theta": -19.87257746134052,
+        "call_vega": 17.08810493068991,
+        "call_rho": 13.92236265325306,
+        "put_price": 5.188034114478199,
+        "put_delta": -0.2890231531740787,
+        "put_gamma": 0.013670483944551925,
+        "put_theta": -15.383587459095605,
+        "put_vega": 17.08810493068991,
+        "put_rho": -8.522587357971517
+      },
+      "metadata": {
+        "moneyness": 1.1,
+        "moneyness_category": "ITM"
+      }
+    },
+    {
+      "id": "BS_106",
+      "category": "black_scholes",
+      "description": "Moneyness=1.1, T=0.50Y, Vol=5%",
+      "inputs": {
+        "s": 100.0,
+        "k": 90.9090909090909,
+        "t": 0.5,
+        "r": 0.05,
+        "v": 0.05
+      },
+      "outputs": {
+        "call_price": 11.335747784273337,
+        "call_delta": 0.9996875421943711,
+        "call_gamma": 0.00032492052594874183,
+        "call_theta": -4.435711828332549,
+        "call_vega": 0.08123013148718546,
+        "call_rho": 44.31650321758188,
+        "put_price": 0.0002852413944803289,
+        "put_delta": -0.00031245780562896543,
+        "put_gamma": 0.00032492052594874183,
+        "put_theta": -0.0024849554764904283,
+        "put_vega": 0.08123013148718546,
+        "put_rho": -0.015765510978688436
+      },
+      "metadata": {
+        "moneyness": 1.1,
+        "moneyness_category": "ITM"
+      }
+    },
+    {
+      "id": "BS_107",
+      "category": "black_scholes",
+      "description": "Moneyness=1.1, T=0.50Y, Vol=10%",
+      "inputs": {
+        "s": 100.0,
+        "k": 90.9090909090909,
+        "t": 0.5,
+        "r": 0.05,
+        "v": 0.1
+      },
+      "outputs": {
+        "call_price": 11.456742754647877,
+        "call_delta": 0.9587886032075561,
+        "call_gamma": 0.012485540524488173,
+        "call_theta": -4.845382904529796,
+        "call_vega": 6.242770262244087,
+        "call_rho": 42.211058783053865,
+        "put_price": 0.12128021176901971,
+        "put_delta": -0.0412113967924439,
+        "put_gamma": 0.012485540524488173,
+        "put_theta": -0.4121560316737381,
+        "put_vega": 6.242770262244087,
+        "put_rho": -2.121209945506705
+      },
+      "metadata": {
+        "moneyness": 1.1,
+        "moneyness_category": "ITM"
+      }
+    },
+    {
+      "id": "BS_108",
+      "category": "black_scholes",
+      "description": "Moneyness=1.1, T=0.50Y, Vol=20%",
+      "inputs": {
+        "s": 100.0,
+        "k": 90.9090909090909,
+        "t": 0.5,
+        "r": 0.05,
+        "v": 0.2
+      },
+      "outputs": {
+        "call_price": 12.795803669437916,
+        "call_delta": 0.8215875666655357,
+        "call_gamma": 0.018451385979174208,
+        "call_theta": -7.158424845690625,
+        "call_vega": 18.45138597917421,
+        "call_rho": 34.68147649855783,
+        "put_price": 1.460341126559058,
+        "put_delta": -0.17841243333446427,
+        "put_gamma": 0.018451385979174208,
+        "put_theta": -2.7251979728345668,
+        "put_vega": 18.45138597917421,
+        "put_rho": -9.650792230002743
+      },
+      "metadata": {
+        "moneyness": 1.1,
+        "moneyness_category": "ITM"
+      }
+    },
+    {
+      "id": "BS_109",
+      "category": "black_scholes",
+      "description": "Moneyness=1.1, T=0.50Y, Vol=30%",
+      "inputs": {
+        "s": 100.0,
+        "k": 90.9090909090909,
+        "t": 0.5,
+        "r": 0.05,
+        "v": 0.3
+      },
+      "outputs": {
+        "call_price": 14.87768282578439,
+        "call_delta": 0.749594308808077,
+        "call_gamma": 0.01499301834872496,
+        "call_theta": -9.750945659677399,
+        "call_vega": 22.489527523087443,
+        "call_rho": 30.040874027511656,
+        "put_price": 3.5422202829055323,
+        "put_delta": -0.250405691191923,
+        "put_gamma": 0.01499301834872496,
+        "put_theta": -5.317718786821341,
+        "put_vega": 22.489527523087443,
+        "put_rho": -14.291394701048917
+      },
+      "metadata": {
+        "moneyness": 1.1,
+        "moneyness_category": "ITM"
+      }
+    },
+    {
+      "id": "BS_110",
+      "category": "black_scholes",
+      "description": "Moneyness=1.1, T=0.50Y, Vol=50%",
+      "inputs": {
+        "s": 100.0,
+        "k": 90.9090909090909,
+        "t": 0.5,
+        "r": 0.05,
+        "v": 0.5
+      },
+      "outputs": {
+        "call_price": 19.654123366187726,
+        "call_delta": 0.6974447021513249,
+        "call_gamma": 0.009871867875081626,
+        "call_theta": -14.844352186299272,
+        "call_vega": 24.679669687704067,
+        "call_rho": 25.045173424472384,
+        "put_price": 8.318660823308864,
+        "put_delta": -0.3025552978486751,
+        "put_gamma": 0.009871867875081626,
+        "put_theta": -10.411125313443215,
+        "put_vega": 24.679669687704067,
+        "put_rho": -19.287095304088187
+      },
+      "metadata": {
+        "moneyness": 1.1,
+        "moneyness_category": "ITM"
+      }
+    },
+    {
+      "id": "BS_111",
+      "category": "black_scholes",
+      "description": "Moneyness=1.1, T=1.00Y, Vol=5%",
+      "inputs": {
+        "s": 100.0,
+        "k": 90.9090909090909,
+        "t": 1.0,
+        "r": 0.05,
+        "v": 0.05
+      },
+      "outputs": {
+        "call_price": 13.527062392294752,
+        "call_delta": 0.9983117429453935,
+        "call_gamma": 0.001086978221465625,
+        "call_theta": -4.32879282288055,
+        "call_vega": 0.5434891107328126,
+        "call_rho": 86.3041119022446,
+        "put_price": 0.0024646196323891423,
+        "put_delta": -0.0016882570546064642,
+        "put_gamma": 0.001086978221465625,
+        "put_theta": -0.005022711513668534,
+        "put_vega": 0.5434891107328126,
+        "put_rho": -0.17129032509303557
+      },
+      "metadata": {
+        "moneyness": 1.1,
+        "moneyness_category": "ITM"
+      }
+    },
+    {
+      "id": "BS_112",
+      "category": "black_scholes",
+      "description": "Moneyness=1.1, T=1.00Y, Vol=10%",
+      "inputs": {
+        "s": 100.0,
+        "k": 90.9090909090909,
+        "t": 1.0,
+        "r": 0.05,
+        "v": 0.1
+      },
+      "outputs": {
+        "call_price": 13.827348455794635,
+        "call_delta": 0.9335936023804815,
+        "call_gamma": 0.012891576906841682,
+        "call_theta": -4.621179434454761,
+        "call_vega": 12.891576906841681,
+        "call_rho": 79.53201178225352,
+        "put_price": 0.3027506831322837,
+        "put_delta": -0.06640639761951846,
+        "put_gamma": 0.012891576906841682,
+        "put_theta": -0.2974093230878776,
+        "put_vega": 12.891576906841681,
+        "put_rho": -6.9433904450841295
+      },
+      "metadata": {
+        "moneyness": 1.1,
+        "moneyness_category": "ITM"
+      }
+    },
+    {
+      "id": "BS_113",
+      "category": "black_scholes",
+      "description": "Moneyness=1.1, T=1.00Y, Vol=20%",
+      "inputs": {
+        "s": 100.0,
+        "k": 90.9090909090909,
+        "t": 1.0,
+        "r": 0.05,
+        "v": 0.2
+      },
+      "outputs": {
+        "call_price": 16.057230673264037,
+        "call_delta": 0.7957541713095866,
+        "call_gamma": 0.014175161996694446,
+        "call_theta": -6.01094172222362,
+        "call_vega": 28.350323993388894,
+        "call_rho": 63.51818645769462,
+        "put_price": 2.532632900601673,
+        "put_delta": -0.20424582869041347,
+        "put_gamma": 0.014175161996694446,
+        "put_theta": -1.6871716108567378,
+        "put_vega": 28.350323993388894,
+        "put_rho": -22.95721576964302
+      },
+      "metadata": {
+        "moneyness": 1.1,
+        "moneyness_category": "ITM"
+      }
+    },
+    {
+      "id": "BS_114",
+      "category": "black_scholes",
+      "description": "Moneyness=1.1, T=1.00Y, Vol=30%",
+      "inputs": {
+        "s": 100.0,
+        "k": 90.9090909090909,
+        "t": 1.0,
+        "r": 0.05,
+        "v": 0.3
+      },
+      "outputs": {
+        "call_price": 19.146391993281533,
+        "call_delta": 0.737079416471609,
+        "call_gamma": 0.010874367887738745,
+        "call_theta": -7.621543032176405,
+        "call_vega": 32.623103663216234,
+        "call_rho": 54.561549653879375,
+        "put_price": 5.621794220619162,
+        "put_delta": -0.26292058352839104,
+        "put_gamma": 0.010874367887738745,
+        "put_theta": -3.297772920809522,
+        "put_vega": 32.623103663216234,
+        "put_rho": -31.913852573458264
+      },
+      "metadata": {
+        "moneyness": 1.1,
+        "moneyness_category": "ITM"
+      }
+    },
+    {
+      "id": "BS_115",
+      "category": "black_scholes",
+      "description": "Moneyness=1.1, T=1.00Y, Vol=50%",
+      "inputs": {
+        "s": 100.0,
+        "k": 90.9090909090909,
+        "t": 1.0,
+        "r": 0.05,
+        "v": 0.5
+      },
+      "outputs": {
+        "call_price": 25.92287071283701,
+        "call_delta": 0.705615359105516,
+        "call_gamma": 0.006894048848595571,
+        "call_theta": -10.849494320630193,
+        "call_vega": 34.470244242977856,
+        "call_rho": 44.63866519771459,
+        "put_price": 12.39827294017465,
+        "put_delta": -0.294384640894484,
+        "put_gamma": 0.006894048848595571,
+        "put_theta": -6.525724209263311,
+        "put_vega": 34.470244242977856,
+        "put_rho": -41.83673702962305
+      },
+      "metadata": {
+        "moneyness": 1.1,
+        "moneyness_category": "ITM"
+      }
+    },
+    {
+      "id": "BS_116",
+      "category": "black_scholes",
+      "description": "Moneyness=1.1, T=2.00Y, Vol=5%",
+      "inputs": {
+        "s": 100.0,
+        "k": 90.9090909090909,
+        "t": 2.0,
+        "r": 0.05,
+        "v": 0.05
+      },
+      "outputs": {
+        "call_price": 17.747589723583715,
+        "call_delta": 0.9974246799497777,
+        "call_gamma": 0.0011274049864743038,
+        "call_theta": -4.113836475900632,
+        "call_vega": 1.1274049864743039,
+        "call_rho": 163.98975654278811,
+        "put_price": 0.005536817761847834,
+        "put_delta": -0.0025753200502222897,
+        "put_gamma": 0.0011274049864743038,
+        "put_theta": -0.0009391211917249582,
+        "put_vega": 1.1274049864743039,
+        "put_rho": -0.5261376455681536
+      },
+      "metadata": {
+        "moneyness": 1.1,
+        "moneyness_category": "ITM"
+      }
+    },
+    {
+      "id": "BS_117",
+      "category": "black_scholes",
+      "description": "Moneyness=1.1, T=2.00Y, Vol=10%",
+      "inputs": {
+        "s": 100.0,
+        "k": 90.9090909090909,
+        "t": 2.0,
+        "r": 0.05,
+        "v": 0.1
+      },
+      "outputs": {
+        "call_price": 18.23148418562866,
+        "call_delta": 0.926716131701118,
+        "call_gamma": 0.009834054531958682,
+        "call_theta": -4.213709175822092,
+        "call_vega": 19.668109063917367,
+        "call_rho": 148.88025796896628,
+        "put_price": 0.48943127980678724,
+        "put_delta": -0.07328386829888199,
+        "put_gamma": 0.009834054531958682,
+        "put_theta": -0.10081182111318476,
+        "put_vega": 19.668109063917367,
+        "put_rho": -15.635636219389973
+      },
+      "metadata": {
+        "moneyness": 1.1,
+        "moneyness_category": "ITM"
+      }
+    },
+    {
+      "id": "BS_118",
+      "category": "black_scholes",
+      "description": "Moneyness=1.1, T=2.00Y, Vol=20%",
+      "inputs": {
+        "s": 100.0,
+        "k": 90.9090909090909,
+        "t": 2.0,
+        "r": 0.05,
+        "v": 0.2
+      },
+      "outputs": {
+        "call_price": 21.445582109500116,
+        "call_delta": 0.7972806031068183,
+        "call_gamma": 0.00997860077358441,
+        "call_theta": -4.909844064775968,
+        "call_vega": 39.91440309433764,
+        "call_rho": 116.56495640236342,
+        "put_price": 3.7035292036782437,
+        "put_delta": -0.2027193968931818,
+        "put_gamma": 0.00997860077358441,
+        "put_theta": -0.7969467100670609,
+        "put_vega": 39.91440309433764,
+        "put_rho": -47.95093778599285
+      },
+      "metadata": {
+        "moneyness": 1.1,
+        "moneyness_category": "ITM"
+      }
+    },
+    {
+      "id": "BS_119",
+      "category": "black_scholes",
+      "description": "Moneyness=1.1, T=2.00Y, Vol=30%",
+      "inputs": {
+        "s": 100.0,
+        "k": 90.9090909090909,
+        "t": 2.0,
+        "r": 0.05,
+        "v": 0.3
+      },
+      "outputs": {
+        "call_price": 25.744495974588382,
+        "call_delta": 0.7493617250212442,
+        "call_gamma": 0.007500197762722492,
+        "call_theta": -5.8346728196019235,
+        "call_vega": 45.00118657633496,
+        "call_rho": 98.38335305507208,
+        "put_price": 8.002443068766517,
+        "put_delta": -0.2506382749787558,
+        "put_gamma": 0.007500197762722492,
+        "put_theta": -1.7217754648930168,
+        "put_vega": 45.00118657633496,
+        "put_rho": -66.13254113328419
+      },
+      "metadata": {
+        "moneyness": 1.1,
+        "moneyness_category": "ITM"
+      }
+    },
+    {
+      "id": "BS_120",
+      "category": "black_scholes",
+      "description": "Moneyness=1.1, T=2.00Y, Vol=50%",
+      "inputs": {
+        "s": 100.0,
+        "k": 90.9090909090909,
+        "t": 2.0,
+        "r": 0.05,
+        "v": 0.5
+      },
+      "outputs": {
+        "call_price": 34.9641422454781,
+        "call_delta": 0.7355753992152732,
+        "call_gamma": 0.004627047583882931,
+        "call_theta": -7.713479363656124,
+        "call_vega": 46.27047583882932,
+        "call_rho": 77.18679535209841,
+        "put_price": 17.222089339656236,
+        "put_delta": -0.2644246007847269,
+        "put_gamma": 0.004627047583882931,
+        "put_theta": -3.6005820089472174,
+        "put_vega": 46.27047583882932,
+        "put_rho": -87.32909883625786
+      },
+      "metadata": {
+        "moneyness": 1.1,
+        "moneyness_category": "ITM"
+      }
+    },
+    {
+      "id": "BS_121",
+      "category": "black_scholes",
+      "description": "Moneyness=1.2, T=0.01Y, Vol=5%",
+      "inputs": {
+        "s": 100.0,
+        "k": 83.33333333333334,
+        "t": 0.01,
+        "r": 0.05,
+        "v": 0.05
+      },
+      "outputs": {
+        "call_price": 16.708322918402544,
+        "call_delta": 1.0,
+        "call_gamma": 3.527622862063504e-291,
+        "call_theta": -4.164583854079872,
+        "call_vega": 1.763811431031752e-290,
+        "call_rho": 0.8329167708159746,
+        "put_price": 6.5816590511175255e-295,
+        "put_delta": -4.819931553549239e-293,
+        "put_gamma": 3.527622862063504e-291,
+        "put_theta": -4.385425628982108e-290,
+        "put_vega": 1.763811431031752e-290,
+        "put_rho": -4.8205897194543514e-293
+      },
+      "metadata": {
+        "moneyness": 1.2,
+        "moneyness_category": "ITM"
+      }
+    },
+    {
+      "id": "BS_122",
+      "category": "black_scholes",
+      "description": "Moneyness=1.2, T=0.01Y, Vol=10%",
+      "inputs": {
+        "s": 100.0,
+        "k": 83.33333333333334,
+        "t": 0.01,
+        "r": 0.05,
+        "v": 0.1
+      },
+      "outputs": {
+        "call_price": 16.708322918402544,
+        "call_delta": 1.0,
+        "call_gamma": 9.605414281338857e-74,
+        "call_theta": -4.164583854079872,
+        "call_vega": 9.605414281338857e-73,
+        "call_rho": 0.8329167708159746,
+        "put_price": 2.848415135064205e-76,
+        "put_delta": -5.236979296846733e-75,
+        "put_gamma": 9.605414281338857e-74,
+        "put_theta": -4.776508002109519e-72,
+        "put_vega": 9.605414281338857e-73,
+        "put_rho": -5.239827711981798e-75
+      },
+      "metadata": {
+        "moneyness": 1.2,
+        "moneyness_category": "ITM"
+      }
+    },
+    {
+      "id": "BS_123",
+      "category": "black_scholes",
+      "description": "Moneyness=1.2, T=0.01Y, Vol=20%",
+      "inputs": {
+        "s": 100.0,
+        "k": 83.33333333333334,
+        "t": 0.01,
+        "r": 0.05,
+        "v": 0.2
+      },
+      "outputs": {
+        "call_price": 16.708322918402544,
+        "call_delta": 1.0,
+        "call_gamma": 1.3046283866292384e-19,
+        "call_theta": -4.164583854079872,
+        "call_vega": 2.6092567732584768e-18,
+        "call_rho": 0.8329167708159746,
+        "put_price": 6.033466012764545e-21,
+        "put_delta": -2.818414654379766e-20,
+        "put_gamma": 1.3046283866292384e-19,
+        "put_theta": -2.595134532656514e-17,
+        "put_vega": 2.6092567732584768e-18,
+        "put_rho": -2.824448120392531e-20
+      },
+      "metadata": {
+        "moneyness": 1.2,
+        "moneyness_category": "ITM"
+      }
+    },
+    {
+      "id": "BS_124",
+      "category": "black_scholes",
+      "description": "Moneyness=1.2, T=0.01Y, Vol=30%",
+      "inputs": {
+        "s": 100.0,
+        "k": 83.33333333333334,
+        "t": 0.01,
+        "r": 0.05,
+        "v": 0.3
+      },
+      "outputs": {
+        "call_price": 16.708322918638004,
+        "call_delta": 0.9999999994988763,
+        "call_gamma": 1.046506525660485e-09,
+        "call_theta": -4.164584322490417,
+        "call_vega": 3.139519576981455e-08,
+        "call_rho": 0.8329167703124963,
+        "put_price": 2.3546391473050094e-10,
+        "put_delta": -5.011236963872515e-10,
+        "put_gamma": 1.046506525660485e-09,
+        "put_theta": -4.684105448695454e-07,
+        "put_vega": 3.139519576981455e-08,
+        "put_rho": -5.034783355345566e-10
+      },
+      "metadata": {
+        "moneyness": 1.2,
+        "moneyness_category": "ITM"
+      }
+    },
+    {
+      "id": "BS_125",
+      "category": "black_scholes",
+      "description": "Moneyness=1.2, T=0.01Y, Vol=50%",
+      "inputs": {
+        "s": 100.0,
+        "k": 83.33333333333334,
+        "t": 0.01,
+        "r": 0.05,
+        "v": 0.5
+      },
+      "outputs": {
+        "call_price": 16.70846453741528,
+        "call_delta": 0.9998840357821874,
+        "call_gamma": 9.098243884926695e-05,
+        "call_theta": -4.277725000601755,
+        "call_vega": 0.0045491219424633475,
+        "call_rho": 0.8327993904080346,
+        "put_price": 0.0001416190127378151,
+        "put_delta": -0.00011596421781260044,
+        "put_gamma": 9.098243884926695e-05,
+        "put_theta": -0.11314114652188378,
+        "put_vega": 0.0045491219424633475,
+        "put_rho": -0.0001173804079399786
+      },
+      "metadata": {
+        "moneyness": 1.2,
+        "moneyness_category": "ITM"
+      }
+    },
+    {
+      "id": "BS_126",
+      "category": "black_scholes",
+      "description": "Moneyness=1.2, T=0.10Y, Vol=5%",
+      "inputs": {
+        "s": 100.0,
+        "k": 83.33333333333334,
+        "t": 0.1,
+        "r": 0.05,
+        "v": 0.05
+      },
+      "outputs": {
+        "call_price": 17.0822934006098,
+        "call_delta": 1.0,
+        "call_gamma": 7.638610912020877e-32,
+        "call_theta": -4.14588532996951,
+        "call_vega": 3.819305456010438e-30,
+        "call_rho": 8.29177065993902,
+        "put_price": 1.3324709706388714e-33,
+        "put_delta": -1.0116725856496356e-32,
+        "put_gamma": 7.638610912020877e-32,
+        "put_theta": -9.04176111171596e-31,
+        "put_vega": 3.819305456010438e-30,
+        "put_rho": -1.0130050566202746e-31
+      },
+      "metadata": {
+        "moneyness": 1.2,
+        "moneyness_category": "ITM"
+      }
+    },
+    {
+      "id": "BS_127",
+      "category": "black_scholes",
+      "description": "Moneyness=1.2, T=0.10Y, Vol=10%",
+      "inputs": {
+        "s": 100.0,
+        "k": 83.33333333333334,
+        "t": 0.1,
+        "r": 0.05,
+        "v": 0.1
+      },
+      "outputs": {
+        "call_price": 17.08229340133667,
+        "call_delta": 0.9999999985700058,
+        "call_gamma": 2.7581665320229465e-09,
+        "call_theta": -4.145885460691522,
+        "call_vega": 2.758166532022947e-07,
+        "call_rho": 8.291770645566391,
+        "put_price": 7.268840204329558e-10,
+        "put_delta": -1.4299941891027652e-09,
+        "put_gamma": 2.7581665320229465e-09,
+        "put_theta": -1.3072201145461186e-07,
+        "put_vega": 2.758166532022947e-07,
+        "put_rho": -1.4372630293070948e-08
+      },
+      "metadata": {
+        "moneyness": 1.2,
+        "moneyness_category": "ITM"
+      }
+    },
+    {
+      "id": "BS_128",
+      "category": "black_scholes",
+      "description": "Moneyness=1.2, T=0.10Y, Vol=20%",
+      "inputs": {
+        "s": 100.0,
+        "k": 83.33333333333334,
+        "t": 0.1,
+        "r": 0.05,
+        "v": 0.2
+      },
+      "outputs": {
+        "call_price": 17.08480937783699,
+        "call_delta": 0.9986207261411765,
+        "call_gamma": 0.0007146556471770983,
+        "call_theta": -4.281794291249453,
+        "call_vega": 0.14293112943541966,
+        "call_rho": 8.277726323628066,
+        "put_price": 0.0025159772271853287,
+        "put_delta": -0.0013792738588235289,
+        "put_gamma": 0.0007146556471770983,
+        "put_theta": -0.13590896127994279,
+        "put_vega": 0.14293112943541966,
+        "put_rho": -0.014044336310953823
+      },
+      "metadata": {
+        "moneyness": 1.2,
+        "moneyness_category": "ITM"
+      }
+    },
+    {
+      "id": "BS_129",
+      "category": "black_scholes",
+      "description": "Moneyness=1.2, T=0.10Y, Vol=30%",
+      "inputs": {
+        "s": 100.0,
+        "k": 83.33333333333334,
+        "t": 0.1,
+        "r": 0.05,
+        "v": 0.3
+      },
+      "outputs": {
+        "call_price": 17.160729144530364,
+        "call_delta": 0.9784106228688886,
+        "call_gamma": 0.005445104401385061,
+        "call_theta": -6.484313637741202,
+        "call_vega": 1.6335313204155182,
+        "call_rho": 8.06803331423585,
+        "put_price": 0.07843574392057429,
+        "put_delta": -0.0215893771311114,
+        "put_gamma": 0.005445104401385061,
+        "put_theta": -2.338428307771691,
+        "put_vega": 1.6335313204155182,
+        "put_rho": -0.22373734570317144
+      },
+      "metadata": {
+        "moneyness": 1.2,
+        "moneyness_category": "ITM"
+      }
+    },
+    {
+      "id": "BS_130",
+      "category": "black_scholes",
+      "description": "Moneyness=1.2, T=0.10Y, Vol=50%",
+      "inputs": {
+        "s": 100.0,
+        "k": 83.33333333333334,
+        "t": 0.1,
+        "r": 0.05,
+        "v": 0.5
+      },
+      "outputs": {
+        "call_price": 17.91392918422565,
+        "call_delta": 0.8968459461981024,
+        "call_gamma": 0.011353353872539138,
+        "call_theta": -17.780225612453155,
+        "call_vega": 5.676676936269569,
+        "call_rho": 7.1770665435584595,
+        "put_price": 0.8316357836158375,
+        "put_delta": -0.10315405380189763,
+        "put_gamma": 0.011353353872539138,
+        "put_theta": -13.634340282483645,
+        "put_vega": 5.676676936269569,
+        "put_rho": -1.11470411638056
+      },
+      "metadata": {
+        "moneyness": 1.2,
+        "moneyness_category": "ITM"
+      }
+    },
+    {
+      "id": "BS_131",
+      "category": "black_scholes",
+      "description": "Moneyness=1.2, T=0.25Y, Vol=5%",
+      "inputs": {
+        "s": 100.0,
+        "k": 83.33333333333334,
+        "t": 0.25,
+        "r": 0.05,
+        "v": 0.05
+      },
+      "outputs": {
+        "call_price": 17.701849958843198,
+        "call_delta": 0.999999999999997,
+        "call_gamma": 9.409379708930971e-15,
+        "call_theta": -4.1149075020579415,
+        "call_vega": 1.1761724636163713e-12,
+        "call_rho": 20.574537510289126,
+        "put_price": 9.240885525964645e-16,
+        "put_delta": -2.9665433077023788e-15,
+        "put_gamma": 9.409379708930971e-15,
+        "put_theta": -1.0273832539549541e-13,
+        "put_vega": 1.1761724636163713e-12,
+        "put_rho": -7.439460483070859e-14
+      },
+      "metadata": {
+        "moneyness": 1.2,
+        "moneyness_category": "ITM"
+      }
+    },
+    {
+      "id": "BS_132",
+      "category": "black_scholes",
+      "description": "Moneyness=1.2, T=0.25Y, Vol=10%",
+      "inputs": {
+        "s": 100.0,
+        "k": 83.33333333333334,
+        "t": 0.25,
+        "r": 0.05,
+        "v": 0.1
+      },
+      "outputs": {
+        "call_price": 17.701900985467375,
+        "call_delta": 0.9999559876970324,
+        "call_gamma": 3.653691193977688e-05,
+        "call_theta": -4.116511734808782,
+        "call_vega": 0.00913422798494422,
+        "call_rho": 20.573424446058965,
+        "put_price": 5.102662418195701e-05,
+        "put_delta": -4.401230296756671e-05,
+        "put_gamma": 3.653691193977688e-05,
+        "put_theta": -0.0016042327509419125,
+        "put_vega": 0.00913422798494422,
+        "put_rho": -0.001113064230234657
+      },
+      "metadata": {
+        "moneyness": 1.2,
+        "moneyness_category": "ITM"
+      }
+    },
+    {
+      "id": "BS_133",
+      "category": "black_scholes",
+      "description": "Moneyness=1.2, T=0.25Y, Vol=20%",
+      "inputs": {
+        "s": 100.0,
+        "k": 83.33333333333334,
+        "t": 0.25,
+        "r": 0.05,
+        "v": 0.2
+      },
+      "outputs": {
+        "call_price": 17.79015737309247,
+        "call_delta": 0.9771533527688506,
+        "call_gamma": 0.005418391091544802,
+        "call_theta": -5.0799371134985885,
+        "call_vega": 2.709195545772401,
+        "call_rho": 19.981294475948147,
+        "put_price": 0.08830741424927568,
+        "put_delta": -0.02284664723114938,
+        "put_gamma": 0.005418391091544802,
+        "put_theta": -0.9650296114407497,
+        "put_vega": 2.709195545772401,
+        "put_rho": -0.5932430343410534
+      },
+      "metadata": {
+        "moneyness": 1.2,
+        "moneyness_category": "ITM"
+      }
+    },
+    {
+      "id": "BS_134",
+      "category": "black_scholes",
+      "description": "Moneyness=1.2, T=0.25Y, Vol=30%",
+      "inputs": {
+        "s": 100.0,
+        "k": 83.33333333333334,
+        "t": 0.25,
+        "r": 0.05,
+        "v": 0.3
+      },
+      "outputs": {
+        "call_price": 18.321745666273614,
+        "call_delta": 0.9152497208867028,
+        "call_gamma": 0.0103510614133161,
+        "call_theta": -8.318138957112078,
+        "call_vega": 7.763296059987075,
+        "call_rho": 18.300806605599167,
+        "put_price": 0.6198957074304037,
+        "put_delta": -0.08475027911329724,
+        "put_gamma": 0.0103510614133161,
+        "put_theta": -4.203231455054239,
+        "put_vega": 7.763296059987075,
+        "put_rho": -2.2737309046900323
+      },
+      "metadata": {
+        "moneyness": 1.2,
+        "moneyness_category": "ITM"
+      }
+    },
+    {
+      "id": "BS_135",
+      "category": "black_scholes",
+      "description": "Moneyness=1.2, T=0.25Y, Vol=50%",
+      "inputs": {
+        "s": 100.0,
+        "k": 83.33333333333334,
+        "t": 0.25,
+        "r": 0.05,
+        "v": 0.5
+      },
+      "outputs": {
+        "call_price": 20.516156344030676,
+        "call_delta": 0.8170781760238304,
+        "call_gamma": 0.010602333629130664,
+        "call_theta": -16.312500099330947,
+        "call_vega": 13.252917036413331,
+        "call_rho": 15.297915314588089,
+        "put_price": 2.8143063851874786,
+        "put_delta": -0.18292182397616968,
+        "put_gamma": 0.010602333629130664,
+        "put_theta": -12.19759259727311,
+        "put_vega": 13.252917036413331,
+        "put_rho": -5.276622195701112
+      },
+      "metadata": {
+        "moneyness": 1.2,
+        "moneyness_category": "ITM"
+      }
+    },
+    {
+      "id": "BS_136",
+      "category": "black_scholes",
+      "description": "Moneyness=1.2, T=0.50Y, Vol=5%",
+      "inputs": {
+        "s": 100.0,
+        "k": 83.33333333333334,
+        "t": 0.5,
+        "r": 0.05,
+        "v": 0.05
+      },
+      "outputs": {
+        "call_price": 18.724173998804417,
+        "call_delta": 0.9999999979686097,
+        "call_gamma": 3.472083300546085e-09,
+        "call_theta": -4.063791333303869,
+        "call_vega": 8.680208251365212e-07,
+        "call_rho": 40.63791289902828,
+        "put_price": 1.165475000108235e-09,
+        "put_delta": -2.0313902364583826e-09,
+        "put_gamma": 3.472083300546085e-09,
+        "put_theta": -3.3185816324528734e-08,
+        "put_vega": 8.680208251365212e-07,
+        "put_rho": -1.0215224932297324e-07
+      },
+      "metadata": {
+        "moneyness": 1.2,
+        "moneyness_category": "ITM"
+      }
+    },
+    {
+      "id": "BS_137",
+      "category": "black_scholes",
+      "description": "Moneyness=1.2, T=0.50Y, Vol=10%",
+      "inputs": {
+        "s": 100.0,
+        "k": 83.33333333333334,
+        "t": 0.5,
+        "r": 0.05,
+        "v": 0.1
+      },
+      "outputs": {
+        "call_price": 18.727263941689515,
+        "call_delta": 0.998497983390316,
+        "call_gamma": 0.0006909392836228382,
+        "call_theta": -4.090673684048247,
+        "call_vega": 0.34546964181141915,
+        "call_rho": 40.56126719867105,
+        "put_price": 0.0030899440505643694,
+        "put_delta": -0.001502016609683948,
+        "put_gamma": 0.0006909392836228382,
+        "put_theta": -0.026882383930193945,
+        "put_vega": 0.34546964181141915,
+        "put_rho": -0.07664580250947958
+      },
+      "metadata": {
+        "moneyness": 1.2,
+        "moneyness_category": "ITM"
+      }
+    },
+    {
+      "id": "BS_138",
+      "category": "black_scholes",
+      "description": "Moneyness=1.2, T=0.50Y, Vol=20%",
+      "inputs": {
+        "s": 100.0,
+        "k": 83.33333333333334,
+        "t": 0.5,
+        "r": 0.05,
+        "v": 0.2
+      },
+      "outputs": {
+        "call_price": 19.127043955854802,
+        "call_delta": 0.937816048914623,
+        "call_gamma": 0.00866196486290483,
+        "call_theta": -5.465121019361341,
+        "call_vega": 8.661964862904831,
+        "call_rho": 37.327280467803746,
+        "put_price": 0.4028699582158657,
+        "put_delta": -0.06218395108537705,
+        "put_gamma": 0.00866196486290483,
+        "put_theta": -1.4013297192432876,
+        "put_vega": 8.661964862904831,
+        "put_rho": -3.310632533376785
+      },
+      "metadata": {
+        "moneyness": 1.2,
+        "moneyness_category": "ITM"
+      }
+    },
+    {
+      "id": "BS_139",
+      "category": "black_scholes",
+      "description": "Moneyness=1.2, T=0.50Y, Vol=30%",
+      "inputs": {
+        "s": 100.0,
+        "k": 83.33333333333334,
+        "t": 0.5,
+        "r": 0.05,
+        "v": 0.3
+      },
+      "outputs": {
+        "call_price": 20.38165094731717,
+        "call_delta": 0.8606821481966722,
+        "call_gamma": 0.010457577820159122,
+        "call_theta": -7.990238212689108,
+        "call_vega": 15.686366730238685,
+        "call_rho": 32.843281936175025,
+        "put_price": 1.6574769496782213,
+        "put_delta": -0.13931785180332784,
+        "put_gamma": 0.010457577820159122,
+        "put_theta": -3.9264469125710546,
+        "put_vega": 15.686366730238685,
+        "put_rho": -7.794631065005503
+      },
+      "metadata": {
+        "moneyness": 1.2,
+        "moneyness_category": "ITM"
+      }
+    },
+    {
+      "id": "BS_140",
+      "category": "black_scholes",
+      "description": "Moneyness=1.2, T=0.50Y, Vol=50%",
+      "inputs": {
+        "s": 100.0,
+        "k": 83.33333333333334,
+        "t": 0.5,
+        "r": 0.05,
+        "v": 0.5
+      },
+      "outputs": {
+        "call_price": 24.174673849482126,
+        "call_delta": 0.7773191730475377,
+        "call_gamma": 0.008433000505928856,
+        "call_theta": -13.219112805174653,
+        "call_vega": 21.08250126482214,
+        "call_rho": 26.778621727635826,
+        "put_price": 5.450499851843169,
+        "put_delta": -0.22268082695246233,
+        "put_gamma": 0.008433000505928856,
+        "put_theta": -9.1553215050566,
+        "put_vega": 21.08250126482214,
+        "put_rho": -13.8592912735447
+      },
+      "metadata": {
+        "moneyness": 1.2,
+        "moneyness_category": "ITM"
+      }
+    },
+    {
+      "id": "BS_141",
+      "category": "black_scholes",
+      "description": "Moneyness=1.2, T=1.00Y, Vol=5%",
+      "inputs": {
+        "s": 100.0,
+        "k": 83.33333333333334,
+        "t": 1.0,
+        "r": 0.05,
+        "v": 0.05
+      },
+      "outputs": {
+        "call_price": 20.73088278545235,
+        "call_delta": 0.9999985044580995,
+        "call_gamma": 1.4564466730899286e-06,
+        "call_theta": -3.9634665886012934,
+        "call_vega": 0.0007282233365449643,
+        "call_rho": 79.26896766035759,
+        "put_price": 1.493845196535678e-06,
+        "put_delta": -1.4955419005135134e-06,
+        "put_gamma": 1.4564466730899286e-06,
+        "put_theta": -1.0653181651229755e-05,
+        "put_vega": 0.0007282233365449643,
+        "put_rho": -0.00015104803524788703
+      },
+      "metadata": {
+        "moneyness": 1.2,
+        "moneyness_category": "ITM"
+      }
+    },
+    {
+      "id": "BS_142",
+      "category": "black_scholes",
+      "description": "Moneyness=1.2, T=1.00Y, Vol=10%",
+      "inputs": {
+        "s": 100.0,
+        "k": 83.33333333333334,
+        "t": 1.0,
+        "r": 0.05,
+        "v": 0.1
+      },
+      "outputs": {
+        "call_price": 20.761300596561753,
+        "call_delta": 0.9911830155706103,
+        "call_gamma": 0.002387282254304737,
+        "call_theta": -4.0372141607402,
+        "call_vega": 2.387282254304737,
+        "call_rho": 78.35700096049928,
+        "put_price": 0.030419304954591664,
+        "put_delta": -0.008816984429389744,
+        "put_gamma": 0.002387282254304737,
+        "put_theta": -0.07375822532055856,
+        "put_vega": 2.387282254304737,
+        "put_rho": -0.912117747893566
+      },
+      "metadata": {
+        "moneyness": 1.2,
+        "moneyness_category": "ITM"
+      }
+    },
+    {
+      "id": "BS_143",
+      "category": "black_scholes",
+      "description": "Moneyness=1.2, T=1.00Y, Vol=20%",
+      "inputs": {
+        "s": 100.0,
+        "k": 83.33333333333334,
+        "t": 1.0,
+        "r": 0.05,
+        "v": 0.2
+      },
+      "outputs": {
+        "call_price": 21.80753662237275,
+        "call_delta": 0.8964550230770805,
+        "call_gamma": 0.009000295156245978,
+        "call_theta": -5.19195731551596,
+        "call_vega": 18.00059031249196,
+        "call_rho": 67.83796568533529,
+        "put_price": 1.0766553307655897,
+        "put_delta": -0.10354497692291958,
+        "put_gamma": 0.009000295156245978,
+        "put_theta": -1.2285013800963185,
+        "put_vega": 18.00059031249196,
+        "put_rho": -11.431153023057549
+      },
+      "metadata": {
+        "moneyness": 1.2,
+        "moneyness_category": "ITM"
+      }
+    },
+    {
+      "id": "BS_144",
+      "category": "black_scholes",
+      "description": "Moneyness=1.2, T=1.00Y, Vol=30%",
+      "inputs": {
+        "s": 100.0,
+        "k": 83.33333333333334,
+        "t": 1.0,
+        "r": 0.05,
+        "v": 0.3
+      },
+      "outputs": {
+        "call_price": 24.067025776759543,
+        "call_delta": 0.8223623030406937,
+        "call_gamma": 0.00867423282792267,
+        "call_theta": -6.811864998930693,
+        "call_vega": 26.022698483768007,
+        "call_rho": 58.16920452730982,
+        "put_price": 3.3361444851523885,
+        "put_delta": -0.17763769695930626,
+        "put_gamma": 0.00867423282792267,
+        "put_theta": -2.8484090635110504,
+        "put_vega": 26.022698483768007,
+        "put_rho": -21.099914181083015
+      },
+      "metadata": {
+        "moneyness": 1.2,
+        "moneyness_category": "ITM"
+      }
+    },
+    {
+      "id": "BS_145",
+      "category": "black_scholes",
+      "description": "Moneyness=1.2, T=1.00Y, Vol=50%",
+      "inputs": {
+        "s": 100.0,
+        "k": 83.33333333333334,
+        "t": 1.0,
+        "r": 0.05,
+        "v": 0.5
+      },
+      "outputs": {
+        "call_price": 29.887892149170142,
+        "call_delta": 0.7625852015023433,
+        "call_gamma": 0.006180729771183394,
+        "call_theta": -10.044443614032453,
+        "call_vega": 30.90364885591697,
+        "call_rho": 46.37062800106419,
+        "put_price": 9.157010857562966,
+        "put_delta": -0.23741479849765673,
+        "put_gamma": 0.006180729771183394,
+        "put_theta": -6.080987678612811,
+        "put_vega": 30.90364885591697,
+        "put_rho": -32.89849070732864
+      },
+      "metadata": {
+        "moneyness": 1.2,
+        "moneyness_category": "ITM"
+      }
+    },
+    {
+      "id": "BS_146",
+      "category": "black_scholes",
+      "description": "Moneyness=1.2, T=2.00Y, Vol=5%",
+      "inputs": {
+        "s": 100.0,
+        "k": 83.33333333333334,
+        "t": 2.0,
+        "r": 0.05,
+        "v": 0.05
+      },
+      "outputs": {
+        "call_price": 24.596927133404535,
+        "call_delta": 0.9999718715441903,
+        "call_gamma": 1.6915470215789398e-05,
+        "call_theta": -3.7702244444284223,
+        "call_vega": 0.0169154702157894,
+        "call_rho": 150.800520042029,
+        "put_price": 4.530306783594824e-05,
+        "put_delta": -2.8128455809664463e-05,
+        "put_gamma": 1.6915470215789398e-05,
+        "put_theta": -6.853594525724771e-05,
+        "put_vega": 0.0169154702157894,
+        "put_rho": -0.005716297297604789
+      },
+      "metadata": {
+        "moneyness": 1.2,
+        "moneyness_category": "ITM"
+      }
+    },
+    {
+      "id": "BS_147",
+      "category": "black_scholes",
+      "description": "Moneyness=1.2, T=2.00Y, Vol=10%",
+      "inputs": {
+        "s": 100.0,
+        "k": 83.33333333333334,
+        "t": 2.0,
+        "r": 0.05,
+        "v": 0.1
+      },
+      "outputs": {
+        "call_price": 24.701977749441838,
+        "call_delta": 0.9806341267998616,
+        "call_gamma": 0.0033312937709484504,
+        "call_theta": -3.8346364350746382,
+        "call_vega": 6.662587541896901,
+        "call_rho": 146.72286986108864,
+        "put_price": 0.10509591910515326,
+        "put_delta": -0.01936587320013834,
+        "put_gamma": 0.0033312937709484504,
+        "put_theta": -0.06448052659147314,
+        "put_vega": 6.662587541896901,
+        "put_rho": -4.083366478237974
+      },
+      "metadata": {
+        "moneyness": 1.2,
+        "moneyness_category": "ITM"
+      }
+    },
+    {
+      "id": "BS_148",
+      "category": "black_scholes",
+      "description": "Moneyness=1.2, T=2.00Y, Vol=20%",
+      "inputs": {
+        "s": 100.0,
+        "k": 83.33333333333334,
+        "t": 2.0,
+        "r": 0.05,
+        "v": 0.2
+      },
+      "outputs": {
+        "call_price": 26.637372709923397,
+        "call_delta": 0.8727690876003495,
+        "call_gamma": 0.007368329140719065,
+        "call_theta": -4.50564263064939,
+        "call_vega": 29.47331656287626,
+        "call_rho": 121.27907210022312,
+        "put_price": 2.0404908795866934,
+        "put_delta": -0.12723091239965045,
+        "put_gamma": 0.007368329140719065,
+        "put_theta": -0.7354867221662259,
+        "put_vega": 29.47331656287626,
+        "put_rho": -29.527164239103477
+      },
+      "metadata": {
+        "moneyness": 1.2,
+        "moneyness_category": "ITM"
+      }
+    },
+    {
+      "id": "BS_149",
+      "category": "black_scholes",
+      "description": "Moneyness=1.2, T=2.00Y, Vol=30%",
+      "inputs": {
+        "s": 100.0,
+        "k": 83.33333333333334,
+        "t": 2.0,
+        "r": 0.05,
+        "v": 0.3
+      },
+      "outputs": {
+        "call_price": 30.106422998091823,
+        "call_delta": 0.809911530473117,
+        "call_gamma": 0.006397971173119016,
+        "call_theta": -5.423323530364551,
+        "call_vega": 38.3878270387141,
+        "call_rho": 101.76946009843975,
+        "put_price": 5.509541167755131,
+        "put_delta": -0.19008846952688296,
+        "put_gamma": 0.006397971173119016,
+        "put_theta": -1.6531676218813862,
+        "put_vega": 38.3878270387141,
+        "put_rho": -49.03677624088685
+      },
+      "metadata": {
+        "moneyness": 1.2,
+        "moneyness_category": "ITM"
+      }
+    },
+    {
+      "id": "BS_150",
+      "category": "black_scholes",
+      "description": "Moneyness=1.2, T=2.00Y, Vol=50%",
+      "inputs": {
+        "s": 100.0,
+        "k": 83.33333333333334,
+        "t": 2.0,
+        "r": 0.05,
+        "v": 0.5
+      },
+      "outputs": {
+        "call_price": 38.34589354023854,
+        "call_delta": 0.7742198643833824,
+        "call_gamma": 0.004249723450046317,
+        "call_theta": -7.26595895746288,
+        "call_vega": 42.49723450046317,
+        "call_rho": 78.15218579619939,
+        "put_price": 13.749011709901847,
+        "put_delta": -0.22578013561661758,
+        "put_gamma": 0.004249723450046317,
+        "put_theta": -3.4958030489797154,
+        "put_vega": 42.49723450046317,
+        "put_rho": -72.65405054312721
+      },
+      "metadata": {
+        "moneyness": 1.2,
+        "moneyness_category": "ITM"
+      }
+    },
+    {
+      "id": "BS_EDGE_151",
+      "category": "black_scholes",
+      "description": "Deep ITM",
+      "inputs": {
+        "s": 200.0,
+        "k": 100.0,
+        "t": 1.0,
+        "r": 0.05,
+        "v": 0.2
+      },
+      "outputs": {
+        "call_price": 104.87772423432371,
+        "call_delta": 0.9999321111667006,
+        "call_gamma": 6.874179772990105e-06,
+        "call_theta": -4.760934243769212,
+        "call_vega": 0.05499343818392084,
+        "call_rho": 95.1086979990164,
+        "put_price": 0.0006666843951132276,
+        "put_delta": -6.788883329942401e-05,
+        "put_gamma": 6.874179772990105e-06,
+        "put_theta": -0.004787121265642183,
+        "put_vega": 0.05499343818392084,
+        "put_rho": -0.014244451054998029
+      },
+      "metadata": {
+        "moneyness": 2.0,
+        "moneyness_category": "ITM"
+      }
+    },
+    {
+      "id": "BS_EDGE_152",
+      "category": "black_scholes",
+      "description": "Deep OTM",
+      "inputs": {
+        "s": 50.0,
+        "k": 100.0,
+        "t": 1.0,
+        "r": 0.05,
+        "v": 0.2
+      },
+      "outputs": {
+        "call_price": 0.0023994175533097323,
+        "call_delta": 0.0009174326039451515,
+        "call_gamma": 0.0003110898644849087,
+        "call_theta": -0.017728103856442825,
+        "call_vega": 0.15554493224245433,
+        "call_rho": 0.04347221264394784,
+        "put_price": 45.12534186762472,
+        "put_delta": -0.9990825673960548,
+        "put_gamma": 0.0003110898644849087,
+        "put_theta": 4.738419018647128,
+        "put_vega": 0.15554493224245433,
+        "put_rho": -95.07947023742746
+      },
+      "metadata": {
+        "moneyness": 0.5,
+        "moneyness_category": "OTM"
+      }
+    },
+    {
+      "id": "BS_EDGE_153",
+      "category": "black_scholes",
+      "description": "Near expiry",
+      "inputs": {
+        "s": 100.0,
+        "k": 100.0,
+        "t": 0.001,
+        "r": 0.05,
+        "v": 0.2
+      },
+      "outputs": {
+        "call_price": 0.25481434603003095,
+        "call_delta": 0.5044153917657693,
+        "call_gamma": 0.6307444962214838,
+        "call_theta": -128.65823548582406,
+        "call_vega": 1.261488992442967,
+        "call_rho": 0.050186724830546904,
+        "put_price": 0.24981447102794618,
+        "put_delta": -0.4955846082342307,
+        "put_gamma": 0.6307444962214838,
+        "put_theta": -123.65848547957418,
+        "put_vega": 1.261488992442967,
+        "put_rho": -0.04980827529445101
+      },
+      "metadata": {
+        "moneyness": 1.0,
+        "moneyness_category": "ATM"
+      }
+    },
+    {
+      "id": "BS_EDGE_154",
+      "category": "black_scholes",
+      "description": "High volatility",
+      "inputs": {
+        "s": 100.0,
+        "k": 100.0,
+        "t": 1.0,
+        "r": 0.05,
+        "v": 1.0
+      },
+      "outputs": {
+        "call_price": 39.84016248343717,
+        "call_delta": 0.7088403132116536,
+        "call_gamma": 0.003429438550193839,
+        "call_theta": -18.699386192855606,
+        "call_vega": 34.29438550193839,
+        "call_rho": 31.043868837728194,
+        "put_price": 34.963104933508575,
+        "put_delta": -0.29115968678834636,
+        "put_gamma": 0.003429438550193839,
+        "put_theta": -13.943239070352035,
+        "put_vega": 34.29438550193839,
+        "put_rho": -64.07907361234321
+      },
+      "metadata": {
+        "moneyness": 1.0,
+        "moneyness_category": "ATM"
+      }
+    },
+    {
+      "id": "BS_EDGE_155",
+      "category": "black_scholes",
+      "description": "Negative rate",
+      "inputs": {
+        "s": 100.0,
+        "k": 100.0,
+        "t": 1.0,
+        "r": -0.02,
+        "v": 0.2
+      },
+      "outputs": {
+        "call_price": 7.076019176652636,
+        "call_delta": 0.5,
+        "call_gamma": 0.019947114020071634,
+        "call_theta": -3.1309431875473797,
+        "call_vega": 39.89422804014327,
+        "call_rho": 42.923980823347364,
+        "put_price": 9.096153179328205,
+        "put_delta": -0.5,
+        "put_gamma": 0.019947114020071634,
+        "put_theta": -5.171345867600891,
+        "put_vega": 39.89422804014327,
+        "put_rho": -59.096153179328205
+      },
+      "metadata": {
+        "moneyness": 1.0,
+        "moneyness_category": "ATM"
+      }
+    },
+    {
+      "id": "BS_REF_156",
+      "category": "black_scholes",
+      "description": "Reference ATM (used in Rust tests)",
+      "inputs": {
+        "s": 100.0,
+        "k": 100.0,
+        "t": 1.0,
+        "r": 0.05,
+        "v": 0.2
+      },
+      "outputs": {
+        "call_price": 10.450583572185565,
+        "call_delta": 0.6368306511756191,
+        "call_gamma": 0.018762017345846895,
+        "call_theta": -6.414027546438196,
+        "call_vega": 37.52403469169379,
+        "call_rho": 53.232481545376345,
+        "put_price": 5.573526022256971,
+        "put_delta": -0.3631693488243809,
+        "put_gamma": 0.018762017345846895,
+        "put_theta": -1.6578804239346256,
+        "put_vega": 37.52403469169379,
+        "put_rho": -41.89046090469506
+      },
+      "metadata": {
+        "moneyness": 1.0,
+        "moneyness_category": "ATM"
+      }
+    },
+    {
+      "id": "BS_REF_157",
+      "category": "black_scholes",
+      "description": "Reference OTM",
+      "inputs": {
+        "s": 90.0,
+        "k": 100.0,
+        "t": 1.0,
+        "r": 0.05,
+        "v": 0.2
+      },
+      "outputs": {
+        "call_price": 5.091222078817552,
+        "call_delta": 0.42983173188954316,
+        "call_gamma": 0.021819747579660095,
+        "call_theta": -5.214480797467002,
+        "call_vega": 35.34799107904935,
+        "call_rho": 33.59363379124133,
+        "put_price": 10.214164528888958,
+        "put_delta": -0.5701682681104568,
+        "put_gamma": 0.021819747579660095,
+        "put_theta": -0.45833367496343147,
+        "put_vega": 35.34799107904935,
+        "put_rho": -61.529308658830075
+      },
+      "metadata": {
+        "moneyness": 0.9,
+        "moneyness_category": "OTM"
+      }
+    },
+    {
+      "id": "BS_REF_158",
+      "category": "black_scholes",
+      "description": "Reference ITM",
+      "inputs": {
+        "s": 110.0,
+        "k": 100.0,
+        "t": 1.0,
+        "r": 0.05,
+        "v": 0.2
+      },
+      "outputs": {
+        "call_price": 17.66295374059044,
+        "call_delta": 0.7957541713095866,
+        "call_gamma": 0.012886510906085861,
+        "call_theta": -6.612035894445983,
+        "call_vega": 31.185356392727783,
+        "call_rho": 69.87000510346408,
+        "put_price": 2.785896190661841,
+        "put_delta": -0.20424582869041347,
+        "put_gamma": 0.012886510906085861,
+        "put_theta": -1.8558887719424122,
+        "put_vega": 31.185356392727783,
+        "put_rho": -25.25293734660732
+      },
+      "metadata": {
+        "moneyness": 1.1,
+        "moneyness_category": "ITM"
+      }
+    }
+  ],
+  "tolerance": 1e-10,
+  "total_cases": 158,
+  "categories": {
+    "black_scholes": 158,
+    "merton": 0,
+    "black_76": 0
+  }
+}

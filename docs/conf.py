@@ -16,12 +16,12 @@ author = "driller"
 extensions = [
     "myst_parser",
     "sphinxcontrib.mermaid",
-    "sphinx.ext.autodoc",        # APIドキュメント自動生成
-    "sphinx.ext.napoleon",       # Google/NumPyスタイルdocstring
-    "sphinx.ext.viewcode",       # ソースコードリンク
-    "sphinx.ext.mathjax",       # 数式表示
-    "sphinx_copybutton",        # コードブロックコピーボタン
-    "sphinx_tabs.tabs",         # タブ表示
+    "sphinx.ext.autodoc",  # APIドキュメント自動生成
+    "sphinx.ext.napoleon",  # Google/NumPyスタイルdocstring
+    "sphinx.ext.viewcode",  # ソースコードリンク
+    "sphinx.ext.mathjax",  # 数式表示
+    "sphinx_copybutton",  # コードブロックコピーボタン
+    "sphinx_tabs.tabs",  # タブ表示
 ]
 
 templates_path = ["_templates"]
@@ -36,15 +36,15 @@ html_static_path = ["_static"]
 
 # テーマ設定
 html_theme_options = {
-    'navigation_depth': 4,
-    'collapse_navigation': False,
-    'sticky_navigation': True,
-    'includehidden': True,
-    'titles_only': False
+    "navigation_depth": 4,
+    "collapse_navigation": False,
+    "sticky_navigation": True,
+    "includehidden": True,
+    "titles_only": False,
 }
 
 # 言語設定
-language = 'ja'  # 日本語対応
+language = "ja"  # 日本語対応
 
 # MyST Parser configuration
 myst_enable_extensions = [

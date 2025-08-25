@@ -1,0 +1,31 @@
+[package]
+name = "quantforge"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+name = "quantforge"
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+pyo3 = { version = "0.22", features = ["extension-module", "abi3-py39"] }
+numpy = "0.22"
+ndarray = "0.16"
+thiserror = "2.0"
+
+[dev-dependencies]
+approx = "0.5"
+criterion = { version = "0.5", features = ["html_reports"] }
+
+[profile.release]
+lto = true
+codegen-units = 1
+opt-level = 3
+
+[features]
+default = []
+simd = []  # SIMD最適化の有効化
+
+[[bench]]
+name = "benchmark"
+harness = false

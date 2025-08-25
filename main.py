@@ -1,4 +1,5 @@
-def main():
+def main() -> None:
+    """QuantForgeのエントリーポイント."""
     print("Hello from quantforge!")
 
 

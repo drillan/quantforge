@@ -4,11 +4,20 @@
 
 ## 📋 アクティブな計画
 
+### テスト計画
+- [2025-01-24 Pytestカバレッジ戦略](./2025-01-24-pytest-coverage-strategy.md) - **DRAFT** - 2週間の包括的テストカバレッジ戦略
+
+## 📦 完了した計画
+
 ### 実装計画
-- [2025-01-24 実装計画](./2025-01-24-implementation-plan.md) - **ACTIVE** - 14週間の包括的実装計画
+- [2025-01-24 実装計画](./archive/2025-01-24-implementation-plan.md) - **COMPLETED** - 14週間の包括的実装計画（基本設計完了）
+- [2025-01-24 Rust BSコア実装](./archive/2025-01-24-rust-bs-core.md) - **COMPLETED** - Black-Scholesコア実装計画策定済み
 
 ### ドキュメント計画
-- [2025-01-24 Sphinxドキュメント作成](./2025-01-24-sphinx-documentation.md) - **DRAFT** - 7日間のドキュメント作成計画
+- [2025-01-24 Sphinxドキュメント作成](./archive/2025-01-24-sphinx-documentation.md) - **COMPLETED** - Sphinxドキュメント構造作成済み
+
+### テスト計画
+- [2025-01-25 ゴールデンマスターテスト](./archive/2025-01-25-golden-master-testing.md) - **COMPLETED** - ゴールデンマスター実装完了
 
 ## 📁 ディレクトリ構造
 
@@ -52,17 +61,25 @@ YYYY-MM-DD-<type>-<title>.md
 
 ## 📊 進捗サマリー
 
+### アクティブな計画
 | 計画 | ステータス | 開始日 | 完了予定 | 進捗 |
 |------|-----------|--------|----------|------|
-| [実装計画](./2025-01-24-implementation-plan.md) | ACTIVE | 2025-01-24 | 2025-04-30 | 0% |
-| [Sphinxドキュメント](./2025-01-24-sphinx-documentation.md) | DRAFT | - | 2025-01-31 | 0% |
+| [Pytestカバレッジ戦略](./2025-01-24-pytest-coverage-strategy.md) | DRAFT | 2025-01-24 | 2025-02-07 | 0% |
+
+### 完了した計画
+| 計画 | ステータス | 開始日 | 完了日 | 成果物 |
+|------|-----------|--------|--------|--------|
+| [実装計画](./archive/2025-01-24-implementation-plan.md) | **COMPLETED** | 2025-01-24 | 2025-01-24 | 14週間の詳細実装計画書 ✅ |
+| [Rust BSコア](./archive/2025-01-24-rust-bs-core.md) | **COMPLETED** | 2025-01-24 | 2025-01-24 | 技術設計書 ✅ |
+| [Sphinxドキュメント](./archive/2025-01-24-sphinx-documentation.md) | **COMPLETED** | 2025-01-24 | 2025-01-25 | docs/配下の完全なドキュメント構造 ✅ |
+| [ゴールデンマスター](./archive/2025-01-25-golden-master-testing.md) | **COMPLETED** | 2025-01-25 | 2025-01-25 | 158テストケース生成、テスト基盤構築 ✅ |
 
 ## 🚀 Quick Links
 
 - [プロジェクトルート](../)
 - [設計文書](../draft/)
-- [ソースコード](../src/) *(未作成)*
+- [ソースコード](../src/)
 
 ---
 
-**最終更新**: 2025-01-24
+**最終更新**: 2025-01-25
