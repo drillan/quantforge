@@ -17,6 +17,12 @@ fn quantforge(m: &Bound<'_, PyModule>) -> PyResult<()> {
     // Add models submodule only - this is the only API
     let models = PyModule::new_bound(m.py(), "models")?;
     python_modules::black_scholes(&models)?;
+
+    // Add black76 as a submodule of models
+    let black76 = PyModule::new_bound(m.py(), "black76")?;
+    python_modules::black76(&black76)?;
+    models.add_submodule(&black76)?;
+
     m.add_submodule(&models)?;
 
     Ok(())

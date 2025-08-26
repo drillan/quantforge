@@ -1,149 +1,148 @@
-# 価格計算API
+# 価格計算API概要
 
-オプション価格計算のための主要な関数群です。
+QuantForgeの価格計算APIは、複数のオプション価格モデルを統一されたインターフェースで提供します。
 
-## Black-Scholesモデル
+## サポートされているモデル
 
-現在、QuantForgeはBlack-Scholesモデルのヨーロピアンオプションをサポートしています。
-
-### API使用方法
+### Black-Scholesモデル
+株式オプションの標準的な価格モデル。スポット価格を入力として使用します。
 
 ```python
 from quantforge.models import black_scholes
 
-# コールオプション価格
-call_price = black_scholes.call_price(
-    s=100.0,      # スポット価格
-    k=105.0,      # 権利行使価格
-    t=1.0,        # 満期までの時間（年）
-    r=0.05,       # 無リスク金利
-    sigma=0.2     # ボラティリティ
-)
-
-# プットオプション価格
-put_price = black_scholes.put_price(
-    s=100.0,
-    k=105.0,
-    t=1.0,
-    r=0.05,
-    sigma=0.2
-)
+# パラメータ: s(spot), k(strike), t(time), r(rate), sigma
+price = black_scholes.call_price(100.0, 105.0, 1.0, 0.05, 0.2)
 ```
 
-#### バッチ処理
+詳細: [Black-Scholesモデル API](black_scholes.md)
 
+### Black76モデル
+商品先物・金利デリバティブ向けの価格モデル。フォワード価格を入力として使用します。
+
+```python
+from quantforge.models import black76
+
+# パラメータ: f(forward), k(strike), t(time), r(rate), sigma
+price = black76.call_price(75.0, 70.0, 0.25, 0.05, 0.3)
+```
+
+詳細: [Black76モデル API](black76.md)
+
+## モデルの選択ガイド
+
+### Black-Scholesを使用する場合
+- **株式オプション**: 個別株、株価指数オプション
+- **配当なしの資産**: 配当を支払わない資産のオプション
+- **スポット価格ベース**: 現在の市場価格から直接計算
+
+### Black76を使用する場合
+- **商品先物オプション**: 原油、金、農産物などの先物オプション
+- **金利デリバティブ**: 金利キャップ、フロア、スワプション
+- **フォワード価格ベース**: 将来時点の価格から計算
+- **保管コスト・便益利回りがある資産**: 商品の保管コストや便益を考慮
+
+## 共通機能
+
+両モデルは以下の同一機能を提供します：
+
+### 価格計算
+```python
+# コールオプション価格
+call_price = model.call_price(...)
+
+# プットオプション価格  
+put_price = model.put_price(...)
+```
+
+### バッチ処理
 ```python
 import numpy as np
 
-# 複数のスポット価格でバッチ計算
-spots = np.array([95, 100, 105, 110])
-call_prices = black_scholes.call_price_batch(
-    spots=spots,
-    k=100.0,
-    t=1.0,
-    r=0.05,
-    sigma=0.2
-)
-
-put_prices = black_scholes.put_price_batch(
-    spots=spots,
-    k=100.0,
-    t=1.0,
-    r=0.05,
-    sigma=0.2
-)
+# 複数の価格で一括計算
+prices = np.array([90, 95, 100, 105, 110])
+results = model.call_price_batch(prices, ...)
 ```
 
+### グリークス計算
+```python
+# 全グリークスを一括取得
+greeks = model.greeks(..., is_call=True)
 
-## グリークス計算
+print(f"Delta: {greeks.delta}")  # 原資産価格感応度
+print(f"Gamma: {greeks.gamma}")  # デルタの変化率
+print(f"Vega: {greeks.vega}")    # ボラティリティ感応度
+print(f"Theta: {greeks.theta}")  # 時間減衰
+print(f"Rho: {greeks.rho}")      # 金利感応度
+```
 
+### インプライドボラティリティ
+```python
+# 市場価格からボラティリティを逆算
+iv = model.implied_volatility(market_price, ...)
+```
+
+## パラメータの対応
+
+| パラメータ | Black-Scholes | Black76 | 説明 |
+|-----------|---------------|---------|------|
+| 原資産価格 | `s` (spot) | `f` (forward) | 現在価格 vs 先物価格 |
+| 権利行使価格 | `k` | `k` | 共通 |
+| 満期 | `t` | `t` | 共通（年単位） |
+| 金利 | `r` | `r` | 共通（年率） |
+| ボラティリティ | `sigma` | `sigma` | 共通（年率） |
+
+## パフォーマンス
+
+両モデルとも同等の高速性能を実現：
+
+| 操作 | 処理時間 | スループット |
+|------|----------|-------------|
+| 単一価格計算 | < 10ns | 1億回/秒 |
+| グリークス計算 | < 50ns | 2000万回/秒 |
+| IV計算 | < 200ns | 500万回/秒 |
+| バッチ処理（100万件） | < 20ms | 5000万件/秒 |
+
+## 使用例の比較
+
+### 株式オプション（Black-Scholes）
 ```python
 from quantforge.models import black_scholes
 
-# 全グリークスを一括計算
-greeks = black_scholes.greeks(
-    s=100.0,
-    k=100.0,
-    t=1.0,
-    r=0.05,
-    sigma=0.2,
-    is_call=True  # True: コール, False: プット
+# 現在の株価から計算
+spot_price = 100.0
+strike = 105.0
+time_to_maturity = 0.25
+risk_free_rate = 0.05
+volatility = 0.2
+
+call_price = black_scholes.call_price(
+    spot_price, strike, time_to_maturity, risk_free_rate, volatility
 )
-
-# 個別のグリークスへアクセス
-print(f"Delta: {greeks.delta:.4f}")
-print(f"Gamma: {greeks.gamma:.4f}")
-print(f"Vega: {greeks.vega:.4f}")
-print(f"Theta: {greeks.theta:.4f}")
-print(f"Rho: {greeks.rho:.4f}")
 ```
 
-
-## 数式
-
-### Black-Scholesモデル
-
-ヨーロピアンコールオプション:
-$$C = S_0 \cdot N(d_1) - K \cdot e^{-rT} \cdot N(d_2)$$
-
-ヨーロピアンプットオプション:
-$$P = K \cdot e^{-rT} \cdot N(-d_2) - S_0 \cdot N(-d_1)$$
-
-where:
-- $d_1 = \frac{\ln(S_0/K) + (r + \sigma^2/2)T}{\sigma\sqrt{T}}$
-- $d_2 = d_1 - \sigma\sqrt{T}$
-- $N(x)$: 標準正規分布の累積分布関数
-
-## パラメータ説明
-
-### API パラメータ
-
-| パラメータ | 型 | 説明 |
-|-----------|-----|------|
-| `s` | float | 原資産の現在価格（スポット価格） |
-| `k` | float | オプションの権利行使価格（ストライク） |
-| `t` | float | 満期までの時間（年） |
-| `r` | float | 無リスク金利（年率） |
-| `sigma` | float | ボラティリティ（年率） |
-| `is_call` | bool | True: コール, False: プット |
-
-#### バッチ処理用パラメータ
-
-| パラメータ | 型 | 説明 |
-|-----------|-----|------|
-| `spots` | np.ndarray | 複数のスポット価格 |
-| `k` | float | オプションの権利行使価格（ストライク） |
-| `t` | float | 満期までの時間（年） |
-| `r` | float | 無リスク金利（年率） |
-| `sigma` | float | ボラティリティ（年率） |
-
-## パフォーマンス指標
-
-| 操作 | 単一計算 | 100万件バッチ |
-|------|----------|--------------|
-| コール/プット価格 | < 10ns | < 20ms |
-| 全グリークス | < 50ns | < 100ms |
-| インプライドボラティリティ | < 200ns | < 500ms |
-
-## エラーハンドリング
-
-すべての価格計算関数は以下の条件でエラーを返します：
-
-- スポット価格が負または0
-- 権利行使価格が負または0
-- 満期までの時間が負
-- ボラティリティが負
-- 数値がNaNまたは無限大
-
+### 原油先物オプション（Black76）
 ```python
-try:
-    price = black_scholes.call_price(
-        s=-100,  # 無効な負の値
-        k=100,
-        t=1.0,
-        r=0.05,
-        sigma=0.2
-    )
-except ValueError as e:
-    print(f"入力エラー: {e}")
+from quantforge.models import black76
+
+# 先物価格から計算
+forward_price = 85.0  # WTI先物価格
+strike = 90.0
+time_to_maturity = 0.25
+risk_free_rate = 0.05
+volatility = 0.35
+
+call_price = black76.call_price(
+    forward_price, strike, time_to_maturity, risk_free_rate, volatility
+)
 ```
+
+## 詳細ドキュメント
+
+### APIリファレンス
+- [Black-Scholesモデル API](black_scholes.md)
+- [Black76モデル API](black76.md)
+- [インプライドボラティリティ API](implied_vol.md)
+
+### 理論的背景
+- [Black-Scholesモデル理論](../../models/black_scholes.md)
+- [Black76モデル理論](../../models/black76.md)

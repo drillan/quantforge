@@ -111,6 +111,44 @@ YYYY-MM-DD-<lang>-<type>-<title>.md
 4. **COMPLETED**: 役割終了、archive/へ移動
 5. **以降参照禁止**: 過去の記録として保管のみ
 
+### 計画文書の必須セクション
+
+#### 4. 命名定義セクション
+新機能の計画では以下を必ず記載：
+
+##### 4.1 使用する既存命名
+```yaml
+existing_names:
+  - name: "k"
+    meaning: "権利行使価格"
+    source: "naming_conventions.md#共通パラメータ"
+  - name: "t"
+    meaning: "満期までの時間"
+    source: "naming_conventions.md#共通パラメータ"
+```
+
+##### 4.2 新規提案命名（必要な場合）
+```yaml
+proposed_names:
+  - name: "kappa"
+    meaning: "mean reversion rate"
+    justification: "Heston modelで業界標準"
+    references: "Heston (1993) Review of Financial Studies"
+    status: "pending_approval"
+```
+
+##### 4.3 命名の一貫性チェックリスト
+- [ ] 既存モデルとの整合性確認
+- [ ] naming_conventions.mdとの一致確認
+- [ ] ドキュメントでの使用方法定義
+- [ ] APIパラメータは省略形を使用
+- [ ] エラーメッセージでもAPI名を使用
+
+#### 命名に関する注意事項
+- **必ず** `docs/internal/naming_conventions.md` を参照
+- **カタログにない命名は事前承認が必要**
+- **独自判断での命名は技術的負債**
+
 ### 言語別テンプレートの使用
 
 #### Rust実装の場合

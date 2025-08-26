@@ -1,6 +1,6 @@
 use thiserror::Error;
 
-#[derive(Error, Debug)]
+#[derive(Error, Debug, Clone)]
 #[allow(clippy::enum_variant_names)]
 pub enum QuantForgeError {
     #[error("Invalid input: {0}")]

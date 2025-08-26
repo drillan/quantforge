@@ -333,6 +333,84 @@ A: 可能な限り再定義して意味を明確化。例：`std::f64::EPSILON`�
 4. **検証可能性**: 定数の妥当性を一覧で確認可能
 5. **技術的負債ゼロ**: ハードコードによる将来の問題を防止
 
+## 🔤 Naming Consistency Protocol (NCP) [C015相当]
+
+このセクションは命名の一貫性を保証し、AIによる独自判断での命名を防ぐプロトコルです。
+
+### 基本原則
+**命名は創造ではなく選択。独自判断での命名は技術的負債。**
+
+### 命名カタログの参照
+すべての命名は `docs/internal/naming_conventions.md` に定義された命名カタログに従います：
+- APIパラメータ: 省略形を使用（s, k, t, r, sigma等）
+- 関数名: 確立されたパターンに従う（call_price, greeks等）
+- 構造体: {Model}Params, {Model}Greeks形式
+
+### AIの行動指針
+
+#### 実装前の必須確認
+1. `docs/internal/naming_conventions.md` の命名カタログを確認
+2. 既存コードでの使用例を検索
+3. カタログにない場合は実装を停止してユーザーに確認
+
+#### 命名選択のフロー
+```
+if カタログに存在:
+    その名前を使用
+elif 業界標準が明確:
+    理由と参考資料を提示してユーザー承認を求める
+else:
+    複数の選択肢を提示してユーザーに選択を依頼
+```
+
+#### 禁止事項
+- ❌ その場での「創作」（例：「こっちの方が分かりやすい」）
+- ❌ 一貫性のない混在（同じファイルでspot/sを混在）
+- ❌ カタログにない省略形の独自作成
+
+#### 推奨事項
+- ✅ 不明な場合は必ず確認
+- ✅ 論理的根拠がある改善案はユーザーに提案
+- ✅ 新規追加時はカタログの更新も提案
+
+### 具体例
+
+#### ❌ 悪い例：独自判断
+```python
+# AIが「分かりやすい」と判断して独自に命名
+def calculate_option_value(current_price, exercise_price, ...):
+```
+
+#### ✅ 良い例：カタログに従う
+```python
+# naming_conventions.mdに従って命名
+def call_price(s, k, t, r, sigma):
+```
+
+#### ✅ 良い例：改善提案
+```
+「現在のカタログでは 's' をスポット価格に使用していますが、
+Black76では先物価格なので 'f' の方が適切です。
+参考：Hull (2018) Options, Futures, and Other Derivatives
+この変更を承認しますか？」
+```
+
+### エラーメッセージでの命名
+エラーメッセージでもAPIパラメータ名を使用：
+```python
+# ✅ 良い例
+raise ValueError("s must be positive")
+raise ValueError("k, t, and sigma must be positive")
+
+# ❌ 悪い例
+raise ValueError("spot_price must be positive")  # APIでは 's' を使用
+```
+
+### ドキュメントでの命名
+- 初出時: フルネームを併記 `s (spot price)`
+- 以降: 省略形のみ `s = 100.0`
+- コード例: API通りの省略形を使用
+
 ## 📚 Document as Single Source of Truth (D-SSoT) プロトコル [C008強化版]
 
 このセクションは critical-rules.xml の C008（ドキュメント整合性絶対遵守）を

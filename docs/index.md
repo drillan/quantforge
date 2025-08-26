@@ -76,6 +76,8 @@ user_guide/examples
 
 api/python/index
 api/python/pricing
+api/python/black_scholes
+api/python/black76
 api/python/implied_vol
 api/rust/index
 ```
@@ -86,6 +88,7 @@ api/rust/index
 
 models/index
 models/black_scholes
+models/black76
 models/american_options
 models/asian_options
 ```
@@ -107,6 +110,7 @@ development/setup
 development/architecture
 development/contributing
 development/testing
+development/hardcode-prevention
 ```
 
 ```{toctree}

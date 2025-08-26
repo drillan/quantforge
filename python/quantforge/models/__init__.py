@@ -18,7 +18,22 @@ class BlackScholesModule:
         self.implied_volatility = _rust_models.implied_volatility
 
 
-# Create module instance
-black_scholes = BlackScholesModule()
+# Create a namespace for black76
+class Black76Module:
+    """Black76 option pricing model for commodity and futures options."""
 
-__all__ = ["black_scholes"]
+    def __init__(self) -> None:
+        # Bind functions from the Rust module
+        self.call_price = _rust_models.black76.call_price
+        self.put_price = _rust_models.black76.put_price
+        self.call_price_batch = _rust_models.black76.call_price_batch
+        self.put_price_batch = _rust_models.black76.put_price_batch
+        self.greeks = _rust_models.black76.greeks
+        self.implied_volatility = _rust_models.black76.implied_volatility
+
+
+# Create module instances
+black_scholes = BlackScholesModule()
+black76 = Black76Module()
+
+__all__ = ["black_scholes", "black76"]

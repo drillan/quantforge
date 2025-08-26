@@ -15,16 +15,19 @@ from quantforge.models import black_scholes
 明示的で拡張性の高いモジュールベース設計を採用しています。
 
 ```python
-from quantforge.models import black_scholes
+from quantforge.models import black_scholes, black76
 
-# 価格計算
-price = black_scholes.call_price(s=100, k=105, t=1.0, r=0.05, sigma=0.2)
+# Black-Scholesモデル（スポット価格）
+# パラメータ: s(spot), k(strike), t(time), r(rate), sigma
+price_bs = black_scholes.call_price(100, 105, 1.0, 0.05, 0.2)
+greeks_bs = black_scholes.greeks(100, 100, 1.0, 0.05, 0.2, True)
+iv_bs = black_scholes.implied_volatility(10.45, 100, 100, 1.0, 0.05, True)
 
-# グリークス
-greeks = black_scholes.greeks(s=100, k=100, t=1.0, r=0.05, sigma=0.2, is_call=True)
-
-# インプライドボラティリティ
-iv = black_scholes.implied_volatility(price=10.45, s=100, k=100, t=1.0, r=0.05, is_call=True)
+# Black76モデル（フォワード価格）
+# パラメータ: f(forward), k(strike), t(time), r(rate), sigma
+price_b76 = black76.call_price(75, 70, 0.25, 0.05, 0.3)
+greeks_b76 = black76.greeks(75, 70, 0.25, 0.05, 0.3, True)
+iv_b76 = black76.implied_volatility(5.5, 75, 75, 0.5, 0.05, True)
 ```
 
 
@@ -41,23 +44,25 @@ iv = black_scholes.implied_volatility(price=10.45, s=100, k=100, t=1.0, r=0.05, 
 
 ```python
 import numpy as np
-from quantforge.models import black_scholes
+from quantforge.models import black_scholes, black76
 
+# Black-Scholesバッチ計算
 spots = np.array([95, 100, 105, 110])
-prices = black_scholes.call_price_batch(spots=spots, k=100, t=1.0, r=0.05, sigma=0.2)
+# パラメータ: spots, k, t, r, sigma
+prices_bs = black_scholes.call_price_batch(spots, 100, 1.0, 0.05, 0.2)
+
+# Black76バッチ計算
+forwards = np.array([70, 75, 80, 85])
+# パラメータ: fs(forwards), k, t, r, sigma
+prices_b76 = black76.call_price_batch(forwards, 75, 0.5, 0.05, 0.25)
 ```
 
 ### グリークス計算
 
 ```python
-greeks = black_scholes.greeks(
-    s=100,
-    k=100,
-    t=1.0,
-    r=0.05,
-    sigma=0.2,
-    is_call=True
-)
+# Black-Scholesグリークス
+# パラメータ: s(spot), k, t, r, sigma, is_call
+greeks = black_scholes.greeks(100, 100, 1.0, 0.05, 0.2, True)
 print(f"Delta: {greeks.delta:.4f}")
 print(f"Gamma: {greeks.gamma:.4f}")
 print(f"Vega: {greeks.vega:.4f}")
