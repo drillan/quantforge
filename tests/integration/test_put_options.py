@@ -5,7 +5,7 @@ import sys
 
 import numpy as np
 import pytest
-import quantforge  # type: ignore[import-untyped]
+from quantforge.models import black_scholes  # type: ignore[import-untyped]
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -15,22 +15,22 @@ from conftest import PRACTICAL_TOLERANCE  # type: ignore[import-not-found]
 def test_put_single_calculation() -> None:
     """単一プット価格計算のテスト"""
     # ATMプット
-    price = quantforge.calculate_put_price(100.0, 100.0, 1.0, 0.05, 0.2)
+    price = black_scholes.put_price(100.0, 100.0, 1.0, 0.05, 0.2)
     assert abs(price - 5.573526022657734) < PRACTICAL_TOLERANCE
 
     # ITMプット (S < K)
-    itm_price = quantforge.calculate_put_price(90.0, 100.0, 1.0, 0.05, 0.2)
+    itm_price = black_scholes.put_price(90.0, 100.0, 1.0, 0.05, 0.2)
     assert itm_price > price  # ITMはATMより高い
 
     # OTMプット (S > K)
-    otm_price = quantforge.calculate_put_price(110.0, 100.0, 1.0, 0.05, 0.2)
+    otm_price = black_scholes.put_price(110.0, 100.0, 1.0, 0.05, 0.2)
     assert otm_price < price  # OTMはATMより低い
 
 
 def test_put_batch_calculation() -> None:
     """バッチプット価格計算のテスト"""
     spots = np.array([90.0, 100.0, 110.0])
-    prices = quantforge.calculate_put_price_batch(spots, 100.0, 1.0, 0.05, 0.2)
+    prices = black_scholes.put_price_batch(spots, 100.0, 1.0, 0.05, 0.2)
 
     assert len(prices) == 3
     assert prices[0] > prices[1] > prices[2]  # ITM > ATM > OTM
@@ -40,8 +40,8 @@ def test_put_call_parity() -> None:
     """Put-Callパリティのテスト"""
     s, k, t, r, sigma = 100.0, 100.0, 1.0, 0.05, 0.2
 
-    call = quantforge.calculate_call_price(s, k, t, r, sigma)
-    put = quantforge.calculate_put_price(s, k, t, r, sigma)
+    call = black_scholes.call_price(s, k, t, r, sigma)
+    put = black_scholes.put_price(s, k, t, r, sigma)
 
     # C - P = S - K*exp(-r*T)
     parity_lhs = call - put
@@ -56,7 +56,7 @@ def test_put_large_batch_performance() -> None:
     spots = np.random.uniform(50, 150, n)
 
     # エラーなく実行できることを確認
-    prices = quantforge.calculate_put_price_batch(spots, 100.0, 1.0, 0.05, 0.2)
+    prices = black_scholes.put_price_batch(spots, 100.0, 1.0, 0.05, 0.2)
 
     assert len(prices) == n
     assert np.all(prices >= 0)  # 全て非負
@@ -66,16 +66,16 @@ def test_put_large_batch_performance() -> None:
 def test_put_edge_cases() -> None:
     """エッジケースのテスト"""
     # Deep ITM (S << K)
-    deep_itm = quantforge.calculate_put_price(10.0, 100.0, 1.0, 0.05, 0.2)
+    deep_itm = black_scholes.put_price(10.0, 100.0, 1.0, 0.05, 0.2)
     intrinsic = 100.0 * np.exp(-0.05) - 10.0
     assert deep_itm >= intrinsic * 0.99  # ほぼ内在価値
 
     # Deep OTM (S >> K)
-    deep_otm = quantforge.calculate_put_price(500.0, 100.0, 1.0, 0.05, 0.2)
+    deep_otm = black_scholes.put_price(500.0, 100.0, 1.0, 0.05, 0.2)
     assert deep_otm < 0.001  # ほぼゼロ
 
     # 満期直前（最小時間は0.001）
-    near_expiry = quantforge.calculate_put_price(90.0, 100.0, 0.001, 0.05, 0.2)
+    near_expiry = black_scholes.put_price(90.0, 100.0, 0.001, 0.05, 0.2)
     assert abs(near_expiry - 10.0) < 0.1  # ほぼ内在価値
 
 
@@ -83,13 +83,13 @@ def test_put_input_validation() -> None:
     """入力検証のテスト"""
     with pytest.raises(ValueError):
         # 負のスポット価格
-        quantforge.calculate_put_price(-100.0, 100.0, 1.0, 0.05, 0.2)
+        black_scholes.put_price(-100.0, 100.0, 1.0, 0.05, 0.2)
 
     with pytest.raises(ValueError):
         # 負のボラティリティ
-        quantforge.calculate_put_price(100.0, 100.0, 1.0, 0.05, -0.2)
+        black_scholes.put_price(100.0, 100.0, 1.0, 0.05, -0.2)
 
     with pytest.raises(ValueError):
         # NaN入力
         spots = np.array([100.0, np.nan, 110.0])
-        quantforge.calculate_put_price_batch(spots, 100.0, 1.0, 0.05, 0.2)
+        black_scholes.put_price_batch(spots, 100.0, 1.0, 0.05, 0.2)

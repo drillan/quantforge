@@ -145,23 +145,31 @@ QuantForgeの詳細なパフォーマンス測定結果です。
 
 ```python
 import quantforge as qf
+from quantforge.models import black_scholes
 import numpy as np
 import time
 
 def benchmark_black_scholes(n=1_000_000):
     spots = np.random.uniform(90, 110, n)
-    strikes = np.full(n, 100.0)
+    strike = 100.0
     rate = 0.05
-    vol = 0.2
+    sigma = 0.2
     time_to_exp = 1.0
     
     # ウォームアップ
-    _ = qf.calculate(spots[:1000], strikes[:1000], 
-                     rate, vol, time_to_exp)
+    _ = black_scholes.call_price_batch(
+        spots[:1000], strike, time_to_exp, rate, sigma
+    )
     
     # 測定
     start = time.perf_counter()
-    prices = qf.calculate(spots, strikes, rate, vol, time_to_exp)
+    prices = black_scholes.call_price_batch(
+        spots=spots,
+        strike=strike,
+        time=time_to_exp,
+        rate=rate,
+        sigma=sigma
+    )
     elapsed = time.perf_counter() - start
     
     return {

@@ -38,7 +38,7 @@ class TestGoldenMaster:
 
     def test_reference_atm_value(self, golden_data: dict[str, Any]) -> None:
         """既知のATM参照値との一致を確認."""
-        from quantforge import calculate_call_price
+        from quantforge.models import black_scholes
 
         # Rustテストで使用されている参照値を探す
         for case in golden_data["test_cases"]:
@@ -47,9 +47,7 @@ class TestGoldenMaster:
                 expected_call = case["outputs"]["call_price"]
 
                 # Rust実装を呼び出し
-                actual_call = calculate_call_price(
-                    s=inputs["s"], k=inputs["k"], t=inputs["t"], r=inputs["r"], sigma=inputs["v"]
-                )
+                actual_call = black_scholes.call_price(inputs["s"], inputs["k"], inputs["t"], inputs["r"], inputs["v"])
 
                 # 許容誤差内での一致を確認
                 tolerance = golden_data["tolerance"]
@@ -69,7 +67,7 @@ class TestGoldenMaster:
 
     def test_black_scholes_call_prices(self, golden_data: dict[str, Any]) -> None:
         """Black-Scholesコールオプション価格の検証."""
-        from quantforge import calculate_call_price
+        from quantforge.models import black_scholes
 
         tolerance = golden_data["tolerance"]
         errors = []
@@ -83,9 +81,7 @@ class TestGoldenMaster:
             expected = case["outputs"]["call_price"]
 
             try:
-                actual = calculate_call_price(
-                    s=inputs["s"], k=inputs["k"], t=inputs["t"], r=inputs["r"], sigma=inputs["v"]
-                )
+                actual = black_scholes.call_price(inputs["s"], inputs["k"], inputs["t"], inputs["r"], inputs["v"])
 
                 error = abs(actual - expected)
                 if error >= tolerance:
@@ -124,7 +120,7 @@ class TestGoldenMaster:
 
     def test_price_bounds(self, golden_data: dict[str, Any]) -> None:
         """価格境界条件の検証: max(S - K*e^(-rt), 0) <= C <= S."""
-        from quantforge import calculate_call_price
+        from quantforge.models import black_scholes
 
         violations = []
 
@@ -140,7 +136,7 @@ class TestGoldenMaster:
             v = inputs["v"]
 
             # 価格計算
-            call_price = calculate_call_price(s, k, t, r, sigma=v)
+            call_price = black_scholes.call_price(s, k, t, r, sigma=v)
 
             # 境界条件
             intrinsic_value = max(s - k * np.exp(-r * t), 0)
@@ -166,7 +162,7 @@ class TestGoldenMaster:
 
     def test_moneyness_relationships(self, golden_data: dict[str, Any]) -> None:
         """モネネスによる価格関係の検証: OTM < ATM < ITM."""
-        from quantforge import calculate_call_price
+        from quantforge.models import black_scholes
 
         # モネネスカテゴリ別にグループ化
         by_moneyness: dict[str, list[dict[str, Any]]] = {"OTM": [], "ATM": [], "ITM": []}
@@ -178,9 +174,7 @@ class TestGoldenMaster:
             moneyness_cat = case["metadata"]["moneyness_category"]
             if moneyness_cat in by_moneyness:
                 inputs = case["inputs"]
-                price = calculate_call_price(
-                    s=inputs["s"], k=inputs["k"], t=inputs["t"], r=inputs["r"], sigma=inputs["v"]
-                )
+                price = black_scholes.call_price(inputs["s"], inputs["k"], inputs["t"], inputs["r"], inputs["v"])
                 by_moneyness[moneyness_cat].append(
                     {"price": price, "moneyness": case["metadata"]["moneyness"], "id": case["id"]}
                 )
@@ -202,7 +196,7 @@ class TestGoldenMaster:
 
     def test_edge_cases(self, golden_data: dict[str, Any]) -> None:
         """エッジケースの検証（Deep ITM/OTM、満期直前など）."""
-        from quantforge import calculate_call_price
+        from quantforge.models import black_scholes
 
         edge_cases_tested = 0
 
@@ -213,7 +207,7 @@ class TestGoldenMaster:
             inputs = case["inputs"]
             expected = case["outputs"]["call_price"]
 
-            actual = calculate_call_price(s=inputs["s"], k=inputs["k"], t=inputs["t"], r=inputs["r"], sigma=inputs["v"])
+            actual = black_scholes.call_price(inputs["s"], inputs["k"], inputs["t"], inputs["r"], inputs["v"])
 
             tolerance = golden_data["tolerance"]
             assert abs(actual - expected) < tolerance, (
@@ -227,7 +221,7 @@ class TestGoldenMaster:
 
     def test_batch_consistency(self, golden_data: dict[str, Any]) -> None:
         """バッチ処理と単一処理の一致性を検証."""
-        from quantforge import calculate_call_price, calculate_call_price_batch
+        from quantforge.models import black_scholes
 
         # テスト用のサンプルを選択
         test_cases = [c for c in golden_data["test_cases"] if c["category"] == "black_scholes"][:10]
@@ -243,11 +237,11 @@ class TestGoldenMaster:
         v = test_cases[0]["inputs"]["v"]
 
         # バッチ処理
-        batch_results = calculate_call_price_batch(spots, k, t, r, sigma=v)
+        batch_results = black_scholes.call_price_batch(spots, k, t, r, sigma=v)
 
         # 個別処理と比較
         for i, spot in enumerate(spots):
-            single_result = calculate_call_price(spot, k, t, r, sigma=v)
+            single_result = black_scholes.call_price(spot, k, t, r, sigma=v)
             assert abs(batch_results[i] - single_result) < 1e-3, (
                 f"Batch and single results differ at index {i}: {batch_results[i]} vs {single_result}"
             )

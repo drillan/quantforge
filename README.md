@@ -90,7 +90,7 @@ pip install -e ".[dev]"
 
 ## 💻 Quick Start
 
-### Module-Based API (Recommended)
+### Usage
 
 ```python
 import numpy as np
@@ -110,24 +110,12 @@ put_price = black_scholes.put_price(spot, strike, time, rate, sigma)
 print(f"Call: ${call_price:.4f}, Put: ${put_price:.4f}")
 ```
 
-### Legacy API (Backward Compatible)
-
-```python
-import numpy as np
-import quantforge as qf
-
-# Direct function calls (will be deprecated)
-call_price = qf.calculate_call_price(spot, strike, time, rate, sigma)
-put_price = qf.calculate_put_price(spot, strike, time, rate, sigma)
-```
-
 ### Batch Processing
 
 ```python
 # Process 100,000 options in milliseconds
 spots = np.linspace(80, 120, 100000)
 
-# Module-based API (recommended)
 from quantforge.models import black_scholes
 call_prices = black_scholes.call_price_batch(spots, strike, time, rate, sigma)
 
@@ -162,18 +150,8 @@ iv = black_scholes.implied_volatility(
 )
 print(f"Implied Volatility: {iv:.2%}")
 
-# Batch IV calculation
-market_prices = np.array([3.0, 3.5, 4.0, 4.5, 5.0])
-spots_arr = np.full(5, spot)
-strikes_arr = np.full(5, strike)
-times_arr = np.full(5, time)
-rates_arr = np.full(5, rate)
-is_calls = np.array([True] * 5)
-
-ivs = qf.calculate_implied_volatility_batch(
-    market_prices, spots_arr, strikes_arr, 
-    times_arr, rates_arr, is_calls
-)
+# Note: Batch IV calculation coming in future release
+# Will support vectorized implied volatility solving
 ```
 
 ## 🔬 Implementation Details

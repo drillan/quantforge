@@ -32,21 +32,21 @@ pub use implied_volatility::{
 pub trait PricingModel {
     /// Model-specific parameters
     type Params;
-    
+
     /// Calculate call option price
     fn call_price(params: &Self::Params) -> f64;
-    
+
     /// Calculate put option price
     fn put_price(params: &Self::Params) -> f64;
-    
+
     /// Calculate all Greeks for the option
     fn greeks(params: &Self::Params, is_call: bool) -> Greeks;
-    
+
     /// Calculate implied volatility from option price
     fn implied_volatility(
-        price: f64, 
-        params: &Self::Params, 
+        price: f64,
+        params: &Self::Params,
         is_call: bool,
-        initial_guess: Option<f64>
+        initial_guess: Option<f64>,
     ) -> Result<f64, crate::error::QuantForgeError>;
 }

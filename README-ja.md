@@ -80,7 +80,7 @@ pip install -e ".[dev]"
 
 ## 💡 クイックスタート
 
-### モジュールベースAPI（推奨）
+### 使用方法
 
 ```python
 import numpy as np
@@ -99,23 +99,12 @@ put_price = black_scholes.put_price(spot, strike, time, rate, sigma)
 print(f"Call: ${call_price:.4f}, Put: ${put_price:.4f}")
 ```
 
-### レガシーAPI（互換性維持）
-
-```python
-import quantforge as qf
-
-# 直接関数呼び出し（将来非推奨予定）
-call_price = qf.calculate_call_price(spot, strike, time, rate, sigma)
-put_price = qf.calculate_put_price(spot, strike, time, rate, sigma)
-```
-
 ### バッチ処理（大規模データの高速処理）
 
 ```python
 # 複数のスポット価格でのバッチ計算
 spots = np.linspace(80, 120, 100000)  # 10万個のデータポイント
 
-# モジュールベースAPI（推奨）
 from quantforge.models import black_scholes
 call_prices = black_scholes.call_price_batch(spots, strike, time, rate, sigma)
 

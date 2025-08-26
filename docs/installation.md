@@ -123,38 +123,47 @@ uv pip install target/wheels/quantforge-*.whl
 
 ```python
 # Pythonインタープリタで実行
-import quantforge as qf
+from quantforge.models import black_scholes
+import quantforge
 
 # バージョン確認
-print(qf.__version__)
+print(quantforge.__version__)
 
 # 基本的な計算テスト
-price = qf.black_scholes_call(100, 100, 0.05, 0.2, 1.0)
+price = black_scholes.call_price(
+    spot=100.0,
+    strike=100.0,
+    time=1.0,
+    rate=0.05,
+    sigma=0.2
+)
 print(f"Test calculation: {price:.4f}")
-
-# SIMD サポート確認
-print(f"AVX2 support: {qf.has_avx2()}")
-print(f"AVX-512 support: {qf.has_avx512()}")
+# Expected: 10.4506
 ```
 
-### 詳細な診断
+### パフォーマンステスト
 
 ```python
-# システム情報の表示
-qf.print_system_info()
+import numpy as np
+import time
+from quantforge.models import black_scholes
 
-# 出力例：
-# QuantForge System Information
-# =============================
-# Version: 0.1.0
-# Python: 3.12.0
-# Platform: Linux x86_64
-# CPU Features:
-#   - AVX2: Enabled
-#   - AVX-512: Enabled
-#   - Threads: 16
-# Memory: 32.0 GB
-# Compute Strategy: Parallel + SIMD
+# パフォーマンス測定
+n = 100_000
+spots = np.random.uniform(90, 110, n)
+
+start = time.perf_counter()
+prices = black_scholes.call_price_batch(
+    spots=spots,
+    strike=100.0,
+    time=1.0,
+    rate=0.05,
+    sigma=0.2
+)
+elapsed = (time.perf_counter() - start) * 1000
+
+print(f"Batch processing: {n:,} options in {elapsed:.1f}ms")
+print(f"Speed: {elapsed/n*1000:.1f}ns per option")
 ```
 
 ## トラブルシューティング

@@ -2,6 +2,17 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## 🔥 プロジェクト前提条件 [最重要]
+
+**このプロジェクトは開発段階であり、以下の前提で運用されます：**
+
+- **既存ユーザー: ゼロ**
+- **後方互換性: 一切不要**
+- **マイグレーション: 考慮しない**
+- **破壊的変更: 積極推奨**
+
+これらの前提により、技術的負債ゼロの理想的な実装のみを追求します。
+
 ## 🤖 AI 動作制御ルール
 
 @.claude/critical-rules.xml
@@ -374,7 +385,7 @@ A: 可能な限り再定義して意味を明確化。例：`std::f64::EPSILON`�
 ❌ **計画文書の参照**
 ```bash
 # 絶対禁止：計画を真実として扱う
-cat plans/2025-01-24-implementation-plan.md  # 過去の誤りを含む
+cat plans/archive/2025-01-24-implementation-plan.md  # 過去の誤りを含む
 
 # 必須：ドキュメントのみ参照
 cat docs/api/python/pricing.md  # 現在の真実
@@ -425,6 +436,154 @@ echo "✅ D-SSoT検証完了"
 - [ ] ドキュメントから関数名をコピーした（手打ちしていない）
 - [ ] ドキュメントにない機能を追加していない
 - [ ] 計画文書を一切参照していない
+
+## ⚡ Zero Legacy Protocol (ZLP) [C013拡張]
+
+### 基本原則
+**過去の実装は全て置換対象。今作るものが唯一の正解。**
+
+### No Archive Policy（plans/archive以外）
+
+#### アーカイブ禁止事項
+```python
+# ❌ 禁止：コード内でのレガシー保持
+class BlackScholes:     # 現行
+class BlackScholesOld:  # 旧実装を残す → 禁止！
+
+# ❌ 禁止：コメントでの旧実装保存
+"""
+# 旧実装（参考用）← 禁止！
+def calculate_call_price():
+    pass
+"""
+
+# ✅ 必須：レガシーは完全削除
+class BlackScholes:  # 唯一の実装のみ
+```
+
+#### ファイル命名規則
+```bash
+# ❌ 禁止パターン
+file.old
+file.backup
+file_v1.py
+file_legacy.py
+file_deprecated.py
+
+# ✅ 許可パターン
+file.py  # 現行版のみ存在
+```
+
+### レガシーコード即座削除ルール
+
+#### 発見即削除リスト
+- 古い命名規則（例: calculate_*）
+- V2、V3などバージョン付きクラス/関数
+- `_old`、`_legacy`、`_deprecated` サフィックス
+- コメントアウトされた旧実装
+- TODO/FIXMEコメント（即座に解決または削除）
+
+### 実装判断フロー
+```
+if ドキュメントと実装が不一致:
+    # 議論不要、より良い方を採用
+    better = select_better(doc, impl)
+    implement(better)
+    # 悪い方は跡形もなく削除（記録も残さない）
+```
+
+## 🎯 Break Everything Better (BEB) 原則
+
+### 破壊的変更の積極推奨
+
+#### 変更時のルール
+1. **即座置換**: 過去との共存期間なし
+2. **記録最小化**: 変更履歴を詳細に残さない
+3. **完全削除**: 古い実装の痕跡を残さない
+
+### 実装例
+```python
+# 月曜日の実装
+def calculate_call_price(spot, strike, time, rate, vol):
+    pass
+
+# 火曜日：より良い名前を発見
+# → calculate_call_priceは削除（コメントも残さない）
+def black_scholes_call(s, k, t, r, sigma):
+    pass
+
+# 水曜日：さらに良い設計
+# → 前日の実装も削除（履歴はgitのみ）
+class BlackScholes:
+    def call_price(self, spot, strike, time, rate, sigma):
+        pass
+```
+
+## 🚫 No Noise Policy (NNP)
+
+### ノイズ情報の完全遮断
+
+#### コード内で禁止するノイズ
+- 「以前は〜だった」というコメント
+- 「旧API」「レガシーサポート」等の記述
+- deprecation warning
+- 移行ガイド、マイグレーション文書
+- 過去バージョンとの比較表
+
+#### 許可される記録
+- `plans/archive/` - 歴史的記録（参照は禁止）
+- gitコミット履歴 - 最小限の変更記録
+- 現在の仕様のみを記載したドキュメント
+
+### 情報参照の優先順位
+
+1. **docs/api/** - 現在の仕様（唯一の真実）
+2. **実装コード** - ドキュメントの具現化
+3. ~~過去の実装~~ - 存在しない（削除済み）
+4. ~~plans/archive/~~ - 存在するが参照禁止
+
+## 💎 Clean Slate Implementation
+
+### 実装方針
+
+```python
+def handle_inconsistency(doc_spec, current_impl):
+    """仕様と実装の不一致対応"""
+    
+    # 過去は関係ない、より良い方を選ぶ
+    if is_better(doc_spec):
+        delete(current_impl)
+        implement(doc_spec)
+    else:
+        update_doc(current_impl)
+        # または両方破棄して理想実装
+        ideal = design_ideal()
+        implement(ideal)
+        update_doc(ideal)
+```
+
+### コミットメッセージ規則
+```bash
+# ❌ 避けるべき：過去への言及
+"Refactor calculate_call_price to black_scholes_call"
+"Deprecate old API"
+"Add backward compatibility"
+
+# ✅ 推奨：現在形・未来志向
+"Implement black_scholes module"
+"Add optimal pricing algorithm"
+"Improve API design"
+```
+
+## 🏁 開発チェックリスト
+
+- [ ] レガシーコードを見つけたら即削除
+- [ ] 後方互換性を一切考慮しない
+- [ ] V2クラスやold_*関数を作らない
+- [ ] コメントに旧実装を残さない
+- [ ] plans/archive以外にアーカイブを作らない
+- [ ] 破壊的変更を恐れず実施
+- [ ] 理想実装のみを追求
 
 ## パフォーマンス目標
 

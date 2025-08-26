@@ -1,0 +1,13 @@
+{% extends "!layout.html" %}
+
+{% block document %}
+  {% if meta and meta.future_feature %}
+    <div class="admonition warning">
+      <p class="admonition-title">⚠️ 将来実装予定の機能</p>
+      <p>このページで説明されている機能は現在開発中です。
+      現在利用可能なのは<a href="{{ pathto('models/black_scholes') }}">Black-Scholesモデル</a>のみです。
+      実装予定時期については<a href="{{ pathto('roadmap') }}">ロードマップ</a>をご確認ください。</p>
+    </div>
+  {% endif %}
+  {{ super() }}
+{% endblock %}

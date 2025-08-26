@@ -5,28 +5,32 @@ QuantForgeを使って5分でオプション価格計算を始めましょう。
 ## インストール
 
 ```bash
-# uvを使用したインストール（推奨）
-uv pip install quantforge
-
-# または pipを使用
+# pipを使用したインストール
 pip install quantforge
+
+# または開発版のインストール
+git clone https://github.com/drillan/quantforge.git
+cd quantforge
+pip install maturin
+maturin develop --release
 ```
 
-## 最初のBlack-Scholes計算
+## 最初の計算
 
-### ヨーロピアンコールオプション
+### モジュールベースAPI
 
 ```python
-import quantforge as qf
+from quantforge.models import black_scholes
 
-# 基本的なコールオプション価格計算
-price = qf.black_scholes_call(
+# Black-Scholesモデルでコールオプション価格を計算
+price = black_scholes.call_price(
     spot=100.0,    # 現在価格
-    strike=110.0,  # 行使価格
+    strike=110.0,  # 権利行使価格
+    time=1.0,      # 満期（年）
     rate=0.05,     # 無リスク金利
-    vol=0.2,       # ボラティリティ
-    time=1.0       # 満期までの時間（年）
+    sigma=0.2      # ボラティリティ
 )
+
 print(f"Call Option Price: ${price:.2f}")
 ```
 
@@ -34,22 +38,20 @@ print(f"Call Option Price: ${price:.2f}")
 
 ```python
 # グリークスを含む詳細な計算
-result = qf.calculate(
-    spots=100.0,
-    strikes=110.0,
-    rates=0.05,
-    vols=0.2,
-    times=1.0,
-    option_type="call",
-    greeks=True
+greeks = black_scholes.greeks(
+    spot=100.0,
+    strike=100.0,
+    time=1.0,
+    rate=0.05,
+    sigma=0.2,
+    is_call=True
 )
 
-print(f"Price: ${result['price']:.2f}")
-print(f"Delta: {result['delta']:.4f}")
-print(f"Gamma: {result['gamma']:.4f}")
-print(f"Vega: {result['vega']:.4f}")
-print(f"Theta: {result['theta']:.4f}")
-print(f"Rho: {result['rho']:.4f}")
+print(f"Delta: {greeks.delta:.4f}")
+print(f"Gamma: {greeks.gamma:.4f}")
+print(f"Vega: {greeks.vega:.4f}")
+print(f"Theta: {greeks.theta:.4f}")
+print(f"Rho: {greeks.rho:.4f}")
 ```
 
 ## バッチ処理
@@ -59,18 +61,21 @@ QuantForgeの真価は大量データの高速処理にあります：
 ```python
 import numpy as np
 import time
+from quantforge.models import black_scholes
 
-# 100万件のオプションデータを生成
+# 100万件のオプションデータ
 n = 1_000_000
 spots = np.random.uniform(90, 110, n)
-strikes = np.full(n, 100.0)
-rates = np.full(n, 0.05)
-vols = np.random.uniform(0.1, 0.3, n)
-times = np.random.uniform(0.1, 2.0, n)
 
 # 高速バッチ処理
 start = time.perf_counter()
-prices = qf.calculate(spots, strikes, rates, vols, times)
+prices = black_scholes.call_price_batch(
+    spots=spots,
+    strike=100.0,
+    time=1.0,
+    rate=0.05,
+    sigma=0.2
+)
 elapsed = (time.perf_counter() - start) * 1000
 
 print(f"計算時間: {elapsed:.1f}ms")
@@ -83,129 +88,53 @@ print(f"1オプションあたり: {elapsed/n*1000:.1f}ns")
 
 ```python
 # 市場価格からIVを計算
-market_price = 12.5
-iv = qf.implied_volatility(
+market_price = 10.45
+iv = black_scholes.implied_volatility(
     price=market_price,
     spot=100.0,
-    strike=110.0,
-    rate=0.05,
+    strike=100.0,
     time=1.0,
-    option_type="call"
+    rate=0.05,
+    is_call=True
 )
 print(f"Implied Volatility: {iv:.1%}")
 ```
 
-## アメリカンオプション
 
-早期行使権付きオプション：
-
-```python
-# アメリカンプットオプション
-american_price = qf.american_put(
-    spot=100.0,
-    strike=110.0,
-    rate=0.05,
-    vol=0.2,
-    time=1.0
-)
-
-# ヨーロピアンとの比較
-european_price = qf.black_scholes_put(
-    spot=100.0,
-    strike=110.0,
-    rate=0.05,
-    vol=0.2,
-    time=1.0
-)
-
-premium = american_price - european_price
-print(f"American Put: ${american_price:.2f}")
-print(f"European Put: ${european_price:.2f}")
-print(f"Early Exercise Premium: ${premium:.2f}")
-```
-
-## 結果の確認と可視化
+## リアルタイムリスク管理
 
 ```python
-import matplotlib.pyplot as plt
+from quantforge.models import black_scholes
 
-# ペイオフダイアグラム
-spots = np.linspace(80, 120, 100)
-call_prices = qf.calculate(spots, strike=100, rate=0.05, vol=0.2, time=0.25)
+# ポートフォリオのデルタ計算
+positions = [
+    {"spot": 100, "strike": 95, "contracts": 10},
+    {"spot": 100, "strike": 105, "contracts": -5},
+]
 
-plt.figure(figsize=(10, 6))
-plt.plot(spots, call_prices, label='Call Option Value')
-plt.axhline(y=0, color='k', linestyle='-', alpha=0.3)
-plt.axvline(x=100, color='r', linestyle='--', alpha=0.5, label='Strike')
-plt.xlabel('Spot Price')
-plt.ylabel('Option Value')
-plt.title('Call Option Price vs Spot Price')
-plt.legend()
-plt.grid(True, alpha=0.3)
-plt.show()
+total_delta = 0
+for pos in positions:
+    greeks = black_scholes.greeks(
+        pos["spot"], pos["strike"], 1.0, 0.05, 0.2, is_call=True
+    )
+    total_delta += pos["contracts"] * greeks.delta * 100
+
+print(f"Portfolio Delta: {total_delta:.2f} shares")
 ```
 
-## パフォーマンステクニック
+## パフォーマンス
 
-### 1. NumPy配列を使用
+QuantForgeは高速計算を実現：
 
-```python
-# 効率的: NumPy配列を直接渡す
-spots = np.array([100, 105, 110])
-prices = qf.calculate(spots, strike=100, rate=0.05, vol=0.2, time=1.0)
-
-# 非効率: Pythonリストを使用（内部で変換が発生）
-spots_list = [100, 105, 110]
-prices = qf.calculate(spots_list, strike=100, rate=0.05, vol=0.2, time=1.0)
-```
-
-### 2. 適切なバッチサイズ
-
-```python
-# 最適なバッチサイズは10,000～100,000件
-optimal_batch = 50_000
-for i in range(0, len(all_data), optimal_batch):
-    batch = all_data[i:i+optimal_batch]
-    results = qf.calculate(batch, ...)
-```
-
-### 3. メモリの事前確保
-
-```python
-# 結果配列を事前確保
-n = 1_000_000
-results = np.empty(n)
-qf.calculate_inplace(spots, strikes, rates, vols, times, out=results)
-```
+| 操作 | 処理時間 |
+|------|----------|
+| 単一価格計算 | < 10ns |
+| 全グリークス | < 50ns |
+| IV計算 | < 200ns |
+| 100万件バッチ | < 20ms |
 
 ## 次のステップ
 
-- [詳細なインストール手順](installation.md)
-- [基本的な使い方](user_guide/basic_usage.md)
-- [高度なモデル](user_guide/advanced_models.md)
-- [APIリファレンス](api/python/index.md)
-
-## トラブルシューティング
-
-### よくある問題
-
-**Q: ImportError: cannot import name 'quantforge'**
-
-A: インストールを確認してください：
-```bash
-uv pip list | grep quantforge
-```
-
-**Q: 計算結果がNaNになる**
-
-A: 入力パラメータを確認してください：
-- ボラティリティは正の値
-- 満期時間は正の値
-- 現在価格と行使価格は正の値
-
-**Q: パフォーマンスが期待より遅い**
-
-A: 以下を確認してください：
-- NumPy配列を使用しているか
-- AVX2がサポートされているか: `qf.check_simd_support()`
-- 適切なバッチサイズか（10,000～100,000件）
+- [基本的な使い方](user_guide/basic_usage.md) - 詳細なAPI説明
+- [NumPy統合](user_guide/numpy_integration.md) - 大規模データ処理
+- [APIリファレンス](api/python/index.md) - 完全なAPI文書

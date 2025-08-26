@@ -9,13 +9,19 @@ QuantForgeはNumPyとシームレスに統合され、ゼロコピーでの高�
 ```python
 import numpy as np
 import quantforge as qf
+from quantforge.models import black_scholes
 
 # NumPy配列の作成
 spots = np.random.uniform(90, 110, 1_000_000)
-strikes = np.full(1_000_000, 100.0)
 
 # ゼロコピーで処理（メモリコピーなし）
-prices = qf.calculate(spots, strikes, rate=0.05, vol=0.2, time=1.0)
+prices = black_scholes.call_price_batch(
+    spots=spots,
+    strike=100.0,
+    time=1.0,
+    rate=0.05,
+    sigma=0.2
+)
 
 # prices もNumPy配列として返される
 print(f"Type: {type(prices)}")
@@ -39,7 +45,13 @@ import time
 
 def benchmark_layout(array):
     start = time.perf_counter()
-    qf.calculate(array, strike=100, rate=0.05, vol=0.2, time=1.0)
+    black_scholes.call_price_batch(
+        spots=array,
+        strike=100.0,
+        time=1.0,
+        rate=0.05,
+        sigma=0.2
+    )
     return time.perf_counter() - start
 
 time_c = benchmark_layout(spots_c)
@@ -55,13 +67,19 @@ print(f"F-layout: {time_f*1000:.2f}ms")
 ```python
 # スカラーと配列の組み合わせ
 spots = np.array([95, 100, 105])
-strike = 100  # スカラー
-rate = 0.05   # スカラー
-vols = np.array([0.15, 0.20, 0.25])
-time = 1.0    # スカラー
+strike = 100.0  # スカラー
+rate = 0.05    # スカラー
+sigma = 0.20   # スカラー
+time = 1.0     # スカラー
 
 # 自動的にブロードキャスト
-prices = qf.calculate(spots, strike, rate, vols, time)
+prices = black_scholes.call_price_batch(
+    spots=spots,
+    strike=strike,
+    time=time,
+    rate=rate,
+    sigma=sigma
+)
 print(f"Results: {prices}")
 ```
 
@@ -74,8 +92,13 @@ strikes = np.full((100, 1000), 100.0)
 
 # フラット化して計算
 flat_spots = spots.ravel()
-flat_strikes = strikes.ravel()
-flat_prices = qf.calculate(flat_spots, flat_strikes, 0.05, 0.2, 1.0)
+flat_prices = black_scholes.call_price_batch(
+    spots=flat_spots,
+    strike=100.0,
+    time=1.0,
+    rate=0.05,
+    sigma=0.2
+)
 
 # 元の形状に復元
 prices = flat_prices.reshape(spots.shape)
@@ -95,7 +118,13 @@ subset = all_spots[::10]  # 10個おきに選択
 print(f"Is view: {subset.base is all_spots}")
 
 # ビューでの計算
-subset_prices = qf.calculate(subset, strike=100, rate=0.05, vol=0.2, time=1.0)
+subset_prices = black_scholes.call_price_batch(
+    spots=subset,
+    strike=100.0,
+    time=1.0,
+    rate=0.05,
+    sigma=0.2
+)
 ```
 
 ### 条件付き処理
@@ -107,7 +136,13 @@ mask = (spots > 95) & (spots < 105)  # ATM近辺のみ
 
 # マスクされた計算
 atm_spots = spots[mask]
-atm_prices = qf.calculate(atm_spots, strike=100, rate=0.05, vol=0.2, time=1.0)
+atm_prices = black_scholes.call_price_batch(
+    spots=atm_spots,
+    strike=100.0,
+    time=1.0,
+    rate=0.05,
+    sigma=0.2
+)
 
 # 結果を元の配列に戻す
 full_prices = np.zeros_like(spots)
@@ -125,8 +160,12 @@ spots_f64 = np.random.uniform(90, 110, 100000).astype(np.float64)
 
 # QuantForgeは内部でfloat64を使用
 # float32は自動変換される
-prices_f32 = qf.calculate(spots_f32, 100, 0.05, 0.2, 1.0)
-prices_f64 = qf.calculate(spots_f64, 100, 0.05, 0.2, 1.0)
+prices_f32 = black_scholes.call_price_batch(
+    spots=spots_f32, strike=100.0, time=1.0, rate=0.05, sigma=0.2
+)
+prices_f64 = black_scholes.call_price_batch(
+    spots=spots_f64, strike=100.0, time=1.0, rate=0.05, sigma=0.2
+)
 
 print(f"Input f32 dtype: {spots_f32.dtype}")
 print(f"Output dtype: {prices_f32.dtype}")  # float64に変換される
@@ -150,13 +189,18 @@ options['vol'] = np.random.uniform(0.1, 0.3, 1000)
 options['time'] = np.random.uniform(0.1, 2.0, 1000)
 
 # 構造化配列から計算
-prices = qf.calculate(
-    options['spot'],
-    options['strike'],
-    rate=0.05,
-    vols=options['vol'],
-    times=options['time']
-)
+# Note: 現在のAPIでは単一の時間とボラティリティのみサポート
+# 複数のパラメータはループで処理
+prices = np.array([
+    black_scholes.call_price(
+        spot=options['spot'][i],
+        strike=options['strike'][i],
+        time=options['time'][i],
+        rate=0.05,
+        sigma=options['vol'][i]
+    )
+    for i in range(len(options))
+])
 ```
 
 ## メモリマップファイル
@@ -178,7 +222,13 @@ results = []
 
 for i in range(0, len(spots_mmap), chunk_size):
     chunk = spots_mmap[i:i+chunk_size]
-    chunk_prices = qf.calculate(chunk, 100, 0.05, 0.2, 1.0)
+    chunk_prices = black_scholes.call_price_batch(
+        spots=chunk,
+        strike=100.0,
+        time=1.0,
+        rate=0.05,
+        sigma=0.2
+    )
     results.append(chunk_prices)
 
 # 結果の結合
@@ -203,10 +253,14 @@ def custom_pricer(spot, strike, moneyness_threshold=0.1):
     
     if moneyness < moneyness_threshold:
         # ATM近辺は高精度計算
-        return qf.black_scholes_call(spot, strike, 0.05, 0.2, 1.0)
+        return qf.calculate_call_price(
+            s=spot, k=strike, t=1.0, r=0.05, sigma=0.2
+        )
     else:
         # OTMは簡易計算
-        return qf.black_scholes_call(spot, strike, 0.05, 0.15, 1.0)
+        return qf.calculate_call_price(
+            s=spot, k=strike, t=1.0, r=0.05, sigma=0.15
+        )
 
 # ベクトル化された使用
 spots = np.array([95, 100, 105, 120])
@@ -224,8 +278,14 @@ import numpy as np
 
 def process_batch(args):
     """バッチ処理関数"""
-    spots, strike, rate, vol, time = args
-    return qf.calculate(spots, strike, rate, vol, time)
+    spots, strike, rate, sigma, time = args
+    return black_scholes.call_price_batch(
+        spots=spots,
+        strike=strike,
+        time=time,
+        rate=rate,
+        sigma=sigma
+    )
 
 # データを分割
 n_total = 10_000_000
@@ -263,7 +323,13 @@ aligned_spots[:] = np.random.uniform(90, 110, 1_000_000)
 # パフォーマンス測定
 import time
 start = time.perf_counter()
-prices = qf.calculate(aligned_spots, 100, 0.05, 0.2, 1.0)
+prices = black_scholes.call_price_batch(
+    spots=aligned_spots,
+    strike=100.0,
+    time=1.0,
+    rate=0.05,
+    sigma=0.2
+)
 elapsed = time.perf_counter() - start
 print(f"Aligned array: {elapsed*1000:.2f}ms")
 ```
@@ -278,7 +344,13 @@ tracemalloc.start()
 
 # 大規模計算
 spots = np.random.uniform(90, 110, 5_000_000)
-prices = qf.calculate(spots, 100, 0.05, 0.2, 1.0)
+prices = black_scholes.call_price_batch(
+    spots=spots,
+    strike=100.0,
+    time=1.0,
+    rate=0.05,
+    sigma=0.2
+)
 
 # メモリ使用量
 current, peak = tracemalloc.get_traced_memory()
@@ -299,13 +371,13 @@ spots = np.random.uniform(90, 110, n)
 prices = np.empty(n)  # 結果用配列
 
 # インプレース計算（メモリ効率的）
-qf.calculate_inplace(
+# Note: 現在のAPIではインプレース操作はサポートされていません
+prices = black_scholes.call_price_batch(
     spots=spots,
-    strikes=100,
-    rate=0.05,
-    vol=0.2,
+    strike=100.0,
     time=1.0,
-    out=prices  # 結果を直接書き込み
+    rate=0.05,
+    sigma=0.2
 )
 
 print(f"Prices array modified in-place: {prices[:5]}")
@@ -318,7 +390,13 @@ print(f"Prices array modified in-place: {prices[:5]}")
 ```python
 # ポートフォリオ統計
 spots = np.random.uniform(90, 110, 10000)
-prices = qf.calculate(spots, 100, 0.05, 0.2, 1.0)
+prices = black_scholes.call_price_batch(
+    spots=spots,
+    strike=100.0,
+    time=1.0,
+    rate=0.05,
+    sigma=0.2
+)
 
 # 統計量
 stats = {

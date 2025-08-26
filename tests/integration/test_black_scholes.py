@@ -3,7 +3,7 @@
 import numpy as np
 import pytest
 from conftest import PRACTICAL_TOLERANCE, THEORETICAL_TOLERANCE
-from quantforge import calculate_call_price, calculate_call_price_batch
+from quantforge.models import black_scholes
 from scipy import stats
 
 
@@ -27,7 +27,7 @@ class TestBlackScholesIntegration:
         ]
 
         for s, k, t, r, v, expected in test_cases:
-            price = calculate_call_price(s, k, t, r, v)
+            price = black_scholes.call_price(s, k, t, r, v)
             # norm_cdfの実装精度を考慮した検証
             assert abs(price - expected) < THEORETICAL_TOLERANCE, f"価格不一致: S={s}, K={k}, T={t}, r={r}, σ={v}"
 
@@ -38,13 +38,13 @@ class TestBlackScholesIntegration:
         sigma = 0.2
 
         # ITM (In The Money)
-        itm_price = calculate_call_price(110.0, 100.0, t, r, sigma)
+        itm_price = black_scholes.call_price(110.0, 100.0, t, r, sigma)
 
         # ATM (At The Money)
-        atm_price = calculate_call_price(100.0, 100.0, t, r, sigma)
+        atm_price = black_scholes.call_price(100.0, 100.0, t, r, sigma)
 
         # OTM (Out of The Money)
-        otm_price = calculate_call_price(90.0, 100.0, t, r, sigma)
+        otm_price = black_scholes.call_price(90.0, 100.0, t, r, sigma)
 
         # ITM > ATM > OTM
         assert itm_price > atm_price > otm_price, "マネーネスによる価格順序が不正"
@@ -61,7 +61,7 @@ class TestBlackScholesIntegration:
         sigma = 0.2
 
         times = [2.0, 1.5, 1.0, 0.5, 0.25, 0.1]
-        prices = [calculate_call_price(s, k, t, r, sigma) for t in times]
+        prices = [black_scholes.call_price(s, k, t, r, sigma) for t in times]
 
         # 満期が近づくと価格は減少（ATMの場合）
         for i in range(1, len(prices)):
@@ -75,7 +75,7 @@ class TestBlackScholesIntegration:
         r = 0.05
 
         vols = [0.05, 0.1, 0.2, 0.3, 0.4, 0.5]
-        prices = [calculate_call_price(s, k, t, r, vol) for vol in vols]
+        prices = [black_scholes.call_price(s, k, t, r, vol) for vol in vols]
 
         # ボラティリティが増加すると価格も増加
         for i in range(1, len(prices)):
@@ -89,7 +89,7 @@ class TestBlackScholesIntegration:
         sigma = 0.2
 
         rates = [-0.02, 0.0, 0.02, 0.05, 0.10, 0.15]
-        prices = [calculate_call_price(s, k, t, r, sigma) for r in rates]
+        prices = [black_scholes.call_price(s, k, t, r, sigma) for r in rates]
 
         # 金利が増加するとコール価格も増加
         for i in range(1, len(prices)):
@@ -102,12 +102,12 @@ class TestBlackScholesIntegration:
         sigma = 0.2
 
         # Deep ITM: 価格 ≈ S - K*exp(-rT)
-        deep_itm = calculate_call_price(200.0, 50.0, t, r, sigma)
+        deep_itm = black_scholes.call_price(200.0, 50.0, t, r, sigma)
         intrinsic = 200.0 - 50.0 * np.exp(-r * t)
         assert abs(deep_itm - intrinsic) < 0.01, "Deep ITMが本質的価値に収束していない"
 
         # Deep OTM: 価格 ≈ 0
-        deep_otm = calculate_call_price(50.0, 200.0, t, r, sigma)
+        deep_otm = black_scholes.call_price(50.0, 200.0, t, r, sigma)
         assert deep_otm < 0.001, "Deep OTMがゼロに収束していない"
 
     def test_batch_vs_single_consistency(self) -> None:
@@ -122,12 +122,12 @@ class TestBlackScholesIntegration:
         sigma = 0.2
 
         # バッチ処理
-        batch_prices = calculate_call_price_batch(spots, k, t, r, sigma)
+        batch_prices = black_scholes.call_price_batch(spots, k, t, r, sigma)
 
         # 単一処理との比較（サンプリング）
         sample_indices = np.random.choice(n, 100, replace=False)
         for idx in sample_indices:
-            single_price = calculate_call_price(spots[idx], k, t, r, sigma)
+            single_price = black_scholes.call_price(spots[idx], k, t, r, sigma)
             assert abs(batch_prices[idx] - single_price) < PRACTICAL_TOLERANCE, f"バッチと単一の不一致: {idx}"
 
     def test_large_scale_batch(self) -> None:
@@ -139,7 +139,7 @@ class TestBlackScholesIntegration:
         r = 0.05
         sigma = 0.2
 
-        prices = calculate_call_price_batch(spots, k, t, r, sigma)
+        prices = black_scholes.call_price_batch(spots, k, t, r, sigma)
 
         assert len(prices) == n, "バッチサイズが不正"
         assert np.all(prices >= 0), "負の価格が存在"
@@ -160,7 +160,7 @@ class TestBlackScholesIntegration:
 
         # スポット価格の小さな変化
         spots = np.linspace(99.9, 100.1, 21)
-        prices = [calculate_call_price(s, k, t, r, sigma) for s in spots]
+        prices = [black_scholes.call_price(s, k, t, r, sigma) for s in spots]
 
         # 価格変化の滑らかさを確認
         for i in range(1, len(prices)):
@@ -179,7 +179,7 @@ class TestBlackScholesIntegration:
 
         # 満期までの時間
         terms = np.logspace(-3, 1, 50)  # 0.001から10年
-        prices = [calculate_call_price(s, k, t, r, sigma) for t in terms]
+        prices = [black_scholes.call_price(s, k, t, r, sigma) for t in terms]
 
         # 満期が長いほど価格は高い（一般的に）
         for i in range(1, len(prices)):
@@ -202,7 +202,7 @@ class TestBlackScholesIntegration:
         prices = []
         for k in strikes:
             # 現在は固定ボラティリティ
-            price = calculate_call_price(s, k, t, r, base_vol)
+            price = black_scholes.call_price(s, k, t, r, base_vol)
             prices.append(price)
 
         # 価格は行使価格に対して単調減少
@@ -230,7 +230,7 @@ class TestBlackScholesAccuracy:
             sigma = np.random.uniform(0.05, 0.5)
 
             # QuantForge実装
-            qf_price = calculate_call_price(s, k, t, r, sigma)
+            qf_price = black_scholes.call_price(s, k, t, r, sigma)
 
             # SciPy参照実装
             d1 = (np.log(s / k) + (r + 0.5 * sigma**2) * t) / (sigma * np.sqrt(t))
@@ -264,7 +264,7 @@ class TestBlackScholesAccuracy:
         ]
 
         for s, k, t, r, v in test_cases:
-            price = calculate_call_price(s, k, t, r, v)
+            price = black_scholes.call_price(s, k, t, r, v)
             assert np.isfinite(price), f"無限大またはNaN: S={s}, K={k}, T={t}, r={r}, σ={v}"
             assert price >= 0, f"負の価格: S={s}, K={k}, T={t}, r={r}, σ={v}"
 
@@ -281,30 +281,30 @@ class TestBlackScholesAccuracy:
         r = 0.05
         sigma = 0.2
 
-        base_price = calculate_call_price(s, k, t, r, sigma)
+        base_price = black_scholes.call_price(s, k, t, r, sigma)
 
         # デルタ（∂C/∂S）
         ds = 0.01
-        price_up = calculate_call_price(s + ds, k, t, r, sigma)
+        price_up = black_scholes.call_price(s + ds, k, t, r, sigma)
         delta = (price_up - base_price) / ds
         assert 0 <= delta <= 1, f"デルタが範囲外: {delta}"
 
         # ベガ（∂C/∂σ）
         dv = 0.001
-        price_vol_up = calculate_call_price(s, k, t, r, sigma + dv)
+        price_vol_up = black_scholes.call_price(s, k, t, r, sigma + dv)
         vega = (price_vol_up - base_price) / dv
         assert vega > 0, f"ベガが負: {vega}"
 
         # シータ（-∂C/∂T）
         dt = 0.01
-        price_time_down = calculate_call_price(s, k, t - dt, r, sigma)
+        price_time_down = black_scholes.call_price(s, k, t - dt, r, sigma)
         theta = -(base_price - price_time_down) / dt
         # ATMオプションのシータは通常負
         assert theta < 0, f"シータが正: {theta}"
 
         # ロー（∂C/∂r）
         dr = 0.001
-        price_rate_up = calculate_call_price(s, k, t, r + dr, sigma)
+        price_rate_up = black_scholes.call_price(s, k, t, r + dr, sigma)
         rho = (price_rate_up - base_price) / dr
         assert rho > 0, f"ローが負: {rho}"
 
@@ -324,7 +324,7 @@ class TestMarketScenarios:
 
         prices = []
         for k in strikes:
-            price = calculate_call_price(s, k, t, r, sigma)
+            price = black_scholes.call_price(s, k, t, r, sigma)
             prices.append(price)
 
             # 価格の妥当性チェック
@@ -349,7 +349,7 @@ class TestMarketScenarios:
         # 調整後の金利（r - r_foreign）
         r_adjusted = r_domestic - r_foreign
 
-        price = calculate_call_price(s, k, t, r_adjusted, v)
+        price = black_scholes.call_price(s, k, t, r_adjusted, v)
 
         # FXオプションの特性確認
         assert price > 0, "FXオプション価格が負"
@@ -364,7 +364,7 @@ class TestMarketScenarios:
         r = 0.04
         sigma = 0.35  # 商品の高ボラティリティ
 
-        price = calculate_call_price(s, k, t, r, sigma)
+        price = black_scholes.call_price(s, k, t, r, sigma)
 
         # 商品オプションの特性
         assert price > 0, "商品オプション価格が負"
@@ -383,7 +383,7 @@ class TestMarketScenarios:
         ]
 
         for name, s, k, t, r, sigma in scenarios:
-            price = calculate_call_price(s, k, t, r, sigma)
+            price = black_scholes.call_price(s, k, t, r, sigma)
             assert np.isfinite(price), f"{name}: 価格が無限大またはNaN"
             assert price >= 0, f"{name}: 価格が負"
 

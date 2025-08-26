@@ -2,11 +2,32 @@
 
 QuantForgeのPython APIの完全なリファレンスです。
 
-## モジュール構成
+## インポート方法
 
 ```python
-import quantforge as qf
+# モジュールベースAPI（推奨）
+from quantforge.models import black_scholes
 ```
+
+## API構造
+
+### モジュールベースAPI（推奨）
+
+より明示的で将来の拡張に対応した新しいAPI構造です。
+
+```python
+from quantforge.models import black_scholes
+
+# 価格計算
+price = black_scholes.call_price(spot=100, strike=105, time=1.0, rate=0.05, sigma=0.2)
+
+# グリークス
+greeks = black_scholes.greeks(spot=100, strike=100, time=1.0, rate=0.05, sigma=0.2, is_call=True)
+
+# インプライドボラティリティ
+iv = black_scholes.implied_volatility(price=10.45, spot=100, strike=100, time=1.0, rate=0.05, is_call=True)
+```
+
 
 ## API カテゴリ
 
@@ -15,66 +36,48 @@ import quantforge as qf
 - [インプライドボラティリティ](implied_vol.md) - IV計算
 
 ### グリークス
-- `delta_call()`, `delta_put()` - デルタ計算
-- `gamma()` - ガンマ計算
-- `vega()` - ベガ計算
-- `theta()` - シータ計算
-- `rho()` - ロー計算
-
-### ユーティリティ
-- `check_simd_support()` - SIMD機能の確認
-- `print_system_info()` - システム情報表示
-- `version()` - バージョン情報
-
-## 基本的な使用パターン
-
-### 単一計算
-
-```python
-# 単一のオプション価格
-price = qf.black_scholes_call(
-    spot=100.0,
-    strike=105.0,
-    rate=0.05,
-    vol=0.2,
-    time=1.0
-)
-```
+- `calculate_delta_call()`, `calculate_delta_put()` - デルタ計算
+- `calculate_gamma()` - ガンマ計算
+- `calculate_vega()` - ベガ計算  
+- `calculate_theta_call()`, `calculate_theta_put()` - シータ計算
+- `calculate_rho_call()`, `calculate_rho_put()` - ロー計算
 
 ### バッチ計算
 
 ```python
 import numpy as np
 
-# NumPy配列でのバッチ処理
-spots = np.array([95, 100, 105])
-prices = qf.calculate(
-    spots=spots,
-    strikes=100,
-    rates=0.05,
-    vols=0.2,
-    times=1.0
-)
+# モジュールベースAPI（推奨）
+from quantforge.models import black_scholes
+
+spots = np.array([95, 100, 105, 110])
+prices = black_scholes.call_price_batch(spots, strike=100, time=1.0, rate=0.05, sigma=0.2)
+
+# または標準関数API
+import quantforge as qf
+
+prices = qf.calculate_call_price_batch(spots, k=100, t=1.0, r=0.05, sigma=0.2)
 ```
 
-### グリークス付き計算
+### グリークス計算
 
 ```python
-# 価格とグリークスを同時計算
-result = qf.calculate(
-    spots=100,
-    strikes=105,
-    rates=0.05,
-    vols=0.2,
-    times=1.0,
-    option_type="call",
-    greeks=True
+# モジュールベースAPI（推奨）
+greeks = black_scholes.greeks(
+    spot=100,
+    strike=100,
+    time=1.0,
+    rate=0.05,
+    sigma=0.2,
+    is_call=True
 )
+print(f"Delta: {greeks.delta:.4f}")
+print(f"Gamma: {greeks.gamma:.4f}")
+print(f"Vega: {greeks.vega:.4f}")
 
-# 結果は辞書形式
-print(result['price'])
-print(result['delta'])
-print(result['gamma'])
+# 標準関数APIで個別グリークス
+delta = qf.calculate_delta_call(s=100, k=100, t=1.0, r=0.05, sigma=0.2)
+gamma = qf.calculate_gamma(s=100, k=100, t=1.0, r=0.05, sigma=0.2)
 ```
 
 ## 型システム

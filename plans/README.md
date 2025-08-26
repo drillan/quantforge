@@ -21,6 +21,7 @@
 ## 📦 完了した計画
 
 ### API改善計画
+- [2025-08-26 レガシーAPI完全削除](./archive/2025-08-26-both-destroy-legacy-api.md) - **COMPLETED** - calculate_*関数群の完全削除、95%のコード削減達成
 - [2025-08-26 Python API引数名標準化](./archive/2025-08-26-python-api-standardization.md) - **COMPLETED** - Black-Scholesモデルの業界標準表記への統一（v → sigma）
 
 ### 実装計画
@@ -140,7 +141,7 @@ cp templates/python/implementation-plan.md 2025-MM-DD-python-feature-name.md
 #### アーキテクチャ計画
 | 計画 | ステータス | 開始日 | 完了予定 | 進捗 |
 |------|-----------|--------|----------|------|
-| [複数モデル対応](./2025-08-26-multi-model-architecture.md) | **ACTIVE** | 2025-08-26 | 2025-09-23 | 0% |
+| [複数モデル対応](./2025-08-26-multi-model-architecture.md) | **ACTIVE** | 2025-08-26 | 2025-09-23 | 55% |
 
 ### 完了した計画
 | 計画 | ステータス | 開始日 | 完了日 | 成果物 |

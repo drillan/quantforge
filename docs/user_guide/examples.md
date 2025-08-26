@@ -8,6 +8,7 @@
 
 ```python
 import quantforge as qf
+from quantforge.models import black_scholes
 import numpy as np
 import pandas as pd
 
@@ -18,7 +19,7 @@ portfolio = pd.DataFrame({
     'spot': [100, 100, 105, 95],
     'strike': [105, 95, 110, 90],
     'volume': [100, -50, 75, -25],  # 正=ロング、負=ショート
-    'vol': [0.20, 0.22, 0.25, 0.18],
+    'sigma': [0.20, 0.22, 0.25, 0.18],
     'time': [0.25, 0.5, 0.75, 1.0]
 })
 
@@ -28,32 +29,40 @@ def calculate_portfolio_metrics(df, rate=0.05):
     results = []
     
     for _, row in df.iterrows():
-        # 価格とグリークス
+        # グリークス取得
+        greeks = black_scholes.greeks(
+            spot=row['spot'],
+            strike=row['strike'],
+            time=row['time'],
+            rate=rate,
+            sigma=row['sigma'],
+            is_call=(row['type'] == 'call')
+        )
+        
+        # 価格計算
         if row['type'] == 'call':
-            price = qf.black_scholes_call(
-                row['spot'], row['strike'], rate, row['vol'], row['time']
-            )
-            delta = qf.delta_call(
-                row['spot'], row['strike'], rate, row['vol'], row['time']
+            price = black_scholes.call_price(
+                spot=row['spot'],
+                strike=row['strike'],
+                time=row['time'],
+                rate=rate,
+                sigma=row['sigma']
             )
         else:
-            price = qf.black_scholes_put(
-                row['spot'], row['strike'], rate, row['vol'], row['time']
+            price = black_scholes.put_price(
+                spot=row['spot'],
+                strike=row['strike'],
+                time=row['time'],
+                rate=rate,
+                sigma=row['sigma']
             )
-            delta = qf.delta_put(
-                row['spot'], row['strike'], rate, row['vol'], row['time']
-            )
-        
-        gamma = qf.gamma(row['spot'], row['strike'], rate, row['vol'], row['time'])
-        vega = qf.vega(row['spot'], row['strike'], rate, row['vol'], row['time'])
-        theta = qf.theta(row['spot'], row['strike'], rate, row['vol'], row['time'], row['type'])
         
         # ポジション調整
         position_value = price * row['volume']
-        position_delta = delta * row['volume']
-        position_gamma = gamma * row['volume']
-        position_vega = vega * row['volume']
-        position_theta = theta * row['volume']
+        position_delta = greeks.delta * row['volume']
+        position_gamma = greeks.gamma * row['volume']
+        position_vega = greeks.vega * row['volume']
+        position_theta = greeks.theta * row['volume']
         
         results.append({
             'instrument_id': row['instrument_id'],
@@ -112,27 +121,29 @@ print(f"Value: ${abs(hedge['hedge_value']):,.2f}")
 ### VaR（Value at Risk）計算
 
 ```python
-def calculate_var_options(spot, strike, rate, vol, time, confidence=0.95, n_sims=10000):
+def calculate_var_options(spot, strike, rate, sigma, time, confidence=0.95, n_sims=10000):
     """オプションポートフォリオのVaR計算"""
     np.random.seed(42)
     
     # 現在価値
-    current_value = qf.black_scholes_call(spot, strike, rate, vol, time)
+    current_value = black_scholes.call_price(
+        spot=spot, strike=strike, time=time, rate=rate, sigma=sigma
+    )
     
     # モンテカルロシミュレーション
     dt = 1/252  # 1日
     z = np.random.standard_normal(n_sims)
     
     # 1日後のスポット価格
-    future_spots = spot * np.exp((rate - 0.5*vol**2)*dt + vol*np.sqrt(dt)*z)
+    future_spots = spot * np.exp((rate - 0.5*sigma**2)*dt + sigma*np.sqrt(dt)*z)
     
     # 1日後のオプション価値
-    future_values = qf.calculate(
-        future_spots, 
-        strike, 
-        rate, 
-        vol, 
-        time - dt
+    future_values = black_scholes.call_price_batch(
+        spots=future_spots,
+        strike=strike,
+        time=time - dt,
+        rate=rate,
+        sigma=sigma
     )
     
     # 損益分布
@@ -182,10 +193,14 @@ def stress_test_portfolio(base_spot, base_vol, portfolio_func,
     return results, spot_shocks, vol_shocks
 
 # ポートフォリオ関数の定義
-def sample_portfolio(spot, vol):
+def sample_portfolio(spot, sigma):
     """サンプルポートフォリオ"""
-    call = qf.black_scholes_call(spot, 105, 0.05, vol, 0.5)
-    put = qf.black_scholes_put(spot, 95, 0.05, vol, 0.5)
+    call = black_scholes.call_price(
+        spot=spot, strike=105, time=0.5, rate=0.05, sigma=sigma
+    )
+    put = black_scholes.put_price(
+        spot=spot, strike=95, time=0.5, rate=0.05, sigma=sigma
+    )
     return 100 * call - 50 * put
 
 # ストレステスト実行
@@ -213,20 +228,20 @@ plt.show()
 ### インプライドボラティリティサーフェス
 
 ```python
-def build_iv_surface(market_prices, spots, strikes, times, rate=0.05):
+def build_iv_surface(market_prices, spot, strikes, times, rate=0.05):
     """市場価格からIVサーフェスを構築"""
     iv_surface = np.zeros_like(market_prices)
     
     for i in range(len(strikes)):
         for j in range(len(times)):
             if market_prices[i, j] > 0:
-                iv = qf.implied_volatility(
+                iv = black_scholes.implied_volatility(
                     price=market_prices[i, j],
-                    spot=spots,
+                    spot=spot,
                     strike=strikes[i],
-                    rate=rate,
                     time=times[j],
-                    option_type="call"
+                    rate=rate,
+                    is_call=True
                 )
                 iv_surface[i, j] = iv
     
@@ -317,9 +332,13 @@ class OptionMarketMaker:
         """ビッド・アスク価格を生成"""
         # 中間価格
         if option_type == 'call':
-            mid = qf.black_scholes_call(spot, strike, rate, self.base_vol, time)
+            mid = black_scholes.call_price(
+                spot=spot, strike=strike, time=time, rate=rate, sigma=self.base_vol
+            )
         else:
-            mid = qf.black_scholes_put(spot, strike, rate, self.base_vol, time)
+            mid = black_scholes.put_price(
+                spot=spot, strike=strike, time=time, rate=rate, sigma=self.base_vol
+            )
         
         # ボラティリティスプレッド
         bid_vol = self.base_vol * (1 - self.spread_bps)
@@ -327,11 +346,19 @@ class OptionMarketMaker:
         
         # ビッド・アスク価格
         if option_type == 'call':
-            bid = qf.black_scholes_call(spot, strike, rate, bid_vol, time)
-            ask = qf.black_scholes_call(spot, strike, rate, ask_vol, time)
+            bid = black_scholes.call_price(
+                spot=spot, strike=strike, time=time, rate=rate, sigma=bid_vol
+            )
+            ask = black_scholes.call_price(
+                spot=spot, strike=strike, time=time, rate=rate, sigma=ask_vol
+            )
         else:
-            bid = qf.black_scholes_put(spot, strike, rate, bid_vol, time)
-            ask = qf.black_scholes_put(spot, strike, rate, ask_vol, time)
+            bid = black_scholes.put_price(
+                spot=spot, strike=strike, time=time, rate=rate, sigma=bid_vol
+            )
+            ask = black_scholes.put_price(
+                spot=spot, strike=strike, time=time, rate=rate, sigma=ask_vol
+            )
         
         return {
             'bid': bid,
@@ -371,7 +398,7 @@ print(f"Spread: ${adjusted_quote['spread']:.3f} ({adjusted_quote['spread_pct']:.
 ### オプション戦略のバックテスト
 
 ```python
-def backtest_covered_call(price_path, strike, vol, rate, dt=1/252):
+def backtest_covered_call(price_path, strike, sigma, rate, dt=1/252):
     """カバードコール戦略のバックテスト"""
     results = []
     
@@ -380,7 +407,9 @@ def backtest_covered_call(price_path, strike, vol, rate, dt=1/252):
         time_to_expiry = 21 * dt
         
         # オプション売却
-        premium = qf.black_scholes_call(spot, strike, rate, vol, time_to_expiry)
+        premium = black_scholes.call_price(
+            spot=spot, strike=strike, time=time_to_expiry, rate=rate, sigma=sigma
+        )
         
         # 満期時の損益
         final_spot = price_path[i + 21]
@@ -413,7 +442,7 @@ for _ in range(n_days):
 backtest_results = backtest_covered_call(
     price_path, 
     strike=105, 
-    vol=0.2, 
+    sigma=0.2, 
     rate=0.05
 )
 

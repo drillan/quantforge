@@ -57,21 +57,28 @@ mod tests {
 import pytest
 import numpy as np
 import quantforge as qf
+from quantforge.models import black_scholes
 
 class TestBlackScholes:
     def test_call_price(self):
         """Test call option pricing."""
-        price = qf.black_scholes_call(100, 100, 0.05, 0.2, 1.0)
+        price = black_scholes.call_price(
+            spot=100.0, strike=100.0, time=1.0, rate=0.05, sigma=0.2
+        )
         assert abs(price - 10.4506) < 1e-4
     
     def test_boundary_conditions(self):
         """Test extreme cases."""
         # Deep ITM
-        price = qf.black_scholes_call(200, 100, 0.05, 0.2, 1.0)
+        price = black_scholes.call_price(
+            spot=200.0, strike=100.0, time=1.0, rate=0.05, sigma=0.2
+        )
         assert abs(price - (200 - 100 * np.exp(-0.05))) < 0.01
         
         # Deep OTM
-        price = qf.black_scholes_call(50, 100, 0.05, 0.2, 1.0)
+        price = black_scholes.call_price(
+            spot=50.0, strike=100.0, time=1.0, rate=0.05, sigma=0.2
+        )
         assert price < 0.001
 ```
 
@@ -92,7 +99,9 @@ import quantforge as qf
 )
 def test_price_boundaries(spot, strike, rate, vol, time):
     """Test price stays within theoretical bounds."""
-    call_price = qf.black_scholes_call(spot, strike, rate, vol, time)
+    call_price = black_scholes.call_price(
+        spot=spot, strike=strike, time=time, rate=rate, sigma=vol
+    )
     
     # Lower bound
     intrinsic = max(spot - strike * np.exp(-rate * time), 0)
@@ -133,9 +142,10 @@ quickcheck! {
 def test_numpy_integration():
     """Test NumPy array processing."""
     spots = np.random.uniform(90, 110, 10000)
-    strikes = np.full(10000, 100.0)
     
-    prices = qf.calculate(spots, strikes, 0.05, 0.2, 1.0)
+    prices = black_scholes.call_price_batch(
+        spots=spots, strike=100.0, time=1.0, rate=0.05, sigma=0.2
+    )
     
     assert isinstance(prices, np.ndarray)
     assert prices.shape == spots.shape
@@ -150,7 +160,9 @@ def test_zero_copy():
     data_ptr = data.ctypes.data
     
     # 処理
-    result = qf.calculate(data, 100, 0.05, 0.2, 1.0)
+    result = black_scholes.call_price_batch(
+        spots=data, strike=100.0, time=1.0, rate=0.05, sigma=0.2
+    )
     
     # 元のデータが変更されていない
     assert data.ctypes.data == data_ptr
@@ -170,8 +182,8 @@ class TestPerformance:
     def test_single_option_speed(self, benchmark):
         """Single option calculation benchmark."""
         result = benchmark(
-            qf.black_scholes_call,
-            100, 100, 0.05, 0.2, 1.0
+            black_scholes.call_price,
+            spot=100.0, strike=100.0, time=1.0, rate=0.05, sigma=0.2
         )
         assert result > 0
     
@@ -181,8 +193,8 @@ class TestPerformance:
         spots = np.random.uniform(90, 110, 100000)
         
         result = benchmark(
-            qf.calculate,
-            spots, 100, 0.05, 0.2, 1.0
+            black_scholes.call_price_batch,
+            spots=spots, strike=100.0, time=1.0, rate=0.05, sigma=0.2
         )
         
         # パフォーマンス要件
@@ -270,12 +282,12 @@ def test_regression_black_scholes():
         test_cases = json.load(f)
     
     for case in test_cases:
-        price = qf.black_scholes_call(
-            case['spot'],
-            case['strike'],
-            case['rate'],
-            case['vol'],
-            case['time']
+        price = black_scholes.call_price(
+            spot=case['spot'],
+            strike=case['strike'],
+            time=case['time'],
+            rate=case['rate'],
+            sigma=case['vol']
         )
         
         assert abs(price - case['expected']) < 1e-10, \
@@ -288,22 +300,32 @@ def test_regression_black_scholes():
 def test_invalid_inputs():
     """Test error handling."""
     with pytest.raises(ValueError, match="Spot price must be positive"):
-        qf.black_scholes_call(-100, 100, 0.05, 0.2, 1.0)
+        black_scholes.call_price(
+            spot=-100.0, strike=100.0, time=1.0, rate=0.05, sigma=0.2
+        )
     
     with pytest.raises(ValueError, match="Volatility cannot be negative"):
-        qf.black_scholes_call(100, 100, 0.05, -0.2, 1.0)
+        black_scholes.call_price(
+            spot=100.0, strike=100.0, time=1.0, rate=0.05, sigma=-0.2
+        )
     
     with pytest.raises(ValueError, match="Time must be positive"):
-        qf.black_scholes_call(100, 100, 0.05, 0.2, -1.0)
+        black_scholes.call_price(
+            spot=100.0, strike=100.0, time=-1.0, rate=0.05, sigma=0.2
+        )
 
 def test_numerical_stability():
     """Test numerical edge cases."""
     # Very small time
-    price = qf.black_scholes_call(100, 100, 0.05, 0.2, 1e-10)
+    price = black_scholes.call_price(
+        spot=100.0, strike=100.0, time=1e-10, rate=0.05, sigma=0.2
+    )
     assert abs(price - 0) < 1e-8
     
     # Very large volatility
-    price = qf.black_scholes_call(100, 100, 0.05, 10.0, 1.0)
+    price = black_scholes.call_price(
+        spot=100.0, strike=100.0, time=1.0, rate=0.05, sigma=10.0
+    )
     assert price > 0 and price < 100
 ```
 

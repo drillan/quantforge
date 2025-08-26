@@ -22,18 +22,26 @@ Pythonの使いやすさを保ちながら、ネイティブコード並みの�
 import quantforge as qf
 import numpy as np
 
-# 単一オプションの価格計算
-price = qf.black_scholes_call(
+# モジュールベースAPI（推奨）
+from quantforge.models import black_scholes
+
+price = black_scholes.call_price(
     spot=100.0,
     strike=110.0,
+    time=1.0,
     rate=0.05,
-    vol=0.2,
-    time=1.0
+    sigma=0.2
 )
 
-# バッチ処理（100万件を15ms以下で処理）
+# バッチ処理（100万件を20ms以下で処理）
 spots = np.random.uniform(90, 110, 1_000_000)
-prices = qf.calculate(spots, strikes=100, rate=0.05, vol=0.2, time=1.0)
+prices = black_scholes.call_price_batch(
+    spots=spots,
+    strike=100.0,
+    time=1.0,
+    rate=0.05,
+    sigma=0.2
+)
 ```
 
 ## パフォーマンス比較

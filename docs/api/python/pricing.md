@@ -2,312 +2,178 @@
 
 オプション価格計算のための主要な関数群です。
 
-## 汎用計算関数
-
-### `calculate()`
-
-```python
-quantforge.calculate(
-    spots: Union[float, np.ndarray],
-    strikes: Union[float, np.ndarray],
-    rates: Union[float, np.ndarray],
-    vols: Union[float, np.ndarray],
-    times: Union[float, np.ndarray],
-    option_type: str = "call",
-    greeks: bool = False
-) -> Union[float, np.ndarray, dict]
-```
-
-汎用的なオプション価格計算関数。
-
-**パラメータ:**
-- `spots`: 現在価格
-- `strikes`: 行使価格
-- `rates`: 無リスク金利（年率）
-- `vols`: ボラティリティ（年率）
-- `times`: 満期までの時間（年）
-- `option_type`: "call" または "put"
-- `greeks`: Trueの場合、グリークスも計算
-
-**戻り値:**
-- `greeks=False`: 価格（float または np.ndarray）
-- `greeks=True`: 価格とグリークスを含む辞書
-
-**例:**
-```python
-# 単一計算
-price = qf.calculate(100, 105, 0.05, 0.2, 1.0)
-
-# グリークス付き
-result = qf.calculate(100, 105, 0.05, 0.2, 1.0, greeks=True)
-print(result['price'], result['delta'])
-```
-
 ## Black-Scholesモデル
 
-### `black_scholes_call()`
+現在、QuantForgeはBlack-Scholesモデルのヨーロピアンオプションをサポートしています。
+
+### モジュールベースAPI（推奨）
+
+より明示的で将来の拡張に対応したAPI構造です。
 
 ```python
-quantforge.black_scholes_call(
-    spot: Union[float, np.ndarray],
-    strike: Union[float, np.ndarray],
-    rate: Union[float, np.ndarray],
-    vol: Union[float, np.ndarray],
-    time: Union[float, np.ndarray]
-) -> Union[float, np.ndarray]
+from quantforge.models import black_scholes
+
+# コールオプション価格
+call_price = black_scholes.call_price(
+    spot=100.0,    # スポット価格
+    strike=105.0,  # 権利行使価格
+    time=1.0,      # 満期までの時間（年）
+    rate=0.05,     # 無リスク金利
+    sigma=0.2      # ボラティリティ
+)
+
+# プットオプション価格
+put_price = black_scholes.put_price(
+    spot=100.0,
+    strike=105.0,
+    time=1.0,
+    rate=0.05,
+    sigma=0.2
+)
 ```
 
-ヨーロピアンコールオプションのBlack-Scholes価格。
+#### バッチ処理
 
-**数式:**
+```python
+import numpy as np
+
+# 複数のスポット価格でバッチ計算
+spots = np.array([95, 100, 105, 110])
+call_prices = black_scholes.call_price_batch(
+    spots=spots,
+    strike=100.0,
+    time=1.0,
+    rate=0.05,
+    sigma=0.2
+)
+
+put_prices = black_scholes.put_price_batch(
+    spots=spots,
+    strike=100.0,
+    time=1.0,
+    rate=0.05,
+    sigma=0.2
+)
+```
+
+
+## グリークス計算
+
+### モジュールベースAPI（推奨）
+
+```python
+from quantforge.models import black_scholes
+
+# 全グリークスを一括計算
+greeks = black_scholes.greeks(
+    spot=100.0,
+    strike=100.0,
+    time=1.0,
+    rate=0.05,
+    sigma=0.2,
+    is_call=True  # True: コール, False: プット
+)
+
+# 個別のグリークスへアクセス
+print(f"Delta: {greeks.delta:.4f}")
+print(f"Gamma: {greeks.gamma:.4f}")
+print(f"Vega: {greeks.vega:.4f}")
+print(f"Theta: {greeks.theta:.4f}")
+print(f"Rho: {greeks.rho:.4f}")
+```
+
+### 標準関数API
+
+```python
+import quantforge as qf
+
+# 全グリークス一括計算
+greeks = qf.calculate_all_greeks(
+    s=100.0,
+    k=100.0,
+    t=1.0,
+    r=0.05,
+    sigma=0.2,
+    is_call=True
+)
+
+# 個別グリークス計算
+delta_call = qf.calculate_delta_call(s=100, k=100, t=1.0, r=0.05, sigma=0.2)
+delta_put = qf.calculate_delta_put(s=100, k=100, t=1.0, r=0.05, sigma=0.2)
+gamma = qf.calculate_gamma(s=100, k=100, t=1.0, r=0.05, sigma=0.2)
+vega = qf.calculate_vega(s=100, k=100, t=1.0, r=0.05, sigma=0.2)
+theta_call = qf.calculate_theta_call(s=100, k=100, t=1.0, r=0.05, sigma=0.2)
+theta_put = qf.calculate_theta_put(s=100, k=100, t=1.0, r=0.05, sigma=0.2)
+rho_call = qf.calculate_rho_call(s=100, k=100, t=1.0, r=0.05, sigma=0.2)
+rho_put = qf.calculate_rho_put(s=100, k=100, t=1.0, r=0.05, sigma=0.2)
+```
+
+## 数式
+
+### Black-Scholesモデル
+
+ヨーロピアンコールオプション:
 $$C = S_0 \cdot N(d_1) - K \cdot e^{-rT} \cdot N(d_2)$$
+
+ヨーロピアンプットオプション:
+$$P = K \cdot e^{-rT} \cdot N(-d_2) - S_0 \cdot N(-d_1)$$
 
 where:
 - $d_1 = \frac{\ln(S_0/K) + (r + \sigma^2/2)T}{\sigma\sqrt{T}}$
 - $d_2 = d_1 - \sigma\sqrt{T}$
+- $N(x)$: 標準正規分布の累積分布関数
 
-### `black_scholes_put()`
+## パラメータ説明
 
-```python
-quantforge.black_scholes_put(
-    spot: Union[float, np.ndarray],
-    strike: Union[float, np.ndarray],
-    rate: Union[float, np.ndarray],
-    vol: Union[float, np.ndarray],
-    time: Union[float, np.ndarray]
-) -> Union[float, np.ndarray]
-```
+### モジュールベースAPI
 
-ヨーロピアンプットオプションのBlack-Scholes価格。
+| パラメータ | 型 | 説明 |
+|-----------|-----|------|
+| `spot` | float | 原資産の現在価格 |
+| `strike` | float | オプションの権利行使価格 |
+| `time` | float | 満期までの時間（年） |
+| `rate` | float | 無リスク金利（年率） |
+| `sigma` | float | ボラティリティ（年率） |
+| `is_call` | bool | True: コール, False: プット |
 
-**数式:**
-$$P = K \cdot e^{-rT} \cdot N(-d_2) - S_0 \cdot N(-d_1)$$
+### 標準関数API
 
-## 配当付きオプション
-
-### `black_scholes_call_dividend()`
-
-```python
-quantforge.black_scholes_call_dividend(
-    spot: Union[float, np.ndarray],
-    strike: Union[float, np.ndarray],
-    rate: Union[float, np.ndarray],
-    dividend: Union[float, np.ndarray],
-    vol: Union[float, np.ndarray],
-    time: Union[float, np.ndarray]
-) -> Union[float, np.ndarray]
-```
-
-連続配当利回り付きコールオプション。
-
-**パラメータ:**
-- `dividend`: 連続配当利回り（年率）
-
-## アメリカンオプション
-
-### `american_call()`
-
-```python
-quantforge.american_call(
-    spot: Union[float, np.ndarray],
-    strike: Union[float, np.ndarray],
-    rate: Union[float, np.ndarray],
-    vol: Union[float, np.ndarray],
-    time: Union[float, np.ndarray],
-    dividend: Union[float, np.ndarray] = 0.0
-) -> Union[float, np.ndarray]
-```
-
-Bjerksund-Stensland 2002近似によるアメリカンコール。
-
-**特徴:**
-- 早期行使プレミアムを考慮
-- 高精度近似（誤差 < 0.1%）
-- 配当付きでも高速計算
-
-### `american_put()`
-
-```python
-quantforge.american_put(
-    spot: Union[float, np.ndarray],
-    strike: Union[float, np.ndarray],
-    rate: Union[float, np.ndarray],
-    vol: Union[float, np.ndarray],
-    time: Union[float, np.ndarray],
-    dividend: Union[float, np.ndarray] = 0.0
-) -> Union[float, np.ndarray]
-```
-
-アメリカンプットオプション価格。
-
-### `american_exercise_boundary()`
-
-```python
-quantforge.american_exercise_boundary(
-    strike: float,
-    rate: float,
-    vol: float,
-    time: float,
-    option_type: str = "put"
-) -> float
-```
-
-アメリカンオプションの早期行使境界価格。
-
-## アジアンオプション
-
-### `asian_arithmetic_call()`
-
-```python
-quantforge.asian_arithmetic_call(
-    spot: Union[float, np.ndarray],
-    strike: Union[float, np.ndarray],
-    rate: Union[float, np.ndarray],
-    vol: Union[float, np.ndarray],
-    time: Union[float, np.ndarray],
-    averaging_start: Union[float, np.ndarray] = 0.0,
-    n_fixings: int = 252
-) -> Union[float, np.ndarray]
-```
-
-算術平均アジアンコールオプション。
-
-**パラメータ:**
-- `averaging_start`: 平均計算開始時点
-- `n_fixings`: 価格観測回数
-
-### `asian_geometric_call()`
-
-```python
-quantforge.asian_geometric_call(
-    spot: Union[float, np.ndarray],
-    strike: Union[float, np.ndarray],
-    rate: Union[float, np.ndarray],
-    vol: Union[float, np.ndarray],
-    time: Union[float, np.ndarray]
-) -> Union[float, np.ndarray]
-```
-
-幾何平均アジアンコール（解析解）。
-
-## スプレッドオプション
-
-### `spread_option_kirk()`
-
-```python
-quantforge.spread_option_kirk(
-    spot1: Union[float, np.ndarray],
-    spot2: Union[float, np.ndarray],
-    strike: Union[float, np.ndarray],
-    rate: Union[float, np.ndarray],
-    vol1: Union[float, np.ndarray],
-    vol2: Union[float, np.ndarray],
-    correlation: Union[float, np.ndarray],
-    time: Union[float, np.ndarray]
-) -> Union[float, np.ndarray]
-```
-
-Kirk近似による2資産スプレッドオプション。
-
-**パラメータ:**
-- `spot1`, `spot2`: 各資産の現在価格
-- `vol1`, `vol2`: 各資産のボラティリティ
-- `correlation`: 資産間の相関係数
-
-## バリアオプション
-
-### `barrier_call()`
-
-```python
-quantforge.barrier_call(
-    spot: Union[float, np.ndarray],
-    strike: Union[float, np.ndarray],
-    barrier: Union[float, np.ndarray],
-    rate: Union[float, np.ndarray],
-    vol: Union[float, np.ndarray],
-    time: Union[float, np.ndarray],
-    barrier_type: str,
-    rebate: Union[float, np.ndarray] = 0.0
-) -> Union[float, np.ndarray]
-```
-
-バリアコールオプション。
-
-**barrier_type:**
-- `"up_and_out"`: アップアンドアウト
-- `"up_and_in"`: アップアンドイン
-- `"down_and_out"`: ダウンアンドアウト
-- `"down_and_in"`: ダウンアンドイン
-
-## デジタルオプション
-
-### `digital_call()`
-
-```python
-quantforge.digital_call(
-    spot: Union[float, np.ndarray],
-    strike: Union[float, np.ndarray],
-    rate: Union[float, np.ndarray],
-    vol: Union[float, np.ndarray],
-    time: Union[float, np.ndarray],
-    cash_amount: Union[float, np.ndarray] = 1.0
-) -> Union[float, np.ndarray]
-```
-
-キャッシュオアナッシング・デジタルコール。
-
-**パラメータ:**
-- `cash_amount`: ITM時の支払額
-
-## インプレース計算
-
-### `calculate_inplace()`
-
-```python
-quantforge.calculate_inplace(
-    spots: np.ndarray,
-    strikes: Union[float, np.ndarray],
-    rates: Union[float, np.ndarray],
-    vols: Union[float, np.ndarray],
-    times: Union[float, np.ndarray],
-    out: np.ndarray,
-    option_type: str = "call"
-) -> None
-```
-
-結果を既存配列に直接書き込む（メモリ効率的）。
-
-**パラメータ:**
-- `out`: 結果を書き込む配列（事前確保必要）
-
-**例:**
-```python
-n = 1_000_000
-spots = np.random.uniform(90, 110, n)
-results = np.empty(n)
-qf.calculate_inplace(spots, 100, 0.05, 0.2, 1.0, out=results)
-```
+| パラメータ | 型 | 説明 |
+|-----------|-----|------|
+| `s` | float | 原資産の現在価格（スポット価格） |
+| `k` | float | オプションの権利行使価格（ストライク） |
+| `t` | float | 満期までの時間（年） |
+| `r` | float | 無リスク金利（年率） |
+| `sigma` | float | ボラティリティ（年率） |
+| `is_call` | bool | True: コール, False: プット |
 
 ## パフォーマンス指標
 
-| 関数 | 単一計算 | 100万件バッチ |
+| 操作 | 単一計算 | 100万件バッチ |
 |------|----------|--------------|
-| `black_scholes_call` | < 10ns | < 15ms |
-| `american_call` | < 50ns | < 50ms |
-| `asian_arithmetic_call` | < 100ns | < 100ms |
-| `spread_option_kirk` | < 150ns | < 150ms |
+| コール/プット価格 | < 10ns | < 20ms |
+| 全グリークス | < 50ns | < 100ms |
+| インプライドボラティリティ | < 200ns | < 500ms |
 
-## エラー処理
+## エラーハンドリング
 
-すべての価格計算関数は以下のエラーをスローする可能性があります：
+すべての価格計算関数は以下の条件でエラーを返します：
 
-- `InvalidInputError`: 無効な入力パラメータ
-- `ConvergenceError`: 数値計算の収束失敗
-- `MemoryError`: メモリ不足
+- スポット価格が負または0
+- 権利行使価格が負または0
+- 満期までの時間が負
+- ボラティリティが負
+- 数値がNaNまたは無限大
 
 ```python
 try:
-    price = qf.black_scholes_call(-100, 100, 0.05, 0.2, 1.0)
-except qf.InvalidInputError as e:
-    print(f"Invalid input: {e}")
+    price = black_scholes.call_price(
+        spot=-100,  # 無効な負の値
+        strike=100,
+        time=1.0,
+        rate=0.05,
+        sigma=0.2
+    )
+except ValueError as e:
+    print(f"入力エラー: {e}")
 ```

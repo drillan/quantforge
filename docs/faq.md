@@ -85,8 +85,18 @@ A: はい、高速なNewton-Raphson法とBrent法を実装しています。単�
 
 A: ゼロコピーインターフェースを提供：
 ```python
+import numpy as np
+from quantforge.models import black_scholes
+
 # NumPy配列を直接処理（コピーなし）
-prices = qf.calculate(numpy_array, ...)
+spots = np.array([100.0, 101.0, 102.0])
+prices = black_scholes.call_price_batch(
+    spots=spots,
+    strike=100.0,
+    time=1.0,
+    rate=0.05,
+    sigma=0.2
+)
 ```
 
 ### Q: 並列処理は自動ですか？
@@ -112,15 +122,15 @@ A: 以下を確認してください：
 ### Q: 計算結果がNaNになります
 
 A: 入力パラメータを確認：
-- ボラティリティ > 0
-- 満期時間 > 0
-- スポット価格、行使価格 > 0
+- sigma（ボラティリティ） > 0
+- time（満期時間） > 0
+- spot（スポット価格）、strike（行使価格） > 0
 
 ### Q: パフォーマンスが期待より遅い
 
 A: 以下を確認：
 1. NumPy配列を使用しているか
-2. `qf.check_simd_support()` でSIMD有効確認
+2. リリースビルドを使用しているか確認
 3. 適切なバッチサイズ（10,000-100,000）
 
 ## 開発関連

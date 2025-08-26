@@ -25,15 +25,15 @@ pub fn black_scholes(m: &Bound<'_, PyModule>) -> PyResult<()> {
 fn bs_call_price(spot: f64, strike: f64, time: f64, rate: f64, sigma: f64) -> PyResult<f64> {
     validate_inputs(spot, strike, time, rate, sigma)
         .map_err(|e| pyo3::exceptions::PyValueError::new_err(e.to_string()))?;
-    
+
     let params = BlackScholesParams {
         spot,
-        strike, 
+        strike,
         time,
         rate,
         sigma,
     };
-    
+
     Ok(BlackScholes::call_price(&params))
 }
 
@@ -44,7 +44,7 @@ fn bs_call_price(spot: f64, strike: f64, time: f64, rate: f64, sigma: f64) -> Py
 fn bs_put_price(spot: f64, strike: f64, time: f64, rate: f64, sigma: f64) -> PyResult<f64> {
     validate_inputs(spot, strike, time, rate, sigma)
         .map_err(|e| pyo3::exceptions::PyValueError::new_err(e.to_string()))?;
-    
+
     let params = BlackScholesParams {
         spot,
         strike,
@@ -52,7 +52,7 @@ fn bs_put_price(spot: f64, strike: f64, time: f64, rate: f64, sigma: f64) -> PyR
         rate,
         sigma,
     };
-    
+
     Ok(BlackScholes::put_price(&params))
 }
 
@@ -71,9 +71,9 @@ fn bs_call_price_batch<'py>(
     // Validate common parameters
     validate_inputs(100.0, strike, time, rate, sigma)
         .map_err(|e| pyo3::exceptions::PyValueError::new_err(e.to_string()))?;
-    
+
     let spots_slice = spots.as_slice()?;
-    
+
     // Validate each spot price
     for &s in spots_slice {
         if !s.is_finite() || s <= 0.0 {
@@ -82,7 +82,7 @@ fn bs_call_price_batch<'py>(
             ));
         }
     }
-    
+
     let results = BlackScholes::call_price_batch(spots_slice, strike, time, rate, sigma);
     Ok(PyArray1::from_vec_bound(py, results))
 }
@@ -102,9 +102,9 @@ fn bs_put_price_batch<'py>(
     // Validate common parameters
     validate_inputs(100.0, strike, time, rate, sigma)
         .map_err(|e| pyo3::exceptions::PyValueError::new_err(e.to_string()))?;
-    
+
     let spots_slice = spots.as_slice()?;
-    
+
     // Validate each spot price
     for &s in spots_slice {
         if !s.is_finite() || s <= 0.0 {
@@ -113,7 +113,7 @@ fn bs_put_price_batch<'py>(
             ));
         }
     }
-    
+
     let results = BlackScholes::put_price_batch(spots_slice, strike, time, rate, sigma);
     Ok(PyArray1::from_vec_bound(py, results))
 }
@@ -132,7 +132,7 @@ fn bs_greeks(
 ) -> PyResult<PyGreeks> {
     validate_inputs(spot, strike, time, rate, sigma)
         .map_err(|e| pyo3::exceptions::PyValueError::new_err(e.to_string()))?;
-    
+
     let params = BlackScholesParams {
         spot,
         strike,
@@ -140,9 +140,9 @@ fn bs_greeks(
         rate,
         sigma,
     };
-    
+
     let greeks = BlackScholes::greeks(&params, is_call);
-    
+
     Ok(PyGreeks {
         delta: greeks.delta,
         gamma: greeks.gamma,
@@ -170,7 +170,7 @@ fn bs_implied_volatility(
             "All parameters must be positive",
         ));
     }
-    
+
     let params = BlackScholesParams {
         spot,
         strike,
@@ -178,7 +178,7 @@ fn bs_implied_volatility(
         rate,
         sigma: 0.2, // Placeholder, not used in IV calculation
     };
-    
+
     BlackScholes::implied_volatility(price, &params, is_call, None)
         .map_err(|e| pyo3::exceptions::PyRuntimeError::new_err(e.to_string()))
 }

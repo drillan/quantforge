@@ -1,7 +1,5 @@
 """QuantForge models module - option pricing models."""
 
-from typing import Any, Callable
-
 # Import the Rust models submodule
 from ..quantforge import models as _rust_models  # type: ignore[import-not-found]
 

@@ -2,127 +2,124 @@
 
 QuantForgeの基本的な関数とBlack-Scholesモデルを使ったオプション価格計算を学びます。
 
-## Black-Scholesモデル
-
-### ヨーロピアンコールオプション
+## インポート
 
 ```python
+# モジュールベースAPI（推奨）
+from quantforge.models import black_scholes
+
+# または標準インポート
 import quantforge as qf
-
-# 基本パラメータ
-spot = 100.0    # 現在価格
-strike = 110.0  # 行使価格
-rate = 0.05     # 無リスク金利（年率）
-vol = 0.2       # ボラティリティ（年率）
-time = 1.0      # 満期までの時間（年）
-
-# コールオプション価格計算
-call_price = qf.black_scholes_call(spot, strike, rate, vol, time)
-print(f"Call Option Price: ${call_price:.2f}")
 ```
 
-### ヨーロピアンプットオプション
+## Black-Scholesモデル
+
+### モジュールベースAPI（推奨）
 
 ```python
-# プットオプション価格計算
-put_price = qf.black_scholes_put(spot, strike, rate, vol, time)
+from quantforge.models import black_scholes
+
+# コールオプション価格
+call_price = black_scholes.call_price(
+    spot=100.0,    # 現在価格
+    strike=110.0,  # 権利行使価格
+    time=1.0,      # 満期までの時間（年）
+    rate=0.05,     # 無リスク金利（年率）
+    sigma=0.2      # ボラティリティ（年率）
+)
+
+# プットオプション価格
+put_price = black_scholes.put_price(
+    spot=100.0,
+    strike=110.0,
+    time=1.0,
+    rate=0.05,
+    sigma=0.2
+)
+
+print(f"Call Option Price: ${call_price:.2f}")
 print(f"Put Option Price: ${put_price:.2f}")
 
 # Put-Callパリティの検証
+import numpy as np
 parity = call_price - put_price
-theoretical = spot - strike * np.exp(-rate * time)
+theoretical = 100.0 - 110.0 * np.exp(-0.05 * 1.0)
 print(f"Put-Call Parity Check: {abs(parity - theoretical) < 1e-10}")
 ```
 
+
 ## グリークス計算
 
-### 個別のグリークス
+### モジュールベースAPI（推奨）
 
 ```python
-# Delta: 原資産価格に対する感応度
-delta_call = qf.delta_call(spot, strike, rate, vol, time)
-delta_put = qf.delta_put(spot, strike, rate, vol, time)
+from quantforge.models import black_scholes
 
-# Gamma: Deltaの変化率
-gamma = qf.gamma(spot, strike, rate, vol, time)
-
-# Vega: ボラティリティに対する感応度
-vega = qf.vega(spot, strike, rate, vol, time)
-
-# Theta: 時間経過に対する感応度
-theta_call = qf.theta_call(spot, strike, rate, vol, time)
-theta_put = qf.theta_put(spot, strike, rate, vol, time)
-
-# Rho: 金利に対する感応度
-rho_call = qf.rho_call(spot, strike, rate, vol, time)
-rho_put = qf.rho_put(spot, strike, rate, vol, time)
-```
-
-### 一括グリークス計算
-
-```python
-# すべてのグリークスを一度に計算（効率的）
-result = qf.calculate(
-    spots=spot,
-    strikes=strike,
-    rates=rate,
-    vols=vol,
-    times=time,
-    option_type="call",
-    greeks=True
+# 全グリークスを一括計算（効率的）
+greeks = black_scholes.greeks(
+    spot=100.0,
+    strike=100.0,
+    time=1.0,
+    rate=0.05,
+    sigma=0.2,
+    is_call=True
 )
 
 print("Call Option Greeks:")
-print(f"  Price: ${result['price']:.2f}")
-print(f"  Delta: {result['delta']:.4f}")
-print(f"  Gamma: {result['gamma']:.4f}")
-print(f"  Vega:  {result['vega']:.4f}")
-print(f"  Theta: {result['theta']:.4f}")
-print(f"  Rho:   {result['rho']:.4f}")
+print(f"  Delta: {greeks.delta:.4f}")
+print(f"  Gamma: {greeks.gamma:.4f}")
+print(f"  Vega:  {greeks.vega:.4f}")
+print(f"  Theta: {greeks.theta:.4f}")
+print(f"  Rho:   {greeks.rho:.4f}")
 ```
+
 
 ## 複数オプションの同時計算
 
-### リスト形式での入力
+### バッチ処理（NumPy配列）
 
 ```python
-# 複数のオプションパラメータ
-spots = [100, 105, 110]
-strikes = [105, 105, 105]
-vols = [0.2, 0.22, 0.25]
-times = [0.25, 0.5, 1.0]
+import numpy as np
+from quantforge.models import black_scholes
 
-# バッチ計算
-prices = qf.calculate(
+# 複数のスポット価格
+spots = np.array([95, 100, 105, 110])
+
+# バッチ計算（高速）
+call_prices = black_scholes.call_price_batch(
     spots=spots,
-    strikes=strikes,
-    rates=0.05,
-    vols=vols,
-    times=times,
-    option_type="call"
+    strike=100.0,
+    time=1.0,
+    rate=0.05,
+    sigma=0.2
 )
 
-for i, price in enumerate(prices):
-    print(f"Option {i+1}: ${price:.2f}")
+put_prices = black_scholes.put_price_batch(
+    spots=spots,
+    strike=100.0,
+    time=1.0,
+    rate=0.05,
+    sigma=0.2
+)
+
+for i, (spot, call, put) in enumerate(zip(spots, call_prices, put_prices)):
+    print(f"Spot {spot}: Call=${call:.2f}, Put=${put:.2f}")
 ```
 
-### 辞書形式での結果取得
+### 複数のパラメータセット
 
 ```python
-# 構造化された結果を取得
-results = qf.calculate_structured(
-    spots=[100, 100, 100],
-    strikes=[95, 100, 105],
-    rates=0.05,
-    vols=0.2,
-    times=1.0,
-    option_type="both"  # コールとプット両方
-)
-
-for i, result in enumerate(results):
-    print(f"Strike {result['strike']}:")
-    print(f"  Call: ${result['call_price']:.2f}")
-    print(f"  Put:  ${result['put_price']:.2f}")
+# 異なる満期のオプション
+times = [0.25, 0.5, 1.0, 2.0]
+for t in times:
+    price = black_scholes.call_price(
+        spot=100.0,
+        strike=100.0,
+        time=t,
+        rate=0.05,
+        sigma=0.2
+    )
+    print(f"Maturity {t} years: ${price:.2f}")
 ```
 
 ## インプライドボラティリティ
@@ -130,191 +127,122 @@ for i, result in enumerate(results):
 ### 単一のIV計算
 
 ```python
+from quantforge.models import black_scholes
+
 # 市場価格からボラティリティを逆算
-market_price = 12.5
-iv = qf.implied_volatility(
+market_price = 10.45
+iv = black_scholes.implied_volatility(
     price=market_price,
-    spot=100,
-    strike=110,
-    rate=0.05,
+    spot=100.0,
+    strike=100.0,
     time=1.0,
-    option_type="call"
+    rate=0.05,
+    is_call=True
 )
 
 print(f"Implied Volatility: {iv:.1%}")
 
 # 精度の検証
-calculated_price = qf.black_scholes_call(100, 110, 0.05, iv, 1.0)
+calculated_price = black_scholes.call_price(100, 100, 1.0, 0.05, iv)
 print(f"Price Check: Market={market_price:.2f}, Calculated={calculated_price:.2f}")
 ```
 
-### 複数のIV計算
+### IVスマイルの分析
 
 ```python
-# ボラティリティスマイルの計算
-strikes = np.array([90, 95, 100, 105, 110])
-market_prices = np.array([15.2, 11.8, 8.5, 5.7, 3.4])
+import numpy as np
+from quantforge.models import black_scholes
 
-ivs = qf.implied_volatility(
-    price=market_prices,
-    spot=100,
-    strike=strikes,
-    rate=0.05,
-    time=0.5,
-    option_type="call"
-)
+# 異なる権利行使価格
+spot = 100.0
+strikes = np.array([80, 90, 100, 110, 120])
+sigma_true = 0.2
 
-# ボラティリティスマイルの表示
-import matplotlib.pyplot as plt
+# 各ストライクの理論価格を計算
+market_prices = []
+for k in strikes:
+    price = black_scholes.call_price(spot, k, 1.0, 0.05, sigma_true)
+    market_prices.append(price)
 
-plt.figure(figsize=(10, 6))
-plt.plot(strikes, ivs * 100, 'o-')
-plt.xlabel('Strike Price')
-plt.ylabel('Implied Volatility (%)')
-plt.title('Volatility Smile')
-plt.grid(True, alpha=0.3)
-plt.show()
+# IVを逆算
+for k, price in zip(strikes, market_prices):
+    iv = black_scholes.implied_volatility(
+        price, spot, k, 1.0, 0.05, is_call=True
+    )
+    print(f"Strike {k}: IV={iv:.1%}")
 ```
 
-## 配当付きオプション
+## リスク管理への応用
+
+### デルタヘッジ
 
 ```python
-# 配当利回りを考慮した計算
-dividend_yield = 0.02  # 2%の配当利回り
+from quantforge.models import black_scholes
 
-# 調整後の計算
-call_price = qf.black_scholes_call_dividend(
-    spot=100,
-    strike=105,
-    rate=0.05,
-    dividend=dividend_yield,
-    vol=0.2,
-    time=1.0
-)
+# ポジション情報
+spot = 100.0
+strike = 105.0
+time = 0.5
+rate = 0.05
+sigma = 0.25
 
-print(f"Call with Dividends: ${call_price:.2f}")
+# オプションのデルタ計算
+greeks = black_scholes.greeks(spot, strike, time, rate, sigma, is_call=True)
+delta = greeks.delta
+
+# デルタヘッジに必要な株式数
+option_contracts = 100  # 100契約
+hedge_shares = -option_contracts * delta * 100  # 各契約は100株
+
+print(f"Delta: {delta:.4f}")
+print(f"Hedge position: {hedge_shares:.0f} shares")
 ```
 
-## エラーハンドリング
-
-### 入力検証
+### ポートフォリオのグリークス
 
 ```python
-import quantforge as qf
-from quantforge import QuantForgeError
-
-try:
-    # 無効な入力（負のボラティリティ）
-    price = qf.black_scholes_call(100, 100, 0.05, -0.2, 1.0)
-except QuantForgeError as e:
-    print(f"Error: {e}")
-
-# 安全な計算関数
-def safe_calculate(spot, strike, rate, vol, time):
-    """入力検証付き計算"""
-    if vol <= 0:
-        return None, "Volatility must be positive"
-    if time <= 0:
-        return None, "Time to maturity must be positive"
-    if spot <= 0 or strike <= 0:
-        return None, "Spot and strike must be positive"
-    
-    try:
-        return qf.black_scholes_call(spot, strike, rate, vol, time), None
-    except Exception as e:
-        return None, str(e)
-```
-
-### NaN/Inf処理
-
-```python
-# 極端な値の処理
-extreme_values = [
-    (1e-10, 100, 0.05, 0.2, 1.0),  # 極小スポット
-    (100, 1e10, 0.05, 0.2, 1.0),   # 極大ストライク
-    (100, 100, 0.05, 1e-10, 1.0),  # 極小ボラティリティ
+# 複数オプションのポートフォリオ
+positions = [
+    {"spot": 100, "strike": 95, "time": 0.5, "contracts": 10, "is_call": True},
+    {"spot": 100, "strike": 105, "time": 0.5, "contracts": -5, "is_call": False},
+    {"spot": 100, "strike": 100, "time": 1.0, "contracts": 8, "is_call": True},
 ]
 
-for spot, strike, rate, vol, time in extreme_values:
-    price = qf.black_scholes_call(spot, strike, rate, vol, time)
-    if np.isnan(price) or np.isinf(price):
-        print(f"Warning: Invalid result for spot={spot}, strike={strike}")
-    else:
-        print(f"Price: ${price:.10f}")
+# ポートフォリオ全体のグリークス
+total_delta = 0
+total_gamma = 0
+total_vega = 0
+
+for pos in positions:
+    greeks = black_scholes.greeks(
+        pos["spot"], pos["strike"], pos["time"], 
+        0.05, 0.2, pos["is_call"]
+    )
+    total_delta += pos["contracts"] * greeks.delta * 100
+    total_gamma += pos["contracts"] * greeks.gamma * 100
+    total_vega += pos["contracts"] * greeks.vega * 100
+
+print(f"Portfolio Greeks:")
+print(f"  Total Delta: {total_delta:.2f}")
+print(f"  Total Gamma: {total_gamma:.2f}")
+print(f"  Total Vega:  {total_vega:.2f}")
 ```
 
-## パフォーマンスのモニタリング
+## パフォーマンス測定
 
 ```python
 import time
+import numpy as np
+from quantforge.models import black_scholes
 
-# パフォーマンス測定
-def benchmark_calculation(n):
-    """n個のオプション計算のベンチマーク"""
-    spots = np.random.uniform(90, 110, n)
-    strikes = np.full(n, 100)
-    vols = np.random.uniform(0.1, 0.3, n)
-    times = np.random.uniform(0.1, 2.0, n)
-    
-    start = time.perf_counter()
-    prices = qf.calculate(spots, strikes, 0.05, vols, times)
-    elapsed = time.perf_counter() - start
-    
-    return elapsed, prices
+# 大規模バッチ処理のベンチマーク
+n = 1_000_000
+spots = np.random.uniform(90, 110, n)
 
-# 異なるサイズでテスト
-sizes = [100, 1000, 10000, 100000, 1000000]
-for size in sizes:
-    elapsed, _ = benchmark_calculation(size)
-    print(f"{size:8d} options: {elapsed*1000:6.2f}ms ({elapsed/size*1e9:.1f}ns/option)")
+start = time.perf_counter()
+prices = black_scholes.call_price_batch(spots, 100, 1.0, 0.05, 0.2)
+elapsed = (time.perf_counter() - start) * 1000
+
+print(f"Processed {n:,} options in {elapsed:.1f}ms")
+print(f"Average time per option: {elapsed/n*1000:.1f}ns")
 ```
-
-## ユーティリティ関数
-
-### 満期日からの時間計算
-
-```python
-from datetime import datetime, timedelta
-
-def time_to_expiry(expiry_date):
-    """満期日までの年換算時間"""
-    today = datetime.now()
-    days = (expiry_date - today).days
-    return days / 365.25
-
-# 使用例
-expiry = datetime(2025, 12, 31)
-time = time_to_expiry(expiry)
-price = qf.black_scholes_call(100, 105, 0.05, 0.2, time)
-```
-
-### モンテカルロ価格との比較
-
-```python
-def monte_carlo_call(spot, strike, rate, vol, time, n_sims=100000):
-    """検証用のモンテカルロ実装"""
-    np.random.seed(42)
-    z = np.random.standard_normal(n_sims)
-    ST = spot * np.exp((rate - 0.5 * vol**2) * time + vol * np.sqrt(time) * z)
-    payoffs = np.maximum(ST - strike, 0)
-    return np.exp(-rate * time) * np.mean(payoffs)
-
-# 比較
-mc_price = monte_carlo_call(100, 105, 0.05, 0.2, 1.0)
-bs_price = qf.black_scholes_call(100, 105, 0.05, 0.2, 1.0)
-print(f"Monte Carlo: ${mc_price:.4f}")
-print(f"Black-Scholes: ${bs_price:.4f}")
-print(f"Difference: ${abs(mc_price - bs_price):.4f}")
-```
-
-## まとめ
-
-この章では、QuantForgeの基本的な使い方を学びました：
-
-- Black-Scholesモデルによる価格計算
-- グリークスの計算と解釈
-- インプライドボラティリティの逆算
-- 複数オプションの効率的な処理
-- エラーハンドリングとパフォーマンス測定
-
-次は[NumPy統合](numpy_integration.md)で、より高度な配列処理を学びましょう。
