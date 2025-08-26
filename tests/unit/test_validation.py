@@ -218,14 +218,14 @@ class TestBatchValidation:
         k = 100.0
         t = 1.0
         r = 0.05
-        v = 0.2
+        sigma = 0.2
 
         # バッチ処理
-        batch_results = calculate_call_price_batch(spots, k, t, r, v)
+        batch_results = calculate_call_price_batch(spots, k, t, r, sigma)
 
         # 個別処理との比較
         for i, spot in enumerate(spots):
-            single_result = calculate_call_price(spot, k, t, r, v)
+            single_result = calculate_call_price(spot, k, t, r, sigma)
             assert abs(batch_results[i] - single_result) < PRACTICAL_TOLERANCE, f"バッチと個別の不一致: {i}"
 
     def test_large_batch(self) -> None:
@@ -235,9 +235,9 @@ class TestBatchValidation:
         k = 100.0
         t = 1.0
         r = 0.05
-        v = 0.2
+        sigma = 0.2
 
-        results = calculate_call_price_batch(spots, k, t, r, v)
+        results = calculate_call_price_batch(spots, k, t, r, sigma)
 
         assert len(results) == n, "バッチサイズが不正"
         assert np.all(results >= 0), "負の価格が存在"

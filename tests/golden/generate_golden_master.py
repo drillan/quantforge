@@ -62,14 +62,14 @@ class GoldenMasterGenerator:
         """
         # 計算実行
         if category == "black_scholes":
-            call_result = self.reference.black_scholes("c", s, k, t, r, v)
-            put_result = self.reference.black_scholes("p", s, k, t, r, v)
+            call_result = self.reference.black_scholes("c", s, k, t, r, sigma)
+            put_result = self.reference.black_scholes("p", s, k, t, r, sigma)
         elif category == "merton" and q is not None:
             call_result = self.reference.merton("c", s, k, t, r, q, v)
             put_result = self.reference.merton("p", s, k, t, r, q, v)
         elif category == "black_76":
-            call_result = self.reference.black_76("c", s, k, t, r, v)
-            put_result = self.reference.black_76("p", s, k, t, r, v)
+            call_result = self.reference.black_76("c", s, k, t, r, sigma)
+            put_result = self.reference.black_76("p", s, k, t, r, sigma)
         else:
             raise ValueError(f"Unknown category: {category}")
 

@@ -4,11 +4,8 @@
 
 ## 📋 アクティブな計画
 
-### 実装計画
-- [2025-08-25 Rustインプライドボラティリティ](./2025-08-25-rust-implied-volatility.md) - **DRAFT** - Newton-Raphson/Brent法によるIV計算実装（計画策定中）
-
-### 標準化計画
-- [2025-08-25 精度設定一元化](./2025-08-25-both-precision-standardization.md) - **ACTIVE** - 精度設定の階層化と一元管理（実施中: 95%完了）
+### API改善計画
+- [2025-08-26 Python API引数名標準化](./2025-08-26-python-api-standardization.md) - **DRAFT** - Black-Scholesモデルの業界標準表記への統一
 
 ## 📦 完了した計画
 
@@ -16,6 +13,9 @@
 - [2025-01-24 実装計画](./archive/2025-01-24-implementation-plan.md) - **COMPLETED** - 14週間の包括的実装計画（基本設計完了）
 - [2025-01-24 Rust BSコア実装](./archive/2025-01-24-rust-bs-core.md) - **COMPLETED** - Black-Scholesコア実装計画策定済み
 - [2025-08-25 Rustプットオプション実装](./archive/2025-08-25-rust-put-option.md) - **COMPLETED** - ヨーロピアンプットオプション完全実装
+
+### 標準化計画
+- [2025-08-25 精度設定一元化](./archive/2025-08-25-both-precision-standardization.md) - **COMPLETED** - 精度設定の階層化と一元管理（100%完了）
 
 ### ドキュメント計画
 - [2025-01-24 Sphinxドキュメント作成](./archive/2025-01-24-sphinx-documentation.md) - **COMPLETED** - Sphinxドキュメント構造作成済み
@@ -102,20 +102,10 @@ cp templates/python/implementation-plan.md 2025-MM-DD-python-feature-name.md
 
 ### アクティブな計画（言語別）
 
-#### 両言語統合計画
-| 計画 | ステータス | 開始日 | 完了予定 | 進捗 |
-|------|-----------|--------|----------|------|
-| [精度基準統一化](./2025-08-25-both-precision-standardization.md) | **ACTIVE** | 2025-08-25 | 2025-08-25 | 95% |
-
-#### Rust計画
-| 計画 | ステータス | 開始日 | 完了予定 | 進捗 |
-|------|-----------|--------|----------|------|
-| [インプライドボラティリティ実装](./2025-08-25-rust-implied-volatility.md) | **DRAFT** | 2025-08-25 | 2025-09-22 | 0% |
-
 #### Python計画
 | 計画 | ステータス | 開始日 | 完了予定 | 進捗 |
 |------|-----------|--------|----------|------|
-| *アクティブなPython計画なし* | - | - | - | - |
+| [API引数名標準化](./2025-08-26-python-api-standardization.md) | **DRAFT** | 2025-08-26 | 2025-09-02 | 0% |
 
 ### 完了した計画
 | 計画 | ステータス | 開始日 | 完了日 | 成果物 |
@@ -130,6 +120,7 @@ cp templates/python/implementation-plan.md 2025-MM-DD-python-feature-name.md
 | [erfベース最適化](./archive/2025-08-25-erf-based-optimization-strategy.md) | **COMPLETED** | 2025-08-25 | 2025-08-25 | 51ms→9.7ms（5.3倍高速化）、Rayon並列化 ✅ |
 | [Rustプットオプション](./archive/2025-08-25-rust-put-option.md) | **COMPLETED** | 2025-08-25 | 2025-08-25 | プット価格計算実装、Put-Callパリティ検証 ✅ |
 | [Rustインプライドボラティリティ](./archive/2025-08-25-rust-implied-volatility.md) | **COMPLETED** | 2025-08-25 | 2025-08-25 | Newton-Raphson/Brent法、並列化、Python統合 ✅ |
+| [精度設定一元化](./archive/2025-08-25-both-precision-standardization.md) | **COMPLETED** | 2025-08-25 | 2025-08-25 | 精度基準の階層化、ハードコード除去 ✅ |
 
 ## 🎯 品質管理ツールの言語別適用基準
 
@@ -159,9 +150,15 @@ cp templates/python/implementation-plan.md 2025-MM-DD-python-feature-name.md
 
 ---
 
-**最終更新**: 2025-08-25
+**最終更新**: 2025-08-26
 
 ## 📝 計画の変更履歴
+
+### 2025-08-26
+- **新規追加**: `2025-08-26-python-api-standardization.md` - Python API引数名の業界標準化計画
+- **完了**: `2025-08-25-both-precision-standardization.md` → `archive/`へ移動
+  - 成果: 精度設定の階層化、ハードコード完全除去、全テスト成功
+- **README更新**: インプライドボラティリティ計画の重複記載を修正
 
 ### 2025-08-25
 - **完了**: `2025-08-25-rust-put-option.md` → `archive/`へ移動

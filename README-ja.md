@@ -44,7 +44,7 @@ QuantForgeは、Rust + PyO3で実装された超高速オプション価格計�
 
 ```bash
 # リポジトリのクローン
-git clone https://github.com/[username]/quantforge.git
+git clone https://github.com/drillan/quantforge.git
 cd quantforge
 
 # Rustツールチェーンのインストール（未インストールの場合）
@@ -80,14 +80,14 @@ spot = 100.0      # 原資産価格
 strike = 105.0    # 権利行使価格
 time = 0.25       # 満期までの時間（年）
 rate = 0.05       # 無リスク金利
-vol = 0.2         # ボラティリティ
+sigma = 0.2       # ボラティリティ（業界標準記号σ）
 
 # コールオプション価格
-call_price = qf.calculate_call_price(spot, strike, time, rate, vol)
+call_price = qf.calculate_call_price(spot, strike, time, rate, sigma)
 print(f"Call Price: ${call_price:.4f}")
 
 # プットオプション価格
-put_price = qf.calculate_put_price(spot, strike, time, rate, vol)
+put_price = qf.calculate_put_price(spot, strike, time, rate, sigma)
 print(f"Put Price: ${put_price:.4f}")
 ```
 
@@ -98,7 +98,7 @@ print(f"Put Price: ${put_price:.4f}")
 spots = np.linspace(80, 120, 100000)  # 10万個のデータポイント
 
 # 自動的に並列処理が適用される（30,000要素以上）
-call_prices = qf.calculate_call_price_batch(spots, strike, time, rate, vol)
+call_prices = qf.calculate_call_price_batch(spots, strike, time, rate, sigma)
 print(f"Calculated {len(call_prices)} prices in milliseconds")
 ```
 
@@ -106,18 +106,18 @@ print(f"Calculated {len(call_prices)} prices in milliseconds")
 
 ```python
 # 個別のグリークス
-delta_call = qf.calculate_delta_call(spot, strike, time, rate, vol)
-gamma = qf.calculate_gamma(spot, strike, time, rate, vol)
-vega = qf.calculate_vega(spot, strike, time, rate, vol)
-theta_call = qf.calculate_theta_call(spot, strike, time, rate, vol)
-rho_call = qf.calculate_rho_call(spot, strike, time, rate, vol)
+delta_call = qf.calculate_delta_call(spot, strike, time, rate, sigma)
+gamma = qf.calculate_gamma(spot, strike, time, rate, sigma)
+vega = qf.calculate_vega(spot, strike, time, rate, sigma)
+theta_call = qf.calculate_theta_call(spot, strike, time, rate, sigma)
+rho_call = qf.calculate_rho_call(spot, strike, time, rate, sigma)
 
 print(f"Delta (Call): {delta_call:.4f}")
 print(f"Gamma: {gamma:.4f}")
 print(f"Vega: {vega:.4f}")
 
 # 全グリークス一括計算
-greeks = qf.calculate_all_greeks(spot, strike, time, rate, vol, is_call=True)
+greeks = qf.calculate_all_greeks(spot, strike, time, rate, sigma, is_call=True)
 print(f"All Greeks: {greeks}")
 ```
 
@@ -307,7 +307,7 @@ git push origin feature/your-feature
 QuantForgeが高速な理由：
 
 1. **Rust実装**: メモリ安全性を保証しながらC++並みの性能
-2. **SIMD最適化**: コンパイラによる自動ベクトル化
+2. **最適化された実装**: 高速な数学関数の使用
 3. **Rayon並列化**: データ並列処理の自動適用
 4. **ゼロコピー**: PyO3によるNumPy配列の直接操作
 5. **最適化された数学関数**: erfベース実装による高速・高精度計算
@@ -328,6 +328,6 @@ QuantForgeが高速な理由：
 
 **Built with ❤️ and Rust**
 
-[Report Bug](https://github.com/[username]/quantforge/issues) • [Request Feature](https://github.com/[username]/quantforge/issues)
+[Report Bug](https://github.com/drillan/quantforge/issues) • [Request Feature](https://github.com/drillan/quantforge/issues)
 
 </div>

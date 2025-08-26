@@ -8,7 +8,7 @@ def calculate_call_price(
     k: float,
     t: float,
     r: float,
-    v: float,
+    sigma: float,
 ) -> float:
     """ヨーロピアンコールオプション価格を計算.
 
@@ -17,7 +17,7 @@ def calculate_call_price(
         k: 権利行使価格
         t: 満期までの時間（年）
         r: リスクフリーレート
-        v: インプライドボラティリティ
+        sigma: ボラティリティ（業界標準記号σ）
 
     Returns:
         オプション価格
@@ -32,7 +32,7 @@ def calculate_call_price_batch(
     k: float,
     t: float,
     r: float,
-    v: float,
+    sigma: float,
 ) -> NDArray[np.float64]:
     """バッチ計算（SIMD最適化）.
 
@@ -41,7 +41,7 @@ def calculate_call_price_batch(
         k: 権利行使価格
         t: 満期までの時間（年）
         r: リスクフリーレート
-        v: インプライドボラティリティ
+        sigma: ボラティリティ（業界標準記号σ）
 
     Returns:
         オプション価格の配列

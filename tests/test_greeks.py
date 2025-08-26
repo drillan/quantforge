@@ -177,10 +177,10 @@ class TestGreeksEdgeCases:
 
     def test_put_call_parity_delta(self) -> None:
         """Put-CallパリティのDeltaテスト"""
-        s, k, t, r, v = 100.0, 100.0, 1.0, 0.05, 0.2
+        s, k, t, r, sigma = 100.0, 100.0, 1.0, 0.05, 0.2
 
-        delta_call = qf.calculate_delta_call(s, k, t, r, v)
-        delta_put = qf.calculate_delta_put(s, k, t, r, v)
+        delta_call = qf.calculate_delta_call(s, k, t, r, sigma)
+        delta_put = qf.calculate_delta_put(s, k, t, r, sigma)
 
         # Delta_call - Delta_put = 1
         assert abs((delta_call - delta_put) - 1.0) < NUMERICAL_TOLERANCE

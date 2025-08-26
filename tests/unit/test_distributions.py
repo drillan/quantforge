@@ -46,20 +46,20 @@ class TestNormCDF:
     def test_known_values(self, x: float, expected: float) -> None:
         """既知の値との照合テスト."""
         # Black-Scholesを通じて間接的にnorm_cdfをテスト
-        # T=1, r=0, v=1の特殊ケースで計算
+        # T=1, r=0, sigma=1の特殊ケースで計算
         s = 100.0
         k = 100.0 * np.exp(-x)  # d1 = x になるように調整
         t = 1.0
         r = 0.0
-        v = 1.0
+        sigma = 1.0
 
         # この設定では d1 ≈ x, d2 ≈ x - 1
         # 価格から逆算してnorm_cdfの精度を検証
-        price = calculate_call_price(s, k, t, r, v)
+        price = calculate_call_price(s, k, t, r, sigma)
 
         # 理論価格との比較
-        d1 = (np.log(s / k) + (r + 0.5 * v**2) * t) / (v * np.sqrt(t))
-        d2 = d1 - v * np.sqrt(t)
+        d1 = (np.log(s / k) + (r + 0.5 * sigma**2) * t) / (sigma * np.sqrt(t))
+        d2 = d1 - sigma * np.sqrt(t)
         theoretical_price = s * stats.norm.cdf(d1) - k * np.exp(-r * t) * stats.norm.cdf(d2)
 
         # norm_cdfの実装精度に合わせた検証（理論精度レベル）
@@ -73,18 +73,18 @@ class TestNormCDF:
         s = 100.0
         t = 1.0
         r = 0.0  # 金利0で対称性を検証
-        v = 0.2
+        sigma = 0.2
 
         test_values = [0.5, 1.0, 1.5, 2.0]
         for x_val in test_values:
             # 対称的なストライク価格の設定
-            # ln(s/k_low) = x_val * v * sqrt(t)
-            # ln(s/k_high) = -x_val * v * sqrt(t)
-            k_low = s * np.exp(-x_val * v * np.sqrt(t))
-            k_high = s * np.exp(x_val * v * np.sqrt(t))
+            # ln(s/k_low) = x_val * sigma * sqrt(t)
+            # ln(s/k_high) = -x_val * sigma * sqrt(t)
+            k_low = s * np.exp(-x_val * sigma * np.sqrt(t))
+            k_high = s * np.exp(x_val * sigma * np.sqrt(t))
 
-            price_low = calculate_call_price(s, k_low, t, r, v)
-            price_high = calculate_call_price(s, k_high, t, r, v)
+            price_low = calculate_call_price(s, k_low, t, r, sigma)
+            price_high = calculate_call_price(s, k_high, t, r, sigma)
 
             # r=0の場合、価格の対称的な関係を検証
             # C(S,K1) + C(S,K2) ≈ S（K1*K2 = S^2の場合）
@@ -102,10 +102,10 @@ class TestNormCDF:
         s = 100.0
         t = 1.0
         r = 0.05
-        v = 0.2
+        sigma = 0.2
 
         for k in strikes:
-            price = calculate_call_price(s, k, t, r, v)
+            price = calculate_call_price(s, k, t, r, sigma)
             prices.append(price)
 
         # 行使価格が上昇すると価格は減少（単調減少）
@@ -117,17 +117,17 @@ class TestNormCDF:
         s = 100.0
         t = 1.0
         r = 0.05
-        v = 0.2
+        sigma = 0.2
 
         # Deep ITM (In The Money)
         k_itm = 1.0
-        price_itm = calculate_call_price(s, k_itm, t, r, v)
+        price_itm = calculate_call_price(s, k_itm, t, r, sigma)
         intrinsic_itm = s - k_itm * np.exp(-r * t)
         assert abs(price_itm - intrinsic_itm) < 0.01, "Deep ITMで本質的価値に収束していない"
 
         # Deep OTM (Out of The Money)
         k_otm = 10000.0
-        price_otm = calculate_call_price(s, k_otm, t, r, v)
+        price_otm = calculate_call_price(s, k_otm, t, r, sigma)
         assert price_otm < 0.001, "Deep OTMでゼロに収束していない"
 
     def test_accuracy_against_scipy(self) -> None:
@@ -141,14 +141,14 @@ class TestNormCDF:
             k = np.random.uniform(50, 150)
             t = np.random.uniform(0.1, 2.0)
             r = np.random.uniform(-0.05, 0.15)
-            v = np.random.uniform(0.05, 0.5)
+            sigma = np.random.uniform(0.05, 0.5)
 
             # QuantForgeの計算
-            qf_price = calculate_call_price(s, k, t, r, v)
+            qf_price = calculate_call_price(s, k, t, r, sigma)
 
             # SciPyを使った理論価格
-            d1 = (np.log(s / k) + (r + 0.5 * v**2) * t) / (v * np.sqrt(t))
-            d2 = d1 - v * np.sqrt(t)
+            d1 = (np.log(s / k) + (r + 0.5 * sigma**2) * t) / (sigma * np.sqrt(t))
+            d2 = d1 - sigma * np.sqrt(t)
             scipy_price = s * stats.norm.cdf(d1) - k * np.exp(-r * t) * stats.norm.cdf(d2)
 
             # 相対誤差（理論精度レベル）
@@ -191,13 +191,13 @@ class TestNormCDFEdgeCases:
         s = 100.0
         t = 0.001  # 非常に短い満期
         r = 0.05
-        v = 0.2
+        sigma = 0.2
 
         k_values = [99.99, 100.0, 100.01]
         prices = []
 
         for k in k_values:
-            price = calculate_call_price(s, k, t, r, v)
+            price = calculate_call_price(s, k, t, r, sigma)
             prices.append(price)
             assert not math.isnan(price), f"NaNが発生: k={k}"
             assert not math.isinf(price), f"Infが発生: k={k}"
@@ -212,15 +212,15 @@ class TestNormCDFEdgeCases:
         s = 100.0
         k = 100.0  # ATM
         r = 0.0
-        v = 0.2
+        sigma = 0.2
 
         # 非常に短い満期での計算
         t_values = [0.001, 0.01, 0.1]
 
         for t in t_values:
-            price = calculate_call_price(s, k, t, r, v)
+            price = calculate_call_price(s, k, t, r, sigma)
             # ATMオプションの近似式との比較
-            approx_price = s * v * np.sqrt(t / (2 * np.pi))
+            approx_price = s * sigma * np.sqrt(t / (2 * np.pi))
             rel_error = abs(price - approx_price) / approx_price
             assert rel_error < 0.1, f"ATM近似との誤差が大きい: t={t}, error={rel_error}"
 
@@ -236,9 +236,9 @@ class TestDistributionProperties:
         k = 100.0
         t = 1.0
         r = 0.05
-        v = 0.2
+        sigma = 0.2
 
-        call_price = calculate_call_price(s, k, t, r, v)
+        call_price = calculate_call_price(s, k, t, r, sigma)
 
         # Put-Call パリティ: C - P = S - K*exp(-rT)
         # P = C - S + K*exp(-rT)
@@ -256,18 +256,18 @@ class TestDistributionProperties:
         k = 100.0
         t = 1.0
         r = 0.05
-        v = 0.2
+        sigma = 0.2
         ds = 0.01  # 小さな価格変化
 
         s_base = 100.0
-        price_base = calculate_call_price(s_base, k, t, r, v)
-        price_up = calculate_call_price(s_base + ds, k, t, r, v)
+        price_base = calculate_call_price(s_base, k, t, r, sigma)
+        price_up = calculate_call_price(s_base + ds, k, t, r, sigma)
 
         # 数値微分によるデルタ
         delta_numerical = (price_up - price_base) / ds
 
         # 理論デルタ: N(d1)
-        d1 = (np.log(s_base / k) + (r + 0.5 * v**2) * t) / (v * np.sqrt(t))
+        d1 = (np.log(s_base / k) + (r + 0.5 * sigma**2) * t) / (sigma * np.sqrt(t))
         delta_theoretical = stats.norm.cdf(d1)
 
         # デルタの精度確認
@@ -279,10 +279,10 @@ class TestDistributionProperties:
         k = 100.0
         t = 1.0
         r = 0.05
-        v = 0.2
+        sigma = 0.2
 
         # 価格計算
-        price = calculate_call_price(s, k, t, r, v)
+        price = calculate_call_price(s, k, t, r, sigma)
 
         # 価格の範囲チェック
         lower_bound = max(s - k * np.exp(-r * t), 0)  # 本質的価値
@@ -291,8 +291,8 @@ class TestDistributionProperties:
         assert lower_bound <= price <= upper_bound, f"価格が理論範囲外: {price}"
 
         # ATMでの特殊な性質
-        # ATMオプションの価格は約 S * v * sqrt(T/(2π))
+        # ATMオプションの価格は約 S * sigma * sqrt(T/(2π))
         # 注: この近似は金利がゼロの場合のみ正確。r=0.05では誤差が大きくなる
-        atm_approx = s * v * np.sqrt(t / (2 * np.pi))
+        atm_approx = s * sigma * np.sqrt(t / (2 * np.pi))
         # 金利が0.05の場合、誤差は大きくなるため許容範囲を拡大
         assert abs(price - atm_approx) / atm_approx < 0.35, "ATM近似との乖離が大きい"

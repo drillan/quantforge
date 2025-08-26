@@ -38,10 +38,10 @@ def test_put_batch_calculation() -> None:
 
 def test_put_call_parity() -> None:
     """Put-Callパリティのテスト"""
-    s, k, t, r, v = 100.0, 100.0, 1.0, 0.05, 0.2
+    s, k, t, r, sigma = 100.0, 100.0, 1.0, 0.05, 0.2
 
-    call = quantforge.calculate_call_price(s, k, t, r, v)
-    put = quantforge.calculate_put_price(s, k, t, r, v)
+    call = quantforge.calculate_call_price(s, k, t, r, sigma)
+    put = quantforge.calculate_put_price(s, k, t, r, sigma)
 
     # C - P = S - K*exp(-r*T)
     parity_lhs = call - put

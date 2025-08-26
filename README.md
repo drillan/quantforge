@@ -7,8 +7,6 @@
 [![Python Version](https://img.shields.io/badge/python-3.11%2B-blue)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Rust](https://img.shields.io/badge/rust-1.88%2B-orange)](https://www.rust-lang.org/)
-[![Tests](https://img.shields.io/badge/tests-158%20passing-green)]()
-[![Coverage](https://img.shields.io/badge/coverage-90%25-green)]()
 
 **Ultra-High Performance Option Pricing Library — 500-1000x Faster than Pure Python**
 
@@ -52,7 +50,7 @@ QuantForge delivers institutional-grade option pricing with unprecedented speed:
 ### Technical Excellence
 - 🦀 **Pure Rust Core**: Memory-safe, zero-overhead abstractions
 - 🎯 **Machine Precision**: Error-function based implementation (<1e-15 accuracy)
-- ⚡ **SIMD Optimized**: Compiler auto-vectorization for maximum throughput
+- ⚡ **Optimized Implementation**: High-performance mathematical functions
 - 🔧 **Production Ready**: Comprehensive input validation and edge case handling
 
 ## 📦 Installation
@@ -61,7 +59,7 @@ QuantForge delivers institutional-grade option pricing with unprecedented speed:
 
 ```bash
 # Clone repository
-git clone https://github.com/[username]/quantforge.git
+git clone https://github.com/drillan/quantforge.git
 cd quantforge
 
 # Install Rust (if needed)
@@ -95,11 +93,11 @@ spot = 100.0      # Underlying price
 strike = 105.0    # Strike price
 time = 0.25       # Time to maturity (years)
 rate = 0.05       # Risk-free rate
-vol = 0.2         # Volatility
+sigma = 0.2       # Volatility (industry standard σ)
 
 # Calculate option prices
-call_price = qf.calculate_call_price(spot, strike, time, rate, vol)
-put_price = qf.calculate_put_price(spot, strike, time, rate, vol)
+call_price = qf.calculate_call_price(spot, strike, time, rate, sigma)
+put_price = qf.calculate_put_price(spot, strike, time, rate, sigma)
 
 print(f"Call: ${call_price:.4f}, Put: ${put_price:.4f}")
 ```
@@ -111,7 +109,7 @@ print(f"Call: ${call_price:.4f}, Put: ${put_price:.4f}")
 spots = np.linspace(80, 120, 100000)
 
 # Automatic parallelization for large arrays (>30k elements)
-call_prices = qf.calculate_call_price_batch(spots, strike, time, rate, vol)
+call_prices = qf.calculate_call_price_batch(spots, strike, time, rate, sigma)
 print(f"Processed {len(call_prices):,} options")
 ```
 
@@ -119,12 +117,12 @@ print(f"Processed {len(call_prices):,} options")
 
 ```python
 # Individual Greeks
-delta = qf.calculate_delta_call(spot, strike, time, rate, vol)
-gamma = qf.calculate_gamma(spot, strike, time, rate, vol)
-vega = qf.calculate_vega(spot, strike, time, rate, vol)
+delta = qf.calculate_delta_call(spot, strike, time, rate, sigma)
+gamma = qf.calculate_gamma(spot, strike, time, rate, sigma)
+vega = qf.calculate_vega(spot, strike, time, rate, sigma)
 
 # All Greeks at once
-greeks = qf.calculate_all_greeks(spot, strike, time, rate, vol, is_call=True)
+greeks = qf.calculate_all_greeks(spot, strike, time, rate, sigma, is_call=True)
 # Returns: {'delta': 0.377, 'gamma': 0.038, 'vega': 0.189, 'theta': -0.026, 'rho': 0.088}
 ```
 
@@ -272,7 +270,7 @@ Documentation includes:
 
 ## 🤝 Contributing
 
-We welcome contributions! Please see our [Contributing Guide](./CONTRIBUTING.md) for details.
+We welcome contributions!
 
 ### Development Workflow
 
@@ -309,8 +307,8 @@ Built with these excellent tools:
 
 ## 📞 Contact
 
-- **Issues**: [GitHub Issues](https://github.com/[username]/quantforge/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/[username]/quantforge/discussions)
+- **Issues**: [GitHub Issues](https://github.com/drillan/quantforge/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/drillan/quantforge/discussions)
 - **Security**: Please report security vulnerabilities privately
 
 ---

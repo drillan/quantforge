@@ -48,7 +48,7 @@ class TestGoldenMaster:
 
                 # Rust実装を呼び出し
                 actual_call = calculate_call_price(
-                    s=inputs["s"], k=inputs["k"], t=inputs["t"], r=inputs["r"], v=inputs["v"]
+                    s=inputs["s"], k=inputs["k"], t=inputs["t"], r=inputs["r"], sigma=inputs["v"]
                 )
 
                 # 許容誤差内での一致を確認
@@ -83,7 +83,7 @@ class TestGoldenMaster:
             expected = case["outputs"]["call_price"]
 
             try:
-                actual = calculate_call_price(s=inputs["s"], k=inputs["k"], t=inputs["t"], r=inputs["r"], v=inputs["v"])
+                actual = calculate_call_price(s=inputs["s"], k=inputs["k"], t=inputs["t"], r=inputs["r"], sigma=inputs["v"])
 
                 error = abs(actual - expected)
                 if error >= tolerance:
@@ -138,7 +138,7 @@ class TestGoldenMaster:
             v = inputs["v"]
 
             # 価格計算
-            call_price = calculate_call_price(s, k, t, r, v)
+            call_price = calculate_call_price(s, k, t, r, sigma=v)
 
             # 境界条件
             intrinsic_value = max(s - k * np.exp(-r * t), 0)
@@ -176,7 +176,7 @@ class TestGoldenMaster:
             moneyness_cat = case["metadata"]["moneyness_category"]
             if moneyness_cat in by_moneyness:
                 inputs = case["inputs"]
-                price = calculate_call_price(s=inputs["s"], k=inputs["k"], t=inputs["t"], r=inputs["r"], v=inputs["v"])
+                price = calculate_call_price(s=inputs["s"], k=inputs["k"], t=inputs["t"], r=inputs["r"], sigma=inputs["v"])
                 by_moneyness[moneyness_cat].append(
                     {"price": price, "moneyness": case["metadata"]["moneyness"], "id": case["id"]}
                 )
@@ -209,7 +209,7 @@ class TestGoldenMaster:
             inputs = case["inputs"]
             expected = case["outputs"]["call_price"]
 
-            actual = calculate_call_price(s=inputs["s"], k=inputs["k"], t=inputs["t"], r=inputs["r"], v=inputs["v"])
+            actual = calculate_call_price(s=inputs["s"], k=inputs["k"], t=inputs["t"], r=inputs["r"], sigma=inputs["v"])
 
             tolerance = golden_data["tolerance"]
             assert abs(actual - expected) < tolerance, (
@@ -239,11 +239,11 @@ class TestGoldenMaster:
         v = test_cases[0]["inputs"]["v"]
 
         # バッチ処理
-        batch_results = calculate_call_price_batch(spots, k, t, r, v)
+        batch_results = calculate_call_price_batch(spots, k, t, r, sigma=v)
 
         # 個別処理と比較
         for i, spot in enumerate(spots):
-            single_result = calculate_call_price(spot, k, t, r, v)
+            single_result = calculate_call_price(spot, k, t, r, sigma=v)
             assert abs(batch_results[i] - single_result) < 1e-3, (
                 f"Batch and single results differ at index {i}: {batch_results[i]} vs {single_result}"
             )

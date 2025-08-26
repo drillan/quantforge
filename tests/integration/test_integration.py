@@ -14,9 +14,9 @@ def test_calculate_call_price() -> None:
     k = 100.0
     t = 1.0
     r = 0.05
-    v = 0.2
+    sigma = 0.2
 
-    price = calculate_call_price(s, k, t, r, v)
+    price = calculate_call_price(s, k, t, r, sigma)
 
     # 参照値との比較
     expected = 10.450583572185565
@@ -31,9 +31,9 @@ def test_calculate_call_price_batch() -> None:
     k = 100.0
     t = 1.0
     r = 0.05
-    v = 0.2
+    sigma = 0.2
 
-    prices = calculate_call_price_batch(spots, k, t, r, v)
+    prices = calculate_call_price_batch(spots, k, t, r, sigma)
 
     assert len(prices) == 3
     assert isinstance(prices, np.ndarray)

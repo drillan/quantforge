@@ -220,16 +220,16 @@ class TestGoldenMaster:
         k = 100.0
         t = 1.0
         r = 0.05
-        v = 0.2
+        sigma = 0.2
 
         # 理論値計算
-        d1 = (np.log(s / k) + (r + 0.5 * v**2) * t) / (v * np.sqrt(t))
-        # d2 = d1 - v * np.sqrt(t)  # 現在未使用
+        d1 = (np.log(s / k) + (r + 0.5 * sigma**2) * t) / (sigma * np.sqrt(t))
+        # d2 = d1 - sigma * np.sqrt(t)  # 現在未使用
 
         # デルタの近似計算
         ds = 0.01
-        price_base = calculate_call_price(s, k, t, r, v)
-        price_up = calculate_call_price(s + ds, k, t, r, v)
+        price_base = calculate_call_price(s, k, t, r, sigma)
+        price_up = calculate_call_price(s + ds, k, t, r, sigma)
         delta_numerical = (price_up - price_base) / ds
         delta_theoretical = stats.norm.cdf(d1)
 
@@ -238,9 +238,9 @@ class TestGoldenMaster:
         )
 
         # ガンマの近似計算
-        price_down = calculate_call_price(s - ds, k, t, r, v)
+        price_down = calculate_call_price(s - ds, k, t, r, sigma)
         gamma_numerical = (price_up - 2 * price_base + price_down) / (ds**2)
-        gamma_theoretical = stats.norm.pdf(d1) / (s * v * np.sqrt(t))
+        gamma_theoretical = stats.norm.pdf(d1) / (s * sigma * np.sqrt(t))
 
         assert abs(gamma_numerical - gamma_theoretical) < 0.01, (
             f"ガンマ誤差: 数値={gamma_numerical}, 理論={gamma_theoretical}"
@@ -253,13 +253,13 @@ class TestGoldenMaster:
         k = 100.0
         t = 1.0
         r = 0.05
-        v = 0.2
+        sigma = 0.2
 
         # 期待される価格（SciPyで計算）
         expected_prices = []
         for s in spots:
-            d1 = (np.log(s / k) + (r + 0.5 * v**2) * t) / (v * np.sqrt(t))
-            d2 = d1 - v * np.sqrt(t)
+            d1 = (np.log(s / k) + (r + 0.5 * sigma**2) * t) / (sigma * np.sqrt(t))
+            d2 = d1 - sigma * np.sqrt(t)
             price = s * stats.norm.cdf(d1) - k * np.exp(-r * t) * stats.norm.cdf(d2)
             expected_prices.append(price)
 
