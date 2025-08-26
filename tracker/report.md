@@ -1,22 +1,22 @@
 # QuantForge 実装進捗状況
 
-最終更新: 2025-08-25
+最終更新: 2025-08-26
 
 ## 📊 全体進捗
 
 ### 統計サマリー
-- **総項目数**: 134項目
-- **完了済み（テスト含む）**: 14項目 (10.4%)
-- **実装済み（テスト待ち）**: 7項目 (5.2%)
-- **部分実装**: 13項目 (9.7%)
-- **未着手**: 64項目 (47.8%)
-- **ドキュメントのみ**: 36項目 (26.9%)
+- **総項目数**: 180項目 (Mertonモデル詳細追加)
+- **完了済み（テスト含む）**: 27項目 (15.0%)
+- **実装済み（テスト待ち）**: 13項目 (7.2%)
+- **部分実装**: 14項目 (7.8%)
+- **未着手**: 64項目 (35.6%)
+- **ドキュメントのみ**: 62項目 (34.4%)
 
 ### 実装完了率
 ```
-実装関連項目（ドキュメントのみを除く）: 98項目
-実装済み・テスト済み: 21項目
-実装完了率: 21.4%
+実装関連項目（ドキュメントのみを除く）: 118項目
+実装済み・テスト済み: 40項目
+実装完了率: 33.9%
 ```
 
 ## 📁 モデル別進捗
@@ -42,6 +42,43 @@
 - 📝 **パフォーマンス特性**: ドキュメントのみ
 - ✅ **検証テスト**: Put-Callパリティ実装済み
 - ✅ **応用と拡張**: インプライドボラティリティ実装済み
+
+### docs/models/black76.md - Black76モデル: 🟢 50%完了
+
+- 📝 **理論的背景**: ドキュメント完成
+- 📝 **価格式の導出**: ドキュメント完成
+- 🟢 **解析解**: 完全実装
+  - ヨーロピアンコール: 🟢 [src/models/black76/pricing.rs:7-17]
+  - ヨーロピアンプット: 🟢 [src/models/black76/pricing.rs:20-30]
+- 🟢 **グリークス**: 完全実装
+  - Delta (Δ): 🟢 [src/models/black76/greeks.rs]
+  - Gamma (Γ): 🟢 [src/models/black76/greeks.rs]
+  - Vega (ν): 🟢 [src/models/black76/greeks.rs]
+  - Theta (Θ): 🟢 [src/models/black76/greeks.rs]
+  - Rho (ρ): 🟢 [src/models/black76/greeks.rs]
+- 📝 **Black-Scholesとの関係**: ドキュメントのみ
+- 📝 **応用分野**: ドキュメントのみ
+- 🟡 **数値計算上の考慮事項**: 部分実装
+- 📝 **モデルの限界と拡張**: ドキュメントのみ
+
+### docs/models/merton.md - Mertonモデル: ✅ 70%完了（テスト済み）
+
+- 📝 **理論的背景**: ドキュメント完成
+- 📝 **価格式の導出**: ドキュメント完成
+- ✅ **解析解**: 完全実装・テスト済み
+  - ヨーロピアンコール: ✅ [src/models/merton/pricing.rs:48-68]
+  - ヨーロピアンプット: ✅ [src/models/merton/pricing.rs:82-102]
+- ✅ **グリークス**: 完全実装・テスト済み
+  - Delta: ✅ [src/models/merton/greeks.rs:172-197]
+  - Gamma: ✅ [src/models/merton/greeks.rs:202-211]
+  - Vega: ✅ [src/models/merton/greeks.rs:216-225]
+  - Theta: ✅ [src/models/merton/greeks.rs:228-259]
+  - Rho: ✅ [src/models/merton/greeks.rs:153-157]
+  - Dividend Rho: ✅ [src/models/merton/greeks.rs:160-164]
+- ✅ **バッチ処理**: 完全実装・テスト済み
+  - スポット価格バッチ: ✅ [src/models/merton/pricing.rs:113-179]
+  - 配当利回りバッチ: ✅ [src/models/merton/pricing.rs:190-258]
+- ✅ **Pythonバインディング**: 全機能利用可能
 
 ### docs/models/american_options.md - アメリカンオプション: ⭕ 0%完了
 
@@ -114,10 +151,14 @@
 ### コア機能（完全実装）
 - ✅ Black-Scholesヨーロピアンコール価格計算
 - ✅ Black-Scholesヨーロピアンプット価格計算
-- ✅ 全グリークス計算（Delta, Gamma, Vega, Theta, Rho）
+- 🟢 Black76先物オプション価格計算（コール・プット）
+- ✅ Merton配当付きオプション価格計算（コール・プット・テスト済み）
+- ✅ Black-Scholes全グリークス計算（Delta, Gamma, Vega, Theta, Rho）
+- 🟢 Black76全グリークス計算
+- ✅ Merton全グリークス計算（Dividend Rho含む・テスト済み）
 - ✅ 高精度累積正規分布関数（norm_cdf）
 - ✅ インプライドボラティリティ計算（Newton-Raphson法）
-- ✅ Put-Callパリティ検証
+- ✅ Put-Callパリティ検証（Black-Scholes、Mertonで実装）
 
 ### 最適化機能
 - ✅ バッチ処理（シングルスレッド・並列）
@@ -158,16 +199,21 @@
 
 ```
 実装済み機能の内訳:
-- モデル実装: 60% (Black-Scholes完成)
+- モデル実装: 
+  - Black-Scholes: 60% (完成・テスト済み)
+  - Black76: 50% (実装済み・テスト待ち)
+  - Merton: 70% (完成・テスト済み・Dividend Rho含む)
+  - American: 0% (未着手)
+  - Asian: 0% (未着手)
 - API実装: 25% (基本機能のみ)
 - 最適化: 30% (並列化完了、SIMD未実装)
-- テスト: 80% (実装済み機能は全てテスト済み)
+- テスト: Black-ScholeとMertonは100%テスト済み、Black76はテスト待ち
 ```
 
 ## 🎯 次のマイルストーン
 
 ### 短期目標（1-2週間）
-1. 配当付きBlack-Scholesモデルの実装
+1. Black76モデルのテスト作成と実行
 2. SIMD最適化の初期実装（AVX2）
 3. ベンチマーク環境の構築
 

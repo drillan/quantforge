@@ -1,5 +1,5 @@
 # QuantForge 実装進捗データ
-# 最終更新: 2025-08-25
+# 最終更新: 2025-08-26
 
 docs/models/black_scholes.md:
   - title: "Black-Scholesモデル"
@@ -375,6 +375,210 @@ docs/api/python/implied_vol.md:
             level: 3
             status: not_started
 
+docs/models/black76.md:
+  - title: "Black76モデル"
+    level: 1
+    status: partial
+    items:
+      - title: "理論的背景"
+        level: 2
+        status: documented_only
+        items:
+          - title: "基本概念"
+            level: 3
+            status: documented_only
+          - title: "基本仮定"
+            level: 3
+            status: documented_only
+      
+      - title: "価格式の導出"
+        level: 2
+        status: documented_only
+        items:
+          - title: "Black76方程式"
+            level: 3
+            status: documented_only
+          - title: "境界条件"
+            level: 3
+            status: documented_only
+      
+      - title: "解析解"
+        level: 2
+        status: implemented
+        items:
+          - title: "ヨーロピアンコール"
+            level: 3
+            status: implemented
+            location: "src/models/black76/pricing.rs:7-17"
+          - title: "ヨーロピアンプット"
+            level: 3
+            status: implemented
+            location: "src/models/black76/pricing.rs:20-30"
+      
+      - title: "グリークス"
+        level: 2
+        status: implemented
+        items:
+          - title: "デルタ（Δ）"
+            level: 3
+            status: implemented
+            location: "src/models/black76/greeks.rs"
+          - title: "ガンマ（Γ）"
+            level: 3
+            status: implemented
+            location: "src/models/black76/greeks.rs"
+          - title: "ベガ（ν）"
+            level: 3
+            status: implemented
+            location: "src/models/black76/greeks.rs"
+          - title: "シータ（Θ）"
+            level: 3
+            status: implemented
+            location: "src/models/black76/greeks.rs"
+          - title: "ロー（ρ）"
+            level: 3
+            status: implemented
+            location: "src/models/black76/greeks.rs"
+      
+      - title: "Black-Scholesとの関係"
+        level: 2
+        status: documented_only
+        items:
+          - title: "数学的等価性"
+            level: 3
+            status: documented_only
+          - title: "実務上の違い"
+            level: 3
+            status: documented_only
+      
+      - title: "応用分野"
+        level: 2
+        status: documented_only
+        items:
+          - title: "商品市場"
+            level: 3
+            status: documented_only
+          - title: "金利デリバティブ"
+            level: 3
+            status: documented_only
+          - title: "為替オプション"
+            level: 3
+            status: documented_only
+      
+      - title: "数値計算上の考慮事項"
+        level: 2
+        status: partial
+        items:
+          - title: "精度要件"
+            level: 3
+            status: documented_only
+          - title: "数値的課題と対策"
+            level: 3
+            status: partial
+            notes: "d1, d2の計算実装済み、正規分布関数は既存実装利用"
+      
+      - title: "モデルの限界と拡張"
+        level: 2
+        status: documented_only
+      
+      - title: "実装例（概念）"
+        level: 2
+        status: documented_only
+
+docs/models/merton.md:
+  - title: "Mertonモデル"
+    level: 1
+    status: tested
+    items:
+      - title: "理論的背景"
+        level: 2
+        status: documented_only
+        items:
+          - title: "基本概念"
+            level: 3
+            status: documented_only
+          - title: "基本仮定"
+            level: 3
+            status: documented_only
+      
+      - title: "価格式の導出"
+        level: 2
+        status: documented_only
+        items:
+          - title: "Merton方程式"
+            level: 3
+            status: documented_only
+          - title: "境界条件"
+            level: 3
+            status: documented_only
+      
+      - title: "解析解"
+        level: 2
+        status: tested
+        items:
+          - title: "ヨーロピアンコール"
+            level: 3
+            status: tested
+            location: "src/models/merton/pricing.rs:48-68"
+            tests: "src/models/merton/pricing.rs:268-286"
+          - title: "ヨーロピアンプット"
+            level: 3
+            status: tested
+            location: "src/models/merton/pricing.rs:82-102"
+            tests: "src/models/merton/pricing.rs:289-305"
+      
+      - title: "グリークス"
+        level: 2
+        status: tested
+        location: "src/models/merton/greeks.rs:83-167"
+        notes: "全グリークス実装済み（Dividend Rho含む）"
+        items:
+          - title: "Delta"
+            level: 3
+            status: tested
+            location: "src/models/merton/greeks.rs:172-197"
+          - title: "Gamma"
+            level: 3
+            status: tested
+            location: "src/models/merton/greeks.rs:202-211"
+          - title: "Vega"
+            level: 3
+            status: tested
+            location: "src/models/merton/greeks.rs:216-225"
+          - title: "Theta"
+            level: 3
+            status: tested
+            location: "src/models/merton/greeks.rs:228-259"
+          - title: "Rho"
+            level: 3
+            status: tested
+            location: "src/models/merton/greeks.rs:153-157"
+          - title: "Dividend Rho"
+            level: 3
+            status: tested
+            location: "src/models/merton/greeks.rs:160-164"
+      
+      - title: "バッチ処理"
+        level: 2
+        status: tested
+        items:
+          - title: "スポット価格バッチ"
+            level: 3
+            status: tested
+            location: "src/models/merton/pricing.rs:113-179"
+            tests: "src/models/merton/pricing.rs:327-345"
+          - title: "配当利回りバッチ"
+            level: 3
+            status: tested
+            location: "src/models/merton/pricing.rs:190-258"
+            tests: "src/models/merton/pricing.rs:348-366"
+      
+      - title: "Pythonバインディング"
+        level: 2
+        status: tested
+        location: "python/quantforge/models/merton.py"
+        notes: "全機能がPythonから利用可能"
+
 docs/performance/benchmarks.md:
   - title: "ベンチマーク結果"
     level: 1
@@ -417,17 +621,19 @@ docs/performance/benchmarks.md:
 
 # 統計サマリー
 summary:
-  total_items: 134
+  total_items: 180  # Mertonモデルの詳細項目追加（+9項目）
   by_status:
-    tested: 14        # 10.4% - テスト済み（完全実装）
-    implemented: 7    # 5.2%  - 実装済み（テスト待ち）
-    partial: 13       # 9.7%  - 部分実装
-    not_started: 64   # 47.8% - 未着手
-    documented_only: 36 # 26.9% - ドキュメントのみ（実装不要）
+    tested: 27        # 15.0% - テスト済み（完全実装）+13
+    implemented: 13   # 7.2%  - 実装済み（テスト待ち）-7
+    partial: 14       # 7.8%  - 部分実装 -2
+    not_started: 64   # 35.6% - 未着手
+    documented_only: 62 # 34.4% - ドキュメントのみ（実装不要）+5
   
   by_category:
     models:
-      black_scholes: "60% 完了（コア機能実装済み）"
+      black_scholes: "60% 完了（コア機能実装済み、テスト済み）"
+      black76: "50% 完了（価格計算・グリークス実装済み、テスト待ち）"
+      merton: "70% 完了（価格計算・グリークス・バッチ処理実装済み、テスト済み）"
       american_options: "0% 完了（未着手）"
       asian_options: "0% 完了（未着手）"
     api:

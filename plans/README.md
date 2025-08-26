@@ -13,41 +13,11 @@
 
 ---
 
-## 📋 アクティブな計画
+## 📊 現在の状況を確認する方法
 
-（現在アクティブな計画はありません）
-
-## 📦 完了した計画
-
-### API改善計画
-- [2025-08-26 レガシーAPI完全削除](./archive/2025-08-26-both-destroy-legacy-api.md) - **COMPLETED** - calculate_*関数群の完全削除、95%のコード削減達成
-- [2025-08-26 Python API引数名標準化](./archive/2025-08-26-python-api-standardization.md) - **COMPLETED** - Black-Scholesモデルの業界標準表記への統一（v → sigma）
-- [2025-08-26 Black76 API修正](./archive/2025-08-26-both-black76-api-correction.md) - **COMPLETED** - Black76モデルのAPIパラメータ修正（f統一）
-
-### 実装計画
-- [2025-01-24 実装計画](./archive/2025-01-24-implementation-plan.md) - **COMPLETED** - 14週間の包括的実装計画（基本設計完了）
-- [2025-01-24 Rust BSコア実装](./archive/2025-01-24-rust-bs-core.md) - **COMPLETED** - Black-Scholesコア実装計画策定済み
-- [2025-08-25 Rustプットオプション実装](./archive/2025-08-25-rust-put-option.md) - **COMPLETED** - ヨーロピアンプットオプション完全実装
-- [2025-08-26 Black76モデル実装](./archive/2025-08-26-black76-model-implementation.md) - **COMPLETED** - 先物オプション価格モデル完全実装
-
-### 標準化計画
-- [2025-08-25 精度設定一元化](./archive/2025-08-25-both-precision-standardization.md) - **COMPLETED** - 精度設定の階層化と一元管理（100%完了）
-
-### ドキュメント計画
-- [2025-01-24 Sphinxドキュメント作成](./archive/2025-01-24-sphinx-documentation.md) - **COMPLETED** - Sphinxドキュメント構造作成済み
-
-### テスト計画
-- [2025-01-24 Pytestカバレッジ戦略](./archive/2025-01-24-pytest-coverage-strategy.md) - **COMPLETED** - 包括的テストカバレッジ戦略実装完了
-- [2025-01-25 ゴールデンマスターテスト](./archive/2025-01-25-golden-master-testing.md) - **COMPLETED** - ゴールデンマスター実装完了
-
-### 実装改善
-- [2025-01-25 norm_cdf高精度化](./archive/2025-01-25-rust-norm-cdf-erf.md) - **COMPLETED** - erfベース実装で機械精度達成（<1e-15）
-
-### リファクタリング計画
-- [2025-08-25 コード重複削除とリファクタリング](./archive/2025-08-25-code-duplication-refactoring.md) - **COMPLETED** - similarity-rsで検出された重複の解消
-
-### パフォーマンス最適化
-- [2025-08-25 erfベース最適化戦略](./archive/2025-08-25-erf-based-optimization-strategy.md) - **COMPLETED** - Rayon並列化で5.3倍高速化達成
+- **アクティブな計画**: `ls plans/*.md` でREADME.mdとCHANGELOG.md以外のファイルを確認
+- **完了した計画**: `ls plans/archive/` でアーカイブ済みの計画を確認  
+- **変更履歴**: [CHANGELOG.md](./CHANGELOG.md) で詳細な変更履歴を参照
 
 ## 📁 ディレクトリ構造
 
@@ -173,29 +143,6 @@ cp templates/python/implementation-plan.md 2025-MM-DD-python-feature-name.md
 4. **実行**: ACTIVEステータスで実行開始
 5. **完了**: COMPLETEDマーク後、archive/へ移動
 
-## 📊 進捗サマリー
-
-### アクティブな計画（言語別）
-
-（現在アクティブな計画はありません）
-
-### 完了した計画
-| 計画 | ステータス | 開始日 | 完了日 | 成果物 |
-|------|-----------|--------|--------|--------|
-| [実装計画](./archive/2025-01-24-implementation-plan.md) | **COMPLETED** | 2025-01-24 | 2025-01-24 | 14週間の詳細実装計画書 ✅ |
-| [Rust BSコア](./archive/2025-01-24-rust-bs-core.md) | **COMPLETED** | 2025-01-24 | 2025-01-24 | 技術設計書 ✅ |
-| [Sphinxドキュメント](./archive/2025-01-24-sphinx-documentation.md) | **COMPLETED** | 2025-01-24 | 2025-01-25 | docs/配下の完全なドキュメント構造 ✅ |
-| [Pytestカバレッジ戦略](./archive/2025-01-24-pytest-coverage-strategy.md) | **COMPLETED** | 2025-01-24 | 2025-08-25 | 127テスト実装、Pythonカバレッジ100%達成 ✅ |
-| [ゴールデンマスター](./archive/2025-01-25-golden-master-testing.md) | **COMPLETED** | 2025-01-25 | 2025-01-25 | 158テストケース生成、テスト基盤構築 ✅ |
-| [norm_cdf高精度化](./archive/2025-01-25-rust-norm-cdf-erf.md) | **COMPLETED** | 2025-01-25 | 2025-01-25 | 機械精度<1e-15、全127テスト成功 ✅ |
-| [コード重複削除](./archive/2025-08-25-code-duplication-refactoring.md) | **COMPLETED** | 2025-08-25 | 2025-08-25 | 重複削減4→ 3箇所、Critical Bug解消 ✅ |
-| [erfベース最適化](./archive/2025-08-25-erf-based-optimization-strategy.md) | **COMPLETED** | 2025-08-25 | 2025-08-25 | 51ms→9.7ms（5.3倍高速化）、Rayon並列化 ✅ |
-| [Rustプットオプション](./archive/2025-08-25-rust-put-option.md) | **COMPLETED** | 2025-08-25 | 2025-08-25 | プット価格計算実装、Put-Callパリティ検証 ✅ |
-| [Rustインプライドボラティリティ](./archive/2025-08-25-rust-implied-volatility.md) | **COMPLETED** | 2025-08-25 | 2025-08-25 | Newton-Raphson/Brent法、並列化、Python統合 ✅ |
-| [精度設定一元化](./archive/2025-08-25-both-precision-standardization.md) | **COMPLETED** | 2025-08-25 | 2025-08-25 | 精度基準の階層化、ハードコード除去 ✅ |
-| [Black76モデル実装](./archive/2025-08-26-black76-model-implementation.md) | **COMPLETED** | 2025-08-26 | 2025-08-26 | Black76先物オプション価格モデル完全実装 ✅ |
-| [Black76 API修正](./archive/2025-08-26-both-black76-api-correction.md) | **COMPLETED** | 2025-08-26 | 2025-08-26 | APIパラメータ統一（f統一）、ドキュメント整備 ✅ |
-
 ## 🎯 品質管理ツールの言語別適用基準
 
 ### Rust
@@ -222,38 +169,3 @@ cp templates/python/implementation-plan.md 2025-MM-DD-python-feature-name.md
 - [Rustテンプレート](./templates/rust/)
 - [Pythonテンプレート](./templates/python/)
 
----
-
-**最終更新**: 2025-08-26
-
-## 📝 計画の変更履歴
-
-### 2025-08-26
-- **完了**: `2025-08-26-black76-model-implementation.md` → `archive/`へ移動
-  - 成果: Black76先物オプション価格モデルの完全実装
-  - Rustモジュール実装、Python API統合、包括的テスト
-  - 先物価格パラメータfへの統一
-- **完了**: `2025-08-26-both-black76-api-correction.md` → `archive/`へ移動
-  - 成果: Black76モデルのAPIパラメータ修正
-  - 全関数でfパラメータ統一、ドキュメント整備完了
-- **完了**: `2025-08-26-merton-model-implementation.md` → `archive/`へ移動
-  - 成果: Mertonモデル（配当付き資産オプション）の完全実装
-  - Rustモジュール（4ファイル）、Python API（9関数）、テスト（25項目）
-  - 6種類のグリークス（dividend_rho含む）
-  - q=0でBlack-Scholesとの完全互換性確認
-- **完了**: `2025-08-26-python-api-standardization.md` → `archive/`へ移動
-  - 成果: Black-Scholesモデルの引数名をv→sigmaへ統一、業界標準準拠
-- **完了**: `2025-08-25-both-precision-standardization.md` → `archive/`へ移動
-  - 成果: 精度設定の階層化、ハードコード完全除去、全テスト成功
-- **README更新**: インプライドボラティリティ計画の重複記載を修正
-
-### 2025-08-25
-- **完了**: `2025-08-25-rust-put-option.md` → `archive/`へ移動
-  - 成果: ヨーロピアンプットオプション完全実装、Put-Callパリティ検証、全テスト成功
-- **新規追加**: `2025-08-25-erf-based-optimization-strategy.md` - erfベース実装後のパフォーマンス最適化戦略
-- **キャンセル**: `2025-08-25-rust-performance-optimization.md` → `archive/2025-08-25-rust-performance-optimization-cancelled.md`
-  - 理由: erfベース実装により前提条件が根本的に変化（高速近似が不要に）
-
-### 2025-01-25
-- **完了**: `2025-01-25-rust-norm-cdf-erf.md` → `archive/`へ移動
-  - 成果: erfベース実装により機械精度レベル（<1e-15）達成、全127テスト成功
