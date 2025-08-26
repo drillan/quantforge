@@ -23,6 +23,11 @@ fn quantforge(m: &Bound<'_, PyModule>) -> PyResult<()> {
     python_modules::black76(&black76)?;
     models.add_submodule(&black76)?;
 
+    // Add merton as a submodule of models
+    let merton = PyModule::new_bound(m.py(), "merton")?;
+    python_modules::merton(&merton)?;
+    models.add_submodule(&merton)?;
+
     m.add_submodule(&models)?;
 
     Ok(())

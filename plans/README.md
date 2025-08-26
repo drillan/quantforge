@@ -15,19 +15,20 @@
 
 ## 📋 アクティブな計画
 
-### アーキテクチャ設計
-- [2025-08-26 複数オプション価格モデル対応](./2025-08-26-multi-model-architecture.md) - **ACTIVE** - モジュールベースのマルチモデルアーキテクチャ
+（現在アクティブな計画はありません）
 
 ## 📦 完了した計画
 
 ### API改善計画
 - [2025-08-26 レガシーAPI完全削除](./archive/2025-08-26-both-destroy-legacy-api.md) - **COMPLETED** - calculate_*関数群の完全削除、95%のコード削減達成
 - [2025-08-26 Python API引数名標準化](./archive/2025-08-26-python-api-standardization.md) - **COMPLETED** - Black-Scholesモデルの業界標準表記への統一（v → sigma）
+- [2025-08-26 Black76 API修正](./archive/2025-08-26-both-black76-api-correction.md) - **COMPLETED** - Black76モデルのAPIパラメータ修正（f統一）
 
 ### 実装計画
 - [2025-01-24 実装計画](./archive/2025-01-24-implementation-plan.md) - **COMPLETED** - 14週間の包括的実装計画（基本設計完了）
 - [2025-01-24 Rust BSコア実装](./archive/2025-01-24-rust-bs-core.md) - **COMPLETED** - Black-Scholesコア実装計画策定済み
 - [2025-08-25 Rustプットオプション実装](./archive/2025-08-25-rust-put-option.md) - **COMPLETED** - ヨーロピアンプットオプション完全実装
+- [2025-08-26 Black76モデル実装](./archive/2025-08-26-black76-model-implementation.md) - **COMPLETED** - 先物オプション価格モデル完全実装
 
 ### 標準化計画
 - [2025-08-25 精度設定一元化](./archive/2025-08-25-both-precision-standardization.md) - **COMPLETED** - 精度設定の階層化と一元管理（100%完了）
@@ -176,10 +177,7 @@ cp templates/python/implementation-plan.md 2025-MM-DD-python-feature-name.md
 
 ### アクティブな計画（言語別）
 
-#### アーキテクチャ計画
-| 計画 | ステータス | 開始日 | 完了予定 | 進捗 |
-|------|-----------|--------|----------|------|
-| [複数モデル対応](./2025-08-26-multi-model-architecture.md) | **ACTIVE** | 2025-08-26 | 2025-09-23 | 55% |
+（現在アクティブな計画はありません）
 
 ### 完了した計画
 | 計画 | ステータス | 開始日 | 完了日 | 成果物 |
@@ -195,6 +193,8 @@ cp templates/python/implementation-plan.md 2025-MM-DD-python-feature-name.md
 | [Rustプットオプション](./archive/2025-08-25-rust-put-option.md) | **COMPLETED** | 2025-08-25 | 2025-08-25 | プット価格計算実装、Put-Callパリティ検証 ✅ |
 | [Rustインプライドボラティリティ](./archive/2025-08-25-rust-implied-volatility.md) | **COMPLETED** | 2025-08-25 | 2025-08-25 | Newton-Raphson/Brent法、並列化、Python統合 ✅ |
 | [精度設定一元化](./archive/2025-08-25-both-precision-standardization.md) | **COMPLETED** | 2025-08-25 | 2025-08-25 | 精度基準の階層化、ハードコード除去 ✅ |
+| [Black76モデル実装](./archive/2025-08-26-black76-model-implementation.md) | **COMPLETED** | 2025-08-26 | 2025-08-26 | Black76先物オプション価格モデル完全実装 ✅ |
+| [Black76 API修正](./archive/2025-08-26-both-black76-api-correction.md) | **COMPLETED** | 2025-08-26 | 2025-08-26 | APIパラメータ統一（f統一）、ドキュメント整備 ✅ |
 
 ## 🎯 品質管理ツールの言語別適用基準
 
@@ -229,7 +229,18 @@ cp templates/python/implementation-plan.md 2025-MM-DD-python-feature-name.md
 ## 📝 計画の変更履歴
 
 ### 2025-08-26
-- **新規追加**: `2025-08-26-multi-model-architecture.md` - 複数オプション価格モデル対応アーキテクチャ設計
+- **完了**: `2025-08-26-black76-model-implementation.md` → `archive/`へ移動
+  - 成果: Black76先物オプション価格モデルの完全実装
+  - Rustモジュール実装、Python API統合、包括的テスト
+  - 先物価格パラメータfへの統一
+- **完了**: `2025-08-26-both-black76-api-correction.md` → `archive/`へ移動
+  - 成果: Black76モデルのAPIパラメータ修正
+  - 全関数でfパラメータ統一、ドキュメント整備完了
+- **完了**: `2025-08-26-merton-model-implementation.md` → `archive/`へ移動
+  - 成果: Mertonモデル（配当付き資産オプション）の完全実装
+  - Rustモジュール（4ファイル）、Python API（9関数）、テスト（25項目）
+  - 6種類のグリークス（dividend_rho含む）
+  - q=0でBlack-Scholesとの完全互換性確認
 - **完了**: `2025-08-26-python-api-standardization.md` → `archive/`へ移動
   - 成果: Black-Scholesモデルの引数名をv→sigmaへ統一、業界標準準拠
 - **完了**: `2025-08-25-both-precision-standardization.md` → `archive/`へ移動

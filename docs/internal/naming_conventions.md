@@ -251,11 +251,9 @@ call_price = black_scholes.call_price(spot, strike, maturity, rate, vol)
 - **関数パラメータ**: `(s, k, t, r, sigma)` - 省略形で統一
 - **構造体フィールド**: `BlackScholesParams { spot, strike, time, rate, sigma }`
 
-### Black76モデル（移行中）
-- **関数パラメータ**: `(forward, strike, time, rate, sigma)` - フルネーム（省略形への移行検討中）
+### Black76モデル
+- **関数パラメータ**: `(f, k, t, r, sigma)` - 省略形で統一
 - **構造体フィールド**: `Black76Params { forward, strike, time, rate, sigma }`
-
-**注**: Black76は現在フルネームを使用していますが、将来的に省略形 `(f, k, t, r, sigma)` への移行を検討中です。
 
 ## 10. 変更履歴
 

@@ -9,6 +9,7 @@ pub mod greeks;
 pub mod greeks_parallel;
 pub mod implied_volatility;
 pub mod iv_initial_guess;
+pub mod merton;
 
 // Re-export legacy functions for backward compatibility during migration
 pub use black_scholes::{bs_call_price, bs_call_price_batch, bs_put_price, bs_put_price_batch};

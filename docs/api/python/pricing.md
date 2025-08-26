@@ -28,6 +28,18 @@ price = black76.call_price(75.0, 70.0, 0.25, 0.05, 0.3)
 
 詳細: [Black76モデル API](black76.md)
 
+### Mertonモデル
+配当を支払う資産のオプション価格モデル。連続的な配当利回りを考慮します。
+
+```python
+from quantforge.models import merton
+
+# パラメータ: s(spot), k(strike), t(time), r(rate), q(dividend), sigma
+price = merton.call_price(100.0, 105.0, 1.0, 0.05, 0.03, 0.2)
+```
+
+詳細: [Mertonモデル API](merton.md)
+
 ## モデルの選択ガイド
 
 ### Black-Scholesを使用する場合
@@ -41,9 +53,15 @@ price = black76.call_price(75.0, 70.0, 0.25, 0.05, 0.3)
 - **フォワード価格ベース**: 将来時点の価格から計算
 - **保管コスト・便益利回りがある資産**: 商品の保管コストや便益を考慮
 
+### Mertonモデルを使用する場合
+- **高配当株式**: 配当利回りが高い個別株のオプション
+- **株価指数オプション**: S&P 500、日経225など配当を反映する指数
+- **外国為替オプション**: 外国金利を配当利回りとして扱う
+- **配当付き資産**: 定期的な配当・分配金がある資産全般
+
 ## 共通機能
 
-両モデルは以下の同一機能を提供します：
+全モデルは以下の同一機能を提供します：
 
 ### 価格計算
 ```python
@@ -83,17 +101,18 @@ iv = model.implied_volatility(market_price, ...)
 
 ## パラメータの対応
 
-| パラメータ | Black-Scholes | Black76 | 説明 |
-|-----------|---------------|---------|------|
-| 原資産価格 | `s` (spot) | `f` (forward) | 現在価格 vs 先物価格 |
-| 権利行使価格 | `k` | `k` | 共通 |
-| 満期 | `t` | `t` | 共通（年単位） |
-| 金利 | `r` | `r` | 共通（年率） |
-| ボラティリティ | `sigma` | `sigma` | 共通（年率） |
+| パラメータ | Black-Scholes | Black76 | Merton | 説明 |
+|-----------|---------------|---------|--------|------|
+| 原資産価格 | `s` (spot) | `f` (forward) | `s` (spot) | 現在価格 vs 先物価格 |
+| 権利行使価格 | `k` | `k` | `k` | 共通 |
+| 満期 | `t` | `t` | `t` | 共通（年単位） |
+| 金利 | `r` | `r` | `r` | 共通（年率） |
+| 配当利回り | - | - | `q` | Merton固有（年率） |
+| ボラティリティ | `sigma` | `sigma` | `sigma` | 共通（年率） |
 
 ## パフォーマンス
 
-両モデルとも同等の高速性能を実現：
+全モデルで高速性能を実現：
 
 | 操作 | 処理時間 | スループット |
 |------|----------|-------------|
@@ -141,8 +160,10 @@ call_price = black76.call_price(
 ### APIリファレンス
 - [Black-Scholesモデル API](black_scholes.md)
 - [Black76モデル API](black76.md)
+- [Mertonモデル API](merton.md)
 - [インプライドボラティリティ API](implied_vol.md)
 
 ### 理論的背景
 - [Black-Scholesモデル理論](../../models/black_scholes.md)
 - [Black76モデル理論](../../models/black76.md)
+- [Mertonモデル理論](../../models/merton.md)

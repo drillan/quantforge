@@ -78,6 +78,7 @@ api/python/index
 api/python/pricing
 api/python/black_scholes
 api/python/black76
+api/python/merton
 api/python/implied_vol
 api/rust/index
 ```
@@ -89,6 +90,7 @@ api/rust/index
 models/index
 models/black_scholes
 models/black76
+models/merton
 models/american_options
 models/asian_options
 ```

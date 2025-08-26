@@ -1,6 +1,6 @@
 # インプライドボラティリティAPI
 
-市場価格からボラティリティを逆算する関数群です。Black-ScholesモデルとBlack76モデルの両方をサポートしています。
+市場価格からボラティリティを逆算する関数群です。Black-Scholesモデル、Black76モデル、Mertonモデルをサポートしています。
 
 ## 概要
 
@@ -51,6 +51,28 @@ iv = black76.implied_volatility(
 print(f"Implied Volatility: {iv:.4f}")
 ```
 
+### Mertonモデル
+
+配当付き資産の市場価格からIVを計算：
+
+```python
+from quantforge.models import merton
+
+# 配当付き資産のインプライドボラティリティ
+# パラメータ: price, s, k, t, r, q, is_call
+iv = merton.implied_volatility(
+    10.45,    # 市場価格
+    100.0,    # スポット価格
+    100.0,    # 権利行使価格
+    1.0,      # 満期までの時間（年）
+    0.05,     # 無リスク金利
+    0.03,     # 配当利回り
+    True      # True: コール, False: プット
+)
+
+print(f"Implied Volatility: {iv:.4f}")
+```
+
 ## 計算手法
 
 ### Newton-Raphson法
@@ -85,9 +107,10 @@ where:
 
 ### モデル固有パラメータ
 
-| パラメータ | Black-Scholes | Black76 | 説明 |
-|-----------|---------------|---------|------|
-| 原資産価格 | `s` (スポット) | `f` (フォワード) | 現在価格 vs 将来価格 |
+| パラメータ | Black-Scholes | Black76 | Merton | 説明 |
+|-----------|---------------|---------|--------|------|
+| 原資産価格 | `s` (スポット) | `f` (フォワード) | `s` (スポット) | 現在価格 vs 将来価格 |
+| 配当利回り | - | - | `q` | 配当利回り（年率） |
 
 ## エラーハンドリング
 
@@ -145,20 +168,20 @@ for strike in strikes:
     ivs_bs.append(iv)
 
 # Black76でのボラティリティスマイル（商品市場）
-forward = 75.0
-time = 0.5
-rate = 0.05
+f = 75.0
+t = 0.5
+r = 0.05
 strikes_b76 = np.linspace(60, 90, 21)
 
 ivs_b76 = []
 for strike in strikes_b76:
     # 市場価格を取得
-    market_price = get_market_price_b76(forward, strike)
-    is_call = strike >= forward
+    market_price = get_market_price_b76(f, strike)
+    is_call = strike >= f
     
     # パラメータ: price, f, k, t, r, is_call
     iv = black76.implied_volatility(
-        market_price, forward, strike, time, rate, is_call
+        market_price, f, strike, t, r, is_call
     )
     ivs_b76.append(iv)
 
@@ -212,6 +235,7 @@ plt.show()
 |--------|----------|--------------|
 | Black-Scholes IV | < 200ns | < 200μs |
 | Black76 IV | < 200ns | < 200μs |
+| Merton IV | < 300ns | < 300μs |
 
 収束性能：
 - 平均反復回数: 3-5回
@@ -232,4 +256,5 @@ plt.show()
 
 - [Black-Scholesモデル API](black_scholes.md)
 - [Black76モデル API](black76.md)
+- [Mertonモデル API](merton.md)
 - [価格計算API概要](pricing.md)

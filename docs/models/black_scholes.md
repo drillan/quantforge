@@ -4,6 +4,13 @@
 
 ## 理論的背景
 
+### 基本概念
+
+Black-Scholesモデルは、Fischer BlackとMyron Scholesが1973年に発表した画期的なオプション価格モデルです。
+Robert Mertonも同時期に独立して同様のモデルを開発し、1997年にScholesとMertonはノーベル経済学賞を受賞しました。
+
+このモデルは、無裁定価格理論とリスク中立評価法を用いて、ヨーロピアンオプションの理論価格を解析的に導出します。
+
 ### 基本仮定
 
 1. **対数正規分布**: 株価は幾何ブラウン運動に従う
@@ -13,9 +20,15 @@
 
 3. **一定パラメータ**: ボラティリティと金利は一定
 
-## Black-Scholes方程式
+4. **無裁定**: 市場に裁定機会は存在しない
 
-### 偏微分方程式
+5. **ヨーロピアン型**: 満期時のみ行使可能
+
+## 価格式の導出
+
+### Black-Scholes方程式
+
+リスク中立測度下での偏微分方程式：
 
 $$\frac{\partial V}{\partial t} + \frac{1}{2}\sigma^2 S^2 \frac{\partial^2 V}{\partial S^2} + rS\frac{\partial V}{\partial S} - rV = 0$$
 
@@ -46,234 +59,149 @@ where:
 
 $$P = Ke^{-rT} N(-d_2) - S_0 N(-d_1)$$
 
+Put-Callパリティ:
+$$C - P = S_0 - Ke^{-rT}$$
+
 ## グリークス
 
-### Delta (Δ)
+オプション価格の感応度指標：
 
-価格感応度:
+| グリーク | 意味 | コール | プット |
+|---------|------|--------|--------|
+| Delta | 株価感応度 $\partial V/\partial S$ | $N(d_1)$ | $-N(-d_1)$ |
+| Gamma | デルタの変化率 $\partial^2 V/\partial S^2$ | $\frac{\phi(d_1)}{S_0 \sigma \sqrt{T}}$ | 同左 |
+| Vega | ボラティリティ感応度 $\partial V/\partial \sigma$ | $S_0 \phi(d_1) \sqrt{T}$ | 同左 |
+| Theta | 時間価値減衰 $-\partial V/\partial T$ | $-\frac{S_0 \phi(d_1) \sigma}{2\sqrt{T}} - rKe^{-rT}N(d_2)$ | $-\frac{S_0 \phi(d_1) \sigma}{2\sqrt{T}} + rKe^{-rT}N(-d_2)$ |
+| Rho | 金利感応度 $\partial V/\partial r$ | $KTe^{-rT}N(d_2)$ | $-KTe^{-rT}N(-d_2)$ |
 
-$$\Delta_{\text{call}} = N(d_1)$$
-$$\Delta_{\text{put}} = -N(-d_1)$$
+where $\phi(x) = \frac{1}{\sqrt{2\pi}}e^{-x^2/2}$ は標準正規分布の確率密度関数
 
-### Gamma (Γ)
+## Mertonとの関係
 
-Deltaの変化率:
+### 連続配当への拡張
 
-$$\Gamma = \frac{\phi(d_1)}{S_0 \sigma \sqrt{T}}$$
-
-where $\phi(x) = \frac{1}{\sqrt{2\pi}}e^{-x^2/2}$
-
-### Vega (ν)
-
-ボラティリティ感応度:
-
-$$\nu = S_0 \phi(d_1) \sqrt{T}$$
-
-### Theta (Θ)
-
-時間減衰:
-
-$$\Theta_{\text{call}} = -\frac{S_0 \phi(d_1) \sigma}{2\sqrt{T}} - rKe^{-rT}N(d_2)$$
-
-### Rho (ρ)
-
-金利感応度:
-
-$$\rho_{\text{call}} = KTe^{-rT}N(d_2)$$
-
-## 実装詳細
-
-### 高精度累積正規分布
-
-```rust
-fn cumulative_normal(x: f64) -> f64 {
-    // Hart68アルゴリズム
-    const A: [f64; 5] = [
-        0.31938153,
-        -0.356563782,
-        1.781477937,
-        -1.821255978,
-        1.330274429
-    ];
-    
-    let l = x.abs();
-    let k = 1.0 / (1.0 + 0.2316419 * l);
-    let mut w = 1.0 - 1.0 / (2.0 * PI).sqrt() 
-        * (-l * l / 2.0).exp() 
-        * A.iter().enumerate()
-            .fold(0.0, |acc, (i, &a)| acc + a * k.powi(i as i32 + 1));
-    
-    if x < 0.0 {
-        w = 1.0 - w;
-    }
-    w
-}
-```
-
-### SIMD最適化版
-
-```rust
-#[cfg(target_feature = "avx2")]
-unsafe fn black_scholes_avx2(
-    spots: &[f64],
-    strike: f64,
-    rate: f64,
-    vol: f64,
-    time: f64
-) -> Vec<f64> {
-    use std::arch::x86_64::*;
-    
-    let sqrt_time = time.sqrt();
-    let vol_sqrt_time = vol * sqrt_time;
-    let discount = (-rate * time).exp();
-    
-    let mut results = Vec::with_capacity(spots.len());
-    
-    for chunk in spots.chunks_exact(4) {
-        let spot_vec = _mm256_loadu_pd(chunk.as_ptr());
-        let strike_vec = _mm256_set1_pd(strike);
-        
-        // d1計算
-        let log_s_k = _mm256_log_pd(_mm256_div_pd(spot_vec, strike_vec));
-        // ... AVX2計算続き
-    }
-    
-    results
-}
-```
-
-## 配当付きモデル
-
-### 連続配当
-
-配当利回り $q$ を考慮:
+配当利回り $q$ を考慮したMertonモデル：
 
 $$C = S_0 e^{-qT} N(d_1) - Ke^{-rT} N(d_2)$$
 
 where:
 - $d_1 = \frac{\ln(S_0/K) + (r - q + \sigma^2/2)T}{\sigma\sqrt{T}}$
+- $q = 0$ の場合、標準のBlack-Scholesモデルに帰着
 
-### 離散配当
+### 離散配当の扱い
 
-配当落ち日 $t_i$ での配当 $D_i$:
-
+配当落ち日 $t_i$ での配当 $D_i$ を考慮：
 $$S_{\text{ex-div}} = S_0 - \sum_{t_i < T} D_i e^{-rt_i}$$
 
-## 数値安定性
+## 応用分野
 
-### 極限値での振る舞い
+### 株式オプション
+- 個別株オプション
+- 従業員ストックオプション（ESO）
+- ワラント
 
-```rust
-fn black_scholes_stable(
-    spot: f64,
-    strike: f64,
-    rate: f64,
-    vol: f64,
-    time: f64
-) -> f64 {
-    // 満期時
-    if time < 1e-10 {
-        return (spot - strike).max(0.0);
-    }
-    
-    // ゼロボラティリティ
-    if vol < 1e-10 {
-        let forward = spot * (rate * time).exp();
-        return ((forward - strike) * (-rate * time).exp()).max(0.0);
-    }
-    
-    // Deep ITM/OTM
-    let moneyness = spot / strike;
-    if moneyness > 3.0 {
-        return spot - strike * (-rate * time).exp();
-    }
-    if moneyness < 0.3 {
-        return 0.0;
-    }
-    
-    // 通常計算
-    black_scholes_call(spot, strike, rate, vol, time)
-}
-```
+### 株価指数オプション
+- S&P 500、日経225などの指数オプション
+- ETFオプション
+- 配当調整が重要
 
-## パフォーマンス特性
+### 為替オプション
+- Garman-Kohlhagen拡張による外国為替オプション
+- 2つの金利（国内・海外）を考慮
 
-### 計算複雑度
-
-- 単一計算: O(1)
-- バッチ計算: O(n)
-- SIMD並列: O(n/8) for AVX2
-
-### ベンチマーク結果
-
-| データサイズ | スカラー | AVX2 | AVX-512 |
-|------------|---------|------|---------|
-| 1 | 8ns | - | - |
-| 1,000 | 8μs | 1.2μs | 0.8μs |
-| 1,000,000 | 8ms | 1.2ms | 0.8ms |
-
-## 検証テスト
-
-### Put-Callパリティ
-
-```rust
-#[test]
-fn test_put_call_parity() {
-    let spot = 100.0;
-    let strike = 100.0;
-    let rate = 0.05;
-    let vol = 0.2;
-    let time = 1.0;
-    
-    let call = black_scholes_call(spot, strike, rate, vol, time);
-    let put = black_scholes_put(spot, strike, rate, vol, time);
-    
-    let parity = call - put;
-    let theoretical = spot - strike * (-rate * time).exp();
-    
-    assert!((parity - theoretical).abs() < 1e-10);
-}
-```
-
-## 応用と拡張
-
-### インプライドボラティリティ
-
-Black-Scholes式の逆算:
-
-```rust
-fn implied_volatility_newton(
-    price: f64,
-    spot: f64,
-    strike: f64,
-    rate: f64,
-    time: f64
-) -> f64 {
-    let mut vol = 0.2; // 初期推定
-    
-    for _ in 0..50 {
-        let bs_price = black_scholes_call(spot, strike, rate, vol, time);
-        let vega = calculate_vega(spot, strike, rate, vol, time);
-        
-        if (bs_price - price).abs() < 1e-8 {
-            return vol;
-        }
-        
-        vol -= (bs_price - price) / vega;
-    }
-    
-    vol
-}
-```
-
-## まとめ
-
-Black-Scholesモデルは：
-- 理論的に美しく、実装が効率的
-- 市場で広く使用される標準モデル
+### デリバティブプライシング全般
 - 他の複雑なモデルの基礎
+- ボラティリティサーフェスの較正
+- リスク管理の標準ツール
 
-制限事項：
-- ボラティリティ一定の仮定
-- 早期行使を考慮しない
-- ジャンプリスクを無視
+## 数値計算上の考慮事項
+
+### 精度要件
+- 価格精度: 相対誤差 < $10^{-8}$
+- グリークス精度: 相対誤差 < $10^{-7}$
+- Put-Callパリティ: 誤差 < $10^{-12}$
+
+### 数値的課題と対策
+
+1. **極限値での不安定性**
+   - 満期直前（$T \to 0$）: 境界値を直接返す
+   - ゼロボラティリティ（$\sigma \to 0$）: 確定的なペイオフ
+   - Deep ITM/OTM: 漸近展開を使用
+
+2. **累積正規分布の高精度計算**
+   - Hart68アルゴリズムやAS241の使用
+   - 誤差 < $10^{-15}$ を達成
+
+3. **SIMD並列化**
+   - AVX2/AVX-512による4-8倍の高速化
+   - バッチ処理: O(n/8) の計算複雑度
+
+## モデルの限界と拡張
+
+### 限界
+- **ボラティリティスマイル**: 実市場では観測される現象を説明不可
+- **早期行使**: アメリカンオプションには適用不可
+- **ジャンプリスク**: 急激な価格変動を考慮しない
+- **取引コスト**: 現実の市場摩擦を無視
+
+### 拡張モデル
+- **確率的ボラティリティ**: Heston、SABRモデル
+- **ジャンプ拡散**: Merton Jump Diffusion
+- **局所ボラティリティ**: Dupireモデル
+- **アメリカンオプション**: 二項ツリー、有限差分法
+
+## 実装例（概念）
+
+```python
+# 概念的な実装例（実際のAPIとは異なる）
+import numpy as np
+from scipy.stats import norm
+
+def black_scholes_call_price(s, k, t, r, sigma):
+    """
+    Black-Scholesモデルによるコールオプション価格
+    
+    Parameters:
+        s: スポット価格
+        k: 権利行使価格
+        t: 満期までの時間
+        r: 無リスク金利
+        sigma: ボラティリティ
+    
+    Returns:
+        コールオプション価格
+    """
+    # 数値安定性のチェック
+    if t < 1e-10:
+        return max(s - k, 0.0)
+    
+    if sigma < 1e-10:
+        forward = s * np.exp(r * t)
+        return max((forward - k) * np.exp(-r * t), 0.0)
+    
+    # d1, d2の計算
+    d1 = (np.log(s / k) + (r + 0.5 * sigma**2) * t) / (sigma * np.sqrt(t))
+    d2 = d1 - sigma * np.sqrt(t)
+    
+    # Black-Scholes価格式
+    call_price = s * norm.cdf(d1) - k * np.exp(-r * t) * norm.cdf(d2)
+    
+    return call_price
+```
+
+## 参考文献
+
+1. Black, F. and Scholes, M. (1973). "The Pricing of Options and Corporate Liabilities." *Journal of Political Economy*, 81(3), 637-654.
+
+2. Merton, R.C. (1973). "Theory of Rational Option Pricing." *Bell Journal of Economics and Management Science*, 4(1), 141-183.
+
+3. Hull, J.C. (2018). *Options, Futures, and Other Derivatives* (10th ed.). Pearson.
+
+4. Wilmott, P. (2006). *Paul Wilmott on Quantitative Finance* (2nd ed.). Wiley.
+
+## 関連ドキュメント
+
+- [Black-Scholes API](../api/python/black_scholes.md)
+- [Mertonモデル](merton.md)
+- [Black76モデル](black76.md)
+- [インプライドボラティリティ](../api/python/implied_vol.md)

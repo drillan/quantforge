@@ -4,6 +4,7 @@ use pyo3::wrap_pyfunction;
 
 use crate::models::black76::{Black76, Black76Params};
 use crate::models::black_scholes_model::{BlackScholes, BlackScholesParams};
+use crate::models::merton::{MertonModel, MertonParams};
 use crate::models::PricingModel;
 use crate::validation::validate_inputs;
 
@@ -218,76 +219,66 @@ pub fn black76(m: &Bound<'_, PyModule>) -> PyResult<()> {
 /// Calculate Black76 call option price
 #[pyfunction]
 #[pyo3(name = "call_price")]
-#[pyo3(signature = (forward, strike, time, rate, sigma))]
-fn b76_call_price(forward: f64, strike: f64, time: f64, rate: f64, sigma: f64) -> PyResult<f64> {
-    if forward <= 0.0 || strike <= 0.0 || time <= 0.0 || sigma <= 0.0 {
+#[pyo3(signature = (f, k, t, r, sigma))]
+fn b76_call_price(f: f64, k: f64, t: f64, r: f64, sigma: f64) -> PyResult<f64> {
+    if f <= 0.0 || k <= 0.0 || t <= 0.0 || sigma <= 0.0 {
         return Err(pyo3::exceptions::PyValueError::new_err(
-            "forward, strike, time, and sigma must be positive",
+            "f, k, t, and sigma must be positive",
         ));
     }
-    if !forward.is_finite()
-        || !strike.is_finite()
-        || !time.is_finite()
-        || !rate.is_finite()
-        || !sigma.is_finite()
-    {
+    if !f.is_finite() || !k.is_finite() || !t.is_finite() || !r.is_finite() || !sigma.is_finite() {
         return Err(pyo3::exceptions::PyValueError::new_err(
             "All parameters must be finite",
         ));
     }
 
-    let params = Black76Params::new(forward, strike, time, rate, sigma);
+    let params = Black76Params::new(f, k, t, r, sigma);
     Ok(Black76::call_price(&params))
 }
 
 /// Calculate Black76 put option price
 #[pyfunction]
 #[pyo3(name = "put_price")]
-#[pyo3(signature = (forward, strike, time, rate, sigma))]
-fn b76_put_price(forward: f64, strike: f64, time: f64, rate: f64, sigma: f64) -> PyResult<f64> {
-    if forward <= 0.0 || strike <= 0.0 || time <= 0.0 || sigma <= 0.0 {
+#[pyo3(signature = (f, k, t, r, sigma))]
+fn b76_put_price(f: f64, k: f64, t: f64, r: f64, sigma: f64) -> PyResult<f64> {
+    if f <= 0.0 || k <= 0.0 || t <= 0.0 || sigma <= 0.0 {
         return Err(pyo3::exceptions::PyValueError::new_err(
-            "forward, strike, time, and sigma must be positive",
+            "f, k, t, and sigma must be positive",
         ));
     }
-    if !forward.is_finite()
-        || !strike.is_finite()
-        || !time.is_finite()
-        || !rate.is_finite()
-        || !sigma.is_finite()
-    {
+    if !f.is_finite() || !k.is_finite() || !t.is_finite() || !r.is_finite() || !sigma.is_finite() {
         return Err(pyo3::exceptions::PyValueError::new_err(
             "All parameters must be finite",
         ));
     }
 
-    let params = Black76Params::new(forward, strike, time, rate, sigma);
+    let params = Black76Params::new(f, k, t, r, sigma);
     Ok(Black76::put_price(&params))
 }
 
 /// Calculate call prices for multiple forwards
 #[pyfunction]
 #[pyo3(name = "call_price_batch")]
-#[pyo3(signature = (forwards, strike, time, rate, sigma))]
+#[pyo3(signature = (fs, k, t, r, sigma))]
 fn b76_call_price_batch<'py>(
     py: Python<'py>,
-    forwards: PyReadonlyArray1<f64>,
-    strike: f64,
-    time: f64,
-    rate: f64,
+    fs: PyReadonlyArray1<f64>,
+    k: f64,
+    t: f64,
+    r: f64,
     sigma: f64,
 ) -> PyResult<Bound<'py, PyArray1<f64>>> {
     // Validate common parameters
-    if strike <= 0.0 || time <= 0.0 || sigma <= 0.0 {
+    if k <= 0.0 || t <= 0.0 || sigma <= 0.0 {
         return Err(pyo3::exceptions::PyValueError::new_err(
-            "strike, time, and sigma must be positive",
+            "k, t, and sigma must be positive",
         ));
     }
 
-    let forwards_slice = forwards.as_slice()?;
+    let fs_slice = fs.as_slice()?;
 
     // Validate each forward price
-    for &f in forwards_slice {
+    for &f in fs_slice {
         if !f.is_finite() || f <= 0.0 {
             return Err(pyo3::exceptions::PyValueError::new_err(
                 "All forward prices must be positive and finite",
@@ -295,10 +286,10 @@ fn b76_call_price_batch<'py>(
         }
     }
 
-    let results: Vec<f64> = forwards_slice
+    let results: Vec<f64> = fs_slice
         .iter()
-        .map(|&forward| {
-            let params = Black76Params::new(forward, strike, time, rate, sigma);
+        .map(|&f| {
+            let params = Black76Params::new(f, k, t, r, sigma);
             Black76::call_price(&params)
         })
         .collect();
@@ -309,26 +300,26 @@ fn b76_call_price_batch<'py>(
 /// Calculate put prices for multiple forwards
 #[pyfunction]
 #[pyo3(name = "put_price_batch")]
-#[pyo3(signature = (forwards, strike, time, rate, sigma))]
+#[pyo3(signature = (fs, k, t, r, sigma))]
 fn b76_put_price_batch<'py>(
     py: Python<'py>,
-    forwards: PyReadonlyArray1<f64>,
-    strike: f64,
-    time: f64,
-    rate: f64,
+    fs: PyReadonlyArray1<f64>,
+    k: f64,
+    t: f64,
+    r: f64,
     sigma: f64,
 ) -> PyResult<Bound<'py, PyArray1<f64>>> {
     // Validate common parameters
-    if strike <= 0.0 || time <= 0.0 || sigma <= 0.0 {
+    if k <= 0.0 || t <= 0.0 || sigma <= 0.0 {
         return Err(pyo3::exceptions::PyValueError::new_err(
-            "strike, time, and sigma must be positive",
+            "k, t, and sigma must be positive",
         ));
     }
 
-    let forwards_slice = forwards.as_slice()?;
+    let fs_slice = fs.as_slice()?;
 
     // Validate each forward price
-    for &f in forwards_slice {
+    for &f in fs_slice {
         if !f.is_finite() || f <= 0.0 {
             return Err(pyo3::exceptions::PyValueError::new_err(
                 "All forward prices must be positive and finite",
@@ -336,10 +327,10 @@ fn b76_put_price_batch<'py>(
         }
     }
 
-    let results: Vec<f64> = forwards_slice
+    let results: Vec<f64> = fs_slice
         .iter()
-        .map(|&forward| {
-            let params = Black76Params::new(forward, strike, time, rate, sigma);
+        .map(|&f| {
+            let params = Black76Params::new(f, k, t, r, sigma);
             Black76::put_price(&params)
         })
         .collect();
@@ -350,32 +341,20 @@ fn b76_put_price_batch<'py>(
 /// Calculate all Greeks for Black76 option
 #[pyfunction]
 #[pyo3(name = "greeks")]
-#[pyo3(signature = (forward, strike, time, rate, sigma, is_call=true))]
-fn b76_greeks(
-    forward: f64,
-    strike: f64,
-    time: f64,
-    rate: f64,
-    sigma: f64,
-    is_call: bool,
-) -> PyResult<PyGreeks> {
-    if forward <= 0.0 || strike <= 0.0 || time <= 0.0 || sigma <= 0.0 {
+#[pyo3(signature = (f, k, t, r, sigma, is_call=true))]
+fn b76_greeks(f: f64, k: f64, t: f64, r: f64, sigma: f64, is_call: bool) -> PyResult<PyGreeks> {
+    if f <= 0.0 || k <= 0.0 || t <= 0.0 || sigma <= 0.0 {
         return Err(pyo3::exceptions::PyValueError::new_err(
-            "forward, strike, time, and sigma must be positive",
+            "f, k, t, and sigma must be positive",
         ));
     }
-    if !forward.is_finite()
-        || !strike.is_finite()
-        || !time.is_finite()
-        || !rate.is_finite()
-        || !sigma.is_finite()
-    {
+    if !f.is_finite() || !k.is_finite() || !t.is_finite() || !r.is_finite() || !sigma.is_finite() {
         return Err(pyo3::exceptions::PyValueError::new_err(
             "All parameters must be finite",
         ));
     }
 
-    let params = Black76Params::new(forward, strike, time, rate, sigma);
+    let params = Black76Params::new(f, k, t, r, sigma);
     let greeks = Black76::greeks(&params, is_call);
 
     Ok(PyGreeks {
@@ -415,4 +394,319 @@ fn b76_implied_volatility(
 
     Black76::implied_volatility(price, &params, is_call, None)
         .map_err(|e| pyo3::exceptions::PyRuntimeError::new_err(e.to_string()))
+}
+
+/// Merton model module for Python
+#[pymodule]
+pub fn merton(m: &Bound<'_, PyModule>) -> PyResult<()> {
+    m.add_function(wrap_pyfunction!(merton_call_price, m)?)?;
+    m.add_function(wrap_pyfunction!(merton_put_price, m)?)?;
+    m.add_function(wrap_pyfunction!(merton_call_price_batch, m)?)?;
+    m.add_function(wrap_pyfunction!(merton_put_price_batch, m)?)?;
+    m.add_function(wrap_pyfunction!(merton_call_price_batch_q, m)?)?;
+    m.add_function(wrap_pyfunction!(merton_put_price_batch_q, m)?)?;
+    m.add_function(wrap_pyfunction!(merton_greeks, m)?)?;
+    m.add_function(wrap_pyfunction!(merton_implied_volatility, m)?)?;
+    m.add_class::<PyMertonGreeks>()?;
+    Ok(())
+}
+
+/// Calculate Merton model call option price
+#[pyfunction]
+#[pyo3(name = "call_price")]
+#[pyo3(signature = (s, k, t, r, q, sigma))]
+fn merton_call_price(s: f64, k: f64, t: f64, r: f64, q: f64, sigma: f64) -> PyResult<f64> {
+    if s <= 0.0 || k <= 0.0 || t < 0.0 || sigma <= 0.0 {
+        return Err(pyo3::exceptions::PyValueError::new_err(
+            "s, k must be positive; t must be non-negative; sigma must be positive",
+        ));
+    }
+    if !s.is_finite()
+        || !k.is_finite()
+        || !t.is_finite()
+        || !r.is_finite()
+        || !q.is_finite()
+        || !sigma.is_finite()
+    {
+        return Err(pyo3::exceptions::PyValueError::new_err(
+            "All parameters must be finite",
+        ));
+    }
+
+    let params = MertonParams::new_unchecked(s, k, t, r, q, sigma);
+    Ok(MertonModel::call_price(&params))
+}
+
+/// Calculate Merton model put option price
+#[pyfunction]
+#[pyo3(name = "put_price")]
+#[pyo3(signature = (s, k, t, r, q, sigma))]
+fn merton_put_price(s: f64, k: f64, t: f64, r: f64, q: f64, sigma: f64) -> PyResult<f64> {
+    if s <= 0.0 || k <= 0.0 || t < 0.0 || sigma <= 0.0 {
+        return Err(pyo3::exceptions::PyValueError::new_err(
+            "s, k must be positive; t must be non-negative; sigma must be positive",
+        ));
+    }
+    if !s.is_finite()
+        || !k.is_finite()
+        || !t.is_finite()
+        || !r.is_finite()
+        || !q.is_finite()
+        || !sigma.is_finite()
+    {
+        return Err(pyo3::exceptions::PyValueError::new_err(
+            "All parameters must be finite",
+        ));
+    }
+
+    let params = MertonParams::new_unchecked(s, k, t, r, q, sigma);
+    Ok(MertonModel::put_price(&params))
+}
+
+/// Calculate call prices for multiple spots using Merton model
+#[pyfunction]
+#[pyo3(name = "call_price_batch")]
+#[pyo3(signature = (spots, k, t, r, q, sigma))]
+fn merton_call_price_batch<'py>(
+    py: Python<'py>,
+    spots: PyReadonlyArray1<f64>,
+    k: f64,
+    t: f64,
+    r: f64,
+    q: f64,
+    sigma: f64,
+) -> PyResult<Bound<'py, PyArray1<f64>>> {
+    // Validate common parameters
+    if k <= 0.0 || t < 0.0 || sigma <= 0.0 {
+        return Err(pyo3::exceptions::PyValueError::new_err(
+            "k must be positive; t must be non-negative; sigma must be positive",
+        ));
+    }
+
+    let spots_slice = spots.as_slice()?;
+
+    // Validate each spot price
+    for &s in spots_slice {
+        if !s.is_finite() || s <= 0.0 {
+            return Err(pyo3::exceptions::PyValueError::new_err(
+                "All spot prices must be positive and finite",
+            ));
+        }
+    }
+
+    let results = crate::models::merton::pricing::call_price_batch(spots_slice, k, t, r, q, sigma);
+    Ok(PyArray1::from_vec_bound(py, results))
+}
+
+/// Calculate put prices for multiple spots using Merton model
+#[pyfunction]
+#[pyo3(name = "put_price_batch")]
+#[pyo3(signature = (spots, k, t, r, q, sigma))]
+fn merton_put_price_batch<'py>(
+    py: Python<'py>,
+    spots: PyReadonlyArray1<f64>,
+    k: f64,
+    t: f64,
+    r: f64,
+    q: f64,
+    sigma: f64,
+) -> PyResult<Bound<'py, PyArray1<f64>>> {
+    // Validate common parameters
+    if k <= 0.0 || t < 0.0 || sigma <= 0.0 {
+        return Err(pyo3::exceptions::PyValueError::new_err(
+            "k must be positive; t must be non-negative; sigma must be positive",
+        ));
+    }
+
+    let spots_slice = spots.as_slice()?;
+
+    // Validate each spot price
+    for &s in spots_slice {
+        if !s.is_finite() || s <= 0.0 {
+            return Err(pyo3::exceptions::PyValueError::new_err(
+                "All spot prices must be positive and finite",
+            ));
+        }
+    }
+
+    let results = crate::models::merton::pricing::put_price_batch(spots_slice, k, t, r, q, sigma);
+    Ok(PyArray1::from_vec_bound(py, results))
+}
+
+/// Calculate call prices for multiple dividend yields using Merton model
+#[pyfunction]
+#[pyo3(name = "call_price_batch_q")]
+#[pyo3(signature = (s, k, t, r, qs, sigma))]
+fn merton_call_price_batch_q<'py>(
+    py: Python<'py>,
+    s: f64,
+    k: f64,
+    t: f64,
+    r: f64,
+    qs: PyReadonlyArray1<f64>,
+    sigma: f64,
+) -> PyResult<Bound<'py, PyArray1<f64>>> {
+    // Validate common parameters
+    if s <= 0.0 || k <= 0.0 || t < 0.0 || sigma <= 0.0 {
+        return Err(pyo3::exceptions::PyValueError::new_err(
+            "s, k must be positive; t must be non-negative; sigma must be positive",
+        ));
+    }
+
+    let qs_slice = qs.as_slice()?;
+
+    // Validate each q value
+    for &q in qs_slice {
+        if !q.is_finite() {
+            return Err(pyo3::exceptions::PyValueError::new_err(
+                "All dividend yields must be finite",
+            ));
+        }
+    }
+
+    let results = crate::models::merton::pricing::call_price_batch_q(s, k, t, r, qs_slice, sigma);
+    Ok(PyArray1::from_vec_bound(py, results))
+}
+
+/// Calculate put prices for multiple dividend yields using Merton model
+#[pyfunction]
+#[pyo3(name = "put_price_batch_q")]
+#[pyo3(signature = (s, k, t, r, qs, sigma))]
+fn merton_put_price_batch_q<'py>(
+    py: Python<'py>,
+    s: f64,
+    k: f64,
+    t: f64,
+    r: f64,
+    qs: PyReadonlyArray1<f64>,
+    sigma: f64,
+) -> PyResult<Bound<'py, PyArray1<f64>>> {
+    // Validate common parameters
+    if s <= 0.0 || k <= 0.0 || t < 0.0 || sigma <= 0.0 {
+        return Err(pyo3::exceptions::PyValueError::new_err(
+            "s, k must be positive; t must be non-negative; sigma must be positive",
+        ));
+    }
+
+    let qs_slice = qs.as_slice()?;
+
+    // Validate each q value
+    for &q in qs_slice {
+        if !q.is_finite() {
+            return Err(pyo3::exceptions::PyValueError::new_err(
+                "All dividend yields must be finite",
+            ));
+        }
+    }
+
+    let results = crate::models::merton::pricing::put_price_batch_q(s, k, t, r, qs_slice, sigma);
+    Ok(PyArray1::from_vec_bound(py, results))
+}
+
+/// Calculate all Greeks for Merton model option
+#[pyfunction]
+#[pyo3(name = "greeks")]
+#[pyo3(signature = (s, k, t, r, q, sigma, is_call=true))]
+fn merton_greeks(
+    s: f64,
+    k: f64,
+    t: f64,
+    r: f64,
+    q: f64,
+    sigma: f64,
+    is_call: bool,
+) -> PyResult<PyMertonGreeks> {
+    if s <= 0.0 || k <= 0.0 || t < 0.0 || sigma <= 0.0 {
+        return Err(pyo3::exceptions::PyValueError::new_err(
+            "s, k must be positive; t must be non-negative; sigma must be positive",
+        ));
+    }
+    if !s.is_finite()
+        || !k.is_finite()
+        || !t.is_finite()
+        || !r.is_finite()
+        || !q.is_finite()
+        || !sigma.is_finite()
+    {
+        return Err(pyo3::exceptions::PyValueError::new_err(
+            "All parameters must be finite",
+        ));
+    }
+
+    let greeks =
+        crate::models::merton::greeks::calculate_merton_greeks(s, k, t, r, q, sigma, is_call);
+
+    Ok(PyMertonGreeks {
+        delta: greeks.delta,
+        gamma: greeks.gamma,
+        vega: greeks.vega,
+        theta: greeks.theta,
+        rho: greeks.rho,
+        dividend_rho: greeks.dividend_rho,
+    })
+}
+
+/// Calculate implied volatility from Merton model option price
+#[pyfunction]
+#[pyo3(name = "implied_volatility")]
+#[pyo3(signature = (price, s, k, t, r, q, is_call=true))]
+fn merton_implied_volatility(
+    price: f64,
+    s: f64,
+    k: f64,
+    t: f64,
+    r: f64,
+    q: f64,
+    is_call: bool,
+) -> PyResult<f64> {
+    // Basic parameter validation
+    if s <= 0.0 || k <= 0.0 || t <= 0.0 || price <= 0.0 {
+        return Err(pyo3::exceptions::PyValueError::new_err(
+            "s, k, t, and price must be positive",
+        ));
+    }
+    if !s.is_finite()
+        || !k.is_finite()
+        || !t.is_finite()
+        || !r.is_finite()
+        || !q.is_finite()
+        || !price.is_finite()
+    {
+        return Err(pyo3::exceptions::PyValueError::new_err(
+            "All parameters must be finite",
+        ));
+    }
+
+    crate::models::merton::implied_volatility::calculate_implied_volatility(
+        price, s, k, t, r, q, is_call, None,
+    )
+    .map_err(|e| pyo3::exceptions::PyRuntimeError::new_err(e.to_string()))
+}
+
+/// Python-friendly Merton Greeks struct with dividend_rho
+#[pyclass]
+#[derive(Clone)]
+pub struct PyMertonGreeks {
+    #[pyo3(get)]
+    pub delta: f64,
+    #[pyo3(get)]
+    pub gamma: f64,
+    #[pyo3(get)]
+    pub vega: f64,
+    #[pyo3(get)]
+    pub theta: f64,
+    #[pyo3(get)]
+    pub rho: f64,
+    #[pyo3(get)]
+    pub dividend_rho: f64,
+}
+
+#[pymethods]
+impl PyMertonGreeks {
+    fn __repr__(&self) -> String {
+        format!(
+            "MertonGreeks(delta={:.4}, gamma={:.4}, vega={:.4}, theta={:.4}, rho={:.4}, dividend_rho={:.4})",
+            self.delta, self.gamma, self.vega, self.theta, self.rho, self.dividend_rho
+        )
+    }
 }

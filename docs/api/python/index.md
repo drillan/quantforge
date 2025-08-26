@@ -52,9 +52,9 @@ spots = np.array([95, 100, 105, 110])
 prices_bs = black_scholes.call_price_batch(spots, 100, 1.0, 0.05, 0.2)
 
 # Black76バッチ計算
-forwards = np.array([70, 75, 80, 85])
+fs = np.array([70, 75, 80, 85])
 # パラメータ: fs(forwards), k, t, r, sigma
-prices_b76 = black76.call_price_batch(forwards, 75, 0.5, 0.05, 0.25)
+prices_b76 = black76.call_price_batch(fs, 75, 0.5, 0.05, 0.25)
 ```
 
 ### グリークス計算

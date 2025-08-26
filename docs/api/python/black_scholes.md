@@ -135,21 +135,21 @@ except ValueError as e:
 from quantforge.models import black_scholes
 
 # ATM（At The Money）オプション
-spot = 100.0
-strike = 100.0
-time = 0.25  # 3ヶ月
-rate = 0.05
+s = 100.0
+k = 100.0
+t = 0.25  # 3ヶ月
+r = 0.05
 sigma = 0.2
 
 # 価格計算
-call_price = black_scholes.call_price(spot, strike, time, rate, sigma)
-put_price = black_scholes.put_price(spot, strike, time, rate, sigma)
+call_price = black_scholes.call_price(s, k, t, r, sigma)
+put_price = black_scholes.put_price(s, k, t, r, sigma)
 
 print(f"Call Price: ${call_price:.2f}")
 print(f"Put Price: ${put_price:.2f}")
 
 # グリークス計算
-greeks = black_scholes.greeks(spot, strike, time, rate, sigma, is_call=True)
+greeks = black_scholes.greeks(s, k, t, r, sigma, is_call=True)
 print(f"Delta: {greeks.delta:.4f}")
 print(f"Gamma: {greeks.gamma:.4f}")
 print(f"Vega: {greeks.vega:.4f}")
@@ -161,21 +161,21 @@ print(f"Vega: {greeks.vega:.4f}")
 import numpy as np
 from quantforge.models import black_scholes
 
-spot = 100.0
-time = 0.25
-rate = 0.05
+s = 100.0
+t = 0.25
+r = 0.05
 strikes = np.linspace(80, 120, 21)
 
 # 各ストライクでの市場価格（仮定）からIVを計算
 ivs = []
-for strike in strikes:
+for k in strikes:
     # 実際の市場価格を使用
-    market_price = get_market_price(strike)  # 市場データ取得関数
-    is_call = strike >= spot
+    market_price = get_market_price(k)  # 市場データ取得関数
+    is_call = k >= s
     
     # パラメータ: price, s, k, t, r, is_call
     iv = black_scholes.implied_volatility(
-        market_price, spot, strike, time, rate, is_call
+        market_price, s, k, t, r, is_call
     )
     ivs.append(iv)
 
