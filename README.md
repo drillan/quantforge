@@ -41,8 +41,16 @@ QuantForge delivers institutional-grade option pricing with unprecedented speed:
 
 ## ✨ Features
 
+### Option Pricing Models
+
+QuantForge supports multiple option pricing models, each optimized for specific asset classes:
+
+- **Black-Scholes**: European options on stocks
+- **Merton** *(coming soon)*: Options on dividend-paying assets
+- **Black76** *(coming soon)*: Commodity options
+- **Garman-Kohlhagen** *(coming soon)*: FX options
+
 ### Core Capabilities
-- **Black-Scholes Model**: European options (call/put) with full Put-Call parity validation
 - **Complete Greeks**: Delta, Gamma, Vega, Theta, Rho with analytical precision
 - **Implied Volatility**: Hybrid Newton-Raphson/Brent solver with Brenner-Subrahmanyam initialization
 - **Batch Processing**: Zero-copy NumPy integration with automatic parallelization (>30k elements)
@@ -82,24 +90,35 @@ pip install -e ".[dev]"
 
 ## 💻 Quick Start
 
-### Basic Usage
+### Module-Based API (Recommended)
+
+```python
+import numpy as np
+from quantforge.models import black_scholes
+
+# Single option pricing
+spot = 100.0      # Underlying price
+strike = 105.0    # Strike price  
+time = 0.25       # Time to maturity (years)
+rate = 0.05       # Risk-free rate
+sigma = 0.2       # Volatility (industry standard σ)
+
+# Black-Scholes model for stock options
+call_price = black_scholes.call_price(spot, strike, time, rate, sigma)
+put_price = black_scholes.put_price(spot, strike, time, rate, sigma)
+
+print(f"Call: ${call_price:.4f}, Put: ${put_price:.4f}")
+```
+
+### Legacy API (Backward Compatible)
 
 ```python
 import numpy as np
 import quantforge as qf
 
-# Single option pricing
-spot = 100.0      # Underlying price
-strike = 105.0    # Strike price
-time = 0.25       # Time to maturity (years)
-rate = 0.05       # Risk-free rate
-sigma = 0.2       # Volatility (industry standard σ)
-
-# Calculate option prices
+# Direct function calls (will be deprecated)
 call_price = qf.calculate_call_price(spot, strike, time, rate, sigma)
 put_price = qf.calculate_put_price(spot, strike, time, rate, sigma)
-
-print(f"Call: ${call_price:.4f}, Put: ${put_price:.4f}")
 ```
 
 ### Batch Processing
@@ -108,31 +127,38 @@ print(f"Call: ${call_price:.4f}, Put: ${put_price:.4f}")
 # Process 100,000 options in milliseconds
 spots = np.linspace(80, 120, 100000)
 
+# Module-based API (recommended)
+from quantforge.models import black_scholes
+call_prices = black_scholes.call_price_batch(spots, strike, time, rate, sigma)
+
 # Automatic parallelization for large arrays (>30k elements)
-call_prices = qf.calculate_call_price_batch(spots, strike, time, rate, sigma)
 print(f"Processed {len(call_prices):,} options")
 ```
 
 ### Greeks Calculation
 
 ```python
-# Individual Greeks
-delta = qf.calculate_delta_call(spot, strike, time, rate, sigma)
-gamma = qf.calculate_gamma(spot, strike, time, rate, sigma)
-vega = qf.calculate_vega(spot, strike, time, rate, sigma)
+# Module-based API
+from quantforge.models import black_scholes
 
 # All Greeks at once
-greeks = qf.calculate_all_greeks(spot, strike, time, rate, sigma, is_call=True)
-# Returns: {'delta': 0.377, 'gamma': 0.038, 'vega': 0.189, 'theta': -0.026, 'rho': 0.088}
+greeks = black_scholes.greeks(spot, strike, time, rate, sigma, is_call=True)
+print(greeks)  # Greeks(delta=0.377, gamma=0.038, vega=0.189, theta=-0.026, rho=0.088)
+
+# Access individual Greeks
+print(f"Delta: {greeks.delta:.3f}")
+print(f"Gamma: {greeks.gamma:.3f}")
 ```
 
 ### Implied Volatility
 
 ```python
+from quantforge.models import black_scholes
+
 # Solve for IV from market price
 market_price = 3.5
-iv = qf.calculate_implied_volatility_call(
-    market_price, spot, strike, time, rate
+iv = black_scholes.implied_volatility(
+    market_price, spot, strike, time, rate, is_call=True
 )
 print(f"Implied Volatility: {iv:.2%}")
 

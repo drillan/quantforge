@@ -22,6 +22,17 @@ QuantForgeは、Rust + PyO3で実装された超高速オプション価格計�
 
 ### ✨ 特徴
 
+#### オプション価格モデル
+
+QuantForgeは複数のオプション価格モデルをサポートし、各資産クラスに最適化されています：
+
+- **Black-Scholes**: 株式のヨーロピアンオプション
+- **Merton** *(近日公開予定)*: 配当付き資産のオプション
+- **Black76** *(近日公開予定)*: 商品オプション
+- **Garman-Kohlhagen** *(近日公開予定)*: FXオプション
+
+#### コア機能
+
 - ⚡ **超高速処理**: Rust実装により、純粋なPython実装比で500-1000倍の高速化
 - 🎯 **高精度計算**: erfベース実装により機械精度レベル（<1e-15）の計算精度を実現
 - 🚀 **自動並列化**: 30,000要素以上のバッチ処理で自動的にRayon並列処理を適用
@@ -69,11 +80,11 @@ pip install -e ".[dev]"
 
 ## 💡 クイックスタート
 
-### 基本的な使用例
+### モジュールベースAPI（推奨）
 
 ```python
 import numpy as np
-import quantforge as qf
+from quantforge.models import black_scholes
 
 # 単一のオプション価格計算
 spot = 100.0      # 原資産価格
@@ -82,13 +93,20 @@ time = 0.25       # 満期までの時間（年）
 rate = 0.05       # 無リスク金利
 sigma = 0.2       # ボラティリティ（業界標準記号σ）
 
-# コールオプション価格
-call_price = qf.calculate_call_price(spot, strike, time, rate, sigma)
-print(f"Call Price: ${call_price:.4f}")
+# 株式オプションのBlack-Scholesモデル
+call_price = black_scholes.call_price(spot, strike, time, rate, sigma)
+put_price = black_scholes.put_price(spot, strike, time, rate, sigma)
+print(f"Call: ${call_price:.4f}, Put: ${put_price:.4f}")
+```
 
-# プットオプション価格
+### レガシーAPI（互換性維持）
+
+```python
+import quantforge as qf
+
+# 直接関数呼び出し（将来非推奨予定）
+call_price = qf.calculate_call_price(spot, strike, time, rate, sigma)
 put_price = qf.calculate_put_price(spot, strike, time, rate, sigma)
-print(f"Put Price: ${put_price:.4f}")
 ```
 
 ### バッチ処理（大規模データの高速処理）
@@ -97,37 +115,39 @@ print(f"Put Price: ${put_price:.4f}")
 # 複数のスポット価格でのバッチ計算
 spots = np.linspace(80, 120, 100000)  # 10万個のデータポイント
 
+# モジュールベースAPI（推奨）
+from quantforge.models import black_scholes
+call_prices = black_scholes.call_price_batch(spots, strike, time, rate, sigma)
+
 # 自動的に並列処理が適用される（30,000要素以上）
-call_prices = qf.calculate_call_price_batch(spots, strike, time, rate, sigma)
 print(f"Calculated {len(call_prices)} prices in milliseconds")
 ```
 
 ### グリークス計算
 
 ```python
-# 個別のグリークス
-delta_call = qf.calculate_delta_call(spot, strike, time, rate, sigma)
-gamma = qf.calculate_gamma(spot, strike, time, rate, sigma)
-vega = qf.calculate_vega(spot, strike, time, rate, sigma)
-theta_call = qf.calculate_theta_call(spot, strike, time, rate, sigma)
-rho_call = qf.calculate_rho_call(spot, strike, time, rate, sigma)
-
-print(f"Delta (Call): {delta_call:.4f}")
-print(f"Gamma: {gamma:.4f}")
-print(f"Vega: {vega:.4f}")
+# モジュールベースAPI
+from quantforge.models import black_scholes
 
 # 全グリークス一括計算
-greeks = qf.calculate_all_greeks(spot, strike, time, rate, sigma, is_call=True)
-print(f"All Greeks: {greeks}")
+greeks = black_scholes.greeks(spot, strike, time, rate, sigma, is_call=True)
+print(greeks)  # Greeks(delta=0.377, gamma=0.038, vega=0.189, theta=-0.026, rho=0.088)
+
+# 個別のグリークスへのアクセス
+print(f"Delta: {greeks.delta:.4f}")
+print(f"Gamma: {greeks.gamma:.4f}")
+print(f"Vega: {greeks.vega:.4f}")
 ```
 
 ### インプライドボラティリティ計算
 
 ```python
+from quantforge.models import black_scholes
+
 # マーケット価格からインプライドボラティリティを逆算
 market_price = 3.5
-iv_call = qf.calculate_implied_volatility_call(
-    market_price, spot, strike, time, rate
+iv = black_scholes.implied_volatility(
+    market_price, spot, strike, time, rate, is_call=True
 )
 print(f"Implied Volatility (Call): {iv_call:.4%}")
 

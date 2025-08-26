@@ -8,6 +8,7 @@ pub mod error;
 pub mod math;
 pub mod models;
 pub mod validation;
+pub mod python_modules;
 
 use crate::models::{
     black_scholes, black_scholes_parallel, greeks, greeks_parallel, implied_volatility,
@@ -412,7 +413,7 @@ fn calculate_implied_volatility_batch<'py>(
 /// A Python module implemented in Rust.
 #[pymodule]
 fn quantforge(m: &Bound<'_, PyModule>) -> PyResult<()> {
-    // 価格計算
+    // Legacy functions (kept for backward compatibility during migration)
     m.add_function(wrap_pyfunction!(calculate_call_price, m)?)?;
     m.add_function(wrap_pyfunction!(calculate_call_price_batch, m)?)?;
     m.add_function(wrap_pyfunction!(calculate_put_price, m)?)?;
@@ -437,6 +438,11 @@ fn quantforge(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(calculate_implied_volatility_call, m)?)?;
     m.add_function(wrap_pyfunction!(calculate_implied_volatility_put, m)?)?;
     m.add_function(wrap_pyfunction!(calculate_implied_volatility_batch, m)?)?;
+    
+    // Add models submodule
+    let models = PyModule::new_bound(m.py(), "models")?;
+    python_modules::black_scholes(&models)?;
+    m.add_submodule(&models)?;
 
     Ok(())
 }
