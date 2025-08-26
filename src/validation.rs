@@ -36,15 +36,24 @@ pub fn validate_inputs(s: f64, k: f64, t: f64, r: f64, v: f64) -> Result<(), Qua
 
     // 価格チェック
     if s <= 0.0 || s < limits.min_price || s > limits.max_price {
-        return Err(QuantForgeError::InvalidSpotPrice(s));
+        return Err(QuantForgeError::InvalidSpotPrice(format!(
+            "Spot price {s} is out of valid range [{}, {}]",
+            limits.min_price, limits.max_price
+        )));
     }
     if k <= 0.0 || k < limits.min_price || k > limits.max_price {
-        return Err(QuantForgeError::InvalidStrikePrice(k));
+        return Err(QuantForgeError::InvalidStrikePrice(format!(
+            "Strike price {k} is out of valid range [{}, {}]",
+            limits.min_price, limits.max_price
+        )));
     }
 
     // 時間チェック
     if t <= 0.0 || t < limits.min_time || t > limits.max_time {
-        return Err(QuantForgeError::InvalidTime(t));
+        return Err(QuantForgeError::InvalidTime(format!(
+            "Time {t} is out of valid range [{}, {}]",
+            limits.min_time, limits.max_time
+        )));
     }
 
     // ボラティリティチェック
@@ -55,8 +64,8 @@ pub fn validate_inputs(s: f64, k: f64, t: f64, r: f64, v: f64) -> Result<(), Qua
     // 金利チェック
     if r < limits.min_rate || r > limits.max_rate {
         return Err(QuantForgeError::InvalidInput(format!(
-            "Interest rate {} is out of range [{}, {}]",
-            r, limits.min_rate, limits.max_rate
+            "Interest rate {r} is out of range [{}, {}]",
+            limits.min_rate, limits.max_rate
         )));
     }
 

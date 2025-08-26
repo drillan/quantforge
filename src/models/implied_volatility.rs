@@ -82,19 +82,27 @@ fn implied_volatility(
     }
 
     if s <= 0.0 {
-        return Err(QuantForgeError::InvalidSpotPrice(s));
+        return Err(QuantForgeError::InvalidSpotPrice(format!(
+            "Spot price must be positive, got {s}"
+        )));
     }
 
     if k <= 0.0 {
-        return Err(QuantForgeError::InvalidStrikePrice(k));
+        return Err(QuantForgeError::InvalidStrikePrice(format!(
+            "Strike price must be positive, got {k}"
+        )));
     }
 
     if t <= 0.0 {
-        return Err(QuantForgeError::InvalidTime(t));
+        return Err(QuantForgeError::InvalidTime(format!(
+            "Time must be positive, got {t}"
+        )));
     }
 
     if price <= 0.0 {
-        return Err(QuantForgeError::InvalidMarketPrice(price));
+        return Err(QuantForgeError::InvalidMarketPrice(format!(
+            "Market price must be positive, got {price}"
+        )));
     }
 
     // 無裁定条件のチェック
@@ -109,11 +117,15 @@ fn implied_volatility(
     let upper_bound = if is_call { s } else { k * discount_factor };
 
     if price < intrinsic_value * 0.999 {
-        return Err(QuantForgeError::NoArbitrageBreach);
+        return Err(QuantForgeError::NoArbitrageBreach(format!(
+            "Option price {price} below intrinsic value {intrinsic_value}"
+        )));
     }
 
     if price > upper_bound * 1.001 {
-        return Err(QuantForgeError::NoArbitrageBreach);
+        return Err(QuantForgeError::NoArbitrageBreach(format!(
+            "Option price {price} above upper bound {upper_bound}"
+        )));
     }
 
     // エッジケース処理
@@ -355,11 +367,11 @@ mod tests {
 
         // 価格が低すぎる
         let result = implied_volatility_call(0.01, s, k, t, r);
-        assert!(matches!(result, Err(QuantForgeError::NoArbitrageBreach)));
+        assert!(matches!(result, Err(QuantForgeError::NoArbitrageBreach(_))));
 
         // 価格が高すぎる
         let result = implied_volatility_call(101.0, s, k, t, r);
-        assert!(matches!(result, Err(QuantForgeError::NoArbitrageBreach)));
+        assert!(matches!(result, Err(QuantForgeError::NoArbitrageBreach(_))));
     }
 
     #[test]

@@ -43,15 +43,15 @@ def test_invalid_inputs() -> None:
     """無効な入力のテスト."""
 
     # 負の価格
-    with pytest.raises(ValueError, match="Spot price must be positive"):
+    with pytest.raises(ValueError, match="Invalid spot price"):
         black_scholes.call_price(-100.0, 100.0, 1.0, 0.05, 0.2)
 
     # 負の時間
-    with pytest.raises(ValueError, match="Time to maturity must be positive"):
+    with pytest.raises(ValueError, match="Invalid time"):
         black_scholes.call_price(100.0, 100.0, -1.0, 0.05, 0.2)
 
     # 負のボラティリティ
-    with pytest.raises(ValueError, match="Volatility must be positive"):
+    with pytest.raises(ValueError, match="Invalid volatility"):
         black_scholes.call_price(100.0, 100.0, 1.0, 0.05, -0.2)
 
 
