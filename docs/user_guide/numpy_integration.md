@@ -253,13 +253,13 @@ def custom_pricer(spot, strike, moneyness_threshold=0.1):
     
     if moneyness < moneyness_threshold:
         # ATM近辺は高精度計算
-        return qf.calculate_call_price(
-            s=spot, k=strike, t=1.0, r=0.05, sigma=0.2
+        return black_scholes.call_price(
+            spot=spot, strike=strike, time=1.0, rate=0.05, sigma=0.2
         )
     else:
         # OTMは簡易計算
-        return qf.calculate_call_price(
-            s=spot, k=strike, t=1.0, r=0.05, sigma=0.15
+        return black_scholes.call_price(
+            spot=spot, strike=strike, time=1.0, rate=0.05, sigma=0.15
         )
 
 # ベクトル化された使用

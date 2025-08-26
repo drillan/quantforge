@@ -6,28 +6,26 @@
 
 現在、QuantForgeはBlack-Scholesモデルのヨーロピアンオプションをサポートしています。
 
-### モジュールベースAPI（推奨）
-
-より明示的で将来の拡張に対応したAPI構造です。
+### API使用方法
 
 ```python
 from quantforge.models import black_scholes
 
 # コールオプション価格
 call_price = black_scholes.call_price(
-    spot=100.0,    # スポット価格
-    strike=105.0,  # 権利行使価格
-    time=1.0,      # 満期までの時間（年）
-    rate=0.05,     # 無リスク金利
-    sigma=0.2      # ボラティリティ
+    s=100.0,      # スポット価格
+    k=105.0,      # 権利行使価格
+    t=1.0,        # 満期までの時間（年）
+    r=0.05,       # 無リスク金利
+    sigma=0.2     # ボラティリティ
 )
 
 # プットオプション価格
 put_price = black_scholes.put_price(
-    spot=100.0,
-    strike=105.0,
-    time=1.0,
-    rate=0.05,
+    s=100.0,
+    k=105.0,
+    t=1.0,
+    r=0.05,
     sigma=0.2
 )
 ```
@@ -41,17 +39,17 @@ import numpy as np
 spots = np.array([95, 100, 105, 110])
 call_prices = black_scholes.call_price_batch(
     spots=spots,
-    strike=100.0,
-    time=1.0,
-    rate=0.05,
+    k=100.0,
+    t=1.0,
+    r=0.05,
     sigma=0.2
 )
 
 put_prices = black_scholes.put_price_batch(
     spots=spots,
-    strike=100.0,
-    time=1.0,
-    rate=0.05,
+    k=100.0,
+    t=1.0,
+    r=0.05,
     sigma=0.2
 )
 ```
@@ -59,17 +57,15 @@ put_prices = black_scholes.put_price_batch(
 
 ## グリークス計算
 
-### モジュールベースAPI（推奨）
-
 ```python
 from quantforge.models import black_scholes
 
 # 全グリークスを一括計算
 greeks = black_scholes.greeks(
-    spot=100.0,
-    strike=100.0,
-    time=1.0,
-    rate=0.05,
+    s=100.0,
+    k=100.0,
+    t=1.0,
+    r=0.05,
     sigma=0.2,
     is_call=True  # True: コール, False: プット
 )
@@ -82,31 +78,6 @@ print(f"Theta: {greeks.theta:.4f}")
 print(f"Rho: {greeks.rho:.4f}")
 ```
 
-### 標準関数API
-
-```python
-import quantforge as qf
-
-# 全グリークス一括計算
-greeks = qf.calculate_all_greeks(
-    s=100.0,
-    k=100.0,
-    t=1.0,
-    r=0.05,
-    sigma=0.2,
-    is_call=True
-)
-
-# 個別グリークス計算
-delta_call = qf.calculate_delta_call(s=100, k=100, t=1.0, r=0.05, sigma=0.2)
-delta_put = qf.calculate_delta_put(s=100, k=100, t=1.0, r=0.05, sigma=0.2)
-gamma = qf.calculate_gamma(s=100, k=100, t=1.0, r=0.05, sigma=0.2)
-vega = qf.calculate_vega(s=100, k=100, t=1.0, r=0.05, sigma=0.2)
-theta_call = qf.calculate_theta_call(s=100, k=100, t=1.0, r=0.05, sigma=0.2)
-theta_put = qf.calculate_theta_put(s=100, k=100, t=1.0, r=0.05, sigma=0.2)
-rho_call = qf.calculate_rho_call(s=100, k=100, t=1.0, r=0.05, sigma=0.2)
-rho_put = qf.calculate_rho_put(s=100, k=100, t=1.0, r=0.05, sigma=0.2)
-```
 
 ## 数式
 
@@ -125,18 +96,7 @@ where:
 
 ## パラメータ説明
 
-### モジュールベースAPI
-
-| パラメータ | 型 | 説明 |
-|-----------|-----|------|
-| `spot` | float | 原資産の現在価格 |
-| `strike` | float | オプションの権利行使価格 |
-| `time` | float | 満期までの時間（年） |
-| `rate` | float | 無リスク金利（年率） |
-| `sigma` | float | ボラティリティ（年率） |
-| `is_call` | bool | True: コール, False: プット |
-
-### 標準関数API
+### API パラメータ
 
 | パラメータ | 型 | 説明 |
 |-----------|-----|------|
@@ -146,6 +106,16 @@ where:
 | `r` | float | 無リスク金利（年率） |
 | `sigma` | float | ボラティリティ（年率） |
 | `is_call` | bool | True: コール, False: プット |
+
+#### バッチ処理用パラメータ
+
+| パラメータ | 型 | 説明 |
+|-----------|-----|------|
+| `spots` | np.ndarray | 複数のスポット価格 |
+| `k` | float | オプションの権利行使価格（ストライク） |
+| `t` | float | 満期までの時間（年） |
+| `r` | float | 無リスク金利（年率） |
+| `sigma` | float | ボラティリティ（年率） |
 
 ## パフォーマンス指標
 
@@ -168,10 +138,10 @@ where:
 ```python
 try:
     price = black_scholes.call_price(
-        spot=-100,  # 無効な負の値
-        strike=100,
-        time=1.0,
-        rate=0.05,
+        s=-100,  # 無効な負の値
+        k=100,
+        t=1.0,
+        r=0.05,
         sigma=0.2
     )
 except ValueError as e:

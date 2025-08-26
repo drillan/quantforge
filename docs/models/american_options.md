@@ -38,29 +38,31 @@ $$C_{Am} = \alpha S_0^{\beta} - \alpha \phi(S_0, T, \beta, I, I) + \phi(S_0, T, 
 
 $$S^* - K = C(S^*, K, T) + \left(1 - e^{-qT}N(d_1(S^*))\right)S^*$$
 
-### 実装
+### 実装（将来予定）
 
 ```python
-import quantforge as qf
+# 将来実装予定のAPI
+# from quantforge.models import american
 
 # アメリカンコール
-american_call = qf.american_call(
-    spot=100,
-    strike=95,
-    rate=0.05,
-    vol=0.25,
-    time=1.0,
-    dividend=0.02
-)
+# american_call = american.call_price(
+#     spot=100,
+#     strike=95,
+#     time=1.0,
+#     rate=0.05,
+#     sigma=0.25,
+#     dividend=0.02
+# )
 
 # アメリカンプット
-american_put = qf.american_put(
-    spot=100,
-    strike=105,
-    rate=0.05,
-    vol=0.25,
-    time=1.0
-)
+# american_put = american.put_price(
+#     spot=100,
+#     strike=105,
+#     time=1.0,
+#     rate=0.05,
+#     sigma=0.25,
+#     dividend=0.0
+# )
 ```
 
 ## アメリカンプット
@@ -74,20 +76,22 @@ american_put = qf.american_put(
 ### 数値例
 
 ```python
-# 早期行使プレミアムの計算
+# 早期行使プレミアムの計算（将来実装予定）
 spot = 100
 strike = 110
 rate = 0.05
 vol = 0.3
 time = 1.0
 
-american = qf.american_put(spot, strike, rate, vol, time)
-european = qf.black_scholes_put(spot, strike, rate, vol, time)
-premium = american - european
+# 将来実装予定のコード
+# from quantforge.models import american, black_scholes
+# american = american.put_price(spot, strike, time, rate, vol)
+# european = black_scholes.put_price(spot, strike, time, rate, vol)
+# premium = american - european
 
-print(f"American Put: ${american:.2f}")
-print(f"European Put: ${european:.2f}")
-print(f"Early Exercise Premium: ${premium:.2f} ({premium/european*100:.1f}%)")
+# print(f"American Put: ${american:.2f}")
+# print(f"European Put: ${european:.2f}")
+# print(f"Early Exercise Premium: ${premium:.2f} ({premium/european*100:.1f}%)")
 ```
 
 ## パフォーマンス

@@ -28,15 +28,21 @@ unsafe fn calculate_avx2(data: &[f64]) -> Vec<f64> {
 
 ### CPU機能検出
 
+```{warning}
+このセクションで説明されている高度な最適化機能（SIMD検出、戦略選択）は将来実装予定です。
+現在は、内部的にSIMD最適化が自動的に適用されます。
+```
+
 ```python
-import quantforge as qf
+# 将来的なAPI（現在は未実装）
+# from quantforge import system_info
+# print(f"AVX2: {system_info.has_avx2()}")
+# print(f"AVX-512: {system_info.has_avx512()}")
 
-# SIMD サポート確認
-print(f"AVX2: {qf.has_avx2()}")
-print(f"AVX-512: {qf.has_avx512()}")
-
-# 最適な戦略を自動選択
-qf.set_compute_strategy("auto")
+# 現在はQuantForgeが内部で自動的にSIMD命令を検出・使用
+from quantforge.models import black_scholes
+# 内部でAVX2/AVX-512が自動的に使用される
+prices = black_scholes.call_price_batch(spots, 100, 1.0, 0.05, 0.2)
 ```
 
 ## メモリ最適化
@@ -70,7 +76,8 @@ def process_large_dataset(data):
     results = []
     for i in range(0, len(data), OPTIMAL_BATCH):
         batch = data[i:i+OPTIMAL_BATCH]
-        results.append(qf.calculate(batch, ...))
+        from quantforge.models import black_scholes
+        results.append(black_scholes.call_price_batch(batch, 100, 1.0, 0.05, 0.2))
     return np.concatenate(results)
 ```
 
@@ -103,9 +110,9 @@ def optimal_parallel_strategy(data_size):
     else:
         return "hybrid_simd_parallel"
 
-# 適用
+# 将来的な戦略選択（現在は内部で自動最適化）
 strategy = optimal_parallel_strategy(len(data))
-qf.set_compute_strategy(strategy)
+# 注：set_compute_strategy APIは将来実装予定
 ```
 
 ## インプレース操作
@@ -117,14 +124,19 @@ qf.set_compute_strategy(strategy)
 n = 1_000_000
 results = np.empty(n)
 
-qf.calculate_inplace(
-    spots=spots,
-    strikes=100,
-    rate=0.05,
-    vol=0.2,
-    time=1.0,
-    out=results  # 結果を直接書き込み
-)
+# 将来的なインプレース操作（現在は未実装）
+# qf.calculate_inplace(
+#     spots=spots,
+#     strikes=100,
+#     rate=0.05,
+#     vol=0.2,
+#     time=1.0,
+#     out=results  # 結果を直接書き込み
+# )
+
+# 現在は以下のように使用
+from quantforge.models import black_scholes
+results = black_scholes.call_price_batch(spots, 100, 1.0, 0.05, 0.2)
 ```
 
 ## プロファイリング
@@ -138,7 +150,8 @@ import pstats
 def profile_code():
     # プロファイル対象コード
     spots = np.random.uniform(90, 110, 1_000_000)
-    prices = qf.calculate(spots, 100, 0.05, 0.2, 1.0)
+    from quantforge.models import black_scholes
+    prices = black_scholes.call_price_batch(spots, 100, 1.0, 0.05, 0.2)
     return prices
 
 # プロファイル実行
@@ -180,7 +193,8 @@ with timer("data_prep"):
     data = np.random.uniform(90, 110, 1_000_000)
 
 with timer("calculation"):
-    results = qf.calculate(data, 100, 0.05, 0.2, 1.0)
+    from quantforge.models import black_scholes
+    results = black_scholes.call_price_batch(data, 100, 1.0, 0.05, 0.2)
 
 for label, elapsed in timer.times.items():
     print(f"{label}: {elapsed*1000:.2f}ms")
@@ -218,7 +232,8 @@ RUSTFLAGS="-C target-cpu=native" maturin build --release
 ```python
 # Good
 spots = np.array([100, 105, 110])
-prices = qf.calculate(spots, ...)
+from quantforge.models import black_scholes
+prices = black_scholes.call_price_batch(spots, 100, 1.0, 0.05, 0.2)
 ```
 
 2. **適切なバッチサイズ**
@@ -245,7 +260,8 @@ spots = [100, 105, 110]  # 内部で変換が発生
 ```python
 # Bad: オーバーヘッドが大きい
 for spot in spots:
-    price = qf.calculate(spot, ...)
+    from quantforge.models import black_scholes
+    price = black_scholes.call_price(spot, 100, 1.0, 0.05, 0.2)
 ```
 
 3. **頻繁な型変換**

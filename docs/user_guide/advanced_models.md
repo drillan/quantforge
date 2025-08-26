@@ -17,54 +17,56 @@ QuantForgeは、Black-Scholesを超えた高度なオプション価格モデル
 ### Bjerksund-Stensland 2002モデル
 
 ```python
-import quantforge as qf
 import numpy as np
+# 将来実装予定のAPI
+# from quantforge.models import american, black_scholes
 
 # アメリカンコールオプション
-american_call = qf.american_call(
-    spot=100,
-    strike=95,
-    rate=0.05,
-    vol=0.25,
-    time=1.0,
-    dividend=0.02  # 配当利回り
-)
+# american_call = american.call_price(
+#     spot=100,
+#     strike=95,
+#     time=1.0,
+#     rate=0.05,
+#     sigma=0.25,
+#     dividend=0.02  # 配当利回り
+# )
 
 # ヨーロピアンとの比較
-european_call = qf.black_scholes_call_dividend(
-    spot=100,
-    strike=95,
-    rate=0.05,
-    dividend=0.02,
-    vol=0.25,
-    time=1.0
-)
+# european_call = black_scholes.call_price_with_dividend(
+#     spot=100,
+#     strike=95,
+#     time=1.0,
+#     rate=0.05,
+#     sigma=0.25,
+#     dividend=0.02
+# )
 
-early_exercise_premium = american_call - european_call
-print(f"American Call: ${american_call:.2f}")
-print(f"European Call: ${european_call:.2f}")
-print(f"Early Exercise Premium: ${early_exercise_premium:.2f}")
+# early_exercise_premium = american_call - european_call
+# print(f"American Call: ${american_call:.2f}")
+# print(f"European Call: ${european_call:.2f}")
+# print(f"Early Exercise Premium: ${early_exercise_premium:.2f}")
 ```
 
 ### アメリカンプットオプション
 
 ```python
 # アメリカンプット（早期行使がより重要）
-american_put = qf.american_put(
-    spot=100,
-    strike=105,
-    rate=0.05,
-    vol=0.25,
-    time=1.0
-)
+# 将来実装予定
+# american_put = american.put_price(
+#     spot=100,
+#     strike=105,
+#     time=1.0,
+#     rate=0.05,
+#     sigma=0.25
+# )
 
-european_put = qf.black_scholes_put(
-    spot=100,
-    strike=105,
-    rate=0.05,
-    vol=0.25,
-    time=1.0
-)
+# european_put = black_scholes.put_price(
+#     spot=100,
+#     strike=105,
+#     time=1.0,
+#     rate=0.05,
+#     sigma=0.25
+# )
 
 premium = american_put - european_put
 print(f"American Put: ${american_put:.2f}")

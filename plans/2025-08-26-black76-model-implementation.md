@@ -4,7 +4,15 @@
 **作成日**: 2025-08-26  
 **最終更新**: 2025-08-26  
 **優先度**: HIGH  
-**依存関係**: 2025-08-26-multi-model-architecture.md（フェーズ1完了）
+**依存関係**: docs/api/python/black76.md（作成必須）
+
+## ⚠️ D-SSoTプロトコル適用
+
+**重要**: この計画文書は設計検討用の一時的なメモです。  
+実装開始前に以下を必須実施：
+1. `docs/api/python/black76.md`を作成して仕様確定
+2. ドキュメントから実装へコピペ（手打ち禁止）
+3. 実装完了後、この文書を`archive/`へ移動（以降参照禁止）
 
 ## 概要
 
@@ -40,13 +48,14 @@ Put = exp(-r*T) * (K * N(-d2) - F * N(-d1))
 ### タスク2: パラメータ構造体の定義
 ```rust
 pub struct Black76Params {
-    pub f: f64,      // フォワード価格（スポット価格の代わり）
-    pub k: f64,      // 権利行使価格
-    pub t: f64,      // 満期までの時間
-    pub r: f64,      // リスクフリーレート（割引用）
-    pub sigma: f64,  // ボラティリティ
+    pub forward: f64,  // フォワード価格（スポット価格の代わり）
+    pub strike: f64,   // 権利行使価格
+    pub time: f64,     // 満期までの時間
+    pub rate: f64,     // リスクフリーレート（割引用）
+    pub sigma: f64,    // ボラティリティ
 }
 ```
+**注意**: パラメータ名はBlack-Scholesとの一貫性を保つため完全名を使用
 
 ### タスク3: 価格計算の実装
 - [ ] フォワード価格ベースのコール計算
@@ -62,26 +71,29 @@ Black76固有のグリークス：
 - [ ] Vega: ボラティリティ感応度
 - [ ] Rho: 割引率に対する感応度
 
-### タスク5: 商品市場特有の拡張
-- [ ] 複数満期のストリップ価格計算
-- [ ] カレンダースプレッド対応
-- [ ] アジア型オプションへの拡張準備
+### タスク5: 商品市場特有の機能（理想実装）
+- [ ] 複数満期のストリップ価格計算（完全実装）
+- [ ] カレンダースプレッド対応（完全実装）
+- [ ] **注意**: アジア型は別モデルとして実装（Black76には含めない）
 
 ### タスク6: Python APIの実装
 ```python
 # python/quantforge/models/black76.py
-def call_price(f, k, t, r, sigma):
+def call_price(forward, strike, time, rate, sigma):
     """商品先物のコールオプション価格"""
     
-def put_price(f, k, t, r, sigma):
+def put_price(forward, strike, time, rate, sigma):
     """商品先物のプットオプション価格"""
     
-def greeks(f, k, t, r, sigma, is_call=True):
+def greeks(forward, strike, time, rate, sigma, is_call=True):
     """商品先物のグリークス"""
     
-def from_spot_to_forward(s, r, q, t):
-    """スポット価格からフォワード価格への変換"""
+def from_spot_to_forward(spot, rate, div_yield, time):
+    """スポット価格からフォワード価格への変換
+    F = S * exp((r - q) * T)
+    """
 ```
+**注意**: パラメータ名は既存APIとの一貫性を保持
 
 ### タスク7: テストの実装
 - [ ] 単体テスト（価格計算の精度検証）
@@ -135,29 +147,32 @@ def from_spot_to_forward(s, r, q, t):
 | リスク | 影響 | 対策 |
 |--------|------|------|
 | フォワード価格の誤解釈 | HIGH | 明確なドキュメント、変換関数の提供 |
-| 金利期間構造の簡略化 | MEDIUM | 単一金利から開始、段階的拡張 |
-| 商品固有の慣行 | LOW | 市場別の拡張ポイント準備 |
+| 金利期間構造の扱い | MEDIUM | 完全な期間構造モデルを最初から実装 |
+| 商品固有の慣行 | LOW | 各市場の慣行を完全実装 |
 
 ## 商品市場での応用例
 
 ### エネルギー市場
 ```python
-# 原油先物オプション
-oil_forward = 75.0  # WTI先物価格
-strike = 80.0
-time = 0.25  # 3ヶ月
-rate = 0.05
-vol = 0.30
+# 原油先物オプション（実装時は定数を使用 - C011-3）
+from quantforge.constants import WTI_VOLATILITY, RISK_FREE_RATE
 
-call_price = black76.call_price(oil_forward, strike, time, rate, vol)
+oil_forward = get_current_wti_forward()  # 外部データソースから取得
+strike = get_strike_price()
+time = calculate_time_to_maturity()
+
+call_price = black76.call_price(oil_forward, strike, time, RISK_FREE_RATE, WTI_VOLATILITY)
 ```
+**注意**: ハードコード値は使用禁止（C011-3適用）
 
 ### 農産物市場
 ```python
 # コーン先物オプション
-corn_forward = 650.0  # cents/bushel
-strike = 700.0
-# ...
+from quantforge.constants import COMMODITY_DEFAULTS
+
+corn_forward = get_corn_forward_price()  # 外部データソースから取得
+strike = get_strike_from_market()
+# 以下、定数使用を徹底
 ```
 
 ## 参考資料
@@ -181,13 +196,21 @@ strike = 700.0
 3. グリークス計算の追加
 4. 商品市場固有の拡張
 
-## 将来の拡張計画
+## 関連モデル（別実装）
 
-- Asian76モデル（アジアンオプション）
-- スプレッドオプション対応
-- 季節性の考慮
-- ストレージコストの明示的モデリング
+以下は独立したモデルとして実装（C004/C014適用）：
+- Asian76モデル（アジアンオプション）- 別計画書作成
+- Kirk's Approximation（スプレッドオプション）- 別計画書作成
+- 季節性考慮モデル - 別計画書作成
+- ストレージコストモデル - 別計画書作成
+
+**重要**: 段階的拡張や後での改善は禁止（C004/C014）
 
 ## 更新履歴
 
 - 2025-08-26: 初版作成（2025-08-26-multi-model-architecture.mdから分離）
+- 2025-08-26: Critical Rules準拠に更新
+  - D-SSoTプロトコル警告追加
+  - C011-3: ハードコード値を削除
+  - C004/C014: 段階的実装の記述を削除
+  - パラメータ名を統一（forward, strike, time, rate, sigma）

@@ -19,10 +19,7 @@ Pythonの使いやすさを保ちながら、ネイティブコード並みの�
 ## クイックスタート
 
 ```python
-import quantforge as qf
 import numpy as np
-
-# モジュールベースAPI（推奨）
 from quantforge.models import black_scholes
 
 price = black_scholes.call_price(

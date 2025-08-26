@@ -5,27 +5,26 @@ QuantForgeのPython APIの完全なリファレンスです。
 ## インポート方法
 
 ```python
-# モジュールベースAPI（推奨）
 from quantforge.models import black_scholes
 ```
 
 ## API構造
 
-### モジュールベースAPI（推奨）
+### API構造
 
-より明示的で将来の拡張に対応した新しいAPI構造です。
+明示的で拡張性の高いモジュールベース設計を採用しています。
 
 ```python
 from quantforge.models import black_scholes
 
 # 価格計算
-price = black_scholes.call_price(spot=100, strike=105, time=1.0, rate=0.05, sigma=0.2)
+price = black_scholes.call_price(s=100, k=105, t=1.0, r=0.05, sigma=0.2)
 
 # グリークス
-greeks = black_scholes.greeks(spot=100, strike=100, time=1.0, rate=0.05, sigma=0.2, is_call=True)
+greeks = black_scholes.greeks(s=100, k=100, t=1.0, r=0.05, sigma=0.2, is_call=True)
 
 # インプライドボラティリティ
-iv = black_scholes.implied_volatility(price=10.45, spot=100, strike=100, time=1.0, rate=0.05, is_call=True)
+iv = black_scholes.implied_volatility(price=10.45, s=100, k=100, t=1.0, r=0.05, is_call=True)
 ```
 
 
@@ -36,48 +35,32 @@ iv = black_scholes.implied_volatility(price=10.45, spot=100, strike=100, time=1.
 - [インプライドボラティリティ](implied_vol.md) - IV計算
 
 ### グリークス
-- `calculate_delta_call()`, `calculate_delta_put()` - デルタ計算
-- `calculate_gamma()` - ガンマ計算
-- `calculate_vega()` - ベガ計算  
-- `calculate_theta_call()`, `calculate_theta_put()` - シータ計算
-- `calculate_rho_call()`, `calculate_rho_put()` - ロー計算
+- `black_scholes.greeks()` - 全グリークス一括計算
 
 ### バッチ計算
 
 ```python
 import numpy as np
-
-# モジュールベースAPI（推奨）
 from quantforge.models import black_scholes
 
 spots = np.array([95, 100, 105, 110])
-prices = black_scholes.call_price_batch(spots, strike=100, time=1.0, rate=0.05, sigma=0.2)
-
-# または標準関数API
-import quantforge as qf
-
-prices = qf.calculate_call_price_batch(spots, k=100, t=1.0, r=0.05, sigma=0.2)
+prices = black_scholes.call_price_batch(spots=spots, k=100, t=1.0, r=0.05, sigma=0.2)
 ```
 
 ### グリークス計算
 
 ```python
-# モジュールベースAPI（推奨）
 greeks = black_scholes.greeks(
-    spot=100,
-    strike=100,
-    time=1.0,
-    rate=0.05,
+    s=100,
+    k=100,
+    t=1.0,
+    r=0.05,
     sigma=0.2,
     is_call=True
 )
 print(f"Delta: {greeks.delta:.4f}")
 print(f"Gamma: {greeks.gamma:.4f}")
 print(f"Vega: {greeks.vega:.4f}")
-
-# 標準関数APIで個別グリークス
-delta = qf.calculate_delta_call(s=100, k=100, t=1.0, r=0.05, sigma=0.2)
-gamma = qf.calculate_gamma(s=100, k=100, t=1.0, r=0.05, sigma=0.2)
 ```
 
 ## 型システム
@@ -86,11 +69,11 @@ gamma = qf.calculate_gamma(s=100, k=100, t=1.0, r=0.05, sigma=0.2)
 
 | パラメータ | 型 | 説明 |
 |-----------|-----|------|
-| spot | float \| np.ndarray | 現在価格 |
-| strike | float \| np.ndarray | 行使価格 |
-| rate | float \| np.ndarray | 無リスク金利 |
-| vol | float \| np.ndarray | ボラティリティ |
-| time | float \| np.ndarray | 満期までの時間 |
+| s | float \| np.ndarray | 現在価格（スポット） |
+| k | float \| np.ndarray | 行使価格（ストライク） |
+| r | float \| np.ndarray | 無リスク金利 |
+| sigma | float \| np.ndarray | ボラティリティ |
+| t | float \| np.ndarray | 満期までの時間 |
 
 ### 戻り値型
 
@@ -119,16 +102,16 @@ class ConvergenceError(QuantForgeError):
 
 ```python
 try:
-    price = qf.black_scholes_call(
-        spot=-100,  # 無効な負の値
-        strike=100,
-        rate=0.05,
-        vol=0.2,
-        time=1.0
+    price = black_scholes.call_price(
+        s=-100,  # 無効な負の値
+        k=100,
+        r=0.05,
+        sigma=0.2,
+        t=1.0
     )
-except qf.InvalidInputError as e:
+except ValueError as e:
     print(f"入力エラー: {e}")
-except qf.QuantForgeError as e:
+except RuntimeError as e:
     print(f"計算エラー: {e}")
 ```
 

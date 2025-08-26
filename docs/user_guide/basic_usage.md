@@ -5,35 +5,31 @@ QuantForgeの基本的な関数とBlack-Scholesモデルを使ったオプショ
 ## インポート
 
 ```python
-# モジュールベースAPI（推奨）
 from quantforge.models import black_scholes
-
-# または標準インポート
-import quantforge as qf
 ```
 
 ## Black-Scholesモデル
 
-### モジュールベースAPI（推奨）
+### 基本的な価格計算
 
 ```python
 from quantforge.models import black_scholes
 
 # コールオプション価格
 call_price = black_scholes.call_price(
-    spot=100.0,    # 現在価格
-    strike=110.0,  # 権利行使価格
-    time=1.0,      # 満期までの時間（年）
-    rate=0.05,     # 無リスク金利（年率）
-    sigma=0.2      # ボラティリティ（年率）
+    s=100.0,      # 現在価格
+    k=110.0,      # 権利行使価格
+    t=1.0,        # 満期までの時間（年）
+    r=0.05,       # 無リスク金利（年率）
+    sigma=0.2     # ボラティリティ（年率）
 )
 
 # プットオプション価格
 put_price = black_scholes.put_price(
-    spot=100.0,
-    strike=110.0,
-    time=1.0,
-    rate=0.05,
+    s=100.0,
+    k=110.0,
+    t=1.0,
+    r=0.05,
     sigma=0.2
 )
 
@@ -50,17 +46,17 @@ print(f"Put-Call Parity Check: {abs(parity - theoretical) < 1e-10}")
 
 ## グリークス計算
 
-### モジュールベースAPI（推奨）
+### 全グリークスの一括計算
 
 ```python
 from quantforge.models import black_scholes
 
 # 全グリークスを一括計算（効率的）
 greeks = black_scholes.greeks(
-    spot=100.0,
-    strike=100.0,
-    time=1.0,
-    rate=0.05,
+    s=100.0,
+    k=100.0,
+    t=1.0,
+    r=0.05,
     sigma=0.2,
     is_call=True
 )
@@ -88,17 +84,17 @@ spots = np.array([95, 100, 105, 110])
 # バッチ計算（高速）
 call_prices = black_scholes.call_price_batch(
     spots=spots,
-    strike=100.0,
-    time=1.0,
-    rate=0.05,
+    k=100.0,
+    t=1.0,
+    r=0.05,
     sigma=0.2
 )
 
 put_prices = black_scholes.put_price_batch(
     spots=spots,
-    strike=100.0,
-    time=1.0,
-    rate=0.05,
+    k=100.0,
+    t=1.0,
+    r=0.05,
     sigma=0.2
 )
 
@@ -111,12 +107,12 @@ for i, (spot, call, put) in enumerate(zip(spots, call_prices, put_prices)):
 ```python
 # 異なる満期のオプション
 times = [0.25, 0.5, 1.0, 2.0]
-for t in times:
+for time_val in times:
     price = black_scholes.call_price(
-        spot=100.0,
-        strike=100.0,
-        time=t,
-        rate=0.05,
+        s=100.0,
+        k=100.0,
+        t=time_val,
+        r=0.05,
         sigma=0.2
     )
     print(f"Maturity {t} years: ${price:.2f}")
@@ -133,17 +129,17 @@ from quantforge.models import black_scholes
 market_price = 10.45
 iv = black_scholes.implied_volatility(
     price=market_price,
-    spot=100.0,
-    strike=100.0,
-    time=1.0,
-    rate=0.05,
+    s=100.0,
+    k=100.0,
+    t=1.0,
+    r=0.05,
     is_call=True
 )
 
 print(f"Implied Volatility: {iv:.1%}")
 
 # 精度の検証
-calculated_price = black_scholes.call_price(100, 100, 1.0, 0.05, iv)
+calculated_price = black_scholes.call_price(s=100, k=100, t=1.0, r=0.05, sigma=iv)
 print(f"Price Check: Market={market_price:.2f}, Calculated={calculated_price:.2f}")
 ```
 
@@ -160,14 +156,14 @@ sigma_true = 0.2
 
 # 各ストライクの理論価格を計算
 market_prices = []
-for k in strikes:
-    price = black_scholes.call_price(spot, k, 1.0, 0.05, sigma_true)
+for strike in strikes:
+    price = black_scholes.call_price(s=spot, k=strike, t=1.0, r=0.05, sigma=sigma_true)
     market_prices.append(price)
 
 # IVを逆算
-for k, price in zip(strikes, market_prices):
+for strike, price in zip(strikes, market_prices):
     iv = black_scholes.implied_volatility(
-        price, spot, k, 1.0, 0.05, is_call=True
+        price=price, s=spot, k=strike, t=1.0, r=0.05, is_call=True
     )
     print(f"Strike {k}: IV={iv:.1%}")
 ```
@@ -187,7 +183,7 @@ rate = 0.05
 sigma = 0.25
 
 # オプションのデルタ計算
-greeks = black_scholes.greeks(spot, strike, time, rate, sigma, is_call=True)
+greeks = black_scholes.greeks(s=spot, k=strike, t=time, r=rate, sigma=sigma, is_call=True)
 delta = greeks.delta
 
 # デルタヘッジに必要な株式数
@@ -215,8 +211,8 @@ total_vega = 0
 
 for pos in positions:
     greeks = black_scholes.greeks(
-        pos["spot"], pos["strike"], pos["time"], 
-        0.05, 0.2, pos["is_call"]
+        s=pos["spot"], k=pos["strike"], t=pos["time"], 
+        r=0.05, sigma=0.2, is_call=pos["is_call"]
     )
     total_delta += pos["contracts"] * greeks.delta * 100
     total_gamma += pos["contracts"] * greeks.gamma * 100
@@ -240,7 +236,7 @@ n = 1_000_000
 spots = np.random.uniform(90, 110, n)
 
 start = time.perf_counter()
-prices = black_scholes.call_price_batch(spots, 100, 1.0, 0.05, 0.2)
+prices = black_scholes.call_price_batch(spots=spots, k=100, t=1.0, r=0.05, sigma=0.2)
 elapsed = (time.perf_counter() - start) * 1000
 
 print(f"Processed {n:,} options in {elapsed:.1f}ms")

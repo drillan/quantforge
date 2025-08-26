@@ -37,30 +37,32 @@ $$G_T = \left(\prod_{i=1}^{n} S_{t_i}\right)^{1/n}$$
 算術平均の近似：
 
 ```python
-import quantforge as qf
+# 将来実装予定のAPI
+# from quantforge.models import asian
 
 # 算術平均アジアンコール
-asian_call = qf.asian_arithmetic_call(
-    spot=100,
-    strike=100,
-    rate=0.05,
-    vol=0.2,
-    time=1.0,
-    n_fixings=252  # 日次観測
-)
+# asian_call = asian.arithmetic_call_price(
+#     spot=100,
+#     strike=100,
+#     time=1.0,
+#     rate=0.05,
+#     sigma=0.2,
+#     n_fixings=252  # 日次観測
+# )
 ```
 
 ### 幾何平均の解析解
 
 ```python
 # 幾何平均アジアンコール（正確な値）
-geometric_asian = qf.asian_geometric_call(
-    spot=100,
-    strike=100,
-    rate=0.05,
-    vol=0.2,
-    time=1.0
-)
+# 将来実装予定
+# geometric_asian = asian.geometric_call_price(
+#     spot=100,
+#     strike=100,
+#     time=1.0,
+#     rate=0.05,
+#     sigma=0.2
+# )
 ```
 
 ## 部分観測アジアン
@@ -68,20 +70,22 @@ geometric_asian = qf.asian_geometric_call(
 既に一部の価格が観測されている場合：
 
 ```python
-# 既観測価格を考慮
+# 既観測価格を考慮（将来実装予定）
+import numpy as np
 observed_prices = [98, 102, 101, 99, 103]
 remaining_time = 0.5
 
-adjusted_asian = qf.asian_call_partial(
-    spot=103,
-    strike=100,
-    rate=0.05,
-    vol=0.2,
-    remaining_time=remaining_time,
-    observed_average=np.mean(observed_prices),
-    n_observed=len(observed_prices),
-    n_total=252
-)
+# 将来実装予定
+# adjusted_asian = asian.call_partial(
+#     spot=103,
+#     strike=100,
+#     remaining_time=remaining_time,
+#     rate=0.05,
+#     sigma=0.2,
+#     observed_average=np.mean(observed_prices),
+#     n_observed=len(observed_prices),
+#     n_total=252
+# )
 ```
 
 ## 特徴

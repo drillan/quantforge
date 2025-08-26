@@ -2,6 +2,11 @@
 
 環境とワークロードに応じた詳細なチューニングガイドです。
 
+```{warning}
+このページで説明されている高度なパフォーマンスチューニング機能（戦略選択、CPU固有最適化、NUMA設定など）は将来実装予定です。
+現在は、QuantForgeが内部で自動的に最適化を行います。
+```
+
 ## 環境別チューニング
 
 ### Linux
@@ -71,41 +76,58 @@ qf.set_efficiency_cores(False)  # 高性能コアのみ使用
 ### リアルタイム処理
 
 ```python
-# 低レイテンシ設定
-qf.config.set({
-    "strategy": "low_latency",
-    "batch_size": 100,
-    "prefetch": True,
-    "warm_cache": True
-})
+# 低レイテンシ設定（将来実装予定）
+# config APIは将来実装予定
+# qf.config.set({
+#     "strategy": "low_latency",
+#     "batch_size": 100,
+#     "prefetch": True,
+#     "warm_cache": True
+# })
 
-# ウォームアップ
+# ウォームアップ（現在の使用方法）
+import numpy as np
+from quantforge.models import black_scholes
 dummy_data = np.random.uniform(90, 110, 1000)
-_ = qf.calculate(dummy_data, 100, 0.05, 0.2, 1.0)
+_ = black_scholes.call_price_batch(dummy_data, 100, 1.0, 0.05, 0.2)
 ```
 
 ### バッチ処理
 
 ```python
-# 高スループット設定
-qf.config.set({
-    "strategy": "high_throughput",
-    "batch_size": 100_000,
-    "parallel_threshold": 10_000,
-    "memory_pool": True
-})
+# 高スループット設定（将来実装予定）
+# config APIは将来実装予定
+# qf.config.set({
+#     "strategy": "high_throughput",
+#     "batch_size": 100_000,
+#     "parallel_threshold": 10_000,
+#     "memory_pool": True
+# })
+
+# 現在の大量バッチ処理
+from quantforge.models import black_scholes
+import numpy as np
+spots = np.random.uniform(90, 110, 100_000)
+prices = black_scholes.call_price_batch(spots, 100, 1.0, 0.05, 0.2)
 ```
 
 ### メモリ制限環境
 
 ```python
-# 省メモリ設定
-qf.config.set({
-    "strategy": "memory_efficient",
-    "inplace_operations": True,
-    "streaming_mode": True,
-    "max_memory_mb": 512
-})
+# 省メモリ設定（将来実装予定）
+# config APIは将来実装予定
+# qf.config.set({
+#     "strategy": "memory_efficient",
+#     "inplace_operations": True,
+#     "streaming_mode": True,
+#     "max_memory_mb": 512
+# })
+
+# 現在の省メモリ処理
+from quantforge.models import black_scholes
+# チャンク単位で処理
+for chunk in np.array_split(spots, 10):
+    prices = black_scholes.call_price_batch(chunk, 100, 1.0, 0.05, 0.2)
 ```
 
 ## バッチサイズ最適化
@@ -195,12 +217,14 @@ def numa_aware_processing(data):
 ```python
 # バッテリー動作時の設定
 def battery_optimized_config():
-    qf.config.set({
-        "power_mode": "efficiency",
-        "max_threads": 4,
-        "vector_width": 4,
-        "frequency_scaling": "auto"
-    })
+    # 将来実装予定の電力効率設定
+    # qf.config.set({
+    #     "power_mode": "efficiency",
+    #     "max_threads": 4,
+    #     "vector_width": 4,
+    #     "frequency_scaling": "auto"
+    # })
+    pass  # 現在は内部で自動最適化
 ```
 
 ### 温度管理

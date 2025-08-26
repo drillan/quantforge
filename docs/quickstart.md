@@ -24,11 +24,11 @@ from quantforge.models import black_scholes
 
 # Black-Scholesモデルでコールオプション価格を計算
 price = black_scholes.call_price(
-    spot=100.0,    # 現在価格
-    strike=110.0,  # 権利行使価格
-    time=1.0,      # 満期（年）
-    rate=0.05,     # 無リスク金利
-    sigma=0.2      # ボラティリティ
+    s=100.0,      # 現在価格
+    k=110.0,      # 権利行使価格
+    t=1.0,        # 満期（年）
+    r=0.05,       # 無リスク金利
+    sigma=0.2     # ボラティリティ
 )
 
 print(f"Call Option Price: ${price:.2f}")
@@ -39,10 +39,10 @@ print(f"Call Option Price: ${price:.2f}")
 ```python
 # グリークスを含む詳細な計算
 greeks = black_scholes.greeks(
-    spot=100.0,
-    strike=100.0,
-    time=1.0,
-    rate=0.05,
+    s=100.0,
+    k=100.0,
+    t=1.0,
+    r=0.05,
     sigma=0.2,
     is_call=True
 )
@@ -71,9 +71,9 @@ spots = np.random.uniform(90, 110, n)
 start = time.perf_counter()
 prices = black_scholes.call_price_batch(
     spots=spots,
-    strike=100.0,
-    time=1.0,
-    rate=0.05,
+    k=100.0,
+    t=1.0,
+    r=0.05,
     sigma=0.2
 )
 elapsed = (time.perf_counter() - start) * 1000
@@ -91,10 +91,10 @@ print(f"1オプションあたり: {elapsed/n*1000:.1f}ns")
 market_price = 10.45
 iv = black_scholes.implied_volatility(
     price=market_price,
-    spot=100.0,
-    strike=100.0,
-    time=1.0,
-    rate=0.05,
+    s=100.0,
+    k=100.0,
+    t=1.0,
+    r=0.05,
     is_call=True
 )
 print(f"Implied Volatility: {iv:.1%}")
@@ -115,7 +115,7 @@ positions = [
 total_delta = 0
 for pos in positions:
     greeks = black_scholes.greeks(
-        pos["spot"], pos["strike"], 1.0, 0.05, 0.2, is_call=True
+        s=pos["spot"], k=pos["strike"], t=1.0, r=0.05, sigma=0.2, is_call=True
     )
     total_delta += pos["contracts"] * greeks.delta * 100
 

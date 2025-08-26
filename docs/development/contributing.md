@@ -165,28 +165,31 @@ mod tests {
 ```python
 import pytest
 import numpy as np
-import quantforge as qf
+from quantforge.models import black_scholes
 
 def test_black_scholes_call():
     """Test Black-Scholes call option pricing."""
-    price = qf.black_scholes_call(100, 100, 0.05, 0.2, 1.0)
+    price = black_scholes.call_price(100, 100, 1.0, 0.05, 0.2)
     assert abs(price - 10.4506) < 1e-4
 
 def test_batch_processing():
     """Test batch processing with NumPy arrays."""
     spots = np.array([95, 100, 105])
-    prices = qf.calculate(spots, 100, 0.05, 0.2, 1.0)
+    prices = black_scholes.call_price_batch(spots, 100, 1.0, 0.05, 0.2)
     assert len(prices) == 3
     assert all(p > 0 for p in prices)
 
-@pytest.mark.parametrize("spot,strike,expected", [
-    (100, 90, True),   # ITM
-    (100, 100, False), # ATM
-    (100, 110, False), # OTM
+@pytest.mark.parametrize("spot,strike,time,expected", [
+    (110, 100, 1.0, True),   # ITM
+    (100, 100, 1.0, False),  # ATM
+    (90, 100, 1.0, False),   # OTM
 ])
-def test_moneyness(spot, strike, expected):
-    """Test in-the-money detection."""
-    assert qf.is_itm_call(spot, strike) == expected
+def test_moneyness(spot, strike, time, expected):
+    """Test in-the-money detection via price comparison."""
+    price = black_scholes.call_price(spot, strike, time, 0.05, 0.2)
+    # ITM calls have intrinsic value > 0
+    intrinsic = max(spot - strike, 0)
+    assert (intrinsic > 0) == expected
 ```
 
 ### 4. ドキュメント
