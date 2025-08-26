@@ -83,7 +83,9 @@ class TestGoldenMaster:
             expected = case["outputs"]["call_price"]
 
             try:
-                actual = calculate_call_price(s=inputs["s"], k=inputs["k"], t=inputs["t"], r=inputs["r"], sigma=inputs["v"])
+                actual = calculate_call_price(
+                    s=inputs["s"], k=inputs["k"], t=inputs["t"], r=inputs["r"], sigma=inputs["v"]
+                )
 
                 error = abs(actual - expected)
                 if error >= tolerance:
@@ -176,7 +178,9 @@ class TestGoldenMaster:
             moneyness_cat = case["metadata"]["moneyness_category"]
             if moneyness_cat in by_moneyness:
                 inputs = case["inputs"]
-                price = calculate_call_price(s=inputs["s"], k=inputs["k"], t=inputs["t"], r=inputs["r"], sigma=inputs["v"])
+                price = calculate_call_price(
+                    s=inputs["s"], k=inputs["k"], t=inputs["t"], r=inputs["r"], sigma=inputs["v"]
+                )
                 by_moneyness[moneyness_cat].append(
                     {"price": price, "moneyness": case["metadata"]["moneyness"], "id": case["id"]}
                 )

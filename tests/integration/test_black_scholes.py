@@ -27,7 +27,7 @@ class TestBlackScholesIntegration:
         ]
 
         for s, k, t, r, v, expected in test_cases:
-            price = calculate_call_price(s, k, t, r, sigma)
+            price = calculate_call_price(s, k, t, r, v)
             # norm_cdfの実装精度を考慮した検証
             assert abs(price - expected) < THEORETICAL_TOLERANCE, f"価格不一致: S={s}, K={k}, T={t}, r={r}, σ={v}"
 
@@ -264,7 +264,7 @@ class TestBlackScholesAccuracy:
         ]
 
         for s, k, t, r, v in test_cases:
-            price = calculate_call_price(s, k, t, r, sigma)
+            price = calculate_call_price(s, k, t, r, v)
             assert np.isfinite(price), f"無限大またはNaN: S={s}, K={k}, T={t}, r={r}, σ={v}"
             assert price >= 0, f"負の価格: S={s}, K={k}, T={t}, r={r}, σ={v}"
 
@@ -291,7 +291,7 @@ class TestBlackScholesAccuracy:
 
         # ベガ（∂C/∂σ）
         dv = 0.001
-        price_vol_up = calculate_call_price(s, k, t, r, v + dv)
+        price_vol_up = calculate_call_price(s, k, t, r, sigma + dv)
         vega = (price_vol_up - base_price) / dv
         assert vega > 0, f"ベガが負: {vega}"
 
@@ -304,7 +304,7 @@ class TestBlackScholesAccuracy:
 
         # ロー（∂C/∂r）
         dr = 0.001
-        price_rate_up = calculate_call_price(s, k, t, r + dr, v)
+        price_rate_up = calculate_call_price(s, k, t, r + dr, sigma)
         rho = (price_rate_up - base_price) / dr
         assert rho > 0, f"ローが負: {rho}"
 
@@ -344,7 +344,7 @@ class TestMarketScenarios:
         t = 90 / 365  # 3ヶ月満期
         r_domestic = 0.05  # USD金利
         r_foreign = -0.001  # JPY金利（負金利）
-        sigma = 0.10  # FXボラティリティ
+        v = 0.10  # FXボラティリティ
 
         # 調整後の金利（r - r_foreign）
         r_adjusted = r_domestic - r_foreign

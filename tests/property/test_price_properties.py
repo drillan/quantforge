@@ -45,7 +45,9 @@ class TestPriceProperties:
         sigma2=st.floats(min_value=0.05, max_value=0.5),
     )
     @settings(max_examples=300, deadline=None)
-    def test_volatility_monotonicity(self, s: float, k: float, t: float, r: float, sigma1: float, sigma2: float) -> None:
+    def test_volatility_monotonicity(
+        self, s: float, k: float, t: float, r: float, sigma1: float, sigma2: float
+    ) -> None:
         """ボラティリティに対する単調性: σ1 < σ2 => C(σ1) < C(σ2)."""
         assume(sigma1 != sigma2)
 
@@ -213,7 +215,7 @@ class TestBatchProperties:
         k: float,
         t: float,
         r: float,
-        v: float,
+        sigma: float,
     ) -> None:
         """バッチ処理での価格順序の保持."""
         assume(s_min < s_max)

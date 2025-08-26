@@ -264,7 +264,7 @@ class TestGoldenMaster:
             expected_prices.append(price)
 
         # バッチ計算
-        actual_prices = calculate_call_price_batch(spots, k, t, r, v)
+        actual_prices = calculate_call_price_batch(spots, k, t, r, sigma)
 
         # 比較
         np.testing.assert_allclose(

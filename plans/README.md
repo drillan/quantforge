@@ -4,10 +4,12 @@
 
 ## 📋 アクティブな計画
 
-### API改善計画
-- [2025-08-26 Python API引数名標準化](./2025-08-26-python-api-standardization.md) - **DRAFT** - Black-Scholesモデルの業界標準表記への統一
+*現在アクティブな計画はありません*
 
 ## 📦 完了した計画
+
+### API改善計画
+- [2025-08-26 Python API引数名標準化](./archive/2025-08-26-python-api-standardization.md) - **COMPLETED** - Black-Scholesモデルの業界標準表記への統一（v → sigma）
 
 ### 実装計画
 - [2025-01-24 実装計画](./archive/2025-01-24-implementation-plan.md) - **COMPLETED** - 14週間の包括的実装計画（基本設計完了）
