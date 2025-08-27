@@ -1,5 +1,7 @@
 use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion};
+use quantforge::broadcast::ArrayLike;
 use quantforge::models::black76::{Black76, Black76Params};
+use quantforge::models::black_scholes_batch;
 use quantforge::models::black_scholes_model::{BlackScholes, BlackScholesParams};
 use quantforge::models::merton::{MertonModel, MertonParams};
 use quantforge::models::PricingModel;
@@ -26,26 +28,28 @@ fn bench_black_scholes_batch(c: &mut Criterion) {
 
         group.bench_with_input(BenchmarkId::new("call_price", size), &spots, |b, spots| {
             b.iter(|| {
-                let results = BlackScholes::call_price_batch(
-                    black_box(spots),
-                    black_box(K),
-                    black_box(T),
-                    black_box(R),
-                    black_box(SIGMA),
-                );
+                let results = black_scholes_batch::call_price_batch(
+                    ArrayLike::Array(spots),
+                    ArrayLike::Scalar(K),
+                    ArrayLike::Scalar(T),
+                    ArrayLike::Scalar(R),
+                    ArrayLike::Scalar(SIGMA),
+                )
+                .unwrap();
                 black_box(results)
             })
         });
 
         group.bench_with_input(BenchmarkId::new("put_price", size), &spots, |b, spots| {
             b.iter(|| {
-                let results = BlackScholes::put_price_batch(
-                    black_box(spots),
-                    black_box(K),
-                    black_box(T),
-                    black_box(R),
-                    black_box(SIGMA),
-                );
+                let results = black_scholes_batch::put_price_batch(
+                    ArrayLike::Array(spots),
+                    ArrayLike::Scalar(K),
+                    ArrayLike::Scalar(T),
+                    ArrayLike::Scalar(R),
+                    ArrayLike::Scalar(SIGMA),
+                )
+                .unwrap();
                 black_box(results)
             })
         });
@@ -122,13 +126,14 @@ fn bench_single_vs_batch(c: &mut Criterion) {
     // Benchmark batch processing
     group.bench_function("batch_processing", |b| {
         b.iter(|| {
-            let results = BlackScholes::call_price_batch(
-                black_box(&spots),
-                black_box(K),
-                black_box(T),
-                black_box(R),
-                black_box(SIGMA),
-            );
+            let results = black_scholes_batch::call_price_batch(
+                ArrayLike::Array(&spots),
+                ArrayLike::Scalar(K),
+                ArrayLike::Scalar(T),
+                ArrayLike::Scalar(R),
+                ArrayLike::Scalar(SIGMA),
+            )
+            .unwrap();
             black_box(results)
         })
     });

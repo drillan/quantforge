@@ -1,19 +1,20 @@
 """ベンチマーク実装の正確性テスト."""
 
-import pytest
-import numpy as np
-import sys
 import os
+import sys
+
+import numpy as np
 
 # Add benchmarks directory to Python path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
-from benchmarks.python_baseline import black_scholes_pure_python, black_scholes_scipy_single, black_scholes_numpy_batch
-from quantforge.models import black_scholes
 from conftest import PRACTICAL_TOLERANCE
+from quantforge.models import black_scholes
+
+from benchmarks.python_baseline import black_scholes_numpy_batch, black_scholes_pure_python, black_scholes_scipy_single
 
 
-def test_implementations_consistency():
+def test_implementations_consistency() -> None:
     """各実装の結果が一致することを確認."""
     s, k, t, r, sigma = 100.0, 100.0, 1.0, 0.05, 0.2
 
@@ -27,7 +28,7 @@ def test_implementations_consistency():
     assert abs(pure_result - scipy_result) / scipy_result < PRACTICAL_TOLERANCE
 
 
-def test_batch_consistency():
+def test_batch_consistency() -> None:
     """バッチ処理の一致確認."""
     spots = np.array([90.0, 100.0, 110.0], dtype=np.float64)
     k, t, r, sigma = 100.0, 1.0, 0.05, 0.2
@@ -40,7 +41,7 @@ def test_batch_consistency():
     np.testing.assert_allclose(qf_batch, np_batch, rtol=PRACTICAL_TOLERANCE)
 
 
-def test_pure_python_accuracy():
+def test_pure_python_accuracy() -> None:
     """Pure Python実装の精度確認."""
     # 既知の正確な値（外部計算機で検証済み）
     s, k, t, r, sigma = 100.0, 100.0, 0.5, 0.05, 0.25
@@ -52,7 +53,7 @@ def test_pure_python_accuracy():
     assert abs(pure_result - scipy_result) / scipy_result < 0.01  # 1%以内
 
 
-def test_edge_cases():
+def test_edge_cases() -> None:
     """エッジケースの処理."""
     # ディープ・イン・ザ・マネー
     s, k, t, r, sigma = 200.0, 100.0, 1.0, 0.05, 0.2

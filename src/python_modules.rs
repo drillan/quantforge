@@ -855,6 +855,7 @@ fn merton_implied_volatility(
 #[pyfunction]
 #[pyo3(name = "implied_volatility_batch")]
 #[pyo3(signature = (prices, spots, strikes, times, rates, qs, is_calls))]
+#[allow(clippy::too_many_arguments)]
 fn merton_implied_volatility_batch<'py>(
     py: Python<'py>,
     prices: FlexibleArray<'py>,
@@ -906,6 +907,7 @@ fn merton_implied_volatility_batch<'py>(
 #[pyfunction]
 #[pyo3(name = "greeks_batch")]
 #[pyo3(signature = (spots, strikes, times, rates, qs, sigmas, is_calls))]
+#[allow(clippy::too_many_arguments)]
 fn merton_greeks_batch<'py>(
     py: Python<'py>,
     spots: FlexibleArray<'py>,
@@ -1200,6 +1202,7 @@ fn american_implied_volatility(
 #[pyfunction]
 #[pyo3(name = "implied_volatility_batch")]
 #[pyo3(signature = (prices, spots, strikes, times, rates, qs, is_calls))]
+#[allow(clippy::too_many_arguments)]
 fn american_implied_volatility_batch<'py>(
     py: Python<'py>,
     prices: FlexibleArray<'py>,
@@ -1250,6 +1253,7 @@ fn american_implied_volatility_batch<'py>(
 #[pyfunction]
 #[pyo3(name = "greeks_batch")]
 #[pyo3(signature = (spots, strikes, times, rates, qs, sigmas, is_calls))]
+#[allow(clippy::too_many_arguments)]
 fn american_greeks_batch<'py>(
     py: Python<'py>,
     spots: FlexibleArray<'py>,
@@ -1332,6 +1336,7 @@ fn american_exercise_boundary(
 #[pyfunction]
 #[pyo3(name = "exercise_boundary_batch")]
 #[pyo3(signature = (spots, strikes, times, rates, qs, sigmas, is_calls))]
+#[allow(clippy::too_many_arguments)]
 fn american_exercise_boundary_batch<'py>(
     py: Python<'py>,
     spots: FlexibleArray<'py>,

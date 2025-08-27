@@ -9,9 +9,10 @@ class BlackScholesModule:
     """Black-Scholes option pricing model."""
 
     def __init__(self) -> None:
-        # Bind functions from the Rust module
+        # Bind functions directly from the Rust module
         self.call_price = _rust_models.call_price
         self.put_price = _rust_models.put_price
+        # Batch functions with FlexibleArray support
         self.call_price_batch = _rust_models.call_price_batch
         self.put_price_batch = _rust_models.put_price_batch
         self.greeks = _rust_models.greeks
@@ -25,9 +26,10 @@ class Black76Module:
     """Black76 option pricing model for commodity and futures options."""
 
     def __init__(self) -> None:
-        # Bind functions from the Rust module
+        # Bind functions directly from the Rust module
         self.call_price = _rust_models.black76.call_price
         self.put_price = _rust_models.black76.put_price
+        # Batch functions with FlexibleArray support
         self.call_price_batch = _rust_models.black76.call_price_batch
         self.put_price_batch = _rust_models.black76.put_price_batch
         self.greeks = _rust_models.black76.greeks
@@ -41,13 +43,15 @@ class MertonModule:
     """Merton model for options on dividend-paying assets."""
 
     def __init__(self) -> None:
-        # Bind functions from the Rust module
+        # Bind functions directly from the Rust module
         self.call_price = _rust_models.merton.call_price
         self.put_price = _rust_models.merton.put_price
+        # Batch functions with FlexibleArray support
         self.call_price_batch = _rust_models.merton.call_price_batch
         self.put_price_batch = _rust_models.merton.put_price_batch
-        self.call_price_batch_q = _rust_models.merton.call_price_batch_q
-        self.put_price_batch_q = _rust_models.merton.put_price_batch_q
+        # Batch_q functions removed - use full broadcasting instead
+        self.call_price_batch_q = None  # Removed - use call_price_batch with broadcasting
+        self.put_price_batch_q = None  # Removed - use put_price_batch with broadcasting
         self.greeks = _rust_models.merton.greeks
         self.greeks_batch = _rust_models.merton.greeks_batch
         self.implied_volatility = _rust_models.merton.implied_volatility
@@ -62,6 +66,7 @@ class AmericanModule:
         # Bind functions from the Rust module
         self.call_price = _rust_models.american.call_price
         self.put_price = _rust_models.american.put_price
+        # Batch functions with FlexibleArray support
         self.call_price_batch = _rust_models.american.call_price_batch
         self.put_price_batch = _rust_models.american.put_price_batch
         self.greeks = _rust_models.american.greeks

@@ -3,10 +3,22 @@
 This module provides fully typed interfaces to the Rust-based option pricing models.
 """
 
+from dataclasses import dataclass
 from typing import Protocol, overload
 
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
+
+
+@dataclass
+class GreeksImpl:
+    """Concrete implementation of Greeks."""
+
+    delta: float
+    gamma: float
+    vega: float
+    theta: float
+    rho: float
 
 
 class Greeks(Protocol):
@@ -424,20 +436,24 @@ try:
             self._impl = _rust_models
 
         def call_price(self, spot: float, strike: float, time: float, rate: float, sigma: float) -> float:
-            return self._impl.call_price(spot, strike, time, rate, sigma)
+            return float(self._impl.call_price(spot, strike, time, rate, sigma))
 
         def put_price(self, spot: float, strike: float, time: float, rate: float, sigma: float) -> float:
-            return self._impl.put_price(spot, strike, time, rate, sigma)
+            return float(self._impl.put_price(spot, strike, time, rate, sigma))
 
         def call_price_batch(
             self, spots: ArrayLike, strike: float, time: float, rate: float, sigma: float
         ) -> NDArray[np.float64]:
-            return self._impl.call_price_batch(spots, strike, time, rate, sigma)
+            return np.array(
+                self._impl.call_price_batch(spots, strike, time, rate, sigma) if self._impl.call_price_batch else []
+            )
 
         def put_price_batch(
             self, spots: ArrayLike, strike: float, time: float, rate: float, sigma: float
         ) -> NDArray[np.float64]:
-            return self._impl.put_price_batch(spots, strike, time, rate, sigma)
+            return np.array(
+                self._impl.put_price_batch(spots, strike, time, rate, sigma) if self._impl.put_price_batch else []
+            )
 
         def greeks(
             self,
@@ -448,7 +464,14 @@ try:
             sigma: float,
             is_call: bool = True,
         ) -> Greeks:
-            return self._impl.greeks(spot, strike, time, rate, sigma, is_call)
+            result = self._impl.greeks(spot, strike, time, rate, sigma, is_call)
+            return GreeksImpl(
+                delta=result.delta,
+                gamma=result.gamma,
+                vega=result.vega,
+                theta=result.theta,
+                rho=result.rho,
+            )
 
         def implied_volatility(
             self,
@@ -460,7 +483,7 @@ try:
             is_call: bool = True,
             initial_guess: float | None = None,
         ) -> float:
-            return self._impl.implied_volatility(price, spot, strike, time, rate, is_call, initial_guess)
+            return float(self._impl.implied_volatility(price, spot, strike, time, rate, is_call, initial_guess))
 
     black_scholes: OptionPricingModel = BlackScholesTyped()
 

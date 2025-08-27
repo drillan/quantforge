@@ -22,7 +22,7 @@ put_price = american.put_price
 
 # Import reference implementation
 try:
-    from GBS_2025 import _american_option, _bjerksund_stensland_2002
+    from GBS_2025 import _american_option, _bjerksund_stensland_2002  # type: ignore[import-not-found]
 except ImportError:
     pytest.skip("GBS_2025.py not found in draft/", allow_module_level=True)
 
@@ -34,7 +34,7 @@ TOLERANCE = 1e-3
 class TestAgainstGBS2025:
     """Validate against GBS_2025.py reference implementation."""
 
-    def test_call_prices_no_dividend(self):
+    def test_call_prices_no_dividend(self) -> None:
         """Test call prices without dividends against GBS_2025."""
         test_cases = [
             # (s, k, t, r, q, sigma)
@@ -62,7 +62,7 @@ class TestAgainstGBS2025:
                 f"ours={our_price:.6f}, ref={ref_price:.6f}, rel_error={rel_error:.6f}"
             )
 
-    def test_call_prices_with_dividend(self):
+    def test_call_prices_with_dividend(self) -> None:
         """Test call prices with dividends against GBS_2025."""
         test_cases = [
             # (s, k, t, r, q, sigma)
@@ -89,7 +89,7 @@ class TestAgainstGBS2025:
                 f"ours={our_price:.6f}, ref={ref_price:.6f}, rel_error={rel_error:.6f}"
             )
 
-    def test_put_prices(self):
+    def test_put_prices(self) -> None:
         """Test put prices against GBS_2025."""
         test_cases = [
             # (s, k, t, r, q, sigma)
@@ -117,7 +117,7 @@ class TestAgainstGBS2025:
                 f"ours={our_price:.6f}, ref={ref_price:.6f}, rel_error={rel_error:.6f}"
             )
 
-    def test_bs2002_core_function(self):
+    def test_bs2002_core_function(self) -> None:
         """Test the core Bjerksund-Stensland 2002 function directly."""
         test_cases = [
             # Test cases from GBS_2025.py lines 1705-1707
@@ -149,7 +149,7 @@ class TestAgainstGBS2025:
             rel_error_put = abs(our_put - ref_put) / max(ref_put, 1e-10)
             assert rel_error_put < TOLERANCE, f"BS2002 put mismatch: ours={our_put:.6f}, ref={ref_put:.6f}"
 
-    def test_extreme_values(self):
+    def test_extreme_values(self) -> None:
         """Test extreme parameter values."""
         # Very short time to maturity
         s, k, t, r, q, sigma = 100.0, 100.0, 0.001, 0.05, 0.02, 0.25
@@ -175,7 +175,7 @@ class TestAgainstGBS2025:
         ref_put = ref_result[0]
         assert abs(our_put - ref_put) / max(ref_put, 1e-10) < TOLERANCE
 
-    def test_put_call_transformation_property(self):
+    def test_put_call_transformation_property(self) -> None:
         """Test the put-call transformation: P(S,K,T,r,q,σ) = C(K,S,T,q,r,σ)."""
         test_cases = [
             (100.0, 110.0, 0.5, 0.05, 0.02, 0.25),
@@ -199,7 +199,7 @@ class TestAgainstGBS2025:
 class TestGoldenMasterValues:
     """Test against specific golden master values from GBS_2025.py."""
 
-    def test_golden_values_from_gbs(self):
+    def test_golden_values_from_gbs(self) -> None:
         """Test specific values from GBS_2025.py test suite (lines 1705-1757)."""
         # These are the exact test cases from the reference implementation
         golden_tests = [
@@ -227,7 +227,7 @@ class TestGoldenMasterValues:
                     f"Golden put test failed: expected={exp_put:.4f}, got={our_put:.4f}"
                 )
 
-    def test_edge_case_golden_values(self):
+    def test_edge_case_golden_values(self) -> None:
         """Test edge cases from GBS_2025.py (lines 1734-1757)."""
         # At-the-money, very short maturity
         s, k, t, r, q, sigma = 100.0, 100.0, 0.001, 0.05, 0.0, 0.25

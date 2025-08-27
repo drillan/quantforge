@@ -2,9 +2,8 @@
 
 use crate::broadcast::{ArrayLike, BroadcastIterator};
 use crate::error::QuantForgeError;
-use crate::math::distributions::norm_cdf;
-use crate::models::{Greeks, PricingModel};
 use crate::models::black_scholes_model::{BlackScholes, BlackScholesParams};
+use crate::models::PricingModel;
 use rayon::prelude::*;
 
 /// Calculate call prices with full array support and broadcasting
@@ -16,9 +15,9 @@ pub fn call_price_batch(
     sigmas: ArrayLike,
 ) -> Result<Vec<f64>, QuantForgeError> {
     let inputs = vec![spots, strikes, times, rates, sigmas];
-    let mut iter = BroadcastIterator::new(inputs)?;
+    let iter = BroadcastIterator::new(inputs)?;
     let size = iter.size_hint().0;
-    
+
     // Use parallel processing for large arrays
     if size > 10000 {
         let values: Vec<_> = iter.collect();
@@ -32,9 +31,13 @@ pub fn call_price_batch(
                     rate: vals[3],
                     sigma: vals[4],
                 };
-                
+
                 // Validate inputs
-                if params.spot <= 0.0 || params.strike <= 0.0 || params.time <= 0.0 || params.sigma <= 0.0 {
+                if params.spot <= 0.0
+                    || params.strike <= 0.0
+                    || params.time <= 0.0
+                    || params.sigma <= 0.0
+                {
                     f64::NAN
                 } else {
                     BlackScholes::call_price(&params)
@@ -53,9 +56,13 @@ pub fn call_price_batch(
                 rate: vals[3],
                 sigma: vals[4],
             };
-            
+
             // Validate inputs
-            if params.spot <= 0.0 || params.strike <= 0.0 || params.time <= 0.0 || params.sigma <= 0.0 {
+            if params.spot <= 0.0
+                || params.strike <= 0.0
+                || params.time <= 0.0
+                || params.sigma <= 0.0
+            {
                 results.push(f64::NAN);
             } else {
                 results.push(BlackScholes::call_price(&params));
@@ -74,9 +81,9 @@ pub fn put_price_batch(
     sigmas: ArrayLike,
 ) -> Result<Vec<f64>, QuantForgeError> {
     let inputs = vec![spots, strikes, times, rates, sigmas];
-    let mut iter = BroadcastIterator::new(inputs)?;
+    let iter = BroadcastIterator::new(inputs)?;
     let size = iter.size_hint().0;
-    
+
     // Use parallel processing for large arrays
     if size > 10000 {
         let values: Vec<_> = iter.collect();
@@ -90,9 +97,13 @@ pub fn put_price_batch(
                     rate: vals[3],
                     sigma: vals[4],
                 };
-                
+
                 // Validate inputs
-                if params.spot <= 0.0 || params.strike <= 0.0 || params.time <= 0.0 || params.sigma <= 0.0 {
+                if params.spot <= 0.0
+                    || params.strike <= 0.0
+                    || params.time <= 0.0
+                    || params.sigma <= 0.0
+                {
                     f64::NAN
                 } else {
                     BlackScholes::put_price(&params)
@@ -111,9 +122,13 @@ pub fn put_price_batch(
                 rate: vals[3],
                 sigma: vals[4],
             };
-            
+
             // Validate inputs
-            if params.spot <= 0.0 || params.strike <= 0.0 || params.time <= 0.0 || params.sigma <= 0.0 {
+            if params.spot <= 0.0
+                || params.strike <= 0.0
+                || params.time <= 0.0
+                || params.sigma <= 0.0
+            {
                 results.push(f64::NAN);
             } else {
                 results.push(BlackScholes::put_price(&params));
@@ -133,9 +148,9 @@ pub fn implied_volatility_batch(
     is_calls: ArrayLike,
 ) -> Result<Vec<f64>, QuantForgeError> {
     let inputs = vec![prices, spots, strikes, times, rates, is_calls];
-    let mut iter = BroadcastIterator::new(inputs)?;
+    let iter = BroadcastIterator::new(inputs)?;
     let size = iter.size_hint().0;
-    
+
     // Use parallel processing for large arrays
     if size > 10000 {
         let values: Vec<_> = iter.collect();
@@ -151,9 +166,10 @@ pub fn implied_volatility_batch(
                     sigma: 0.2, // Initial guess
                 };
                 let is_call = vals[5] != 0.0; // Convert to bool
-                
+
                 // Validate inputs
-                if price <= 0.0 || params.spot <= 0.0 || params.strike <= 0.0 || params.time <= 0.0 {
+                if price <= 0.0 || params.spot <= 0.0 || params.strike <= 0.0 || params.time <= 0.0
+                {
                     f64::NAN
                 } else {
                     BlackScholes::implied_volatility(price, &params, is_call, None)
@@ -175,14 +191,14 @@ pub fn implied_volatility_batch(
                 sigma: 0.2, // Initial guess
             };
             let is_call = vals[5] != 0.0; // Convert to bool
-            
+
             // Validate inputs
             if price <= 0.0 || params.spot <= 0.0 || params.strike <= 0.0 || params.time <= 0.0 {
                 results.push(f64::NAN);
             } else {
                 results.push(
                     BlackScholes::implied_volatility(price, &params, is_call, None)
-                        .unwrap_or(f64::NAN)
+                        .unwrap_or(f64::NAN),
                 );
             }
         }
@@ -201,15 +217,15 @@ pub fn greeks_batch(
     is_calls: ArrayLike,
 ) -> Result<GreeksBatch, QuantForgeError> {
     let inputs = vec![spots, strikes, times, rates, sigmas, is_calls];
-    let mut iter = BroadcastIterator::new(inputs)?;
+    let iter = BroadcastIterator::new(inputs)?;
     let size = iter.size_hint().0;
-    
+
     let mut delta = Vec::with_capacity(size);
     let mut gamma = Vec::with_capacity(size);
     let mut vega = Vec::with_capacity(size);
     let mut theta = Vec::with_capacity(size);
     let mut rho = Vec::with_capacity(size);
-    
+
     for vals in iter {
         let params = BlackScholesParams {
             spot: vals[0],
@@ -219,7 +235,7 @@ pub fn greeks_batch(
             sigma: vals[4],
         };
         let is_call = vals[5] != 0.0; // Convert to bool
-        
+
         // Validate inputs
         if params.spot <= 0.0 || params.strike <= 0.0 || params.time <= 0.0 || params.sigma <= 0.0 {
             delta.push(f64::NAN);
@@ -236,7 +252,7 @@ pub fn greeks_batch(
             rho.push(greeks.rho);
         }
     }
-    
+
     Ok(GreeksBatch {
         delta,
         gamma,
@@ -271,7 +287,7 @@ mod tests {
 
         let results = call_price_batch(spots, strikes, times, rates, sigmas).unwrap();
         assert_eq!(results.len(), 3);
-        
+
         // Verify all results are valid prices
         for price in &results {
             assert!(price.is_finite() && *price >= 0.0);
@@ -294,7 +310,7 @@ mod tests {
         assert_eq!(greeks.vega.len(), 3);
         assert_eq!(greeks.theta.len(), 3);
         assert_eq!(greeks.rho.len(), 3);
-        
+
         // Verify all Greeks are valid
         for i in 0..3 {
             assert!(greeks.delta[i].is_finite());

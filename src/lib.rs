@@ -5,6 +5,7 @@ use pyo3::prelude::*;
 pub mod broadcast;
 pub mod constants;
 pub mod error;
+pub mod flexible_array;
 pub mod math;
 pub mod models;
 pub mod python_modules;

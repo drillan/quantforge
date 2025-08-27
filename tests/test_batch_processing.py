@@ -153,7 +153,7 @@ class TestBlack76Batch:
         # Verify put-call parity
         call_prices = black76.call_price_batch(forwards, strikes, times, rates, sigmas)
         discount = np.exp(-rates[0] * times[0])
-        for i, (c, p, f) in enumerate(zip(call_prices, prices, forwards, strict=False)):
+        for _i, (c, p, f) in enumerate(zip(call_prices, prices, forwards, strict=False)):
             parity_lhs = c - p
             parity_rhs = discount * (f - 100.0)
             assert abs(parity_lhs - parity_rhs) < 1e-10
@@ -256,7 +256,7 @@ class TestMertonBatch:
 
         # Verify put-call parity with dividends
         call_prices = merton.call_price_batch(spots, strikes, times, rates, qs, sigmas)
-        for i, (c, p, s) in enumerate(zip(call_prices, prices, spots, strict=False)):
+        for _i, (c, p, s) in enumerate(zip(call_prices, prices, spots, strict=False)):
             parity_lhs = c - p
             parity_rhs = s * np.exp(-qs[0] * times[0]) - strikes[0] * np.exp(-rates[0] * times[0])
             assert abs(parity_lhs - parity_rhs) < 1e-10

@@ -7,6 +7,24 @@
   - TestPyPI配布成功（v0.0.1, v0.0.2）
   - Single Source of Truth（Cargo.toml）によるバージョン管理
   - manylinux2014互換、wheelサイズ < 300KB達成
+- `2025-01-27-python-batch-api-implementation.md` → archive/ ✅
+  - バッチ処理API拡充（IV・Greeks・境界値）
+  - 全モデル（Black-Scholes, Black76, Merton, American）に実装
+  - PyO3によるゼロコピー転送実現
+  - 10,000要素バッチ処理でGreeks < 5ms, 境界値 < 10ms達成
+  - エラー時のNaN返却による安定動作
+- `2025-01-27-both-batch-api-complete-redesign.md` → archive/ ✅
+  - バッチAPI完全再設計（技術的負債ゼロ実装）
+  - ArrayLike enum + FlexibleArray + Broadcasting機能実装
+  - 全モデル（Black-Scholes, Black76, Merton, American）に適用
+  - 10,000要素を20ms以内で処理（ループ版の20倍高速）
+  - NumPy配列・スカラー・リストを透過的に処理
+- `2025-01-27-rust-american-greeks-unification.md` → archive/ ✅
+  - American modelのgreeks_batch戻り値形式統一
+  - Dict[str, np.ndarray]形式への完全移行（List[PyGreeks]を廃止）
+  - 他モデル（Black-Scholes, Black76, Merton）との完全一貫性達成
+  - SoA（Structure of Arrays）によるメモリ効率改善
+  - NumPyエコシステムとの完全統合
 
 ## 2025-08-27（American Option）
 - `2025-01-27-rust-american-option-implementation.md` → archive/ ✅

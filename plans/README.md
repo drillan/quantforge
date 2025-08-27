@@ -19,6 +19,13 @@
 - **完了した計画**: `ls plans/archive/` でアーカイブ済みの計画を確認  
 - **変更履歴**: [CHANGELOG.md](./CHANGELOG.md) で詳細な変更履歴を参照
 
+### 最近完了した計画
+| 計画名 | 完了日 | 成果 |
+|--------|--------|------|
+| [Python バッチ処理API拡充](archive/2025-01-27-python-batch-api-implementation.md) | 2025-01-27 | IV・Greeks・境界値のバッチ処理実装 |
+| [バッチAPI完全再設計](archive/2025-01-27-both-batch-api-complete-redesign.md) | 2025-01-27 | ArrayLike + Broadcasting実装 |
+| [American Greeks戻り値形式統一](archive/2025-01-27-rust-american-greeks-unification.md) | 2025-01-27 | Dict[str, np.ndarray]形式に統一 |
+
 ## 📁 ディレクトリ構造
 
 ```

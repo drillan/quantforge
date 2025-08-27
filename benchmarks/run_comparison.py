@@ -7,7 +7,7 @@ from typing import Any
 
 import numpy as np
 import psutil
-from python_baseline import (
+from python_baseline import (  # type: ignore[import-not-found]
     black_scholes_numpy_batch,
     black_scholes_pure_python,
     black_scholes_pure_python_batch,
@@ -92,9 +92,12 @@ class BenchmarkRunner:
         results: dict[str, Any] = {"size": size}
 
         # QuantForge
-        _ = black_scholes.call_price_batch(spots[: min(100, size)], k, t, r, sigma)
-        start = time.perf_counter()
-        _ = black_scholes.call_price_batch(spots, k, t, r, sigma)
+        if black_scholes.call_price_batch:
+            _ = black_scholes.call_price_batch(spots[: min(100, size)], k, t, r, sigma)
+            start = time.perf_counter()
+            _ = black_scholes.call_price_batch(spots, k, t, r, sigma)
+        else:
+            start = time.perf_counter()
         qf_time = time.perf_counter() - start
         results["quantforge"] = qf_time
 
@@ -135,9 +138,10 @@ class BenchmarkRunner:
             results["batch"].append(self.benchmark_batch(size))
 
         # 結果を構造化データとして保存
-        from save_results import save_benchmark_result
+        from save_results import save_benchmark_result  # type: ignore[import-not-found]
+
         save_benchmark_result(results)
-        
+
         # 互換性のため従来のファイルも保存
         with open("benchmark_results.json", "w") as f:
             json.dump(results, f, indent=2)

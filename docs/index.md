@@ -81,6 +81,8 @@ user_guide/examples
 
 api/python/index
 api/python/pricing
+api/python/greeks
+api/python/batch_processing
 api/python/american
 api/python/black_scholes
 api/python/black76

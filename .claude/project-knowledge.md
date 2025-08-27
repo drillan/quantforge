@@ -330,3 +330,56 @@ pub struct PyMertonGreeks {
 1. **モジュール追加パターン**: Black76と同じ構造で統一
 2. **Python APIパス**: `quantforge.quantforge.models.merton`
 3. **定数管理**: IV_MAX_ITERATIONS等、既存定数を再利用
+
+## API設計決定（2025-01-27）
+
+### Greeks戻り値形式の統一
+
+**決定**: 全モデルでGreeksバッチ処理は`Dict[str, np.ndarray]`を返す
+
+**根拠**:
+- **メモリ効率**: Structure of Arrays (SoA)でキャッシュ局所性向上
+- **NumPy統合**: 配列演算が直接可能
+- **API一貫性**: BS、Black76、Merton、American全て同形式
+
+**実装**:
+```python
+# 統一形式（全モデル共通）
+greeks_batch() -> Dict[str, np.ndarray]
+{
+    'delta': np.ndarray,
+    'gamma': np.ndarray,
+    'vega': np.ndarray,
+    'theta': np.ndarray,
+    'rho': np.ndarray,
+    'dividend_rho': np.ndarray  # American/Mertonのみ
+}
+```
+
+**関連ファイル**:
+- `src/models/american/batch.rs`: GreeksBatch構造体追加
+- `src/python_modules.rs`: 全Greeksバッチ関数がPyDict返却
+- `docs/api/python/greeks.md`: API仕様書
+
+### PyO3バインディングパターン
+
+#### Greeks辞書作成の標準パターン
+```rust
+let dict = PyDict::new_bound(py);
+dict.set_item("delta", PyArray1::from_vec_bound(py, greeks_batch.delta))?;
+dict.set_item("gamma", PyArray1::from_vec_bound(py, greeks_batch.gamma))?;
+// ... 他のGreeks
+Ok(dict)
+```
+
+### バッチ処理の実装パターン
+
+#### 並列化閾値
+- `PARALLELIZATION_THRESHOLD = 10_000`
+- 小規模バッチ（< 10,000）: 逐次処理（スレッドオーバーヘッド回避）
+- 大規模バッチ（≥ 10,000）: Rayon並列処理
+
+#### メモリ最適化
+- Greeks個別ベクトル格納（SoA）でAoSより効率的
+- `Vec::with_capacity(size)`で事前アロケーション
+- `PyArray1::from_vec_bound`でゼロコピー変換

@@ -1,5 +1,5 @@
 //! Broadcasting support for batch operations
-//! 
+//!
 //! This module provides NumPy-style broadcasting for array operations,
 //! allowing scalars and arrays of different sizes to be combined efficiently.
 
@@ -18,6 +18,14 @@ impl<'a> ArrayLike<'a> {
         match self {
             ArrayLike::Scalar(_) => 1,
             ArrayLike::Array(arr) => arr.len(),
+        }
+    }
+
+    /// Check if the array is empty
+    pub fn is_empty(&self) -> bool {
+        match self {
+            ArrayLike::Scalar(_) => false, // Scalar is never empty
+            ArrayLike::Array(arr) => arr.is_empty(),
         }
     }
 
@@ -96,7 +104,8 @@ impl<'a> Iterator for BroadcastIterator<'a> {
             return None;
         }
 
-        let values: Vec<f64> = self.inputs
+        let values: Vec<f64> = self
+            .inputs
             .iter()
             .map(|input| input.get_broadcast(self.index))
             .collect();
@@ -176,7 +185,7 @@ mod tests {
     #[test]
     fn test_single_element_arrays() {
         let inputs = vec![
-            ArrayLike::Array(&[100.0]),  // Single element array
+            ArrayLike::Array(&[100.0]), // Single element array
             ArrayLike::Array(&[95.0, 100.0, 105.0]),
             ArrayLike::Scalar(1.0),
         ];

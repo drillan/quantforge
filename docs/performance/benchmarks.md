@@ -83,7 +83,7 @@ uv run python analyze.py  # results/performance_history.png を生成
 ### JSON Lines履歴フォーマット
 各行が独立したJSONオブジェクト：
 ```json
-{"timestamp": "2025-08-27T14:41:14", "system_info": {...}, "single": {...}, "batch": [...]}
+{"timestamp": "2025-08-27T14:41:14", "system_info": {}, "single": {}, "batch": []}
 ```
 
 ### CSVエクスポート

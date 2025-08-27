@@ -30,7 +30,7 @@ NUMERICAL_TOLERANCE = 1e-7  # For high-precision calculations
 class TestBjerksundStensland2002:
     """Test cases from GBS_2025.py lines 1705-1757."""
 
-    def test_call_price_basic(self):
+    def test_call_price_basic(self) -> None:
         """Test basic American call price calculations.
 
         Note: These values were verified against GBS_2025.py implementation.
@@ -51,7 +51,7 @@ class TestBjerksundStensland2002:
         price = call_price(s=110.0, k=100.0, t=0.5, r=0.1, q=0.0, sigma=0.35)
         assert abs(price - 19.2193) < PRACTICAL_TOLERANCE
 
-    def test_put_price_basic(self):
+    def test_put_price_basic(self) -> None:
         """Test basic American put price calculations.
 
         Note: These values were verified against GBS_2025.py implementation.
@@ -71,7 +71,7 @@ class TestBjerksundStensland2002:
         price = put_price(s=110.0, k=100.0, t=0.5, r=0.1, q=0.0, sigma=0.35)
         assert abs(price - 4.5446) < PRACTICAL_TOLERANCE
 
-    def test_dividend_impact(self):
+    def test_dividend_impact(self) -> None:
         """Test impact of dividends on American option prices.
 
         When q > 0, American call may be exercised early.
@@ -88,7 +88,7 @@ class TestBjerksundStensland2002:
         put_with_div = put_price(s=100.0, k=100.0, t=1.0, r=0.05, q=0.03, sigma=0.3)
         assert put_with_div > put_no_div
 
-    def test_put_call_symmetry(self):
+    def test_put_call_symmetry(self) -> None:
         """Test put-call symmetry property for American options.
 
         Due to dividend arbitrage constraint and the complexity of the
@@ -113,7 +113,7 @@ class TestBjerksundStensland2002:
         assert itm_call > otm_call
         assert itm_put > otm_put
 
-    def test_early_exercise_conditions(self):
+    def test_early_exercise_conditions(self) -> None:
         """Test early exercise boundary conditions."""
         # Deep ITM American put should be exercised immediately
         s, k = 50.0, 100.0
@@ -129,7 +129,7 @@ class TestBjerksundStensland2002:
         intrinsic_deep = k - s_deep
         assert abs(american_put_deep - intrinsic_deep) < PRACTICAL_TOLERANCE
 
-    def test_american_european_relationship(self):
+    def test_american_european_relationship(self) -> None:
         """Test that American >= European for all cases."""
         test_cases = [
             (100.0, 100.0, 0.5, 0.05, 0.0, 0.25),  # ATM
@@ -156,7 +156,7 @@ class TestBjerksundStensland2002:
 class TestAmericanBatchPricing:
     """Test batch pricing functions."""
 
-    def test_call_price_batch(self):
+    def test_call_price_batch(self) -> None:
         """Test batch calculation of call prices."""
         spots = np.array([80.0, 90.0, 100.0, 110.0, 120.0])
         k, t, r, q, sigma = 100.0, 0.5, 0.1, 0.0, 0.25
@@ -174,7 +174,7 @@ class TestAmericanBatchPricing:
             expected = call_price(s=s, k=k, t=t, r=r, q=q, sigma=sigma)
             assert abs(prices[i] - expected) < NUMERICAL_TOLERANCE
 
-    def test_put_price_batch(self):
+    def test_put_price_batch(self) -> None:
         """Test batch calculation of put prices."""
         spots = np.array([80.0, 90.0, 100.0, 110.0, 120.0])
         k, t, r, q, sigma = 100.0, 0.5, 0.1, 0.0, 0.25
@@ -196,7 +196,7 @@ class TestAmericanBatchPricing:
 class TestAmericanGreeks:
     """Test Greeks calculations for American options."""
 
-    def test_call_greeks(self):
+    def test_call_greeks(self) -> None:
         """Test Greeks for American call options."""
         s, k, t, r, q, sigma = 100.0, 100.0, 0.5, 0.05, 0.02, 0.25
 
@@ -224,7 +224,7 @@ class TestAmericanGreeks:
         # Vega should be positive (except at boundaries)
         assert result.vega >= 0
 
-    def test_put_greeks(self):
+    def test_put_greeks(self) -> None:
         """Test Greeks for American put options."""
         s, k, t, r, q, sigma = 100.0, 100.0, 0.5, 0.05, 0.02, 0.25
 
@@ -247,7 +247,7 @@ class TestAmericanGreeks:
 class TestAmericanImpliedVolatility:
     """Test implied volatility calculations."""
 
-    def test_call_implied_volatility(self):
+    def test_call_implied_volatility(self) -> None:
         """Test IV calculation for American calls."""
         # First calculate a price with known volatility
         s, k, t, r, q = 100.0, 100.0, 0.5, 0.05, 0.02
@@ -261,7 +261,7 @@ class TestAmericanImpliedVolatility:
         # Should recover the original volatility
         assert abs(iv - true_sigma) < PRACTICAL_TOLERANCE
 
-    def test_put_implied_volatility(self):
+    def test_put_implied_volatility(self) -> None:
         """Test IV calculation for American puts."""
         # First calculate a price with known volatility
         s, k, t, r, q = 100.0, 100.0, 0.5, 0.05, 0.02
@@ -275,7 +275,7 @@ class TestAmericanImpliedVolatility:
         # Should recover the original volatility
         assert abs(iv - true_sigma) < PRACTICAL_TOLERANCE
 
-    def test_iv_with_initial_guess(self):
+    def test_iv_with_initial_guess(self) -> None:
         """Test IV calculation with initial guess."""
         s, k, t, r, q = 100.0, 100.0, 0.5, 0.05, 0.02
         true_sigma = 0.35
@@ -291,7 +291,7 @@ class TestAmericanImpliedVolatility:
 class TestExerciseBoundary:
     """Test early exercise boundary calculations."""
 
-    def test_call_exercise_boundary(self):
+    def test_call_exercise_boundary(self) -> None:
         """Test exercise boundary for American calls."""
         s, k, t, r, q, sigma = 100.0, 100.0, 0.5, 0.05, 0.03, 0.25
 
@@ -306,7 +306,7 @@ class TestExerciseBoundary:
         boundary_no_div = exercise_boundary(s=s, k=k, t=t, r=r, q=0.0, sigma=sigma, is_call=True)
         assert np.isinf(boundary_no_div)
 
-    def test_put_exercise_boundary(self):
+    def test_put_exercise_boundary(self) -> None:
         """Test exercise boundary for American puts."""
         s, k, t, r, q, sigma = 100.0, 100.0, 0.5, 0.05, 0.02, 0.25
 
@@ -323,7 +323,7 @@ class TestExerciseBoundary:
 class TestEdgeCases:
     """Test edge cases and boundary conditions."""
 
-    def test_zero_time_to_maturity(self):
+    def test_zero_time_to_maturity(self) -> None:
         """Test options at expiry."""
         s, k = 105.0, 100.0
 
@@ -334,7 +334,7 @@ class TestEdgeCases:
         put_val = put_price(s=s, k=k, t=0.0, r=0.05, q=0.02, sigma=0.25)
         assert abs(put_val - max(k - s, 0)) < NUMERICAL_TOLERANCE
 
-    def test_deep_itm_put(self):
+    def test_deep_itm_put(self) -> None:
         """Test deep in-the-money put."""
         s, k = 50.0, 100.0
 
@@ -344,7 +344,7 @@ class TestEdgeCases:
         # Deep ITM put should be close to intrinsic value
         assert put_val >= intrinsic - PRACTICAL_TOLERANCE
 
-    def test_deep_otm_options(self):
+    def test_deep_otm_options(self) -> None:
         """Test deep out-of-the-money options."""
         # Deep OTM call
         call_val = call_price(s=50.0, k=100.0, t=0.1, r=0.05, q=0.0, sigma=0.2)
@@ -354,7 +354,7 @@ class TestEdgeCases:
         put_val = put_price(s=150.0, k=100.0, t=0.1, r=0.05, q=0.0, sigma=0.2)
         assert put_val < 0.01  # Should be very small
 
-    def test_dividend_arbitrage_prevention(self):
+    def test_dividend_arbitrage_prevention(self) -> None:
         """Test that q > r raises an error."""
         with pytest.raises(ValueError, match="arbitrage"):
             call_price(s=100.0, k=100.0, t=0.5, r=0.05, q=0.06, sigma=0.25)

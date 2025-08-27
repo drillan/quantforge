@@ -124,18 +124,20 @@ pub fn calculate_implied_volatility(
     Err(QuantForgeError::ConvergenceFailed(IV_MAX_ITERATIONS))
 }
 
-/// Calculate implied volatility for a batch of option prices.
-///
-/// # Arguments
-/// * `prices` - Array of observed option prices
-/// * `s` - Spot price
-/// * `k` - Strike price
-/// * `t` - Time to maturity (years)
-/// * `r` - Risk-free rate
-/// * `q` - Dividend yield
-/// * `is_call` - true for call, false for put
-///
-/// # Returns
+// Calculate implied volatility for a batch of option prices.
+//
+// Arguments:
+// * `prices` - Array of observed option prices
+// * `s` - Spot price
+// * `k` - Strike price
+// * `t` - Time to maturity (years)
+// * `r` - Risk-free rate
+// * `q` - Dividend yield
+// * `is_call` - true for call, false for put
+//
+// Returns:
+// Vector of implied volatilities (NaN for failed convergence)
+//
 // Batch functions removed - will be reimplemented with full array support
 
 #[cfg(test)]
@@ -211,28 +213,29 @@ mod tests {
         assert!(result.is_err());
     }
 
-    #[test]
-    fn test_implied_volatility_batch() {
-        let s = 100.0;
-        let k = 100.0;
-        let t = 0.25;
-        let r = 0.05;
-        let q = 0.03;
-
-        // Generate prices for different volatilities
-        let sigmas = [0.15, 0.20, 0.25, 0.30, 0.35];
-        let prices: Vec<f64> = sigmas
-            .iter()
-            .map(|&sigma| call_price(s, k, t, r, q, sigma))
-            .collect();
-
-        // Calculate implied volatilities
-        let results = implied_volatility_batch(&prices, s, k, t, r, q, true);
-
-        // Check recovery
-        for (i, result) in results.iter().enumerate() {
-            let iv = result.as_ref().unwrap();
-            assert_relative_eq!(*iv, sigmas[i], epsilon = TEST_TOLERANCE);
-        }
-    }
+    // Commented out until batch functions are reimplemented
+    // #[test]
+    // fn test_implied_volatility_batch() {
+    //     let s = 100.0;
+    //     let k = 100.0;
+    //     let t = 0.25;
+    //     let r = 0.05;
+    //     let q = 0.03;
+    //
+    //     // Generate prices for different volatilities
+    //     let sigmas = [0.15, 0.20, 0.25, 0.30, 0.35];
+    //     let prices: Vec<f64> = sigmas
+    //         .iter()
+    //         .map(|&sigma| call_price(s, k, t, r, q, sigma))
+    //         .collect();
+    //
+    //     // Calculate implied volatilities
+    //     let results = implied_volatility_batch(&prices, s, k, t, r, q, true);
+    //
+    //     // Check recovery
+    //     for (i, result) in results.iter().enumerate() {
+    //         let iv = result.as_ref().unwrap();
+    //         assert_relative_eq!(*iv, sigmas[i], epsilon = TEST_TOLERANCE);
+    //     }
+    // }
 }

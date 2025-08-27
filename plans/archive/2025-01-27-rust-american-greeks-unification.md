@@ -2,11 +2,18 @@
 
 ## メタデータ
 - **作成日**: 2025-01-27
+- **完了日**: 2025-01-27
 - **言語**: Rust/Python統合
-- **ステータス**: DRAFT
+- **ステータス**: COMPLETED
 - **推定規模**: 中
 - **推定コード行数**: 200-300行
 - **対象モジュール**: src/models/american/batch.rs, src/python_modules.rs, Python tests
+
+## 完了報告
+- **実装時間**: 約3時間
+- **進捗**: 100%
+- **全タスク完了**: Phase 1-4のすべてのタスクを完了
+- **成果**: American modelのgreeks_batch戻り値をDict[str, np.ndarray]形式に統一
 
 ## タスク規模判定
 
@@ -77,18 +84,18 @@ proposed_names:
 ## フェーズ構成
 
 ### Phase 1: ドキュメント作成（D-SSoT原則適用）- 30分
-- [ ] `docs/api/python/greeks.md` 作成
+- [x] `docs/api/python/greeks.md` 作成 ✅
   - Greeks戻り値形式の統一仕様を定義
   - 設計根拠（NumPy親和性、SoAメモリ効率）を明記
   - すべてのモデルが従うべき契約として定義
-- [ ] `docs/api/python/batch_processing.md` の更新
+- [x] `docs/api/python/batch_processing.md` の更新 ✅
   - Line 221-224のAmericanモデルgreeks_batchの戻り値型を明確化
   - Migration Guide（Line 407-423）にAmericanモデル固有の移行例を追加
 
 ### Phase 2: 実装（2-3時間）
 
 #### 2.1 Rust側の修正（src/models/american/batch.rs）
-- [ ] `GreeksBatch`構造体の追加
+- [x] `GreeksBatch`構造体の追加 ✅
   ```rust
   pub struct GreeksBatch {
       pub delta: Vec<f64>,
@@ -98,13 +105,13 @@ proposed_names:
       pub rho: Vec<f64>,
   }
   ```
-- [ ] `greeks_batch`関数の戻り値を`Vec<Greeks>`から`GreeksBatch`に変更
-- [ ] 並列処理部分の修正（collectの変更）
-- [ ] 順次処理部分の修正（Vec構築の変更）
+- [x] `greeks_batch`関数の戻り値を`Vec<Greeks>`から`GreeksBatch`に変更 ✅
+- [x] 並列処理部分の修正（collectの変更） ✅
+- [x] 順次処理部分の修正（Vec構築の変更） ✅
 
 #### 2.2 PyO3バインディングの修正（src/python_modules.rs）
-- [ ] `american_greeks_batch`の戻り値を`Vec<PyGreeks>`から`PyDict`に変更
-- [ ] Line 1149-1186の修正
+- [x] `american_greeks_batch`の戻り値を`Vec<PyGreeks>`から`PyDict`に変更 ✅
+- [x] Line 1149-1186の修正 ✅
   - 他モデル（line 194-201）と完全に同じDict生成パターンを使用
   ```rust
   // Create dictionary with NumPy arrays
@@ -117,11 +124,11 @@ proposed_names:
   ```
 
 ### Phase 3: テスト更新（30分）
-- [ ] `playground/test_american_batch.py` の修正
+- [x] `playground/test_american_batch.py` の修正 ✅
   - Line 56-57, 91: `result[i].delta` → `result['delta'][i]`
-- [ ] `playground/test_american_1m.py` の修正  
+- [x] `playground/test_american_1m.py` の修正 ✅  
   - Line 111: `[g.delta for g in greeks[:3]]` → `greeks['delta'][:3].tolist()`
-- [ ] 実行確認
+- [x] 実行確認 ✅
   ```bash
   uv run python playground/test_american_batch.py
   uv run python playground/test_american_1m.py
@@ -182,24 +189,24 @@ uv run pytest playground/test_american*.py -v
 - [x] 影響範囲の特定
 
 ### 実装中
-- [ ] ドキュメントファースト（D-SSoT原則）
-- [ ] 段階的なコンパイル確認
-- [ ] テスト駆動開発（C010原則）
+- [x] ドキュメントファースト（D-SSoT原則） ✅
+- [x] 段階的なコンパイル確認 ✅
+- [x] テスト駆動開発（C010原則） ✅
 
 ### 実装後
-- [ ] すべてのテストがパス
-- [ ] パフォーマンス維持の確認
-- [ ] ドキュメントとの一致確認
-- [ ] 計画のarchive移動
+- [x] すべてのテストがパス ✅
+- [x] パフォーマンス維持の確認 ✅
+- [x] ドキュメントとの一致確認 ✅
+- [x] 計画のarchive移動 ✅
 
 ## 成果物
 
-- [ ] `docs/api/python/greeks.md`（新規）
-- [ ] `docs/api/python/batch_processing.md`（更新）
-- [ ] `src/models/american/batch.rs`（修正）
-- [ ] `src/python_modules.rs`（修正）
-- [ ] `playground/test_american_batch.py`（修正）
-- [ ] `playground/test_american_1m.py`（修正）
+- [x] `docs/api/python/greeks.md`（新規） ✅
+- [x] `docs/api/python/batch_processing.md`（更新） ✅
+- [x] `src/models/american/batch.rs`（修正） ✅
+- [x] `src/python_modules.rs`（修正） ✅
+- [x] `playground/test_american_batch.py`（修正） ✅
+- [x] `playground/test_american_1m.py`（修正） ✅
 
 ## 備考
 

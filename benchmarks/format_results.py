@@ -126,7 +126,7 @@ def format_markdown(results: dict[str, Any]) -> str:
 
 if __name__ == "__main__":
     from pathlib import Path
-    
+
     # 最新結果を優先的に読み込み
     if Path("results/latest.json").exists():
         with open("results/latest.json") as f:

@@ -218,5 +218,5 @@ except ValueError as e:
 ## See Also
 
 - [Pricing Functions](pricing.md) - Option price calculations
-- [Implied Volatility](implied_volatility.md) - IV calculations
+- [Implied Volatility](implied_vol.md) - IV calculations
 - [Batch Processing](batch_processing.md) - Efficient bulk calculations
