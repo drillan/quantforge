@@ -46,16 +46,27 @@ iv_b76 = black76.implied_volatility(5.5, 75, 75, 0.5, 0.05, True)
 import numpy as np
 from quantforge.models import black_scholes, black76
 
-# Black-Scholesバッチ計算
+# Black-Scholesバッチ計算（完全配列サポート + Broadcasting）
 spots = np.array([95, 100, 105, 110])
-# パラメータ: spots, k, t, r, sigma
-prices_bs = black_scholes.call_price_batch(spots, 100, 1.0, 0.05, 0.2)
+strikes = 100.0  # スカラーは自動的に配列サイズに拡張
+times = 1.0
+rates = 0.05
+sigmas = np.array([0.18, 0.20, 0.22, 0.24])
+
+# すべてのパラメータが配列を受け付ける
+prices_bs = black_scholes.call_price_batch(spots, strikes, times, rates, sigmas)
+
+# Greeksはディクショナリで返される
+greeks_bs = black_scholes.greeks_batch(spots, strikes, times, rates, sigmas, is_calls=True)
+print(greeks_bs['delta'])  # NumPy配列
+print(greeks_bs['gamma'])  # NumPy配列
 
 # Black76バッチ計算
-fs = np.array([70, 75, 80, 85])
-# パラメータ: fs(forwards), k, t, r, sigma
-prices_b76 = black76.call_price_batch(fs, 75, 0.5, 0.05, 0.25)
+forwards = np.array([70, 75, 80, 85])
+prices_b76 = black76.call_price_batch(forwards, 75.0, 0.5, 0.05, 0.25)
 ```
+
+詳細は[Batch Processing API](batch_processing.md)を参照してください。
 
 ### グリークス計算
 

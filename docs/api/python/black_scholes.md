@@ -25,17 +25,29 @@ put_price = black_scholes.put_price(100.0, 105.0, 1.0, 0.05, 0.2)
 
 ### バッチ処理
 
-複数のスポット価格に対して効率的に計算を行います：
+完全配列サポートとBroadcastingによる効率的な計算：
 
 ```python
 import numpy as np
 
-# 複数のスポット価格でバッチ計算
+# すべてのパラメータが配列を受け付ける（Broadcasting対応）
 spots = np.array([95, 100, 105, 110])
-# パラメータ: spots, k, t, r, sigma
-call_prices = black_scholes.call_price_batch(spots, 100.0, 1.0, 0.05, 0.2)
-put_prices = black_scholes.put_price_batch(spots, 100.0, 1.0, 0.05, 0.2)
+strikes = 100.0  # スカラーは自動的に配列サイズに拡張
+times = np.array([0.5, 1.0, 1.5, 2.0])
+rates = 0.05
+sigmas = np.array([0.18, 0.20, 0.22, 0.24])
+
+# パラメータ: spots, strikes, times, rates, sigmas
+call_prices = black_scholes.call_price_batch(spots, strikes, times, rates, sigmas)
+put_prices = black_scholes.put_price_batch(spots, strikes, times, rates, sigmas)
+
+# Greeksバッチ計算（辞書形式で返却）
+greeks = black_scholes.greeks_batch(spots, strikes, times, rates, sigmas, is_calls=True)
+portfolio_delta = greeks['delta'].sum()  # NumPy配列の操作
+portfolio_vega = greeks['vega'].sum()
 ```
+
+詳細は[Batch Processing API](batch_processing.md)を参照してください。
 
 ### グリークス計算
 

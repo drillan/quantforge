@@ -29,73 +29,7 @@ pub fn put_price(params: &Black76Params) -> f64 {
     discount * (params.strike * norm_cdf(-d2) - params.forward * norm_cdf(-d1))
 }
 
-/// Calculate call option prices for multiple inputs (batch processing)
-pub fn call_price_batch(
-    forwards: &[f64],
-    strike: f64,
-    time: f64,
-    rate: f64,
-    sigma: f64,
-) -> Vec<f64> {
-    forwards
-        .iter()
-        .map(|&forward| {
-            let params = Black76Params::new(forward, strike, time, rate, sigma);
-            call_price(&params)
-        })
-        .collect()
-}
-
-/// Calculate put option prices for multiple inputs (batch processing)
-pub fn put_price_batch(
-    forwards: &[f64],
-    strike: f64,
-    time: f64,
-    rate: f64,
-    sigma: f64,
-) -> Vec<f64> {
-    forwards
-        .iter()
-        .map(|&forward| {
-            let params = Black76Params::new(forward, strike, time, rate, sigma);
-            put_price(&params)
-        })
-        .collect()
-}
-
-/// Calculate call option prices for multiple strikes
-pub fn call_price_batch_strikes(
-    forward: f64,
-    strikes: &[f64],
-    time: f64,
-    rate: f64,
-    sigma: f64,
-) -> Vec<f64> {
-    strikes
-        .iter()
-        .map(|&strike| {
-            let params = Black76Params::new(forward, strike, time, rate, sigma);
-            call_price(&params)
-        })
-        .collect()
-}
-
-/// Calculate put option prices for multiple strikes
-pub fn put_price_batch_strikes(
-    forward: f64,
-    strikes: &[f64],
-    time: f64,
-    rate: f64,
-    sigma: f64,
-) -> Vec<f64> {
-    strikes
-        .iter()
-        .map(|&strike| {
-            let params = Black76Params::new(forward, strike, time, rate, sigma);
-            put_price(&params)
-        })
-        .collect()
-}
+// Batch functions removed - will be reimplemented with full array support
 
 #[cfg(test)]
 mod tests {

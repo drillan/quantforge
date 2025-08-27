@@ -27,11 +27,18 @@ put_price = {module_name}.put_price({example_values})
 ```python
 import numpy as np
 
-# 複数の{varying_param}でバッチ計算
-{array_name} = np.array([{example_array_values}])
-# パラメータ: {array_name}, {other_params}
-call_prices = {module_name}.call_price_batch({batch_params})
-put_prices = {module_name}.put_price_batch({batch_params})
+# 完全配列サポート（Broadcasting対応）
+{array_name1} = np.array([{example_array_values1}])
+{scalar_or_array1} = {scalar_value1}  # スカラーは自動拡張
+{array_name2} = np.array([{example_array_values2}])
+
+# パラメータ: {param1_plural}, {param2_plural}, {param3_plural}, {param4_plural}, {param5_plural}
+call_prices = {module_name}.call_price_batch({batch_params_all})
+put_prices = {module_name}.put_price_batch({batch_params_all})
+
+# Greeksバッチ（辞書形式で返却）
+greeks = {module_name}.greeks_batch({batch_params_all}, is_calls=True)
+print(greeks['delta'])  # NumPy配列
 ```
 
 ### グリークス計算
@@ -72,13 +79,17 @@ print(f"Implied Volatility: {iv:.4f}")
 | `sigma` | float | ボラティリティ（年率） | > 0 |
 | `is_call` | bool | オプションタイプ | True: コール, False: プット |
 
-### バッチ処理用パラメータ
+### バッチ処理用パラメータ（完全配列API）
 
 | パラメータ | 型 | 説明 |
 |-----------|-----|------|
-| `{array_param}` | np.ndarray | 複数の{array_param_desc} |
-| `{fixed_param1}` | float | {fixed_param1_desc}（共通） |
-| `{fixed_param2}` | float | {fixed_param2_desc}（共通） |
+| `{param1_plural}` | float \| np.ndarray | {param1_desc}（配列またはスカラー） |
+| `{param2_plural}` | float \| np.ndarray | {param2_desc}（配列またはスカラー） |
+| `{param3_plural}` | float \| np.ndarray | {param3_desc}（配列またはスカラー） |
+| `{param4_plural}` | float \| np.ndarray | {param4_desc}（配列またはスカラー） |
+| `{param5_plural}` | float \| np.ndarray | {param5_desc}（配列またはスカラー） |
+
+Broadcasting規則：スカラーは自動的に配列サイズに拡張されます。
 
 ## 価格式（参考）
 

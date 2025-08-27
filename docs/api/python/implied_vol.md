@@ -95,6 +95,38 @@ iv = american.implied_volatility(
 print(f"Implied Volatility: {iv:.4f}")
 ```
 
+## バッチ処理
+
+複数の市場価格から一括でインプライドボラティリティを計算できます：
+
+```python
+import numpy as np
+from quantforge.models import black_scholes
+
+# 完全配列サポート（Broadcasting対応）
+market_prices = np.array([10.0, 10.5, 11.0, 11.5])
+spots = 100.0  # スカラーは自動拡張
+strikes = np.array([95, 100, 105, 110])
+times = 1.0
+rates = 0.05
+is_calls = True
+
+# パラメータ: prices, spots, strikes, times, rates, is_calls
+ivs = black_scholes.implied_volatility_batch(
+    market_prices, spots, strikes, times, rates, is_calls
+)
+
+# ボラティリティスマイルの高速計算
+strikes = np.linspace(80, 120, 41)
+market_prices = get_market_prices(strikes)  # 市場データ取得
+
+ivs = black_scholes.implied_volatility_batch(
+    market_prices, 100.0, strikes, 0.25, 0.05, strikes >= 100.0
+)
+```
+
+詳細は[Batch Processing API](batch_processing.md)を参照してください。
+
 ## 計算手法
 
 ### Newton-Raphson法

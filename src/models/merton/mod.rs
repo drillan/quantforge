@@ -148,3 +148,8 @@ impl PricingModel for MertonModel {
         )
     }
 }
+
+// Batch processing functions
+impl MertonModel {
+    // Batch functions removed - will be reimplemented with full array support
+}

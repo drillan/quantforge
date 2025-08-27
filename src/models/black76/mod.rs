@@ -118,10 +118,15 @@ impl PricingModel for Black76 {
     }
 }
 
+// Batch processing functions
+impl Black76 {
+    // Batch functions removed - will be reimplemented with full array support
+}
+
 // Re-export main functions
 pub use greeks::{calculate_greeks, delta, gamma, rho, theta, vega};
-pub use implied_volatility::{calculate_iv, calculate_iv_batch};
-pub use pricing::{call_price, call_price_batch, put_price, put_price_batch};
+pub use implied_volatility::calculate_iv;
+pub use pricing::{call_price, put_price};
 
 // Utility function to convert spot to forward
 /// Convert spot price to forward price

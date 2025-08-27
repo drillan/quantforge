@@ -5,6 +5,7 @@ pub mod black_scholes_parallel;
 // New model implementations
 pub mod american;
 pub mod black76;
+pub mod black_scholes_batch;
 pub mod black_scholes_model;
 pub mod greeks;
 pub mod greeks_parallel;

@@ -28,12 +28,28 @@ put_price = american.put_price(100.0, 105.0, 1.0, 0.05, 0.03, 0.2)
 ```python
 import numpy as np
 
-# 複数のスポット価格でバッチ計算
+# 完全配列サポートとBroadcasting
 spots = np.array([95, 100, 105, 110])
-# パラメータ: spots, k, t, r, q, sigma
-call_prices = american.call_price_batch(spots, 100.0, 1.0, 0.05, 0.03, 0.2)
-put_prices = american.put_price_batch(spots, 100.0, 1.0, 0.05, 0.03, 0.2)
+strikes = 100.0  # スカラーは自動拡張
+times = np.array([0.5, 1.0, 1.5, 2.0])
+rates = 0.05
+dividend_yields = 0.03
+sigmas = np.array([0.18, 0.20, 0.22, 0.24])
+
+# パラメータ: spots, strikes, times, rates, dividend_yields, sigmas
+call_prices = american.call_price_batch(spots, strikes, times, rates, dividend_yields, sigmas)
+put_prices = american.put_price_batch(spots, strikes, times, rates, dividend_yields, sigmas)
+
+# Greeksバッチ計算（辞書形式）
+greeks = american.greeks_batch(spots, strikes, times, rates, dividend_yields, sigmas, is_calls=False)
+print(greeks['delta'])  # NumPy配列
+print(greeks['gamma'])  # NumPy配列
+
+# 早期行使境界のバッチ計算
+boundaries = american.exercise_boundary_batch(spots, strikes, times, rates, dividend_yields, sigmas, is_calls=False)
 ```
+
+詳細は[Batch Processing API](batch_processing.md)を参照してください。
 
 ### グリークス計算
 

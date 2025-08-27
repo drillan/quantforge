@@ -175,17 +175,29 @@ put_price = black76.put_price(forward, strike, time, rate, sigma)
 print(f"先物コール: ${call_price:.4f}, プット: ${put_price:.4f}")
 ```
 
-### バッチ処理（大規模データの高速処理）
+### バッチ処理（完全配列サポート + Broadcasting）
 
 ```python
-# 複数のスポット価格でのバッチ計算
-spots = np.linspace(80, 120, 100000)  # 10万個のデータポイント
+# すべてのパラメータが配列を受け付ける（Broadcasting対応）
+n = 100000  # 10万個のオプション
+spots = np.linspace(80, 120, n)
+strikes = 100.0  # スカラーは自動的に配列サイズに拡張
+times = np.random.uniform(0.1, 2.0, n)
+rates = 0.05
+sigmas = np.random.uniform(0.1, 0.4, n)
 
 from quantforge.models import black_scholes
-call_prices = black_scholes.call_price_batch(spots, strike, time, rate, sigma)
+# すべてのパラメータに配列またはスカラーを指定可能
+call_prices = black_scholes.call_price_batch(spots, strikes, times, rates, sigmas)
+
+# Greeksバッチ計算（NumPy配列の辞書を返却）
+greeks = black_scholes.greeks_batch(spots, strikes, times, rates, sigmas, is_calls=True)
+portfolio_delta = greeks['delta'].sum()
+portfolio_vega = greeks['vega'].sum()
 
 # 自動的に並列処理が適用される（30,000要素以上）
-print(f"Calculated {len(call_prices)} prices in milliseconds")
+print(f"{len(call_prices):,}個のオプションを処理")
+print(f"ポートフォリオDelta: {portfolio_delta:.2f}, Vega: {portfolio_vega:.2f}")
 ```
 
 ### グリークス計算

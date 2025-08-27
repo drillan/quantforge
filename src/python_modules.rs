@@ -14,10 +14,14 @@ use crate::validation::validate_inputs;
 pub fn black_scholes(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(bs_call_price, m)?)?;
     m.add_function(wrap_pyfunction!(bs_put_price, m)?)?;
-    m.add_function(wrap_pyfunction!(bs_call_price_batch, m)?)?;
-    m.add_function(wrap_pyfunction!(bs_put_price_batch, m)?)?;
+    // Batch functions temporarily disabled - will be reimplemented
+    // m.add_function(wrap_pyfunction!(bs_call_price_batch, m)?)?;
+    // m.add_function(wrap_pyfunction!(bs_put_price_batch, m)?)?;
     m.add_function(wrap_pyfunction!(bs_greeks, m)?)?;
+    // m.add_function(wrap_pyfunction!(bs_greeks_batch, m)?)?;
     m.add_function(wrap_pyfunction!(bs_implied_volatility, m)?)?;
+    // m.add_function(wrap_pyfunction!(bs_implied_volatility_batch, m)?)?;
+    m.add_class::<PyGreeks>()?;
     Ok(())
 }
 
@@ -59,67 +63,7 @@ fn bs_put_price(s: f64, k: f64, t: f64, r: f64, sigma: f64) -> PyResult<f64> {
     Ok(BlackScholes::put_price(&params))
 }
 
-/// Calculate call prices for multiple spots
-#[pyfunction]
-#[pyo3(name = "call_price_batch")]
-#[pyo3(signature = (spots, k, t, r, sigma))]
-fn bs_call_price_batch<'py>(
-    py: Python<'py>,
-    spots: PyReadonlyArray1<f64>,
-    k: f64,
-    t: f64,
-    r: f64,
-    sigma: f64,
-) -> PyResult<Bound<'py, PyArray1<f64>>> {
-    // Validate common parameters
-    validate_inputs(100.0, k, t, r, sigma)
-        .map_err(|e| pyo3::exceptions::PyValueError::new_err(e.to_string()))?;
-
-    let spots_slice = spots.as_slice()?;
-
-    // Validate each spot price
-    for &s in spots_slice {
-        if !s.is_finite() || s <= 0.0 {
-            return Err(pyo3::exceptions::PyValueError::new_err(
-                "All spot prices must be positive and finite",
-            ));
-        }
-    }
-
-    let results = BlackScholes::call_price_batch(spots_slice, k, t, r, sigma);
-    Ok(PyArray1::from_vec_bound(py, results))
-}
-
-/// Calculate put prices for multiple spots
-#[pyfunction]
-#[pyo3(name = "put_price_batch")]
-#[pyo3(signature = (spots, k, t, r, sigma))]
-fn bs_put_price_batch<'py>(
-    py: Python<'py>,
-    spots: PyReadonlyArray1<f64>,
-    k: f64,
-    t: f64,
-    r: f64,
-    sigma: f64,
-) -> PyResult<Bound<'py, PyArray1<f64>>> {
-    // Validate common parameters
-    validate_inputs(100.0, k, t, r, sigma)
-        .map_err(|e| pyo3::exceptions::PyValueError::new_err(e.to_string()))?;
-
-    let spots_slice = spots.as_slice()?;
-
-    // Validate each spot price
-    for &s in spots_slice {
-        if !s.is_finite() || s <= 0.0 {
-            return Err(pyo3::exceptions::PyValueError::new_err(
-                "All spot prices must be positive and finite",
-            ));
-        }
-    }
-
-    let results = BlackScholes::put_price_batch(spots_slice, k, t, r, sigma);
-    Ok(PyArray1::from_vec_bound(py, results))
-}
+// Batch functions removed - will be reimplemented with full array support
 
 /// Calculate all Greeks for Black-Scholes option
 #[pyfunction]
@@ -179,6 +123,8 @@ fn bs_implied_volatility(
         .map_err(|e| pyo3::exceptions::PyRuntimeError::new_err(e.to_string()))
 }
 
+// Batch functions removed - will be reimplemented with full array support
+
 /// Python-friendly Greeks struct
 #[pyclass]
 #[derive(Clone)]
@@ -213,7 +159,10 @@ pub fn black76(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(b76_call_price_batch, m)?)?;
     m.add_function(wrap_pyfunction!(b76_put_price_batch, m)?)?;
     m.add_function(wrap_pyfunction!(b76_greeks, m)?)?;
+    m.add_function(wrap_pyfunction!(b76_greeks_batch, m)?)?;
     m.add_function(wrap_pyfunction!(b76_implied_volatility, m)?)?;
+    m.add_function(wrap_pyfunction!(b76_implied_volatility_batch, m)?)?;
+    m.add_class::<PyGreeks>()?;
     Ok(())
 }
 
@@ -397,6 +346,83 @@ fn b76_implied_volatility(
         .map_err(|e| pyo3::exceptions::PyRuntimeError::new_err(e.to_string()))
 }
 
+/// Calculate implied volatility for multiple option prices (Black76)
+#[pyfunction]
+#[pyo3(name = "implied_volatility_batch")]
+#[pyo3(signature = (prices, f, k, t, r, is_call=true))]
+fn b76_implied_volatility_batch<'py>(
+    py: Python<'py>,
+    prices: PyReadonlyArray1<f64>,
+    f: f64,
+    k: f64,
+    t: f64,
+    r: f64,
+    is_call: bool,
+) -> PyResult<Bound<'py, PyArray1<f64>>> {
+    // Basic parameter validation
+    if f <= 0.0 || k <= 0.0 || t <= 0.0 {
+        return Err(pyo3::exceptions::PyValueError::new_err(
+            "f, k, and t must be positive",
+        ));
+    }
+
+    let prices_slice = prices.as_slice()?;
+    let results = Black76::implied_volatility_batch(prices_slice, f, k, t, r, is_call);
+    
+    // Convert Results to f64, using NaN for errors
+    let ivs: Vec<f64> = results
+        .into_iter()
+        .map(|res| res.unwrap_or(f64::NAN))
+        .collect();
+    
+    Ok(PyArray1::from_vec_bound(py, ivs))
+}
+
+/// Calculate Greeks for multiple forward prices (Black76)
+#[pyfunction]
+#[pyo3(name = "greeks_batch")]
+#[pyo3(signature = (fs, k, t, r, sigma, is_call=true))]
+fn b76_greeks_batch<'py>(
+    _py: Python<'py>,
+    fs: PyReadonlyArray1<f64>,
+    k: f64,
+    t: f64,
+    r: f64,
+    sigma: f64,
+    is_call: bool,
+) -> PyResult<Vec<PyGreeks>> {
+    // Validate common parameters
+    if k <= 0.0 || t <= 0.0 || sigma <= 0.0 {
+        return Err(pyo3::exceptions::PyValueError::new_err(
+            "k, t, and sigma must be positive",
+        ));
+    }
+
+    let fs_slice = fs.as_slice()?;
+    
+    // Validate each forward price
+    for &f in fs_slice {
+        if !f.is_finite() || f <= 0.0 {
+            return Err(pyo3::exceptions::PyValueError::new_err(
+                "All forward prices must be positive and finite",
+            ));
+        }
+    }
+
+    let results = Black76::greeks_batch(fs_slice, k, t, r, sigma, is_call);
+    
+    Ok(results
+        .into_iter()
+        .map(|g| PyGreeks {
+            delta: g.delta,
+            gamma: g.gamma,
+            vega: g.vega,
+            theta: g.theta,
+            rho: g.rho,
+        })
+        .collect())
+}
+
 /// Merton model module for Python
 #[pymodule]
 pub fn merton(m: &Bound<'_, PyModule>) -> PyResult<()> {
@@ -407,7 +433,9 @@ pub fn merton(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(merton_call_price_batch_q, m)?)?;
     m.add_function(wrap_pyfunction!(merton_put_price_batch_q, m)?)?;
     m.add_function(wrap_pyfunction!(merton_greeks, m)?)?;
+    m.add_function(wrap_pyfunction!(merton_greeks_batch, m)?)?;
     m.add_function(wrap_pyfunction!(merton_implied_volatility, m)?)?;
+    m.add_function(wrap_pyfunction!(merton_implied_volatility_batch, m)?)?;
     m.add_class::<PyMertonGreeks>()?;
     Ok(())
 }
@@ -684,6 +712,86 @@ fn merton_implied_volatility(
     .map_err(|e| pyo3::exceptions::PyRuntimeError::new_err(e.to_string()))
 }
 
+/// Calculate implied volatility for multiple option prices (Merton)
+#[pyfunction]
+#[pyo3(name = "implied_volatility_batch")]
+#[pyo3(signature = (prices, s, k, t, r, q, is_call=true))]
+fn merton_implied_volatility_batch<'py>(
+    py: Python<'py>,
+    prices: PyReadonlyArray1<f64>,
+    s: f64,
+    k: f64,
+    t: f64,
+    r: f64,
+    q: f64,
+    is_call: bool,
+) -> PyResult<Bound<'py, PyArray1<f64>>> {
+    // Basic parameter validation
+    if s <= 0.0 || k <= 0.0 || t <= 0.0 {
+        return Err(pyo3::exceptions::PyValueError::new_err(
+            "s, k, and t must be positive",
+        ));
+    }
+
+    let prices_slice = prices.as_slice()?;
+    let results = MertonModel::implied_volatility_batch(prices_slice, s, k, t, r, q, is_call);
+    
+    // Convert Results to f64, using NaN for errors
+    let ivs: Vec<f64> = results
+        .into_iter()
+        .map(|res| res.unwrap_or(f64::NAN))
+        .collect();
+    
+    Ok(PyArray1::from_vec_bound(py, ivs))
+}
+
+/// Calculate Greeks for multiple spot prices (Merton)
+#[pyfunction]
+#[pyo3(name = "greeks_batch")]
+#[pyo3(signature = (spots, k, t, r, q, sigma, is_call=true))]
+fn merton_greeks_batch<'py>(
+    _py: Python<'py>,
+    spots: PyReadonlyArray1<f64>,
+    k: f64,
+    t: f64,
+    r: f64,
+    q: f64,
+    sigma: f64,
+    is_call: bool,
+) -> PyResult<Vec<PyMertonGreeks>> {
+    // Validate common parameters
+    if k <= 0.0 || t < 0.0 || sigma <= 0.0 {
+        return Err(pyo3::exceptions::PyValueError::new_err(
+            "k must be positive; t must be non-negative; sigma must be positive",
+        ));
+    }
+
+    let spots_slice = spots.as_slice()?;
+    
+    // Validate each spot price
+    for &s in spots_slice {
+        if !s.is_finite() || s <= 0.0 {
+            return Err(pyo3::exceptions::PyValueError::new_err(
+                "All spot prices must be positive and finite",
+            ));
+        }
+    }
+
+    let results = MertonModel::greeks_batch(spots_slice, k, t, r, q, sigma, is_call);
+    
+    Ok(results
+        .into_iter()
+        .map(|g| PyMertonGreeks {
+            delta: g.delta,
+            gamma: g.gamma,
+            vega: g.vega,
+            theta: g.theta,
+            rho: g.rho,
+            dividend_rho: g.dividend_rho,
+        })
+        .collect())
+}
+
 /// Python-friendly Merton Greeks struct with dividend_rho
 #[pyclass]
 #[derive(Clone)]
@@ -720,8 +828,12 @@ pub fn american(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(american_call_price_batch, m)?)?;
     m.add_function(wrap_pyfunction!(american_put_price_batch, m)?)?;
     m.add_function(wrap_pyfunction!(american_greeks, m)?)?;
+    m.add_function(wrap_pyfunction!(american_greeks_batch, m)?)?;
     m.add_function(wrap_pyfunction!(american_implied_volatility, m)?)?;
+    m.add_function(wrap_pyfunction!(american_implied_volatility_batch, m)?)?;
     m.add_function(wrap_pyfunction!(american_exercise_boundary, m)?)?;
+    m.add_function(wrap_pyfunction!(american_exercise_boundary_batch, m)?)?;
+    m.add_class::<PyGreeks>()?;
     Ok(())
 }
 
@@ -932,6 +1044,99 @@ fn american_implied_volatility(
         .map_err(|e| pyo3::exceptions::PyRuntimeError::new_err(e.to_string()))
 }
 
+/// Calculate implied volatility for multiple option prices (American)
+#[pyfunction]
+#[pyo3(name = "implied_volatility_batch")]
+#[pyo3(signature = (prices, s, k, t, r, q, is_call=true))]
+fn american_implied_volatility_batch<'py>(
+    py: Python<'py>,
+    prices: PyReadonlyArray1<f64>,
+    s: f64,
+    k: f64,
+    t: f64,
+    r: f64,
+    q: f64,
+    is_call: bool,
+) -> PyResult<Bound<'py, PyArray1<f64>>> {
+    // Basic parameter validation
+    if s <= 0.0 || k <= 0.0 || t < 0.0 {
+        return Err(pyo3::exceptions::PyValueError::new_err(
+            "s and k must be positive; t must be non-negative",
+        ));
+    }
+    
+    // Check dividend arbitrage
+    if q > r {
+        return Err(pyo3::exceptions::PyValueError::new_err(
+            "Dividend yield (q) cannot exceed risk-free rate (r) to prevent arbitrage",
+        ));
+    }
+
+    let prices_slice = prices.as_slice()?;
+    let results = AmericanModel::implied_volatility_batch(prices_slice, s, k, t, r, q, is_call);
+    
+    // Convert Results to f64, using NaN for errors
+    let ivs: Vec<f64> = results
+        .into_iter()
+        .map(|res| res.unwrap_or(f64::NAN))
+        .collect();
+    
+    Ok(PyArray1::from_vec_bound(py, ivs))
+}
+
+/// Calculate Greeks for multiple spot prices (American)
+#[pyfunction]
+#[pyo3(name = "greeks_batch")]
+#[pyo3(signature = (spots, k, t, r, q, sigma, is_call=true))]
+fn american_greeks_batch<'py>(
+    _py: Python<'py>,
+    spots: PyReadonlyArray1<f64>,
+    k: f64,
+    t: f64,
+    r: f64,
+    q: f64,
+    sigma: f64,
+    is_call: bool,
+) -> PyResult<Vec<PyGreeks>> {
+    // Validate common parameters
+    if k <= 0.0 || t < 0.0 || sigma <= 0.0 {
+        return Err(pyo3::exceptions::PyValueError::new_err(
+            "k must be positive; t must be non-negative; sigma must be positive",
+        ));
+    }
+    
+    // Check dividend arbitrage
+    if q > r {
+        return Err(pyo3::exceptions::PyValueError::new_err(
+            "Dividend yield (q) cannot exceed risk-free rate (r) to prevent arbitrage",
+        ));
+    }
+
+    let spots_slice = spots.as_slice()?;
+    
+    // Validate each spot price
+    for &s in spots_slice {
+        if !s.is_finite() || s <= 0.0 {
+            return Err(pyo3::exceptions::PyValueError::new_err(
+                "All spot prices must be positive and finite",
+            ));
+        }
+    }
+
+    let results = AmericanModel::greeks_batch(spots_slice, k, t, r, q, sigma, is_call);
+    
+    Ok(results
+        .into_iter()
+        .map(|g| PyGreeks {
+            delta: g.delta,
+            gamma: g.gamma,
+            vega: g.vega,
+            theta: g.theta,
+            rho: g.rho,
+        })
+        .collect())
+}
+
 /// Calculate early exercise boundary for American option
 #[pyfunction]
 #[pyo3(name = "exercise_boundary")]
@@ -950,4 +1155,48 @@ fn american_exercise_boundary(
         .map_err(|e| pyo3::exceptions::PyValueError::new_err(e.to_string()))?;
 
     Ok(crate::models::american::exercise_boundary(&params, is_call))
+}
+
+/// Calculate early exercise boundaries for multiple spot prices
+#[pyfunction]
+#[pyo3(name = "exercise_boundary_batch")]
+#[pyo3(signature = (spots, k, t, r, q, sigma, is_call=true))]
+fn american_exercise_boundary_batch<'py>(
+    py: Python<'py>,
+    spots: PyReadonlyArray1<f64>,
+    k: f64,
+    t: f64,
+    r: f64,
+    q: f64,
+    sigma: f64,
+    is_call: bool,
+) -> PyResult<Bound<'py, PyArray1<f64>>> {
+    // Validate common parameters
+    if k <= 0.0 || t < 0.0 || sigma <= 0.0 {
+        return Err(pyo3::exceptions::PyValueError::new_err(
+            "k must be positive; t must be non-negative; sigma must be positive",
+        ));
+    }
+    
+    // Check dividend arbitrage
+    if q > r {
+        return Err(pyo3::exceptions::PyValueError::new_err(
+            "Dividend yield (q) cannot exceed risk-free rate (r) to prevent arbitrage",
+        ));
+    }
+
+    let spots_slice = spots.as_slice()?;
+    
+    // Validate each spot price
+    for &s in spots_slice {
+        if !s.is_finite() || s <= 0.0 {
+            return Err(pyo3::exceptions::PyValueError::new_err(
+                "All spot prices must be positive and finite",
+            ));
+        }
+    }
+
+    let results = AmericanModel::exercise_boundary_batch(spots_slice, k, t, r, q, sigma, is_call);
+    
+    Ok(PyArray1::from_vec_bound(py, results))
 }

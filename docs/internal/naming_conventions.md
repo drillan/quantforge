@@ -170,28 +170,51 @@ heston.call_price(s, k, t, r, v0, kappa, theta_v, xi, rho_sv)
 
 ## 5. バッチ処理の命名規則
 
-### 配列パラメータの命名
-- 単数形の複数形を使用（spots, strikes, times）
-- ただし、`f` の複数形は `fs` とする（forwardsは長すぎる）
+### 配列パラメータの命名（完全配列API）
+- 単数形の複数形を使用（spots, strikes, times, rates, sigmas）
+- `f` の複数形は `forwards` とする（完全配列APIでは明確性優先）
+- `q` の複数形は `dividend_yields` とする（説明的）
+- すべてのパラメータが配列を受け付ける（Broadcasting対応）
 
 ```python
-# Black-Scholes batch
+# Black-Scholes batch（完全配列サポート）
 call_prices = black_scholes.call_price_batch(
-    spots=np.array([100, 105, 110]),  # 複数のスポット価格
-    k=100.0,                           # 単一のストライク
-    t=1.0,
-    r=0.05,
-    sigma=0.2
+    spots=np.array([100, 105, 110]),     # 複数のスポット価格
+    strikes=np.array([95, 100, 105]),    # 複数のストライク
+    times=1.0,                            # スカラー（自動拡張）
+    rates=0.05,                           # スカラー（自動拡張）
+    sigmas=np.array([0.18, 0.20, 0.22])  # 複数のボラティリティ
 )
 
-# Black76 batch
+# Black76 batch（完全配列サポート）
 call_prices = black76.call_price_batch(
-    fs=np.array([100, 105, 110]),     # 複数のフォワード価格
-    k=100.0,                          # 単一のストライク
-    t=1.0,
-    r=0.05,
-    sigma=0.2
+    forwards=np.array([100, 105, 110]),  # 複数のフォワード価格
+    strikes=100.0,                        # スカラー（自動拡張）
+    times=np.array([0.5, 1.0, 1.5]),     # 複数の満期
+    rates=0.05,                           # スカラー（自動拡張）
+    sigmas=0.2                            # スカラー（自動拡張）
 )
+
+# Merton batch（配当付き）
+call_prices = merton.call_price_batch(
+    spots=np.array([100, 105, 110]),
+    strikes=100.0,
+    times=1.0,
+    rates=0.05,
+    dividend_yields=np.array([0.01, 0.02, 0.03]),  # 複数の配当利回り
+    sigmas=0.2
+)
+```
+
+### Greeks戻り値の形式
+- Dict[str, np.ndarray] 形式で返却（List[PyGreeks]は廃止）
+- キー名はgreek名の小文字（'delta', 'gamma', 'vega', 'theta', 'rho'）
+- モデル固有のgreek（'dividend_rho'等）も同様
+
+```python
+# 戻り値形式
+greeks = black_scholes.greeks_batch(...)
+# {'delta': np.ndarray, 'gamma': np.ndarray, 'vega': np.ndarray, ...}
 ```
 
 ## 6. エラーメッセージの命名

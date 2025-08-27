@@ -197,32 +197,7 @@ fn calculate_iv_brent(
     Err(QuantForgeError::ConvergenceFailed(IV_MAX_ITERATIONS))
 }
 
-/// Calculate implied volatility for batch of prices
-pub fn calculate_iv_batch(
-    prices: &[f64],
-    forwards: &[f64],
-    strike: f64,
-    time: f64,
-    rate: f64,
-    is_calls: &[bool],
-) -> Vec<Result<f64, QuantForgeError>> {
-    if prices.len() != forwards.len() || prices.len() != is_calls.len() {
-        let error = Err(QuantForgeError::InvalidInput(
-            "Input arrays must have the same length".to_string(),
-        ));
-        return (0..prices.len()).map(|_| error.clone()).collect();
-    }
-
-    prices
-        .iter()
-        .zip(forwards.iter())
-        .zip(is_calls.iter())
-        .map(|((&price, &forward), &is_call)| {
-            let params = Black76Params::new(forward, strike, time, rate, 0.2); // sigma is placeholder
-            calculate_iv(price, &params, is_call, None)
-        })
-        .collect()
-}
+// Batch functions removed - will be reimplemented with full array support
 
 // Helper function for normal PDF
 fn normal_pdf(x: f64) -> f64 {

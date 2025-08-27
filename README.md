@@ -184,17 +184,29 @@ put_price = black76.put_price(forward, strike, time, rate, sigma)
 print(f"Futures Call: ${call_price:.4f}, Put: ${put_price:.4f}")
 ```
 
-### Batch Processing
+### Batch Processing (Full Array Support)
 
 ```python
-# Process 100,000 options in milliseconds
-spots = np.linspace(80, 120, 100000)
+# Process 100,000 options with full array support and broadcasting
+n = 100000
+spots = np.linspace(80, 120, n)
+strikes = 100.0  # Scalar automatically broadcasts to array size
+times = np.random.uniform(0.1, 2.0, n)
+rates = 0.05
+sigmas = np.random.uniform(0.1, 0.4, n)
 
 from quantforge.models import black_scholes
-call_prices = black_scholes.call_price_batch(spots, strike, time, rate, sigma)
+# All parameters can be arrays or scalars (broadcasting supported)
+call_prices = black_scholes.call_price_batch(spots, strikes, times, rates, sigmas)
+
+# Greeks batch returns dictionary of NumPy arrays
+greeks = black_scholes.greeks_batch(spots, strikes, times, rates, sigmas, is_calls=True)
+portfolio_delta = greeks['delta'].sum()
+portfolio_vega = greeks['vega'].sum()
 
 # Automatic parallelization for large arrays (>30k elements)
 print(f"Processed {len(call_prices):,} options")
+print(f"Portfolio Delta: {portfolio_delta:.2f}, Vega: {portfolio_vega:.2f}")
 ```
 
 ### Greeks Calculation

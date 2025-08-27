@@ -27,22 +27,30 @@ put_price = merton.put_price(100.0, 105.0, 1.0, 0.05, 0.03, 0.2)
 
 ### バッチ処理
 
-複数のスポット価格に対して効率的に計算を行います：
+完全配列サポートとBroadcastingによる効率的な計算：
 
 ```python
 import numpy as np
 
-# 複数のスポット価格でバッチ計算
+# すべてのパラメータが配列を受け付ける（Broadcasting対応）
 spots = np.array([95, 100, 105, 110])
-# パラメータ: spots, k, t, r, q, sigma
-call_prices = merton.call_price_batch(spots, 100.0, 1.0, 0.05, 0.03, 0.2)
-put_prices = merton.put_price_batch(spots, 100.0, 1.0, 0.05, 0.03, 0.2)
+strikes = 100.0  # スカラーは自動拡張
+times = 1.0
+rates = 0.05
+dividend_yields = np.array([0.01, 0.02, 0.03, 0.04])
+sigmas = np.array([0.18, 0.20, 0.22, 0.24])
 
-# 複数の配当利回りでバッチ計算
-qs = np.array([0.01, 0.02, 0.03, 0.04])
-# パラメータ: s, k, t, r, qs(複数配当), sigma
-call_prices_q = merton.call_price_batch_q(100.0, 100.0, 1.0, 0.05, qs, 0.2)
+# パラメータ: spots, strikes, times, rates, dividend_yields, sigmas
+call_prices = merton.call_price_batch(spots, strikes, times, rates, dividend_yields, sigmas)
+put_prices = merton.put_price_batch(spots, strikes, times, rates, dividend_yields, sigmas)
+
+# Greeksバッチ計算（辞書形式で返却）
+greeks = merton.greeks_batch(spots, strikes, times, rates, dividend_yields, sigmas, is_calls=True)
+print(greeks['delta'])         # NumPy配列
+print(greeks['dividend_rho'])  # 配当利回り感応度
 ```
+
+詳細は[Batch Processing API](batch_processing.md)を参照してください。
 
 ### グリークス計算
 

@@ -136,21 +136,7 @@ pub fn calculate_implied_volatility(
 /// * `is_call` - true for call, false for put
 ///
 /// # Returns
-/// Vector of Results containing implied volatilities or errors
-pub fn implied_volatility_batch(
-    prices: &[f64],
-    s: f64,
-    k: f64,
-    t: f64,
-    r: f64,
-    q: f64,
-    is_call: bool,
-) -> Vec<Result<f64, QuantForgeError>> {
-    prices
-        .iter()
-        .map(|&price| calculate_implied_volatility(price, s, k, t, r, q, is_call, None))
-        .collect()
-}
+// Batch functions removed - will be reimplemented with full array support
 
 #[cfg(test)]
 mod tests {

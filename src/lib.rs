@@ -2,6 +2,7 @@
 
 use pyo3::prelude::*;
 
+pub mod broadcast;
 pub mod constants;
 pub mod error;
 pub mod math;

@@ -115,7 +115,12 @@ impl PricingModel for AmericanModel {
     }
 }
 
+// Batch processing functions
+impl AmericanModel {
+    // Batch functions removed - will be reimplemented with full array support
+}
+
 // Public API functions
-pub use batch::{call_price_batch, price_batch_parallel, put_price_batch};
+// Batch functions temporarily disabled - will be reimplemented with full array support
 pub use boundary::exercise_boundary;
 pub use pricing::{american_call_price, american_put_price};

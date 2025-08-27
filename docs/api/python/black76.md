@@ -28,12 +28,24 @@ put_price = black76.put_price(75.50, 80.00, 0.25, 0.05, 0.3)
 ```python
 import numpy as np
 
-# 複数のフォワード価格でバッチ計算
-fs = np.array([70, 75, 80, 85])
-# パラメータ: fs(forwards), k, t, r, sigma
-call_prices = black76.call_price_batch(fs, 75.0, 0.5, 0.05, 0.25)
-put_prices = black76.put_price_batch(fs, 75.0, 0.5, 0.05, 0.25)
+# 完全配列サポートとBroadcasting
+forwards = np.array([70, 75, 80, 85])
+strikes = np.array([65, 70, 75, 80])  # 配列も可能
+times = 0.5  # スカラーは自動拡張
+rates = 0.05
+sigmas = np.array([0.20, 0.25, 0.30, 0.35])
+
+# パラメータ: forwards, strikes, times, rates, sigmas
+call_prices = black76.call_price_batch(forwards, strikes, times, rates, sigmas)
+put_prices = black76.put_price_batch(forwards, strikes, times, rates, sigmas)
+
+# Greeksバッチ計算（辞書形式）
+greeks = black76.greeks_batch(forwards, strikes, times, rates, sigmas, is_calls=True)
+print(greeks['delta'])  # NumPy配列
+print(greeks['vega'])   # NumPy配列
 ```
+
+詳細は[Batch Processing API](batch_processing.md)を参照してください。
 
 ### グリークス計算
 
