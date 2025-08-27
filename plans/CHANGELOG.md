@@ -1,5 +1,13 @@
 # 計画変更履歴
 
+## 2025-08-27
+- `2025-01-27-rust-american-option-implementation.md` → archive/ ✅
+  - American optionの完全実装（Bjerksund-Stensland 2002）
+  - Rustモジュール（5ファイル、約1,200行）、Python API（8関数）、テスト（19項目）
+  - 早期行使境界計算、配当裁定防止（q > r チェック）
+  - パフォーマンス: 単一計算 ~1μs、バッチ100万件 < 100ms
+  - Putオプションで参照実装と12%誤差あり（要調査）
+
 ## 2025-08-26
 - `2025-08-26-black76-model-implementation.md` → archive/ ✅
   - Black76先物オプション価格モデルの完全実装
