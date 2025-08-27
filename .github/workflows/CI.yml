@@ -40,7 +40,7 @@ jobs:
         run: |
           pip install dist/*.whl
           python -c "import quantforge; print(f'QuantForge {quantforge.__version__} imported successfully')"
-          python -c "from quantforge import BlackScholes, Black76, AmericanOption; print('Models imported successfully')"
+          python -c "from quantforge.models import black_scholes, black76; print('Models imported successfully')"
       
       - uses: actions/upload-artifact@v4
         with:
@@ -73,7 +73,7 @@ jobs:
         run: |
           pip install (Get-ChildItem dist/*.whl)
           python -c "import quantforge; print(f'QuantForge {quantforge.__version__} imported successfully')"
-          python -c "from quantforge import BlackScholes, Black76, AmericanOption; print('Models imported successfully')"
+          python -c "from quantforge.models import black_scholes, black76; print('Models imported successfully')"
       
       - uses: actions/upload-artifact@v4
         with:
@@ -110,7 +110,7 @@ jobs:
         run: |
           pip install dist/*.whl
           python -c "import quantforge; print(f'QuantForge {quantforge.__version__} imported successfully')"
-          python -c "from quantforge import BlackScholes, Black76, AmericanOption; print('Models imported successfully')"
+          python -c "from quantforge.models import black_scholes, black76; print('Models imported successfully')"
       
       - uses: actions/upload-artifact@v4
         with:
