@@ -4,14 +4,17 @@ pub mod black_scholes_parallel;
 
 // New model implementations
 pub mod american;
+pub mod batch_helpers;
 pub mod black76;
 pub mod black_scholes_batch;
 pub mod black_scholes_model;
 pub mod greeks;
+pub mod greeks_batch;
 pub mod greeks_parallel;
 pub mod implied_volatility;
 pub mod iv_initial_guess;
 pub mod merton;
+pub mod model_traits;
 
 // Re-export legacy functions for backward compatibility during migration
 pub use black_scholes::{bs_call_price, bs_call_price_batch, bs_put_price, bs_put_price_batch};
@@ -24,6 +27,7 @@ pub use greeks::{
     gamma_batch, rho_call, rho_call_batch, rho_put, rho_put_batch, theta_call, theta_call_batch,
     theta_put, theta_put_batch, vega, vega_batch, Greeks,
 };
+pub use greeks_batch::GreeksBatch;
 pub use implied_volatility::{
     implied_volatility_batch, implied_volatility_batch_parallel, implied_volatility_call,
     implied_volatility_put,

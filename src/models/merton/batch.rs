@@ -4,7 +4,7 @@ use super::MertonParams;
 use crate::broadcast::{ArrayLike, BroadcastIterator};
 use crate::error::QuantForgeError;
 use crate::models::merton::{greeks::calculate_merton_greeks, MertonGreeks, MertonModel};
-use crate::models::PricingModel;
+use crate::models::{GreeksBatch, PricingModel};
 use rayon::prelude::*;
 
 const PARALLELIZATION_THRESHOLD: usize = 10_000;
@@ -181,15 +181,7 @@ pub fn greeks_batch(
     })
 }
 
-/// Batch Greeks result structure (arrays of each Greek)
-pub struct GreeksBatch {
-    pub delta: Vec<f64>,
-    pub gamma: Vec<f64>,
-    pub vega: Vec<f64>,
-    pub theta: Vec<f64>,
-    pub rho: Vec<f64>,
-    pub dividend_rho: Vec<f64>,
-}
+// GreeksBatch is now imported from greeks_batch module
 
 #[cfg(test)]
 mod tests {

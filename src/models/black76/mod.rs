@@ -120,9 +120,7 @@ impl PricingModel for Black76 {
 }
 
 // Re-export batch functions
-pub use batch::{
-    call_price_batch, greeks_batch, implied_volatility_batch, put_price_batch, GreeksBatch,
-};
+pub use batch::{call_price_batch, greeks_batch, implied_volatility_batch, put_price_batch};
 
 // Re-export main functions
 pub use greeks::{calculate_greeks, delta, gamma, rho, theta, vega};

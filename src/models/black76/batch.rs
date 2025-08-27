@@ -4,7 +4,7 @@ use super::{calculate_greeks, call_price, put_price, Black76Params};
 use crate::broadcast::{ArrayLike, BroadcastIterator};
 use crate::error::QuantForgeError;
 use crate::models::black76::implied_volatility::calculate_iv;
-use crate::models::Greeks;
+use crate::models::{Greeks, GreeksBatch};
 use rayon::prelude::*;
 
 const PARALLELIZATION_THRESHOLD: usize = 10_000;
@@ -145,23 +145,18 @@ pub fn greeks_batch(
     };
 
     // Convert list of Greeks to GreeksBatch
+    let len = greeks_list.len();
     Ok(GreeksBatch {
         delta: greeks_list.iter().map(|g| g.delta).collect(),
         gamma: greeks_list.iter().map(|g| g.gamma).collect(),
         vega: greeks_list.iter().map(|g| g.vega).collect(),
         theta: greeks_list.iter().map(|g| g.theta).collect(),
         rho: greeks_list.iter().map(|g| g.rho).collect(),
+        dividend_rho: vec![0.0; len], // Black76 doesn't use dividends
     })
 }
 
-/// Batch Greeks result structure (arrays of each Greek)
-pub struct GreeksBatch {
-    pub delta: Vec<f64>,
-    pub gamma: Vec<f64>,
-    pub vega: Vec<f64>,
-    pub theta: Vec<f64>,
-    pub rho: Vec<f64>,
-}
+// GreeksBatch is now imported from greeks_batch module
 
 #[cfg(test)]
 mod tests {

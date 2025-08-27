@@ -14,9 +14,7 @@ pub mod greeks;
 pub mod implied_volatility;
 pub mod pricing;
 
-pub use batch::{
-    call_price_batch, greeks_batch, implied_volatility_batch, put_price_batch, GreeksBatch,
-};
+pub use batch::{call_price_batch, greeks_batch, implied_volatility_batch, put_price_batch};
 pub use greeks::*;
 pub use implied_volatility::*;
 pub use pricing::*;

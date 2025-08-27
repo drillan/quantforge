@@ -21,6 +21,15 @@ impl<'a> ArrayLike<'a> {
         }
     }
 
+    /// Convert ArrayLike to a Vec<f64>
+    /// For scalars, returns a single-element Vec
+    pub fn to_vec(&self) -> Vec<f64> {
+        match self {
+            ArrayLike::Scalar(v) => vec![*v],
+            ArrayLike::Array(arr) => arr.to_vec(),
+        }
+    }
+
     /// Check if the array is empty
     pub fn is_empty(&self) -> bool {
         match self {
@@ -53,6 +62,11 @@ impl<'a> ArrayLike<'a> {
 /// Calculate the output size for broadcasting multiple inputs
 pub fn calculate_output_size(inputs: &[ArrayLike]) -> Result<usize, QuantForgeError> {
     if inputs.is_empty() {
+        return Ok(0);
+    }
+
+    // Check if any input is empty
+    if inputs.iter().any(|input| input.is_empty()) {
         return Ok(0);
     }
 

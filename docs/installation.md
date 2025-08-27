@@ -27,7 +27,7 @@ pip install -i https://test.pypi.org/simple/ --extra-index-url https://pypi.org/
 ### PyPIから安定版をインストール（準備中）
 
 ```bash
-# 安定版がリリースされた後（v0.1.0以降）
+# 安定版がリリースされた後
 pip install quantforge
 ```
 

@@ -8,7 +8,7 @@ QuantForgeを使って5分でオプション価格計算を始めましょう。
 # TestPyPIから最新開発版をインストール（現在利用可能）
 pip install -i https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ quantforge
 
-# PyPIから安定版をインストール（v0.1.0以降で利用可能）
+# PyPIから安定版をインストール（安定版リリース後）
 pip install quantforge
 
 # またはソースから開発版をインストール

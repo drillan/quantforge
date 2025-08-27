@@ -1,5 +1,13 @@
 # 計画変更履歴
 
+## 2025-08-27（Benchmark Enhancement）
+- `2025-01-27-python-benchmark-iv.md` → archive/ ✅
+  - インプライドボラティリティベンチマークの完全実装
+  - 482倍の単一IV計算性能改善（1.5μs vs 707.3μs）
+  - バッチ処理で345倍改善（10,000件を19.87msで処理）
+  - 実践シナリオ（ボラティリティサーフェス、ポートフォリオリスク）のベンチマーク追加
+  - ArrayLike性能測定（list/tuple/ndarrayのオーバーヘッド分析）
+
 ## 2025-08-27
 - `2025-08-27-both-wheel-distribution-strategy.md` → archive/ ✅
   - Python 3.12+ 専用wheel配布戦略の完全実装

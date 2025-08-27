@@ -47,6 +47,20 @@ class NumericalError(RuntimeError):
         return f"Numerical error in {self.operation}: {self.details}"
 
 
+@dataclass
+class DimensionError(ValueError):
+    """Dimension mismatch error."""
+
+    expected: int | tuple[int, ...]
+    actual: int | tuple[int, ...]
+    parameter: str | None = None
+
+    def __str__(self) -> str:
+        if self.parameter:
+            return f"Dimension mismatch for {self.parameter}: expected {self.expected}, got {self.actual}"
+        return f"Dimension mismatch: expected {self.expected}, got {self.actual}"
+
+
 class InputValidator:
     """Utility class for input validation with consistent error messages."""
 

@@ -3,21 +3,12 @@
 use super::{boundary, greeks::calculate_american_greeks, AmericanModel, AmericanParams};
 use crate::broadcast::{ArrayLike, BroadcastIterator};
 use crate::error::QuantForgeError;
-use crate::models::{Greeks, PricingModel};
+use crate::models::{Greeks, GreeksBatch, PricingModel};
 use rayon::prelude::*;
 
 const PARALLELIZATION_THRESHOLD: usize = 10_000;
 
-/// Container for batch Greeks results  
-#[derive(Debug, Clone)]
-pub struct GreeksBatch {
-    pub delta: Vec<f64>,
-    pub gamma: Vec<f64>,
-    pub vega: Vec<f64>,
-    pub theta: Vec<f64>,
-    pub rho: Vec<f64>,
-    pub dividend_rho: Vec<f64>, // American options have dividend rho
-}
+// GreeksBatch is now imported from greeks_batch module
 
 /// Batch calculate American call option prices with broadcasting support
 pub fn call_price_batch(

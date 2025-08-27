@@ -3,7 +3,7 @@
 use crate::broadcast::{ArrayLike, BroadcastIterator};
 use crate::error::QuantForgeError;
 use crate::models::black_scholes_model::{BlackScholes, BlackScholesParams};
-use crate::models::PricingModel;
+use crate::models::{GreeksBatch, PricingModel};
 use rayon::prelude::*;
 
 /// Calculate call prices with full array support and broadcasting
@@ -225,6 +225,7 @@ pub fn greeks_batch(
     let mut vega = Vec::with_capacity(size);
     let mut theta = Vec::with_capacity(size);
     let mut rho = Vec::with_capacity(size);
+    let mut dividend_rho = Vec::with_capacity(size); // For consistency, though BS doesn't use dividends
 
     for vals in iter {
         let params = BlackScholesParams {
@@ -243,6 +244,7 @@ pub fn greeks_batch(
             vega.push(f64::NAN);
             theta.push(f64::NAN);
             rho.push(f64::NAN);
+            dividend_rho.push(0.0); // No dividend sensitivity for standard BS
         } else {
             let greeks = BlackScholes::greeks(&params, is_call);
             delta.push(greeks.delta);
@@ -250,6 +252,7 @@ pub fn greeks_batch(
             vega.push(greeks.vega);
             theta.push(greeks.theta);
             rho.push(greeks.rho);
+            dividend_rho.push(0.0); // No dividend sensitivity for standard BS
         }
     }
 
@@ -259,17 +262,8 @@ pub fn greeks_batch(
         vega,
         theta,
         rho,
+        dividend_rho,
     })
-}
-
-/// Container for batch Greeks results
-#[derive(Debug, Clone)]
-pub struct GreeksBatch {
-    pub delta: Vec<f64>,
-    pub gamma: Vec<f64>,
-    pub vega: Vec<f64>,
-    pub theta: Vec<f64>,
-    pub rho: Vec<f64>,
 }
 
 #[cfg(test)]

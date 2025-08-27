@@ -143,7 +143,3 @@ faq
 - [GitHub Repository](https://github.com/yourusername/quantforge)
 - [PyPI Package](https://pypi.org/project/quantforge/)
 - [Issue Tracker](https://github.com/yourusername/quantforge/issues)
-
----
-
-**最終更新**: 2025-01-24

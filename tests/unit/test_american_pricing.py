@@ -161,7 +161,7 @@ class TestAmericanBatchPricing:
         spots = np.array([80.0, 90.0, 100.0, 110.0, 120.0])
         k, t, r, q, sigma = 100.0, 0.5, 0.1, 0.0, 0.25
 
-        prices = call_price_batch(spots=spots, k=k, t=t, r=r, q=q, sigma=sigma)
+        prices = call_price_batch(spots=spots, strikes=k, times=t, rates=r, qs=q, sigmas=sigma)
 
         # Check shape
         assert len(prices) == len(spots)
@@ -179,7 +179,7 @@ class TestAmericanBatchPricing:
         spots = np.array([80.0, 90.0, 100.0, 110.0, 120.0])
         k, t, r, q, sigma = 100.0, 0.5, 0.1, 0.0, 0.25
 
-        prices = put_price_batch(spots=spots, k=k, t=t, r=r, q=q, sigma=sigma)
+        prices = put_price_batch(spots=spots, strikes=k, times=t, rates=r, qs=q, sigmas=sigma)
 
         # Check shape
         assert len(prices) == len(spots)
