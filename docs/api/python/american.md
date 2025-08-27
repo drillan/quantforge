@@ -62,8 +62,8 @@ print(f"Implied Volatility: {iv:.4f}")
 
 ```python
 # 早期行使境界の計算
-# パラメータ: k, t, r, q, sigma, is_call
-boundary = american.exercise_boundary(100.0, 1.0, 0.05, 0.03, 0.2, True)
+# パラメータ: s, k, t, r, q, sigma, is_call
+boundary = american.exercise_boundary(100.0, 100.0, 1.0, 0.05, 0.03, 0.2, True)
 print(f"Exercise boundary: {boundary:.2f}")
 ```
 
@@ -131,10 +131,10 @@ except ValueError as e:
 
 | 操作 | 単一計算 | 100万件バッチ |
 |------|----------|--------------:|
-| コール/プット価格 | < 50ns | < 100ms |
-| 全グリークス | < 100ns | < 200ms |
-| インプライドボラティリティ | < 500ns | < 1000ms |
-| 早期行使境界 | < 30ns | < 60ms |
+| コール/プット価格 | ~1 μs | ~500ms |
+| 全グリークス | ~6 μs | ~6s |
+| インプライドボラティリティ | ~10 μs | ~10s |
+| 早期行使境界 | ~1 μs | ~1s |
 
 ## 使用例
 
@@ -177,8 +177,8 @@ q = 0.03     # 配当利回り
 sigma = 0.2  # ボラティリティ
 
 # 早期行使境界の計算
-boundary_call = american.exercise_boundary(k, t, r, q, sigma, True)
-boundary_put = american.exercise_boundary(k, t, r, q, sigma, False)
+boundary_call = american.exercise_boundary(100.0, k, t, r, q, sigma, True)
+boundary_put = american.exercise_boundary(100.0, k, t, r, q, sigma, False)
 
 print(f"Call exercise boundary: ${boundary_call:.2f}")
 print(f"Put exercise boundary: ${boundary_put:.2f}")
