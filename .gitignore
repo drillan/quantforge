@@ -254,4 +254,7 @@ tracker_temp.yaml
 
 # Performance and benchmarks
 benchmark_results_*.json
+benchmark_results.json       # 一時的な互換性ファイル
+benchmarks/benchmark_results.json  # 明示的にパスも指定
+benchmarks/results/          # 測定結果ディレクトリ全体（ローカルデータ）
 perf_*.log

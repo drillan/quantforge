@@ -125,9 +125,18 @@ def format_markdown(results: dict[str, Any]) -> str:
 
 
 if __name__ == "__main__":
-    # 前回の実行結果を読み込み
-    with open("benchmark_results.json") as f:
-        results = json.load(f)
+    from pathlib import Path
+    
+    # 最新結果を優先的に読み込み
+    if Path("results/latest.json").exists():
+        with open("results/latest.json") as f:
+            results = json.load(f)
+    elif Path("benchmark_results.json").exists():
+        with open("benchmark_results.json") as f:
+            results = json.load(f)
+    else:
+        print("Error: No benchmark results found")
+        exit(1)
 
     # Markdown形式で出力
     print(format_markdown(results))

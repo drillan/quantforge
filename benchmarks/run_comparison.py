@@ -134,7 +134,11 @@ class BenchmarkRunner:
             print(f"  - サイズ {size:,} ...")
             results["batch"].append(self.benchmark_batch(size))
 
-        # 結果をJSONファイルに保存
+        # 結果を構造化データとして保存
+        from save_results import save_benchmark_result
+        save_benchmark_result(results)
+        
+        # 互換性のため従来のファイルも保存
         with open("benchmark_results.json", "w") as f:
             json.dump(results, f, indent=2)
 
