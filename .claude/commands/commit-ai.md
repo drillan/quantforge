@@ -1,6 +1,6 @@
 ---
 description: Execute smart commits with context-aware quality checks
-argument-hint: "[type] [--options] | docs | fix | feat | quick | style | test | refactor | perf | chore | full | help"
+argument-hint: "[type] [--path <paths>] [--options] | docs | fix | feat | quick | style | test | refactor | perf | chore | full | help"
 ---
 
 # AI Smart Commit Protocol - QuantForge
@@ -11,6 +11,11 @@ Execute commits with intelligent, context-aware quality checks based on the type
 
 ```bash
 /commit-ai [type] [--options]
+```
+
+For path-specific commits:
+```bash
+/commit-ai [type] --path <paths> [--options]
 ```
 
 ### Types
@@ -27,6 +32,7 @@ Execute commits with intelligent, context-aware quality checks based on the type
 - `help` - Show this help message
 
 ### Options
+- `--path <paths>` - Commit only specified files/directories
 - `--skip-tests` - Skip test execution
 - `--skip-rust` - Skip Rust quality checks
 - `--skip-python` - Skip Python quality checks
@@ -47,6 +53,7 @@ TYPE=""
 OPTIONS=""
 CUSTOM_MESSAGE=""
 SCOPE=""
+PATHS=""
 SKIP_TESTS=false
 SKIP_RUST=false
 SKIP_PYTHON=false
@@ -73,6 +80,7 @@ elif [[ "$ARGUMENTS" == "help" ]]; then
     echo "  full     - Complete checks (default)"
     echo ""
     echo "Options:"
+    echo "  --path <paths>    Commit only specified files"
     echo "  --skip-tests      Skip test execution"
     echo "  --skip-rust       Skip Rust checks"
     echo "  --skip-python     Skip Python checks"
@@ -104,6 +112,10 @@ else
     if [[ "$OPTIONS" == *"--scope"* ]]; then
         SCOPE=$(echo "$OPTIONS" | sed -n 's/.*--scope \([^ ]*\).*/\1/p')
     fi
+    if [[ "$OPTIONS" == *"--path"* ]]; then
+        # Extract paths - everything after --path until the next option or end
+        PATHS=$(echo "$OPTIONS" | sed -n 's/.*--path \([^-]*\).*/\1/p' | xargs)
+    fi
 fi
 ```
 
@@ -115,7 +127,19 @@ If no type is provided, analyze changes to determine the best mode:
 # Auto-detect type if not specified
 if [[ "$TYPE" == "full" ]]; then
     # Analyze changed files
-    CHANGED_FILES=$(git diff --name-only --cached)
+    if [[ -n "$PATHS" ]]; then
+        # If paths are specified, analyze only those
+        CHANGED_FILES=""
+        for path in $PATHS; do
+            if [[ -f "$path" ]]; then
+                CHANGED_FILES="$CHANGED_FILES$path\n"
+            elif [[ -d "$path" ]]; then
+                CHANGED_FILES="$CHANGED_FILES$(find "$path" -type f 2>/dev/null)\n"
+            fi
+        done
+    else
+        CHANGED_FILES=$(git diff --name-only --cached)
+    fi
     
     # Check patterns
     if echo "$CHANGED_FILES" | grep -q "^docs/" && ! echo "$CHANGED_FILES" | grep -qE "\.(py|rs)$"; then
@@ -134,6 +158,9 @@ if [[ "$TYPE" == "full" ]]; then
 fi
 
 echo "🎯 Commit type: $TYPE"
+if [[ -n "$PATHS" ]]; then
+    echo "📁 Path filter: $PATHS"
+fi
 ```
 
 ## 📋 Type-Specific Workflows
@@ -398,22 +425,70 @@ Execute these based on type and options:
 if [[ "$SKIP_PYTHON" == false ]]; then
     echo "🐍 Python quality checks..."
     
-    # Format
-    uv run ruff format .
-    
-    # Lint and fix
-    if [[ "$NO_FIX" == false ]]; then
-        uv run ruff check . --fix
+    # Determine files to check
+    PYTHON_FILES=""
+    if [[ -n "$PATHS" ]]; then
+        # Filter Python files from specified paths
+        for path in $PATHS; do
+            if [[ -f "$path" && "$path" == *.py ]]; then
+                PYTHON_FILES="$PYTHON_FILES $path"
+            elif [[ -d "$path" ]]; then
+                # Find Python files in directory
+                PYTHON_FILES="$PYTHON_FILES $(find "$path" -name "*.py" 2>/dev/null | tr '\n' ' ')"
+            fi
+        done
+        
+        if [[ -z "$PYTHON_FILES" ]]; then
+            echo "  No Python files in specified paths, skipping Python checks"
+            SKIP_PYTHON=true
+        else
+            echo "  Checking Python files: $PYTHON_FILES"
+        fi
     else
-        uv run ruff check .
+        PYTHON_FILES="."
     fi
     
-    # Type check
-    uv run mypy .
-    
-    # Tests
-    if [[ "$SKIP_TESTS" == false ]]; then
-        uv run pytest tests/ -q
+    if [[ "$SKIP_PYTHON" == false ]]; then
+        # Format
+        uv run ruff format $PYTHON_FILES
+        
+        # Lint and fix
+        if [[ "$NO_FIX" == false ]]; then
+            uv run ruff check $PYTHON_FILES --fix
+        else
+            uv run ruff check $PYTHON_FILES
+        fi
+        
+        # Type check
+        if [[ "$PYTHON_FILES" != "." ]]; then
+            uv run mypy $PYTHON_FILES
+        else
+            uv run mypy .
+        fi
+        
+        # Tests
+        if [[ "$SKIP_TESTS" == false ]]; then
+            if [[ -n "$PATHS" ]]; then
+                # Run tests related to specified files
+                TEST_FILES=""
+                for py_file in $PYTHON_FILES; do
+                    base_name=$(basename "$py_file" .py)
+                    test_file="tests/test_${base_name}.py"
+                    if [[ -f "$test_file" ]]; then
+                        TEST_FILES="$TEST_FILES $test_file"
+                    fi
+                done
+                
+                if [[ -n "$TEST_FILES" ]]; then
+                    echo "  Running related tests: $TEST_FILES"
+                    uv run pytest $TEST_FILES -q
+                else
+                    echo "  No related tests found for specified files"
+                fi
+            else
+                uv run pytest tests/ -q
+            fi
+        fi
     fi
 fi
 ```
@@ -424,25 +499,49 @@ fi
 if [[ "$SKIP_RUST" == false ]]; then
     echo "🦀 Rust quality checks..."
     
-    # Format
-    cargo fmt --all
-    
-    # Clippy
-    if [[ "$NO_FIX" == false ]]; then
-        cargo clippy --all-targets --all-features --fix -- -D warnings
-    else
-        cargo clippy --all-targets --all-features -- -D warnings
+    # Check if any Rust files are in the specified paths
+    if [[ -n "$PATHS" ]]; then
+        RUST_FILES=""
+        for path in $PATHS; do
+            if [[ -f "$path" && "$path" == *.rs ]]; then
+                RUST_FILES="$RUST_FILES $path"
+            elif [[ -d "$path" ]]; then
+                # Find Rust files in directory
+                RUST_FILES="$RUST_FILES $(find "$path" -name "*.rs" 2>/dev/null | tr '\n' ' ')"
+            fi
+        done
+        
+        if [[ -z "$RUST_FILES" ]]; then
+            echo "  No Rust files in specified paths, skipping Rust checks"
+            SKIP_RUST=true
+        else
+            echo "  Found Rust files in specified paths"
+            # Note: Rust tools typically need to run on the whole crate
+            echo "  Running full Rust checks (cargo requires whole-crate analysis)"
+        fi
     fi
     
-    # Build and test
-    cargo build --release
-    
-    if [[ "$SKIP_TESTS" == false ]]; then
-        cargo test --release
+    if [[ "$SKIP_RUST" == false ]]; then
+        # Format
+        cargo fmt --all
+        
+        # Clippy
+        if [[ "$NO_FIX" == false ]]; then
+            cargo clippy --all-targets --all-features --fix -- -D warnings
+        else
+            cargo clippy --all-targets --all-features -- -D warnings
+        fi
+        
+        # Build and test
+        cargo build --release
+        
+        if [[ "$SKIP_TESTS" == false ]]; then
+            cargo test --release
+        fi
+        
+        # Build Python bindings
+        uv run maturin develop --release
     fi
-    
-    # Build Python bindings
-    uv run maturin develop --release
 fi
 ```
 
@@ -452,6 +551,9 @@ fi
 # Always run critical rules check unless explicitly skipped
 if [[ "$TYPE" != "docs" ]] && [[ "$TYPE" != "style" ]]; then
     echo "📋 Critical rules compliance..."
+    
+    # Note: Critical rules check always runs on the entire codebase for safety
+    # even when --path is specified to ensure no violations are introduced
     
     ./scripts/check_critical_rules.sh || {
         if [[ "$NO_FIX" == false ]]; then
@@ -553,8 +655,28 @@ COMMIT_MSG=$(generate_commit_message "$TYPE" "$SCOPE" "$CUSTOM_MESSAGE")
 
 echo "💬 Commit message: $COMMIT_MSG"
 
-# Stage all changes
-git add -A
+# Stage changes based on path specification
+if [[ -n "$PATHS" ]]; then
+    echo "📁 Adding specified paths: $PATHS"
+    
+    # Verify paths exist
+    for path in $PATHS; do
+        if [[ ! -e "$path" ]]; then
+            echo "❌ Error: Path does not exist: $path"
+            exit 1
+        fi
+    done
+    
+    # Add specified paths
+    git add $PATHS
+    
+    # Show what will be committed
+    echo "📋 Files to be committed:"
+    git diff --name-only --cached
+else
+    # Stage all changes
+    git add -A
+fi
 
 # Create commit
 git commit -m "$COMMIT_MSG"
@@ -627,6 +749,21 @@ report_completion
 
 # Dependency update
 /commit-ai chore --message "Update PyO3 to 0.21.0"
+
+# Commit only specific files
+/commit-ai feat --path "src/models/black_scholes.rs tests/test_black_scholes.py"
+
+# Commit a specific directory
+/commit-ai refactor --path src/models/
+
+# Fix a single file with custom message
+/commit-ai fix --path src/lib.rs --message "Fix memory leak in calculation"
+
+# Documentation change in specific folder
+/commit-ai docs --path docs/api/
+
+# Multiple files with different types
+/commit-ai feat --path "src/models/asian.rs python/quantforge/asian.py" --scope models
 
 # Full quality check (default)
 /commit-ai
