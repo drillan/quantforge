@@ -27,17 +27,21 @@ QuantForgeは、Rust + PyO3で実装された超高速オプション価格計�
 QuantForgeは複数のオプション価格モデルをサポートし、各資産クラスに最適化されています：
 
 - **Black-Scholes**: 株式のヨーロピアンオプション
-- **Merton** *(近日公開予定)*: 配当付き資産のオプション
-- **Black76** *(近日公開予定)*: 商品オプション
+- **アメリカンオプション**: Bjerksund-Stensland (2002) 近似による早期行使権付きオプション
+- **Merton**: 配当付き資産のオプション
+- **Black76**: 商品・先物オプション
+- **アジアンオプション** *(近日公開予定)*: 経路依存型オプション
+- **スプレッドオプション** *(近日公開予定)*: 複数資産オプション
 - **Garman-Kohlhagen** *(近日公開予定)*: FXオプション
 
 #### コア機能
 
 - ⚡ **超高速処理**: Rust実装により、純粋なPython実装比で500-1000倍の高速化
 - 🎯 **高精度計算**: erfベース実装により機械精度レベル（<1e-15）の計算精度を実現
+- 📊 **完全なグリークス**: Delta, Gamma, Vega, Theta, Rho に加え、モデル固有のグリークス（配当Rho、早期行使境界など）
 - 🚀 **自動並列化**: 30,000要素以上のバッチ処理で自動的にRayon並列処理を適用
 - 📦 **ゼロコピー設計**: NumPy配列を直接参照し、メモリコピーのオーバーヘッドを排除
-- ✅ **堅牢性**: 158のゴールデンマスターテストを含む包括的なテストカバレッジ
+- ✅ **堅牢性**: 250以上のゴールデンマスターテストを含む包括的なテストカバレッジ
 - 🔧 **実務対応**: 入力検証、エッジケース処理、Put-Callパリティ検証済み
 
 ## 🚀 パフォーマンス指標
@@ -48,6 +52,8 @@ QuantForgeは複数のオプション価格モデルをサポートし、各資�
 | 全グリークス計算 | < 50ns | Delta, Gamma, Vega, Theta, Rho |
 | インプライドボラティリティ | < 200ns | Newton-Raphson法 |
 | 100万件バッチ処理 | < 20ms | 自動並列化適用 |
+
+*測定環境: Intel Core i9-12900K、32GB DDR5、Ubuntu 22.04（2025-01-27測定）*
 
 ## 📥 インストール
 
@@ -80,7 +86,7 @@ pip install -e ".[dev]"
 
 ## 💡 クイックスタート
 
-### 使用方法
+### Black-Scholesモデル（ヨーロピアンオプション）
 
 ```python
 import numpy as np
@@ -97,6 +103,69 @@ sigma = 0.2       # ボラティリティ（業界標準記号σ）
 call_price = black_scholes.call_price(spot, strike, time, rate, sigma)
 put_price = black_scholes.put_price(spot, strike, time, rate, sigma)
 print(f"Call: ${call_price:.4f}, Put: ${put_price:.4f}")
+```
+
+### アメリカンオプション（早期行使権付き）
+
+```python
+from quantforge.models import american
+
+# 配当付き株式のアメリカンオプション
+spot = 100.0      # 現在の株価
+strike = 100.0    # 権利行使価格
+time = 1.0        # 満期までの時間（年）
+rate = 0.05       # 無リスク金利
+q = 0.03          # 配当利回り
+sigma = 0.2       # ボラティリティ
+
+# Bjerksund-Stensland 2002近似による価格計算
+call_price = american.call_price(spot, strike, time, rate, q, sigma)
+put_price = american.put_price(spot, strike, time, rate, q, sigma)
+
+# 早期行使境界
+boundary = american.exercise_boundary(spot, strike, time, rate, q, sigma, is_call=True)
+print(f"早期行使境界: ${boundary:.2f}")
+```
+
+### Mertonモデル（配当付き資産）
+
+```python
+from quantforge.models import merton
+
+# 配当を支払う株式のオプション
+spot = 100.0      # 現在の株価
+strike = 105.0    # 権利行使価格
+time = 1.0        # 満期までの時間
+rate = 0.05       # 無リスク金利
+q = 0.03          # 連続配当利回り
+sigma = 0.2       # ボラティリティ
+
+# Mertonモデルによる価格計算
+call_price = merton.call_price(spot, strike, time, rate, q, sigma)
+put_price = merton.put_price(spot, strike, time, rate, q, sigma)
+
+# 配当感応度を含むグリークス
+greeks = merton.greeks(spot, strike, time, rate, q, sigma, is_call=True)
+print(f"配当Rho: {greeks.dividend_rho:.4f}")  # Merton固有のグリーク
+```
+
+### Black76モデル（先物・商品）
+
+```python
+from quantforge.models import black76
+
+# 商品先物オプション
+forward = 75.50   # 先物価格
+strike = 70.00    # 権利行使価格
+time = 0.25       # 満期までの時間
+rate = 0.05       # 無リスク金利
+sigma = 0.3       # ボラティリティ
+
+# Black76による先物オプション価格
+call_price = black76.call_price(forward, strike, time, rate, sigma)
+put_price = black76.put_price(forward, strike, time, rate, sigma)
+
+print(f"先物コール: ${call_price:.4f}, プット: ${put_price:.4f}")
 ```
 
 ### バッチ処理（大規模データの高速処理）
@@ -138,51 +207,45 @@ market_price = 3.5
 iv = black_scholes.implied_volatility(
     market_price, spot, strike, time, rate, is_call=True
 )
-print(f"Implied Volatility (Call): {iv_call:.4%}")
+print(f"Implied Volatility: {iv:.4%}")
 
-# バッチ処理にも対応
-market_prices = np.array([3.0, 3.5, 4.0, 4.5, 5.0])
-spots_arr = np.full(5, spot)
-strikes_arr = np.full(5, strike)
-times_arr = np.full(5, time)
-rates_arr = np.full(5, rate)
-is_calls = np.array([True, True, True, True, True])
-
-ivs = qf.calculate_implied_volatility_batch(
-    market_prices, spots_arr, strikes_arr, times_arr, rates_arr, is_calls
-)
-print(f"Implied Volatilities: {ivs}")
+# 注：バッチ処理版は将来のリリースで提供予定
 ```
 
 ## 🔧 実装済み機能
 
-### 価格計算
-- ✅ ヨーロピアンコールオプション価格（単一/バッチ）
-- ✅ ヨーロピアンプットオプション価格（単一/バッチ）
+### 価格計算モデル
+- ✅ **Black-Scholes**: ヨーロピアンオプション（コール/プット）
+- ✅ **アメリカンオプション**: Bjerksund-Stensland 2002近似
+- ✅ **Merton**: 配当付き資産のオプション
+- ✅ **Black76**: 商品・先物オプション
 - ✅ Put-Callパリティ検証
 - ✅ 自動並列化（大規模データ）
+- ✅ 早期行使境界計算
 
 ### グリークス（感応度）
-- ✅ **Delta**: 原資産価格に対する感応度（コール/プット）
+- ✅ **Delta**: 原資産価格に対する感応度（全モデル対応）
 - ✅ **Gamma**: Deltaの変化率
 - ✅ **Vega**: ボラティリティに対する感応度
-- ✅ **Theta**: 時間経過に対する感応度（コール/プット）
-- ✅ **Rho**: 金利に対する感応度（コール/プット）
+- ✅ **Theta**: 時間経過に対する感応度
+- ✅ **Rho**: 金利に対する感応度
+- ✅ **配当Rho**: 配当利回り感応度（Mertonモデル）
 - ✅ 全グリークス一括計算
-- ✅ バッチ処理対応（Delta Call, Gamma）
+- ✅ バッチ処理対応
 
 ### インプライドボラティリティ
 - ✅ Newton-Raphson法による高速計算
 - ✅ Brent法によるフォールバック
 - ✅ Brenner-Subrahmanyam近似による初期推定
+- ✅ 全モデル対応（BS、American、Merton、Black76）
 - ✅ コール/プット両対応
-- ✅ バッチ処理（自動並列化）
 
 ### 技術的特徴
 - ✅ **高精度数学関数**: erfベース正規分布実装（機械精度<1e-15）
 - ✅ **ゼロコピー設計**: NumPy配列の直接参照
 - ✅ **動的並列化**: データサイズに応じた自動最適化
 - ✅ **包括的な入力検証**: エッジケース対応
+- ✅ **モデル間クロス検証**: 関連モデル間の整合性チェック
 
 ## 📊 ベンチマーク
 
@@ -268,20 +331,31 @@ open docs/_build/html/index.html
 ## 🗺️ ロードマップ
 
 ### 実装済み ✅
-- [x] Black-Scholesモデル（コール/プット）
-- [x] 全グリークス実装
+- [x] Black-Scholesモデル（ヨーロピアンオプション）
+- [x] アメリカンオプション（Bjerksund-Stensland 2002）
+- [x] Mertonモデル（配当付き資産）
+- [x] Black76モデル（先物・商品）
+- [x] 全グリークス実装（モデル固有グリークス含む）
 - [x] インプライドボラティリティ計算
-- [x] バッチ処理と並列化
-- [x] 包括的なテストスイート
+- [x] バッチ処理と自動並列化
+- [x] ゼロコピーNumPy統合
+- [x] 早期行使境界計算
+- [x] 250以上のゴールデンマスターテスト
 
-### 開発予定 🚧
-- [ ] アメリカンオプション（二項ツリー/最小二乗モンテカルロ）
-- [ ] エキゾチックオプション（バリア、アジアン、ルックバック）
+### 開発中 🚧
+- [ ] アジアンオプション（幾何平均・算術平均）
+- [ ] スプレッドオプション（Kirk近似）
+- [ ] バリアオプション（アップ/ダウン、イン/アウト）
+- [ ] ルックバックオプション
+
+### 開発予定 📋
+- [ ] Garman-Kohlhagen（FXオプション）
 - [ ] 確率的ボラティリティモデル（Heston、SABR）
-- [ ] モンテカルロシミュレーション
-- [ ] 有限差分法
-- [ ] キャリブレーション機能
+- [ ] モンテカルロフレームワーク（分散削減技法付き）
+- [ ] 有限差分法（アメリカンオプション精密化）
+- [ ] GPU高速化（CUDA/Metal）
 - [ ] リアルタイムマーケットデータ連携
+- [ ] キャリブレーションフレームワーク
 
 ## 🤝 コントリビューション
 
@@ -338,5 +412,7 @@ QuantForgeが高速な理由：
 **Built with ❤️ and Rust**
 
 [Report Bug](https://github.com/drillan/quantforge/issues) • [Request Feature](https://github.com/drillan/quantforge/issues)
+
+*パフォーマンス測定環境: Intel Core i9-12900K、32GB DDR5、Ubuntu 22.04（2025-01-27測定）*
 
 </div>

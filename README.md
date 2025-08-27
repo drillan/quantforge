@@ -46,19 +46,23 @@ QuantForge delivers institutional-grade option pricing with unprecedented speed:
 QuantForge supports multiple option pricing models, each optimized for specific asset classes:
 
 - **Black-Scholes**: European options on stocks
-- **Merton** *(coming soon)*: Options on dividend-paying assets
-- **Black76** *(coming soon)*: Commodity options
+- **American Options**: Early exercise options with Bjerksund-Stensland (2002) approximation
+- **Merton**: Options on dividend-paying assets
+- **Black76**: Commodity and futures options
+- **Asian Options** *(coming soon)*: Path-dependent options
+- **Spread Options** *(coming soon)*: Multi-asset options
 - **Garman-Kohlhagen** *(coming soon)*: FX options
 
 ### Core Capabilities
 - **Complete Greeks**: Delta, Gamma, Vega, Theta, Rho with analytical precision
+- **Model-Specific Greeks**: Dividend Rho (Merton), Early Exercise Boundaries (American)
 - **Implied Volatility**: Hybrid Newton-Raphson/Brent solver with Brenner-Subrahmanyam initialization
 - **Batch Processing**: Zero-copy NumPy integration with automatic parallelization (>30k elements)
 
 ### Technical Excellence
 - 🦀 **Pure Rust Core**: Memory-safe, zero-overhead abstractions
 - 🎯 **Machine Precision**: Error-function based implementation (<1e-15 accuracy)
-- ⚡ **Optimized Implementation**: High-performance mathematical functions
+- ⚡ **Optimized Implementation**: High-performance mathematical functions (measured on Intel i9-12900K)
 - 🔧 **Production Ready**: Comprehensive input validation and edge case handling
 
 ## 📦 Installation
@@ -90,7 +94,7 @@ pip install -e ".[dev]"
 
 ## 💻 Quick Start
 
-### Usage
+### Black-Scholes Model (European Options)
 
 ```python
 import numpy as np
@@ -108,6 +112,69 @@ call_price = black_scholes.call_price(spot, strike, time, rate, sigma)
 put_price = black_scholes.put_price(spot, strike, time, rate, sigma)
 
 print(f"Call: ${call_price:.4f}, Put: ${put_price:.4f}")
+```
+
+### American Options (Early Exercise)
+
+```python
+from quantforge.models import american
+
+# American option with dividends
+spot = 100.0      # Current stock price
+strike = 100.0    # Strike price
+time = 1.0        # Time to maturity (years)
+rate = 0.05       # Risk-free rate
+q = 0.03          # Dividend yield
+sigma = 0.2       # Volatility
+
+# American call price (Bjerksund-Stensland 2002)
+call_price = american.call_price(spot, strike, time, rate, q, sigma)
+put_price = american.put_price(spot, strike, time, rate, q, sigma)
+
+# Early exercise boundary
+boundary = american.exercise_boundary(spot, strike, time, rate, q, sigma, is_call=True)
+print(f"Early exercise boundary: ${boundary:.2f}")
+```
+
+### Merton Model (Dividend-Paying Assets)
+
+```python
+from quantforge.models import merton
+
+# Options on dividend-paying stocks
+spot = 100.0      # Current stock price
+strike = 105.0    # Strike price
+time = 1.0        # Time to maturity
+rate = 0.05       # Risk-free rate
+q = 0.03          # Continuous dividend yield
+sigma = 0.2       # Volatility
+
+# Merton model pricing
+call_price = merton.call_price(spot, strike, time, rate, q, sigma)
+put_price = merton.put_price(spot, strike, time, rate, q, sigma)
+
+# Greeks including dividend sensitivity
+greeks = merton.greeks(spot, strike, time, rate, q, sigma, is_call=True)
+print(f"Dividend Rho: {greeks.dividend_rho:.4f}")  # Merton-specific Greek
+```
+
+### Black76 Model (Futures & Commodities)
+
+```python
+from quantforge.models import black76
+
+# Commodity futures options
+forward = 75.50   # Forward/futures price
+strike = 70.00    # Strike price
+time = 0.25       # Time to maturity
+rate = 0.05       # Risk-free rate
+sigma = 0.3       # Volatility
+
+# Black76 pricing for futures
+call_price = black76.call_price(forward, strike, time, rate, sigma)
+put_price = black76.put_price(forward, strike, time, rate, sigma)
+
+print(f"Futures Call: ${call_price:.4f}, Put: ${put_price:.4f}")
 ```
 
 ### Batch Processing
@@ -167,10 +234,11 @@ print(f"Implied Volatility: {iv:.2%}")
 - **Memory Efficiency**: Stack allocation for small batches, minimal heap pressure
 
 ### Validation
-- **158 Golden Master Tests**: Validated against reference implementations
+- **250+ Golden Master Tests**: Validated against reference implementations
 - **Property-Based Testing**: Hypothesis framework for edge case discovery
 - **Put-Call Parity**: Automatic validation in test suite
 - **Boundary Conditions**: Special handling for extreme values
+- **Model Cross-Validation**: Consistency checks between related models (BS-Merton, American-European)
 
 ## 📊 Detailed Benchmarks
 
@@ -255,22 +323,29 @@ Documentation includes:
 
 ### Completed ✅
 - [x] Black-Scholes Model (European options)
-- [x] Complete Greeks suite
+- [x] American Options (Bjerksund-Stensland 2002 approximation)
+- [x] Merton Model (Dividend-paying assets)
+- [x] Black76 Model (Futures and commodities)
+- [x] Complete Greeks suite (including model-specific Greeks)
 - [x] Implied Volatility solver
 - [x] Batch processing with auto-parallelization
 - [x] Zero-copy NumPy integration
+- [x] Early exercise boundary calculation
 
 ### In Progress 🚧
-- [ ] American options (Binomial tree, LSM)
-- [ ] Exotic options (Barrier, Asian, Lookback)
-- [ ] Variance swaps
+- [ ] Asian options (geometric and arithmetic averaging)
+- [ ] Spread options (Kirk's approximation)
+- [ ] Barrier options (up/down, in/out)
+- [ ] Lookback options
 
 ### Planned 📋
+- [ ] Garman-Kohlhagen (FX options)
 - [ ] Stochastic volatility models (Heston, SABR)
-- [ ] Monte Carlo framework
-- [ ] Finite difference methods
+- [ ] Monte Carlo framework with variance reduction
+- [ ] Finite difference methods (American options refinement)
 - [ ] GPU acceleration (CUDA/Metal)
 - [ ] Real-time market data integration
+- [ ] Calibration framework
 
 ## 🤝 Contributing
 
@@ -322,5 +397,7 @@ Built with these excellent tools:
 **Built with Rust for Speed, Wrapped in Python for Simplicity**
 
 ⭐ Star us on GitHub — it helps the project grow!
+
+*Performance metrics measured on Intel Core i9-12900K, 32GB DDR5, Ubuntu 22.04 (2025-01-27)*
 
 </div>
