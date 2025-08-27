@@ -1,7 +1,14 @@
 [package]
 name = "quantforge"
-version = "0.0.1"
+version = "0.0.2"
 edition = "2021"
+authors = ["driller"]
+description = "High-performance option pricing engine with Rust + PyO3"
+homepage = "https://github.com/drillan/quantforge"
+repository = "https://github.com/drillan/quantforge"
+license = "MIT"
+keywords = ["quantitative-finance", "options", "derivatives", "black-scholes", "pricing"]
+categories = ["mathematics", "science", "finance"]
 
 [lib]
 name = "quantforge"

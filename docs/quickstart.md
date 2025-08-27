@@ -5,10 +5,13 @@ QuantForgeを使って5分でオプション価格計算を始めましょう。
 ## インストール
 
 ```bash
-# pipを使用したインストール
+# TestPyPIから最新開発版をインストール（現在利用可能）
+pip install -i https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ quantforge
+
+# PyPIから安定版をインストール（v0.1.0以降で利用可能）
 pip install quantforge
 
-# または開発版のインストール
+# またはソースから開発版をインストール
 git clone https://github.com/drillan/quantforge.git
 cd quantforge
 pip install maturin

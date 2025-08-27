@@ -11,6 +11,28 @@ requires-python = ">=3.12"
 dependencies = [
     "numpy>=1.20",
 ]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Financial and Insurance Industry",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: Implementation :: CPython",
+    "Programming Language :: Rust",
+    "Topic :: Office/Business :: Financial",
+    "Topic :: Scientific/Engineering :: Mathematics",
+    "Operating System :: OS Independent",
+]
+
+[project.urls]
+Homepage = "https://github.com/drillan/quantforge"
+Documentation = "https://github.com/drillan/quantforge/tree/main/docs"
+Repository = "https://github.com/drillan/quantforge.git"
+Issues = "https://github.com/drillan/quantforge/issues"
+Changelog = "https://github.com/drillan/quantforge/blob/main/CHANGELOG.md"
 [project.optional-dependencies]
 docs = [
     "sphinx>=8.2.3",

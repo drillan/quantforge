@@ -9,6 +9,17 @@
 project = "quantforge"
 copyright = "2025, driller"
 author = "driller"
+release = "0.0.2"
+version = "0.0.2"
+
+# -- Project URLs ------------------------------------------------------------
+html_context = {
+    "display_github": True,
+    "github_user": "drillan",
+    "github_repo": "quantforge",
+    "github_version": "main",
+    "conf_py_path": "/docs/",
+}
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration

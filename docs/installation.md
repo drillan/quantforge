@@ -15,9 +15,25 @@
 
 ## インストール方法
 
+### TestPyPIから開発版をインストール（現在利用可能）
+
+最新の開発版はTestPyPIから入手可能です：
+
+```bash
+# TestPyPIから最新開発版をインストール
+pip install -i https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ quantforge
+```
+
+### PyPIから安定版をインストール（準備中）
+
+```bash
+# 安定版がリリースされた後（v0.1.0以降）
+pip install quantforge
+```
+
 ### uv を使用（推奨）
 
-uvは高速で信頼性の高いPythonパッケージマネージャーです。
+uvは高速で信頼性の高いPythonパッケージマネージャーです：
 
 ```bash
 # uvのインストール（未インストールの場合）
@@ -29,23 +45,8 @@ source .venv/bin/activate  # Linux/macOS
 # または
 .venv\Scripts\activate     # Windows
 
-# QuantForgeのインストール
-uv pip install quantforge
-```
-
-### pip を使用
-
-標準的なpipでもインストール可能です：
-
-```bash
-# 仮想環境の作成（推奨）
-python -m venv venv
-source venv/bin/activate  # Linux/macOS
-# または
-venv\Scripts\activate     # Windows
-
-# インストール
-pip install quantforge
+# TestPyPIからインストール
+uv pip install -i https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ quantforge
 ```
 
 
@@ -102,7 +103,7 @@ uv pip install maturin
 
 ```bash
 # リポジトリのクローン
-git clone https://github.com/yourusername/quantforge.git
+git clone https://github.com/drillan/quantforge.git
 cd quantforge
 
 # 仮想環境の作成と有効化
@@ -271,6 +272,6 @@ pip uninstall quantforge
 
 問題が解決しない場合：
 
-- [GitHub Issues](https://github.com/yourusername/quantforge/issues)
+- [GitHub Issues](https://github.com/drillan/quantforge/issues)
 - [FAQ](faq.md)
-- [Discord Community](https://discord.gg/quantforge)
+- [プロジェクトページ](https://github.com/drillan/quantforge)

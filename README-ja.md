@@ -4,7 +4,7 @@
 
 **日本語** | [English](./README.md)
 
-[![Python Version](https://img.shields.io/badge/python-3.11%2B-blue)](https://www.python.org/downloads/)
+[![Python Version](https://img.shields.io/badge/python-3.12%2B-blue)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Rust](https://img.shields.io/badge/rust-1.88%2B-orange)](https://www.rust-lang.org/)
 
@@ -57,7 +57,14 @@ QuantForgeは複数のオプション価格モデルをサポートし、各資�
 
 ## 📥 インストール
 
-### 開発版のインストール
+### TestPyPIからのインストール（最新開発版）
+
+```bash
+# TestPyPIから最新の開発版をインストール
+pip install -i https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ quantforge
+```
+
+### ソースからのインストール（開発用）
 
 ```bash
 # リポジトリのクローン

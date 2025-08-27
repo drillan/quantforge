@@ -4,7 +4,7 @@
 
 [日本語](./README-ja.md) | **English**
 
-[![Python Version](https://img.shields.io/badge/python-3.11%2B-blue)](https://www.python.org/downloads/)
+[![Python Version](https://img.shields.io/badge/python-3.12%2B-blue)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Rust](https://img.shields.io/badge/rust-1.88%2B-orange)](https://www.rust-lang.org/)
 
@@ -66,6 +66,13 @@ QuantForge supports multiple option pricing models, each optimized for specific 
 - 🔧 **Production Ready**: Comprehensive input validation and edge case handling
 
 ## 📦 Installation
+
+### From TestPyPI (Latest Development Version)
+
+```bash
+# Install the latest development version from TestPyPI
+pip install -i https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ quantforge
+```
 
 ### From Source (Development)
 

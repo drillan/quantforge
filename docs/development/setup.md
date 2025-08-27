@@ -19,15 +19,17 @@ cargo --version
 ### Python環境
 
 ```bash
-# Python 3.12+
-python --version
+# Python 3.12以降が必要
+python --version  # 3.12.0以上を確認
 
-# uv インストール
+# uv インストール（高速なパッケージマネージャー）
 curl -LsSf https://astral.sh/uv/install.sh | sh
 
 # 仮想環境作成
 uv venv
-source .venv/bin/activate
+source .venv/bin/activate  # Linux/macOS
+# または
+.venv\Scripts\activate      # Windows
 ```
 
 ### 開発ツール
