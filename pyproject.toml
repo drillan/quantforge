@@ -10,6 +10,7 @@ readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
     "numpy>=1.20",
+    "psutil>=7.0.0",
 ]
 classifiers = [
     "Development Status :: 3 - Alpha",
@@ -60,6 +61,7 @@ dev = [
     "scipy>=1.16.1",
     "types-pyyaml>=6.0.12.20250822",
     "scipy-stubs>=1.16.1.1",
+    "types-psutil>=7.0.0.20250822",
 ]
 
 [tool.ruff]

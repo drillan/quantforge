@@ -2,187 +2,88 @@
 
 QuantForgeの詳細なパフォーマンス測定結果です。
 
-## テスト環境
+## 最新の測定結果
 
-### ハードウェア
-- **CPU**: Intel Core i9-12900K / AMD Ryzen 9 5950X
-- **メモリ**: 32GB DDR5-5600
-- **OS**: Ubuntu 22.04 LTS / Windows 11 / macOS 14
+**重要**: 実際のユーザー環境での実測値に基づいています。理論値ではありません。
 
-### ソフトウェア
-- **Python**: 3.12.1
-- **Rust**: 1.75.0
-- **NumPy**: 1.26.0
-- **コンパイラ最適化**: `-O3 -march=native`
+最新の測定結果は [benchmarks_20250827.md](benchmarks_20250827.md) を参照してください。
 
-## Black-Scholesベンチマーク
+## テスト環境例
 
-:::{note}
-測定条件: 単一オプション価格計算、繰り返し1000回の中央値
-:::
+### AMD Ryzen 5 5600G (2025-08-27測定)
+- **CPU**: AMD Ryzen 5 5600G (6コア/12スレッド)
+- **メモリ**: 29.3 GB
+- **OS**: Linux 6.12 (Pop!_OS 22.04)
+- **Python**: 3.12.5
+- **Rust**: 1.75+
+
+## Black-Scholesベンチマーク（実測値）
 
 ### 単一計算
 
-| 実装 | 時間 | 相対速度 |
-|------|------|----------|
-| QuantForge (Rust) | 8ns | 1.0x |
-| NumPy実装 | 420ns | 52x |
-| Pure Python | 3,800ns | 475x |
-| QuantLib | 95ns | 12x |
+| 実装 | 実測時間 | 相対速度 |
+|------|----------|----------|
+| QuantForge (Rust) | 1.40 μs | 1.0x (基準) |
+| Pure Python (math only) | 3.74 μs | 0.37x |
+| SciPy | 89.23 μs | 0.016x |
 
 ### バッチ処理（100万オプション）
 
-| 実装 | 時間 | スループット |
-|------|------|-------------|
-| QuantForge (並列処理) | 12ms | 83M ops/sec |
-| NumPy Vectorized | 6,200ms | 161K ops/sec |
-| Python Loop | 3,800,000ms | 263 ops/sec |
+| 実装 | 実測時間 | スループット |
+|------|----------|-------------|
+| QuantForge | 54.88 ms | 18.2M ops/sec |
+| NumPy Vectorized | 99.50 ms | 10.1M ops/sec |
+| Pure Python Loop | N/A | < 1M ops/sec |
+
+## 性能特性
+
+### FFIオーバーヘッド
+- 単一呼び出し: 約1μsのオーバーヘッド
+- バッチ処理: 要素あたりのオーバーヘッドは無視可能
+
+### スケーリング特性
+| データサイズ | スループット | 効率性 |
+|-------------|-------------|--------|
+| 100 | 11.7M ops/sec | FFIオーバーヘッド大 |
+| 1,000 | 16.6M ops/sec | 良好 |
+| 10,000 | 18.2M ops/sec | 最適 |
+| 100,000+ | 18.3M ops/sec | 飽和 |
+
+## ベンチマーク実行方法
+
+```bash
+# 自動ベンチマーク実行
+cd benchmarks
+./run_benchmarks.sh
+
+# 個別実行
+uv run python run_comparison.py
+uv run python format_results.py
+```
+
+## パフォーマンス要約
+
+### 対Pure Python
+- 単一計算: **3倍**高速
+- バッチ処理: **20倍以上**高速（推定）
+
+### 対SciPy/NumPy
+- 単一計算: **64倍**高速（SciPy比）
+- バッチ処理: **1.8倍**高速（NumPy比）
+
+## 注記
+
+- 測定値は環境によって変動します
+- AMD Ryzen 5 5600Gでの実測値を基準としています
+- 高性能サーバーやIntel CPUでは異なる結果になる可能性があります
+- SIMD最適化は現在無効化されています（安定性優先）
 
 ## グリークス計算
 
-### 全グリークス（Delta, Gamma, Vega, Theta, Rho）
+グリークス計算のベンチマークは今後追加予定です。
 
-| データサイズ | QuantForge | NumPy | 高速化率 |
-|-------------|------------|-------|---------|
-| 1 | 45ns | 2.1μs | 47x |
-| 1,000 | 38μs | 2.1ms | 55x |
-| 100,000 | 3.8ms | 210ms | 55x |
-| 1,000,000 | 38ms | 2,100ms | 55x |
+## 関連ドキュメント
 
-## アメリカンオプション
-
-### Bjerksund-Stensland 2002
-
-| データサイズ | QuantForge | QuantLib | py_vollib |
-|-------------|------------|----------|-----------|
-| 1 | 48ns | 580ns | 12μs |
-| 10,000 | 420μs | 5.8ms | 120ms |
-| 1,000,000 | 42ms | 580ms | 12,000ms |
-
-## インプライドボラティリティ
-
-### Newton-Raphson法
-
-| 精度 | QuantForge | SciPy | 収束回数 |
-|------|------------|-------|----------|
-| 1e-6 | 180ns | 8.5μs | 3-4 |
-| 1e-8 | 210ns | 12μs | 4-5 |
-| 1e-10 | 250ns | 18μs | 5-6 |
-
-## メモリ効率
-
-### メモリ使用量（100万オプション）
-
-| 操作 | QuantForge | NumPy | Pure Python |
-|------|------------|-------|-------------|
-| 価格計算 | 16MB | 24MB | 380MB |
-| グリークス | 48MB | 120MB | 1,900MB |
-| インプレース | 8MB | - | - |
-
-## 並列処理スケーリング
-
-### マルチコア性能
-
-| コア数 | 1M opts処理時間 | スケーリング効率 |
-|--------|----------------|-----------------|
-| 1 | 38ms | 100% |
-| 2 | 20ms | 95% |
-| 4 | 11ms | 86% |
-| 8 | 6.5ms | 73% |
-| 16 | 4.2ms | 57% |
-
-
-## プラットフォーム比較
-
-### OS別パフォーマンス（100万オプション）
-
-| OS | Black-Scholes | American | Asian |
-|----|--------------|----------|-------|
-| Linux | 12ms | 42ms | 85ms |
-| macOS (Intel) | 14ms | 48ms | 92ms |
-| macOS (M1) | 16ms | 51ms | 98ms |
-| Windows | 15ms | 49ms | 95ms |
-
-## 実世界シナリオ
-
-### ポートフォリオ評価（10,000オプション）
-
-| タスク | QuantForge | 業界標準 | 改善率 |
-|--------|------------|---------|--------|
-| 価格計算 | 0.12ms | 21ms | 175x |
-| リスク計算 | 0.48ms | 105ms | 219x |
-| ヘッジ計算 | 0.35ms | 63ms | 180x |
-| 総計 | 0.95ms | 189ms | 199x |
-
-### リアルタイム処理
-
-| メトリクス | QuantForge | 要件 | 余裕 |
-|-----------|------------|------|------|
-| レイテンシ (p50) | 45μs | 1ms | 22x |
-| レイテンシ (p99) | 120μs | 5ms | 42x |
-| スループット | 830K/sec | 100K/sec | 8.3x |
-
-## エネルギー効率
-
-### 電力あたりの性能
-
-| 実装 | ops/Watt | 相対効率 |
-|------|----------|---------|
-| QuantForge (並列処理) | 2.1M | 1.0x |
-| NumPy | 41K | 0.02x |
-| Pure Python | 87 | 0.00004x |
-
-## コード例
-
-### ベンチマークスクリプト
-
-```python
-import quantforge as qf
-from quantforge.models import black_scholes
-import numpy as np
-import time
-
-def benchmark_black_scholes(n=1_000_000):
-    spots = np.random.uniform(90, 110, n)
-    strike = 100.0
-    rate = 0.05
-    sigma = 0.2
-    time_to_exp = 1.0
-    
-    # ウォームアップ
-    _ = black_scholes.call_price_batch(
-        spots[:1000], strike, time_to_exp, rate, sigma
-    )
-    
-    # 測定
-    start = time.perf_counter()
-    prices = black_scholes.call_price_batch(
-        spots=spots,
-        strike=strike,
-        time=time_to_exp,
-        rate=rate,
-        sigma=sigma
-    )
-    elapsed = time.perf_counter() - start
-    
-    return {
-        'total_time': elapsed * 1000,  # ms
-        'per_option': elapsed / n * 1e9,  # ns
-        'throughput': n / elapsed  # ops/sec
-    }
-
-results = benchmark_black_scholes()
-print(f"Time: {results['total_time']:.2f}ms")
-print(f"Per option: {results['per_option']:.1f}ns")
-print(f"Throughput: {results['throughput']/1e6:.1f}M ops/sec")
-```
-
-## まとめ
-
-QuantForgeの性能特性：
-- 単一計算: 8-50ns（測定環境による）
-- バッチ処理: Python比500-1000倍の処理速度
-- メモリ効率: 最小限のアロケーション
-- スケーラビリティ: 効率的な並列化
-
-詳細な最適化手法は[最適化ガイド](optimization.md)を参照してください。
+- [最適化ガイド](optimization.md)
+- [チューニングガイド](tuning.md)
+- [アーキテクチャ](../development/architecture.md)
