@@ -223,6 +223,10 @@ implied_volatility_batch(prices, spots, strikes, times, rates, dividend_yields, 
 greeks_batch(spots, strikes, times, rates, dividend_yields, sigmas, is_calls) -> Dict[str, np.ndarray]
 ```
 
+**Returns:**
+- Dictionary with keys: 'delta', 'gamma', 'vega', 'theta', 'rho', 'dividend_rho'
+- Each value is a NumPy array of the corresponding Greek
+
 #### exercise_boundary_batch
 
 Calculate optimal exercise boundaries for American options.
@@ -428,4 +432,4 @@ print(greeks_dict['gamma'])  # NumPy array of all gammas
 - [Black76 Model](black76.md)
 - [Merton Model](merton.md)
 - [American Options](american.md)
-- [Performance Optimization](../performance/optimization.md)
+- [Performance Optimization](../../performance/optimization.md)

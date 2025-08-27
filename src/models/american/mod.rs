@@ -80,6 +80,19 @@ impl AmericanParams {
         })
     }
 
+    /// Create new American option parameters without validation (for batch operations)
+    #[inline]
+    pub fn new_unchecked(s: f64, k: f64, t: f64, r: f64, q: f64, sigma: f64) -> Self {
+        Self {
+            s,
+            k,
+            t,
+            r,
+            q,
+            sigma,
+        }
+    }
+
     /// Cost of carry parameter (b = r - q)
     #[inline]
     pub fn b(&self) -> f64 {
@@ -121,6 +134,9 @@ impl AmericanModel {
 }
 
 // Public API functions
-// Batch functions temporarily disabled - will be reimplemented with full array support
+pub use batch::{
+    call_price_batch, exercise_boundary_batch, greeks_batch, implied_volatility_batch,
+    put_price_batch,
+};
 pub use boundary::exercise_boundary;
 pub use pricing::{american_call_price, american_put_price};
