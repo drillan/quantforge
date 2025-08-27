@@ -61,52 +61,32 @@ $$P = Ke^{-rT} N(-d_2) - S_0 e^{-qT} N(-d_1)$$
 
 ## グリークス
 
-配当利回りを考慮したグリークスの導出：
+配当利回りを考慮したオプション価格の感応度指標：
 
-### Delta (Δ)
+| グリーク | 意味 | コール | プット |
+|---------|------|--------|--------|
+| Delta | 株価感応度 $\partial V/\partial S$ | $e^{-qT} N(d_1)$ | $-e^{-qT} N(-d_1)$ |
+| Gamma | デルタの変化率 $\partial^2 V/\partial S^2$ | $\frac{e^{-qT} \phi(d_1)}{S_0 \sigma \sqrt{T}}$ | 同左 |
+| Vega | ボラティリティ感応度 $\partial V/\partial \sigma$ | $S_0 e^{-qT} \phi(d_1) \sqrt{T}$ | 同左 |
+| Theta | 時間価値減衰 $-\partial V/\partial T$ | 下記参照 | 下記参照 |
+| Rho | 金利感応度 $\partial V/\partial r$ | $KTe^{-rT}N(d_2)$ | $-KTe^{-rT}N(-d_2)$ |
+| Dividend Rho | 配当利回り感応度 $\partial V/\partial q$ | $-TS_0 e^{-qT}N(d_1)$ | $TS_0 e^{-qT}N(-d_1)$ |
 
-スポット価格に対する感応度:
+where $\phi(x) = \frac{1}{\sqrt{2\pi}}e^{-x^2/2}$ は標準正規分布の確率密度関数
 
-$$\Delta_{\text{call}} = e^{-qT} N(d_1)$$
-$$\Delta_{\text{put}} = -e^{-qT} N(-d_1)$$
+### 特記事項
 
-配当調整係数 $e^{-qT}$ により、配当なしのBlack-Scholesより小さくなります。
+- **Delta**: 配当調整係数 $e^{-qT}$ により、配当なしのBlack-Scholesより小さくなります
+- **Theta**: 配当項 $qS_0 e^{-qT}N(d_1)$ が追加されています
+- **Dividend Rho**: Mertonモデル特有のグリークです
 
-### Gamma (Γ)
+### シータの詳細
 
-Deltaの変化率:
-
-$$\Gamma = \frac{e^{-qT} \phi(d_1)}{S_0 \sigma \sqrt{T}}$$
-
-where $\phi(x) = \frac{1}{\sqrt{2\pi}}e^{-x^2/2}$
-
-### Vega (ν)
-
-ボラティリティ感応度:
-
-$$\nu = S_0 e^{-qT} \phi(d_1) \sqrt{T}$$
-
-### Theta (Θ)
-
-時間減衰（コールオプション）:
-
+コール:
 $$\Theta_{\text{call}} = -\frac{S_0 e^{-qT} \phi(d_1) \sigma}{2\sqrt{T}} + qS_0 e^{-qT}N(d_1) - rKe^{-rT}N(d_2)$$
 
-配当項 $qS_0 e^{-qT}N(d_1)$ が追加されています。
-
-### Rho (ρ)
-
-金利感応度:
-
-$$\rho_{\text{call}} = KTe^{-rT}N(d_2)$$
-$$\rho_{\text{put}} = -KTe^{-rT}N(-d_2)$$
-
-### Dividend Rho
-
-配当利回りに対する感応度（Mertonモデル特有）:
-
-$$\text{DividendRho}_{\text{call}} = -TS_0 e^{-qT}N(d_1)$$
-$$\text{DividendRho}_{\text{put}} = TS_0 e^{-qT}N(-d_1)$$
+プット:
+$$\Theta_{\text{put}} = -\frac{S_0 e^{-qT} \phi(d_1) \sigma}{2\sqrt{T}} - qS_0 e^{-qT}N(-d_1) + rKe^{-rT}N(-d_2)$$
 
 ## Black-Scholesとの関係
 
@@ -146,30 +126,26 @@ $$d_1 = \frac{\ln(F/K) + \sigma^2T/2}{\sigma\sqrt{T}}$$
 
 ### 精度要件
 
-- 価格精度: 相対誤差 < 1e-6
-- グリークス精度: 相対誤差 < 1e-5
-- Put-Callパリティ: 誤差 < 1e-10
+| 領域 | 精度目標 | 実装上の注意 |
+|------|----------|-------------|
+| 価格精度 | 相対誤差 < 1e-6 | 標準的な実装で十分 |
+| グリークス | 相対誤差 < 1e-5 | 有限差分法での検証推奨 |
+| Put-Callパリティ | 誤差 < 1e-10 | 理論的整合性の検証用 |
 
 ### 数値的課題と対策
 
 1. **配当調整の事前計算**
-   ```python
-   # 概念的な実装例（実際のAPIとは異なる）
-   def merton_call(s, k, t, r, q, sigma):
-       # 配当調整を事前計算
-       dividend_discount = exp(-q * t)
-       adjusted_spot = s * dividend_discount
-       # ...
-   ```
+   - 配当割引係数 $e^{-qT}$ を事前に計算して再利用
+   - 調整後スポット価格での計算により数値誤差を最小化
 
 2. **極限値での安定性**
-   - `q → 0`: Black-Scholesの計算に切り替え
-   - `q → r`: 特殊ケースとして処理
-   - 大きな `q`: 数値オーバーフロー防止
+   - $q \to 0$: Black-Scholesの計算に切り替え
+   - $q \to r$: 特殊ケースとして処理
+   - 大きな $q$: 数値オーバーフロー防止のための範囲チェック
 
 3. **exp関数の最適化**
    - 共通項の事前計算: $e^{-rT}$, $e^{-qT}$
-   - SIMD化での一括計算
+   - SIMD化での一括計算による高速化
 
 ## モデルの限界と拡張
 

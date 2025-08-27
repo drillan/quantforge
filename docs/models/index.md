@@ -6,14 +6,14 @@ QuantForgeで実装されているオプション価格モデルの数学的背�
 
 ### 実装済みモデル
 - [Black-Scholesモデル](black_scholes.md) - ヨーロピアンオプションの標準モデル ✅
-- [Black76モデル](../api/python/black76.md) - 商品先物・金利先物オプション ✅
+- [Black76モデル](black76.md) - 商品先物・金利先物オプション ✅
+- [Mertonモデル](merton.md) - 配当付き資産のオプション ✅
+- [アメリカンオプション](american_options.md) - Bjerksund-Stensland 2002近似 ✅
 
 ### 開発中モデル
-- [アメリカンオプション](american_options.md) - Bjerksund-Stensland 2002近似 ⚠️
 - [アジアンオプション](asian_options.md) - 平均価格オプション ⚠️
 
 ### 将来実装予定
-- Mertonモデル - 配当付き資産のオプション
 - Garman-Kohlhagenモデル - FXオプション
 - スプレッドオプション - Kirk近似
 - バリアオプション - ノックイン/ノックアウト
@@ -193,5 +193,7 @@ $$C - P = S_0 e^{-qT} - K e^{-rT}$$
 ## 次のステップ
 
 - [Black-Scholesモデル](black_scholes.md) - 詳細な理論と実装
+- [Black76モデル](black76.md) - 先物オプションの理論
+- [Mertonモデル](merton.md) - 配当考慮の拡張
 - [アメリカンオプション](american_options.md) - 早期行使の数学
 - [アジアンオプション](asian_options.md) - パス依存型オプション

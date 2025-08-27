@@ -76,6 +76,7 @@ user_guide/examples
 
 api/python/index
 api/python/pricing
+api/python/american
 api/python/black_scholes
 api/python/black76
 api/python/merton

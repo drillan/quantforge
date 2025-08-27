@@ -73,6 +73,28 @@ iv = merton.implied_volatility(
 print(f"Implied Volatility: {iv:.4f}")
 ```
 
+### アメリカンオプションモデル
+
+早期行使権を持つオプションの市場価格からIVを計算：
+
+```python
+from quantforge.models import american
+
+# アメリカンオプションのインプライドボラティリティ
+# パラメータ: price, s, k, t, r, q, is_call
+iv = american.implied_volatility(
+    15.50,    # 市場価格
+    100.0,    # スポット価格
+    100.0,    # 権利行使価格
+    1.0,      # 満期までの時間（年）
+    0.05,     # 無リスク金利
+    0.03,     # 配当利回り
+    True      # True: コール, False: プット
+)
+
+print(f"Implied Volatility: {iv:.4f}")
+```
+
 ## 計算手法
 
 ### Newton-Raphson法
@@ -107,10 +129,10 @@ where:
 
 ### モデル固有パラメータ
 
-| パラメータ | Black-Scholes | Black76 | Merton | 説明 |
-|-----------|---------------|---------|--------|------|
-| 原資産価格 | `s` (スポット) | `f` (フォワード) | `s` (スポット) | 現在価格 vs 将来価格 |
-| 配当利回り | - | - | `q` | 配当利回り（年率） |
+| パラメータ | Black-Scholes | Black76 | Merton | American | 説明 |
+|-----------|---------------|---------|--------|----------|------|
+| 原資産価格 | `s` (スポット) | `f` (フォワード) | `s` (スポット) | `s` (スポット) | 現在価格 vs 将来価格 |
+| 配当利回り | - | - | `q` | `q` | 配当利回り（年率） |
 
 ## エラーハンドリング
 

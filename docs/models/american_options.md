@@ -1,14 +1,4 @@
----
-future_feature: true
----
-
 # アメリカンオプションモデル
-
-:::{warning}
-このページで説明されている機能は現在開発中です。
-現在利用可能なモデルは[モデル一覧](index.md)をご確認ください。
-実装予定時期については[ロードマップ](../roadmap.md)をご確認ください。
-:::
 
 早期行使権を持つオプションの価格評価モデルです。
 
@@ -84,15 +74,29 @@ $$P_{Am} = K - S_0 + \text{European Put} + \text{Early Exercise Premium}$$
 
 ## グリークス
 
-アメリカンオプションのグリークス：
+アメリカンオプションの価格感応度指標：
 
-| グリーク | 意味 | 特徴 |
-|---------|------|------|
-| Delta | 株価感応度 $\partial V/\partial S$ | 早期行使境界で不連続 |
-| Gamma | デルタの変化率 $\partial^2 V/\partial S^2$ | 早期行使境界近傍で急増 |
-| Vega | ボラティリティ感応度 $\partial V/\partial \sigma$ | ヨーロピアンより小さい |
-| Theta | 時間価値減衰 $-\partial V/\partial T$ | 早期行使により複雑 |
-| Rho | 金利感応度 $\partial V/\partial r$ | コールは正、プットは負 |
+| グリーク | 意味 | コール | プット |
+|---------|------|--------|--------|
+| Delta | 株価感応度 $\partial V/\partial S$ | 早期行使境界で不連続 | 早期行使境界で不連続 |
+| Gamma | デルタの変化率 $\partial^2 V/\partial S^2$ | 境界近傍で急増 | 境界近傍で急増 |
+| Vega | ボラティリティ感応度 $\partial V/\partial \sigma$ | ヨーロピアンより小さい | ヨーロピアンより小さい |
+| Theta | 時間価値減衰 $-\partial V/\partial T$ | 早期行使により複雑 | 早期行使により複雑 |
+| Rho | 金利感応度 $\partial V/\partial r$ | 正（通常） | 負（通常） |
+
+### アメリカンオプション特有の特徴
+
+1. **早期行使境界の影響**
+   - Delta: 境界での不連続性により、ヘッジが困難
+   - Gamma: 境界付近でスパイクが発生、リスク管理に注意が必要
+
+2. **ヨーロピアンとの差異**
+   - Vega: 早期行使の可能性により、ボラティリティ感応度が低下
+   - Theta: 早期行使プレミアムの時間減衰が追加される
+
+3. **数値計算上の注意**
+   - 解析的な式が存在しないため、有限差分法やモンテカルロ法で近似
+   - Bjerksund-Stensland近似を使用した高速計算も可能
 
 ## Black-Scholesとの関係
 
@@ -169,8 +173,6 @@ $$\lim_{T \to 0} (American - European) = 0$$
 
 ```python
 # 概念的な実装例（実際のAPIとは異なる）
-# 将来実装予定のAPI
-
 def american_call_price(s, k, t, r, sigma, q=0.0):
     """
     Bjerksund-Stensland 2002モデルによるアメリカンコール価格
@@ -222,7 +224,8 @@ def american_call_price(s, k, t, r, sigma, q=0.0):
 
 ## 関連ドキュメント
 
-- [アメリカンオプション API（将来実装予定）]
+- [アメリカンオプション API](../api/python/american.md)
 - [Black-Scholesモデル](black_scholes.md)
-- [二項ツリーモデル（将来実装予定）]
-- [有限差分法（将来実装予定）]
+- [Mertonモデル](merton.md)
+- 二項ツリーモデル（開発中）
+- 有限差分法（開発中）
