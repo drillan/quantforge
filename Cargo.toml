@@ -31,3 +31,7 @@ simd = []  # SIMD最適化の有効化
 [[bench]]
 name = "benchmark"
 harness = false
+
+[[bench]]
+name = "american_benchmark"
+harness = false

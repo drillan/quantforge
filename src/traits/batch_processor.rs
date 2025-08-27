@@ -15,6 +15,7 @@ pub trait BatchProcessor: Sync {
     fn process_single(&self, params: &Self::Params) -> Self::Output;
 
     /// Process batch with validation and zero-copy optimization
+    #[allow(clippy::too_many_arguments)]
     fn process_batch<'py>(
         &self,
         py: Python<'py>,
@@ -40,7 +41,7 @@ pub trait BatchProcessor: Sync {
 
         // Process without GIL release for now (safety issue with mutable array)
         let output_slice = unsafe { output.as_slice_mut()? };
-        
+
         // Dynamic strategy selection based on size
         match len {
             0..=1000 => self.process_sequential(prices_slice, k, t, r, sigma, output_slice),
@@ -141,6 +142,7 @@ pub trait BatchProcessorWithDividend: BatchProcessor {
     fn process_single_with_dividend(&self, params: &Self::ParamsWithDividend) -> Self::Output;
 
     /// Process batch with dividend yield
+    #[allow(clippy::too_many_arguments)]
     fn process_batch_with_dividend<'py>(
         &self,
         py: Python<'py>,

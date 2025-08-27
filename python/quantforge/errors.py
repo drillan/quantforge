@@ -115,13 +115,13 @@ class ErrorHandler:
     def __enter__(self) -> "ErrorHandler":
         return self
 
-    def __exit__(self, exc_type: type[BaseException] | None, exc_val: BaseException | None, exc_tb: Any) -> bool:
+    def __exit__(self, exc_type: type[BaseException] | None, exc_val: BaseException | None, exc_tb: Any) -> None:
         if exc_type is None:
-            return False
+            return
 
         # Re-raise our custom errors as-is
-        if isinstance(exc_val, (ValidationError, ConvergenceError, NumericalError)):
-            return False
+        if isinstance(exc_val, ValidationError | ConvergenceError | NumericalError):
+            return
 
         # Wrap unexpected errors
         if exc_type is ValueError:
@@ -130,7 +130,7 @@ class ErrorHandler:
             raise NumericalError(operation=self.operation, details=str(exc_val)) from exc_val
 
         # Let other exceptions propagate
-        return False
+        return
 
 
 # Convenience functions for common validations

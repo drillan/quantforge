@@ -30,6 +30,11 @@ fn quantforge(m: &Bound<'_, PyModule>) -> PyResult<()> {
     python_modules::merton(&merton)?;
     models.add_submodule(&merton)?;
 
+    // Add american as a submodule of models
+    let american = PyModule::new_bound(m.py(), "american")?;
+    python_modules::american(&american)?;
+    models.add_submodule(&american)?;
+
     m.add_submodule(&models)?;
 
     Ok(())

@@ -2,6 +2,7 @@ use numpy::{PyArray1, PyReadonlyArray1};
 use pyo3::prelude::*;
 use pyo3::wrap_pyfunction;
 
+use crate::models::american::{AmericanModel, AmericanParams};
 use crate::models::black76::{Black76, Black76Params};
 use crate::models::black_scholes_model::{BlackScholes, BlackScholesParams};
 use crate::models::merton::{MertonModel, MertonParams};
@@ -709,4 +710,244 @@ impl PyMertonGreeks {
             self.delta, self.gamma, self.vega, self.theta, self.rho, self.dividend_rho
         )
     }
+}
+
+/// American option module for Python
+#[pymodule]
+pub fn american(m: &Bound<'_, PyModule>) -> PyResult<()> {
+    m.add_function(wrap_pyfunction!(american_call_price, m)?)?;
+    m.add_function(wrap_pyfunction!(american_put_price, m)?)?;
+    m.add_function(wrap_pyfunction!(american_call_price_batch, m)?)?;
+    m.add_function(wrap_pyfunction!(american_put_price_batch, m)?)?;
+    m.add_function(wrap_pyfunction!(american_greeks, m)?)?;
+    m.add_function(wrap_pyfunction!(american_implied_volatility, m)?)?;
+    m.add_function(wrap_pyfunction!(american_exercise_boundary, m)?)?;
+    Ok(())
+}
+
+/// Calculate American call option price using Bjerksund-Stensland 2002
+#[pyfunction]
+#[pyo3(name = "call_price")]
+#[pyo3(signature = (s, k, t, r, q, sigma))]
+fn american_call_price(s: f64, k: f64, t: f64, r: f64, q: f64, sigma: f64) -> PyResult<f64> {
+    // Create and validate parameters
+    let params = AmericanParams::new(s, k, t, r, q, sigma)
+        .map_err(|e| pyo3::exceptions::PyValueError::new_err(e.to_string()))?;
+
+    Ok(AmericanModel::call_price(&params))
+}
+
+/// Calculate American put option price using Bjerksund-Stensland 2002
+#[pyfunction]
+#[pyo3(name = "put_price")]
+#[pyo3(signature = (s, k, t, r, q, sigma))]
+fn american_put_price(s: f64, k: f64, t: f64, r: f64, q: f64, sigma: f64) -> PyResult<f64> {
+    // Create and validate parameters
+    let params = AmericanParams::new(s, k, t, r, q, sigma)
+        .map_err(|e| pyo3::exceptions::PyValueError::new_err(e.to_string()))?;
+
+    Ok(AmericanModel::put_price(&params))
+}
+
+/// Calculate call prices for multiple spots
+#[pyfunction]
+#[pyo3(name = "call_price_batch")]
+#[pyo3(signature = (spots, k, t, r, q, sigma))]
+fn american_call_price_batch<'py>(
+    py: Python<'py>,
+    spots: PyReadonlyArray1<f64>,
+    k: f64,
+    t: f64,
+    r: f64,
+    q: f64,
+    sigma: f64,
+) -> PyResult<Bound<'py, PyArray1<f64>>> {
+    // Validate common parameters
+    if k <= 0.0 || t < 0.0 || sigma <= 0.0 {
+        return Err(pyo3::exceptions::PyValueError::new_err(
+            "k must be positive; t must be non-negative; sigma must be positive",
+        ));
+    }
+
+    // Check dividend arbitrage
+    if q > r {
+        return Err(pyo3::exceptions::PyValueError::new_err(
+            "Dividend yield (q) cannot exceed risk-free rate (r) to prevent arbitrage",
+        ));
+    }
+
+    let spots_slice = spots.as_slice()?;
+
+    // Validate each spot price
+    for &s in spots_slice {
+        if !s.is_finite() || s <= 0.0 {
+            return Err(pyo3::exceptions::PyValueError::new_err(
+                "All spot prices must be positive and finite",
+            ));
+        }
+    }
+
+    let results: Vec<f64> = spots_slice
+        .iter()
+        .map(|&s| {
+            let params = AmericanParams {
+                s,
+                k,
+                t,
+                r,
+                q,
+                sigma,
+            };
+            AmericanModel::call_price(&params)
+        })
+        .collect();
+
+    Ok(PyArray1::from_vec_bound(py, results))
+}
+
+/// Calculate put prices for multiple spots
+#[pyfunction]
+#[pyo3(name = "put_price_batch")]
+#[pyo3(signature = (spots, k, t, r, q, sigma))]
+fn american_put_price_batch<'py>(
+    py: Python<'py>,
+    spots: PyReadonlyArray1<f64>,
+    k: f64,
+    t: f64,
+    r: f64,
+    q: f64,
+    sigma: f64,
+) -> PyResult<Bound<'py, PyArray1<f64>>> {
+    // Validate common parameters
+    if k <= 0.0 || t < 0.0 || sigma <= 0.0 {
+        return Err(pyo3::exceptions::PyValueError::new_err(
+            "k must be positive; t must be non-negative; sigma must be positive",
+        ));
+    }
+
+    // Check dividend arbitrage
+    if q > r {
+        return Err(pyo3::exceptions::PyValueError::new_err(
+            "Dividend yield (q) cannot exceed risk-free rate (r) to prevent arbitrage",
+        ));
+    }
+
+    let spots_slice = spots.as_slice()?;
+
+    // Validate each spot price
+    for &s in spots_slice {
+        if !s.is_finite() || s <= 0.0 {
+            return Err(pyo3::exceptions::PyValueError::new_err(
+                "All spot prices must be positive and finite",
+            ));
+        }
+    }
+
+    let results: Vec<f64> = spots_slice
+        .iter()
+        .map(|&s| {
+            let params = AmericanParams {
+                s,
+                k,
+                t,
+                r,
+                q,
+                sigma,
+            };
+            AmericanModel::put_price(&params)
+        })
+        .collect();
+
+    Ok(PyArray1::from_vec_bound(py, results))
+}
+
+/// Calculate all Greeks for American option
+#[pyfunction]
+#[pyo3(name = "greeks")]
+#[pyo3(signature = (s, k, t, r, q, sigma, is_call=true))]
+fn american_greeks(
+    s: f64,
+    k: f64,
+    t: f64,
+    r: f64,
+    q: f64,
+    sigma: f64,
+    is_call: bool,
+) -> PyResult<PyGreeks> {
+    // Create and validate parameters
+    let params = AmericanParams::new(s, k, t, r, q, sigma)
+        .map_err(|e| pyo3::exceptions::PyValueError::new_err(e.to_string()))?;
+
+    let greeks = AmericanModel::greeks(&params, is_call);
+
+    Ok(PyGreeks {
+        delta: greeks.delta,
+        gamma: greeks.gamma,
+        vega: greeks.vega,
+        theta: greeks.theta,
+        rho: greeks.rho,
+    })
+}
+
+/// Calculate implied volatility from American option price
+#[pyfunction]
+#[pyo3(name = "implied_volatility")]
+#[pyo3(signature = (price, s, k, t, r, q, is_call=true, initial_guess=None))]
+#[allow(clippy::too_many_arguments)]
+fn american_implied_volatility(
+    price: f64,
+    s: f64,
+    k: f64,
+    t: f64,
+    r: f64,
+    q: f64,
+    is_call: bool,
+    initial_guess: Option<f64>,
+) -> PyResult<f64> {
+    // Basic parameter validation (sigma will be solved for)
+    if s <= 0.0 || k <= 0.0 || t < 0.0 || price <= 0.0 {
+        return Err(pyo3::exceptions::PyValueError::new_err(
+            "s, k, and price must be positive; t must be non-negative",
+        ));
+    }
+
+    // Check dividend arbitrage
+    if q > r {
+        return Err(pyo3::exceptions::PyValueError::new_err(
+            "Dividend yield (q) cannot exceed risk-free rate (r) to prevent arbitrage",
+        ));
+    }
+
+    // Create params with dummy sigma for IV calculation
+    let params = AmericanParams {
+        s,
+        k,
+        t,
+        r,
+        q,
+        sigma: 0.3,
+    };
+
+    AmericanModel::implied_volatility(price, &params, is_call, initial_guess)
+        .map_err(|e| pyo3::exceptions::PyRuntimeError::new_err(e.to_string()))
+}
+
+/// Calculate early exercise boundary for American option
+#[pyfunction]
+#[pyo3(name = "exercise_boundary")]
+#[pyo3(signature = (s, k, t, r, q, sigma, is_call=true))]
+fn american_exercise_boundary(
+    s: f64,
+    k: f64,
+    t: f64,
+    r: f64,
+    q: f64,
+    sigma: f64,
+    is_call: bool,
+) -> PyResult<f64> {
+    // Create and validate parameters
+    let params = AmericanParams::new(s, k, t, r, q, sigma)
+        .map_err(|e| pyo3::exceptions::PyValueError::new_err(e.to_string()))?;
+
+    Ok(crate::models::american::exercise_boundary(&params, is_call))
 }

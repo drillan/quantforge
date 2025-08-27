@@ -177,11 +177,11 @@ fn bench_greeks(c: &mut Criterion) {
     group.bench_function("merton_greeks", |b| {
         b.iter(|| {
             let params = MertonParams {
-                spot: black_box(S),
-                strike: black_box(K),
-                time: black_box(T),
-                rate: black_box(R),
-                div_yield: black_box(0.02),
+                s: black_box(S),
+                k: black_box(K),
+                t: black_box(T),
+                r: black_box(R),
+                q: black_box(0.02),
                 sigma: black_box(SIGMA),
             };
             let greeks = MertonModel::greeks(&params, true);
@@ -221,7 +221,7 @@ fn bench_implied_volatility(c: &mut Criterion) {
                 rate: black_box(R),
                 sigma: 0.0,
             };
-            let iv = BlackScholes::implied_volatility(&params, black_box(call_price), true, None);
+            let iv = BlackScholes::implied_volatility(black_box(call_price), &params, true, None);
             black_box(iv)
         })
     });
