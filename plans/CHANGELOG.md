@@ -1,6 +1,14 @@
 # 計画変更履歴
 
 ## 2025-08-27
+- `2025-08-27-both-wheel-distribution-strategy.md` → archive/ ✅
+  - Python 3.12+ 専用wheel配布戦略の完全実装
+  - GitHub Actions CI/CD（Linux/Windows/macOS）構築
+  - TestPyPI配布成功（v0.0.1, v0.0.2）
+  - Single Source of Truth（Cargo.toml）によるバージョン管理
+  - manylinux2014互換、wheelサイズ < 300KB達成
+
+## 2025-08-27（American Option）
 - `2025-01-27-rust-american-option-implementation.md` → archive/ ✅
   - American optionの完全実装（Bjerksund-Stensland 2002）
   - Rustモジュール（5ファイル、約1,200行）、Python API（8関数）、テスト（19項目）

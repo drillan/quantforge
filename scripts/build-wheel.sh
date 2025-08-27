@@ -31,11 +31,17 @@ elif [ "$PROFILE" = "release" ]; then
         -o dist
 elif [ "$PROFILE" = "manylinux" ]; then
     echo -e "${GREEN}📦 manylinux2014 build (Docker required)${NC}"
+    echo -e "${YELLOW}Note: manylinux wheels are automatically built by GitHub Actions for releases.${NC}"
+    echo -e "${YELLOW}      Local manylinux builds are only needed for testing compatibility.${NC}"
     
     # Check if Docker is available
     if ! command -v docker &> /dev/null; then
         echo -e "${RED}❌ Docker is not installed or not running${NC}"
-        echo "Please install Docker to build manylinux wheels"
+        echo "Docker is optional for local development since:"
+        echo "  • GitHub Actions automatically builds manylinux wheels"
+        echo "  • Local 'dev' or 'release' builds work fine for development"
+        echo ""
+        echo "To proceed without Docker, use: $0 dev"
         exit 1
     fi
     
@@ -48,9 +54,12 @@ elif [ "$PROFILE" = "manylinux" ]; then
 else
     echo -e "${RED}❌ Unknown profile: $PROFILE${NC}"
     echo "Usage: $0 [dev|release|manylinux]"
-    echo "  dev       - Fast development build"
+    echo "  dev       - Fast development build (recommended for local development)"
     echo "  release   - Optimized release build"
-    echo "  manylinux - manylinux2014 compatible build (requires Docker)"
+    echo "  manylinux - manylinux2014 compatible build (optional, requires Docker)"
+    echo ""
+    echo "Note: manylinux wheels are automatically built by GitHub Actions."
+    echo "      Docker is NOT required for normal development."
     exit 1
 fi
 
