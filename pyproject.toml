@@ -4,7 +4,7 @@ build-backend = "maturin"
 
 [project]
 name = "quantforge"
-version = "0.0.1"
+dynamic = ["version"]
 description = "高性能オプション価格計算エンジン - Rust + PyO3実装"
 readme = "README.md"
 requires-python = ">=3.12"
