@@ -7,7 +7,6 @@ pub mod error;
 pub mod math;
 pub mod models;
 pub mod python_modules;
-pub mod simd;
 pub mod traits;
 pub mod validation;
 

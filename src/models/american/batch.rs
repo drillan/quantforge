@@ -1,17 +1,10 @@
-//! Batch processing for American options with SIMD optimization
+//! Batch processing for American options with parallel processing
 
 use super::{pricing, AmericanParams};
 use rayon::prelude::*;
 
-/// Batch calculate call prices with SIMD optimization
-pub fn call_price_batch_simd(
-    spots: &[f64],
-    k: f64,
-    t: f64,
-    r: f64,
-    q: f64,
-    sigma: f64,
-) -> Vec<f64> {
+/// Batch calculate call prices with parallel processing
+pub fn call_price_batch(spots: &[f64], k: f64, t: f64, r: f64, q: f64, sigma: f64) -> Vec<f64> {
     // Use parallel processing for large batches
     if spots.len() > 1000 {
         spots
@@ -47,8 +40,8 @@ pub fn call_price_batch_simd(
     }
 }
 
-/// Batch calculate put prices with SIMD optimization
-pub fn put_price_batch_simd(spots: &[f64], k: f64, t: f64, r: f64, q: f64, sigma: f64) -> Vec<f64> {
+/// Batch calculate put prices with parallel processing
+pub fn put_price_batch(spots: &[f64], k: f64, t: f64, r: f64, q: f64, sigma: f64) -> Vec<f64> {
     // Use parallel processing for large batches
     if spots.len() > 1000 {
         spots

@@ -7,11 +7,11 @@ Pythonの使いやすさを保ちながら、高速な計算性能を提供し�
 
 :::{note}
 **主要機能**
-- Python実装比 500-1000倍の処理速度（Intel i9-12900K、AVX2有効時の測定値）
+- Python実装比 500-1000倍の処理速度（Intel i9-12900K測定値）
 - 数値誤差 < 1e-15（倍精度演算）
 - シンプルなPython API
 - Black-Scholes、アメリカン、アジアン、スプレッドオプション対応
-- AVX2/AVX-512 SIMD命令セットによる並列計算
+- Rayonによる効率的な並列計算
 - NumPy配列のゼロコピー処理
 :::
 
@@ -30,7 +30,7 @@ price = black_scholes.call_price(
 )
 
 # バッチ処理
-# 100万件を20ms以下で処理（測定環境: Intel i9-12900K、AVX2有効）
+# 100万件を20ms以下で処理（測定環境: Intel i9-12900K）
 spots = np.random.uniform(90, 110, 1_000_000)
 prices = black_scholes.call_price_batch(
     spots=spots,
@@ -44,7 +44,7 @@ prices = black_scholes.call_price_batch(
 ## パフォーマンス比較
 
 :::{note}
-測定環境: Intel Core i9-12900K、32GB DDR5、Ubuntu 22.04、AVX2有効
+測定環境: Intel Core i9-12900K、32GB DDR5、Ubuntu 22.04
 測定日: 2025-01-24
 :::
 

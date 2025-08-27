@@ -11,7 +11,7 @@
 ### オプション要件
 
 - **Rust環境**: ソースからビルドする場合のみ必要
-- **CPU**: AVX2またはAVX-512サポート（自動検出、なくても動作）
+- **CPU**: x86-64またはARMプロセッサ
 
 ## インストール方法
 
@@ -193,8 +193,8 @@ sw_vers
 # CPU機能の確認
 lscpu | grep -E "avx|sse"
 
-# AVX非対応環境用のビルド
-RUSTFLAGS="-C target-feature=-avx2" maturin build
+# カスタムビルド
+maturin build --release
 ```
 
 #### メモリ不足エラー
@@ -213,9 +213,8 @@ batch_size = 10_000  # 100万件ではなく1万件ずつ処理
 # スレッド数の制御
 export RAYON_NUM_THREADS=8
 
-# SIMD機能の無効化（デバッグ用）
-export QUANTFORGE_DISABLE_AVX2=1
-export QUANTFORGE_DISABLE_AVX512=1
+# デバッグ用設定
+export RUST_LOG=debug
 ```
 
 #### Python設定

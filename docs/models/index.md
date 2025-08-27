@@ -146,16 +146,16 @@ struct PrecomputedValues {
 }
 ```
 
-### SIMDベクトル化
+### 並列処理
 
-8要素同時計算(AVX2)：
+Rayonによるバッチ処理：
 
 ```rust
-use std::arch::x86_64::*;
+use rayon::prelude::*;
 
-unsafe fn black_scholes_avx2(
-    spots: __m512d,
-    strikes: __m512d,
+fn black_scholes_parallel(
+    spots: &[f64],
+    strikes: &[f64],
     rate: f64,
     vol: f64,
     time: f64,

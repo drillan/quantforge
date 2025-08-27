@@ -122,7 +122,7 @@ except ValueError as e:
 ## パフォーマンス指標
 
 :::{note}
-測定環境: Intel Core i9-12900K、AVX2有効、Ubuntu 22.04
+測定環境: Intel Core i9-12900K、Ubuntu 22.04
 測定方法: 1000回実行の中央値
 :::
 

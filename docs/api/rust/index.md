@@ -8,7 +8,6 @@ QuantForgeのコアとなるRust実装のAPIドキュメントです。
 use quantforge::{
     models::{BlackScholes, American, Asian},
     greeks::Greeks,
-    simd::{SimdProcessor, SimdStrategy},
     parallel::ParallelExecutor,
 };
 ```
@@ -27,18 +26,16 @@ pub fn black_scholes_call(
 ) -> f64
 ```
 
-**SIMD最適化版:**
+**並列処理版:**
 
 ```rust
-pub fn black_scholes_call_simd<const N: usize>(
-    spots: &[f64; N],
-    strikes: &[f64; N],
+pub fn black_scholes_call_batch(
+    spots: &[f64],
+    strikes: &[f64],
     rate: f64,
     vol: f64,
     time: f64,
-) -> [f64; N]
-where
-    N: SimdWidth,
+) -> Vec<f64>
 ```
 
 ### アメリカンオプション
@@ -68,36 +65,30 @@ impl AmericanOption {
 }
 ```
 
-## SIMD最適化
+## 並列処理最適化
 
-### AVX2実装
+### Rayon実装
 
 ```rust
-#[cfg(target_feature = "avx2")]
-pub mod avx2 {
-    use std::arch::x86_64::*;
-    
-    pub unsafe fn black_scholes_avx2(
-        spots: &[f64],
-        strikes: &[f64],
-        rate: f64,
-        vol: f64,
-        time: f64,
-    ) -> Vec<f64> {
-        let mut results = Vec::with_capacity(spots.len());
-        
-        // 8要素ずつ処理
-        for chunk in spots.chunks_exact(8) {
-            let spot_vec = _mm512_loadu_pd(chunk.as_ptr());
-            // AVX2計算...
-        }
-        
-        results
-    }
+use rayon::prelude::*;
+
+pub fn black_scholes_parallel(
+    spots: &[f64],
+    strikes: &[f64],
+    rate: f64,
+    vol: f64,
+    time: f64,
+) -> Vec<f64> {
+    spots.par_iter()
+        .zip(strikes.par_iter())
+        .map(|(&s, &k)| {
+            black_scholes_call(s, k, rate, vol, time)
+        })
+        .collect()
 }
 ```
 
-### AVX-512実装
+### 高度な並列化
 
 ```rust
 #[cfg(target_feature = "avx512f")]

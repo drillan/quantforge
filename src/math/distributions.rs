@@ -54,21 +54,6 @@ pub fn norm_cdf(x: f64) -> f64 {
     0.5 * (1.0 + erf(x / SQRT_2))
 }
 
-/// SIMD版（将来の実装用プレースホルダー）
-/// 現在はスカラー実装、将来的にAVX2/AVX-512対応予定
-#[allow(dead_code)]
-pub(crate) fn norm_cdf_simd(values: &[f64]) -> Vec<f64> {
-    // TODO: Phase 2でtarget_featureによるSIMD実装切り替えを追加
-    // #[cfg(all(target_arch = "x86_64", target_feature = "avx2"))]
-    // でAVX2実装を分岐させる予定
-    norm_cdf_simd_scalar(values)
-}
-
-#[inline(always)]
-fn norm_cdf_simd_scalar(values: &[f64]) -> Vec<f64> {
-    values.iter().map(|&x| norm_cdf(x)).collect()
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;

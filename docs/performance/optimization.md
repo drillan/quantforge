@@ -2,9 +2,9 @@
 
 QuantForgeのパフォーマンスを最大化するための詳細な最適化手法です。
 
-## SIMD最適化
+## 並列処理最適化
 
-### AVX2最適化
+### Rayonによる並列化
 
 8要素並列処理：
 
@@ -17,7 +17,7 @@ unsafe fn calculate_avx2(data: &[f64]) -> Vec<f64> {
     
     for chunk in data.chunks_exact(8) {
         let vec = _mm512_loadu_pd(chunk.as_ptr());
-        // SIMD演算
+        // 並列演算
         let result = process_avx2(vec);
         _mm512_storeu_pd(results.as_mut_ptr(), result);
     }
@@ -29,19 +29,15 @@ unsafe fn calculate_avx2(data: &[f64]) -> Vec<f64> {
 ### CPU機能検出
 
 ```{warning}
-このセクションで説明されている高度な最適化機能（SIMD検出、戦略選択）は将来実装予定です。
-現在は、内部的にSIMD最適化が自動的に適用されます。
+このセクションで説明されている高度な最適化機能（戦略選択）は将来実装予定です。
+現在は、内部的に並列化が自動的に適用されます。
 ```
 
 ```python
 # 将来的なAPI（現在は未実装）
 # from quantforge import system_info
-# print(f"AVX2: {system_info.has_avx2()}")
-# print(f"AVX-512: {system_info.has_avx512()}")
-
-# 現在はQuantForgeが内部で自動的にSIMD命令を検出・使用
+# 現在はQuantForgeが内部で自動的に並列化を適用
 from quantforge.models import black_scholes
-# 内部でAVX2/AVX-512が自動的に使用される
 prices = black_scholes.call_price_batch(spots, 100, 1.0, 0.05, 0.2)
 ```
 
@@ -104,11 +100,11 @@ def optimal_parallel_strategy(data_size):
     if data_size < 1_000:
         return "sequential"
     elif data_size < 10_000:
-        return "simd_only"
+        return "parallel_2"
     elif data_size < 100_000:
         return "parallel_4"
     else:
-        return "hybrid_simd_parallel"
+        return "parallel_auto"
 
 # 将来的な戦略選択（現在は内部で自動最適化）
 strategy = optimal_parallel_strategy(len(data))
@@ -277,4 +273,4 @@ data = data.astype(np.float32)  # 変換が発生
 2. **データ構造**: NumPy配列、適切なレイアウト
 3. **バッチ処理**: 適切なサイズでまとめて処理
 4. **並列化**: データ量に応じた戦略
-5. **SIMD**: CPU機能を最大限活用
+5. **並列化**: マルチコアを最大限活用

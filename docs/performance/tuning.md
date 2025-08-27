@@ -47,12 +47,12 @@ Start-Process python.exe -ArgumentList "script.py" -Priority High
 ### Intel
 
 ```python
-# AVX-512最適化
+# 高度な並列化
 import quantforge as qf
 
-if qf.has_avx512():
-    qf.set_compute_strategy("avx512_optimized")
-    qf.set_vector_width(16)  # 16要素並列
+# スレッド数の調整
+import os
+os.environ["RAYON_NUM_THREADS"] = "16"
 ```
 
 ### AMD
@@ -299,8 +299,8 @@ def diagnose_performance():
     print("System Information:")
     print(f"CPU: {psutil.cpu_count()} cores")
     print(f"Memory: {psutil.virtual_memory().total / 1e9:.1f} GB")
-    print(f"AVX2: {qf.has_avx2()}")
-    print(f"AVX-512: {qf.has_avx512()}")
+    print(f"CPUコア数: {psutil.cpu_count(logical=False)}")
+    print(f"論理コア数: {psutil.cpu_count(logical=True)}")
     
     # テスト実行
     test_sizes = [100, 10000, 1000000]

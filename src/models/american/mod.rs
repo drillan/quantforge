@@ -116,6 +116,6 @@ impl PricingModel for AmericanModel {
 }
 
 // Public API functions
-pub use batch::{call_price_batch_simd, price_batch_parallel, put_price_batch_simd};
+pub use batch::{call_price_batch, price_batch_parallel, put_price_batch};
 pub use boundary::exercise_boundary;
 pub use pricing::{american_call_price, american_put_price};

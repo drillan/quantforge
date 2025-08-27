@@ -34,8 +34,7 @@ QuantForgeの詳細なパフォーマンス測定結果です。
 
 | 実装 | 時間 | スループット |
 |------|------|-------------|
-| QuantForge (AVX2) | 12ms | 83M ops/sec |
-| QuantForge (AVX-512) | 8ms | 125M ops/sec |
+| QuantForge (並列処理) | 12ms | 83M ops/sec |
 | NumPy Vectorized | 6,200ms | 161K ops/sec |
 | Python Loop | 3,800,000ms | 263 ops/sec |
 
@@ -92,16 +91,6 @@ QuantForgeの詳細なパフォーマンス測定結果です。
 | 8 | 6.5ms | 73% |
 | 16 | 4.2ms | 57% |
 
-## SIMD最適化効果
-
-### AVX2 vs スカラー
-
-| 演算 | スカラー | AVX2 | AVX-512 | 高速化 |
-|------|---------|------|---------|--------|
-| exp() | 100% | 28% | 15% | 6.7x |
-| log() | 100% | 25% | 13% | 7.7x |
-| sqrt() | 100% | 18% | 10% | 10x |
-| N(x) | 100% | 22% | 12% | 8.3x |
 
 ## プラットフォーム比較
 
@@ -139,7 +128,7 @@ QuantForgeの詳細なパフォーマンス測定結果です。
 
 | 実装 | ops/Watt | 相対効率 |
 |------|----------|---------|
-| QuantForge (SIMD) | 2.1M | 1.0x |
+| QuantForge (並列処理) | 2.1M | 1.0x |
 | NumPy | 41K | 0.02x |
 | Pure Python | 87 | 0.00004x |
 

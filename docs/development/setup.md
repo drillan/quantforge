@@ -49,7 +49,7 @@ quantforge/
 ├── src/
 │   ├── lib.rs         # Rustライブラリエントリ
 │   ├── models/        # 価格モデル実装
-│   ├── simd/          # SIMD最適化
+│   ├── parallel/      # 並列処理
 │   └── python.rs      # PyO3バインディング
 ├── python/
 │   └── quantforge/    # Pythonパッケージ

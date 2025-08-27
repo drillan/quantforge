@@ -45,23 +45,23 @@ fn benchmark_american_implied_volatility(c: &mut Criterion) {
 }
 
 fn benchmark_american_batch_1000(c: &mut Criterion) {
-    use quantforge::models::american::call_price_batch_simd;
+    use quantforge::models::american::call_price_batch;
 
     c.bench_function("american_call_batch_1000", |b| {
         let spots: Vec<f64> = (1..=1000).map(|i| 50.0 + i as f64 * 0.1).collect();
         b.iter(|| {
-            black_box(call_price_batch_simd(&spots, 100.0, 0.5, 0.05, 0.02, 0.25));
+            black_box(call_price_batch(&spots, 100.0, 0.5, 0.05, 0.02, 0.25));
         });
     });
 }
 
 fn benchmark_american_batch_10000(c: &mut Criterion) {
-    use quantforge::models::american::call_price_batch_simd;
+    use quantforge::models::american::call_price_batch;
 
     c.bench_function("american_call_batch_10000", |b| {
         let spots: Vec<f64> = (1..=10000).map(|i| 50.0 + i as f64 * 0.01).collect();
         b.iter(|| {
-            black_box(call_price_batch_simd(&spots, 100.0, 0.5, 0.05, 0.02, 0.25));
+            black_box(call_price_batch(&spots, 100.0, 0.5, 0.05, 0.02, 0.25));
         });
     });
 }

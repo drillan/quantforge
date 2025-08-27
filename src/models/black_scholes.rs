@@ -34,7 +34,7 @@ pub fn bs_put_price(s: f64, k: f64, t: f64, r: f64, v: f64) -> f64 {
     (k * (-r * t).exp() * norm_cdf(-d2) - s * norm_cdf(-d1)).max(0.0)
 }
 
-/// バッチ処理用（将来のSIMD最適化対応）
+/// バッチ処理用
 pub fn bs_call_price_batch(spots: &[f64], k: f64, t: f64, r: f64, v: f64) -> Vec<f64> {
     // 共通項の事前計算
     let sqrt_t = t.sqrt();

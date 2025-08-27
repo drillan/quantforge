@@ -26,7 +26,6 @@ opt-level = 3
 
 [features]
 default = []
-simd = []  # SIMD最適化の有効化
 
 [[bench]]
 name = "benchmark"

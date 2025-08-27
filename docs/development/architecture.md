@@ -18,23 +18,20 @@ graph TB
     
     subgraph "Rust Core"
         MODELS[Price Models]
-        SIMD[SIMD Engine]
         PARALLEL[Parallel Executor]
         MATH[Math Functions]
     end
     
     subgraph "Hardware"
         CPU[CPU]
-        AVX[AVX2/AVX-512]
         CACHE[Cache]
     end
     
     PY --> PYO3
     NP --> PYO3
     PYO3 --> MODELS
-    MODELS --> SIMD
     MODELS --> PARALLEL
-    SIMD --> AVX
+    MODELS --> MATH
     PARALLEL --> CPU
     MATH --> CACHE
 ```
@@ -65,7 +62,6 @@ class QuantForgeAPI:
 ```rust
 // src/lib.rs
 pub struct QuantForgeCore {
-    simd_engine: SimdEngine,
     parallel_executor: ParallelExecutor,
     memory_pool: MemoryPool,
 }
@@ -77,7 +73,6 @@ impl QuantForgeCore {
         
         match strategy {
             Strategy::Sequential => self.calculate_sequential(params),
-            Strategy::Simd => self.simd_engine.calculate(params),
             Strategy::Parallel => self.parallel_executor.calculate(params),
             Strategy::Hybrid => self.calculate_hybrid(params),
         }
@@ -99,7 +94,7 @@ pub struct OptionData {
     time: f64,
 }
 
-// SIMD用アラインメント
+// メモリアラインメント
 #[repr(align(64))]
 pub struct AlignedBuffer {
     data: Vec<f64>,
@@ -134,10 +129,6 @@ fn calculate_zero_copy(
 
 ```rust
 pub enum ParallelStrategy {
-    // レベル1: SIMD（データレベル並列）
-    SimdOnly {
-        vector_width: usize,  // 4, 8, or 16
-    },
     
     // レベル2: スレッド（タスクレベル並列）
     ThreadPool {
@@ -145,10 +136,10 @@ pub enum ParallelStrategy {
         chunk_size: usize,
     },
     
-    // レベル3: ハイブリッド（SIMD + スレッド）
+    // レベル3: ハイブリッド（複数レベルの並列化）
     Hybrid {
         num_threads: usize,
-        simd_width: usize,
+        chunk_strategy: String,
     },
 }
 ```
@@ -161,8 +152,8 @@ use rayon::prelude::*;
 pub fn parallel_calculate(data: &[f64]) -> Vec<f64> {
     data.par_chunks(1000)
         .flat_map(|chunk| {
-            // 各チャンクをSIMDで処理
-            simd_process(chunk)
+            // 各チャンクを処理
+            process(chunk)
         })
         .collect()
 }
@@ -183,8 +174,6 @@ pub enum QuantForgeError {
     #[error("Convergence failed after {0} iterations")]
     ConvergenceFailed(usize),
     
-    #[error("SIMD not supported on this CPU")]
-    SimdNotSupported,
 }
 
 // Result型エイリアス

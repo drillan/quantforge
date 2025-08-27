@@ -131,7 +131,7 @@ iv = model.implied_volatility(market_price, ...)
 ## パフォーマンス
 
 :::{note}
-測定環境: Intel Core i9-12900K、AVX2有効、単精度演算
+測定環境: Intel Core i9-12900K、単精度演算
 測定方法: 1000回実行の中央値
 :::
 
