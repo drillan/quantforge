@@ -710,6 +710,77 @@ C007（品質例外化禁止）の具体的実装方法を定義します。
 - 全てのPython関数に型アノテーションを付与
 - docstringは必須（Googleスタイル推奨）
 
+## 🔄 コミット実行プロトコル [AI専用]
+
+### 重要：AIによるコミット実行時の必須プロセス
+
+ソースコードの変更をコミットする際は、必ず以下のプロトコルに従う：
+
+1. **自動実行の原則**
+   - `.claude/commands/commit-ai.md` の指示を完全に遵守
+   - ユーザー確認を待たずに品質チェックとコミットを実行
+   - エラーは即座に自動修正（C002適用）
+
+2. **品質チェックの必須実行**
+   ```bash
+   # Python変更時
+   uv run ruff format .
+   uv run ruff check . --fix
+   uv run mypy .
+   uv run pytest tests/ -q
+   
+   # Rust変更時
+   cargo fmt --all
+   cargo clippy --all-targets --all-features -- -D warnings
+   cargo test --release
+   uv run maturin develop --release
+   
+   # 共通チェック（必須）
+   ./scripts/check_critical_rules.sh
+   ./scripts/detect_hardcode.sh
+   ```
+
+3. **ドキュメント同期の確認**
+   - APIドキュメント（`docs/api/`）と実装の整合性を確認
+   - 新機能追加時は対応するドキュメントを作成・更新
+   - 変更内容に応じた関連ドキュメントの更新
+
+4. **コミットメッセージ規約**
+   - **言語**: 英語（国際化対応）
+   - **形式**: Conventional Commits形式を厳守
+   ```
+   <type>(<scope>): <subject>
+   
+   <body>
+   
+   <footer>
+   ```
+   - **型の選択**: feat, fix, refactor, perf, docs, test, style, chore
+   - **subject**: 50文字以内、命令形、小文字開始、ピリオドなし
+   - **body**: 72文字で改行、whatとwhyを説明
+
+5. **計画管理の確認**
+   - アクティブな計画のステータス更新
+   - 完了した計画の`archive/`への移動
+   - `plans/CHANGELOG.md`の更新
+
+### コミット禁止条件
+- 品質チェックでエラーが残っている場合
+- Critical Rules違反が検出された場合
+- ハードコードが検出された場合
+- ドキュメントが未更新の場合
+
+### 実行コマンド
+ユーザーが「コミットして」「commit the changes」等を指示した場合：
+1. `.claude/commands/commit-ai.md`を参照
+2. 全チェックを自動実行
+3. 問題を自動修正
+4. 適切なコミットメッセージを生成
+5. コミットを実行
+6. 完了レポートを表示
+
+**注意**: 途中経過の報告は不要。すべて完了後に結果のみ報告。
+
 ## 実装判断フローチャート
 
 新機能を実装する前に、以下の質問に答えてください：
