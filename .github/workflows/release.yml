@@ -1,0 +1,69 @@
+# Release to PyPI with Trusted Publisher
+name: Release to PyPI
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      test_pypi:
+        description: 'Release to TestPyPI instead of PyPI'
+        required: false
+        type: boolean
+        default: false
+
+jobs:
+  # Build all wheels
+  build:
+    uses: ./.github/workflows/CI.yml
+
+  # Publish to PyPI
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.test_pypi == 'true' && 'testpypi' || 'pypi-release' }}
+    permissions:
+      id-token: write  # Required for Trusted Publisher
+      contents: write   # For release artifacts
+      attestations: write  # For artifact attestation
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+      
+      - name: List distribution files
+        run: |
+          echo "📦 Distribution files to be published:"
+          ls -lh dist/
+      
+      - name: Generate artifact attestation
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: 'dist/*'
+      
+      - name: Publish to TestPyPI
+        if: github.event.inputs.test_pypi == 'true'
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          repository-url: https://test.pypi.org/legacy/
+          skip-existing: true
+          verbose: true
+      
+      - name: Publish to PyPI
+        if: github.event.inputs.test_pypi != 'true'
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          verbose: true
+      
+      - name: Upload release assets
+        if: github.event_name == 'release'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          for file in dist/*; do
+            gh release upload ${{ github.ref_name }} "$file" --clobber
+          done

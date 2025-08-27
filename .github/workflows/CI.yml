@@ -1,0 +1,168 @@
+# Build and Test Wheels for Multiple Platforms
+# Generated for Python 3.12+ with abi3-py312
+name: Build Wheels
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+  workflow_dispatch:
+  workflow_call:  # Allow this workflow to be called from other workflows
+
+permissions:
+  contents: read
+
+jobs:
+  # Linux builds (manylinux2014)
+  linux:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        target: [x86_64, aarch64]
+    steps:
+      - uses: actions/checkout@v4
+      
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      
+      - name: Build wheels
+        uses: PyO3/maturin-action@v1
+        with:
+          target: ${{ matrix.target }}
+          args: --release --out dist
+          sccache: 'true'
+          manylinux: '2014'
+      
+      - name: Test wheel (x86_64 only)
+        if: matrix.target == 'x86_64'
+        run: |
+          pip install dist/*.whl
+          python -c "import quantforge; print(f'QuantForge {quantforge.__version__} imported successfully')"
+          python -c "from quantforge import BlackScholes, Black76, AmericanOption; print('Models imported successfully')"
+      
+      - uses: actions/upload-artifact@v4
+        with:
+          name: wheels-linux-${{ matrix.target }}
+          path: dist
+
+  # Windows builds
+  windows:
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        target: [x64]  # x86 is P2 priority, excluded initially
+    steps:
+      - uses: actions/checkout@v4
+      
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          architecture: ${{ matrix.target }}
+      
+      - name: Build wheels
+        uses: PyO3/maturin-action@v1
+        with:
+          target: ${{ matrix.target }}
+          args: --release --out dist
+          sccache: 'true'
+      
+      - name: Test wheel
+        shell: pwsh
+        run: |
+          pip install (Get-ChildItem dist/*.whl)
+          python -c "import quantforge; print(f'QuantForge {quantforge.__version__} imported successfully')"
+          python -c "from quantforge import BlackScholes, Black76, AmericanOption; print('Models imported successfully')"
+      
+      - uses: actions/upload-artifact@v4
+        with:
+          name: wheels-windows-${{ matrix.target }}
+          path: dist
+
+  # macOS builds
+  macos:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: macos-14  # M1/M2/M3 (Apple Silicon)
+            target: aarch64-apple-darwin
+            name: macos-aarch64
+          - os: macos-13  # Intel
+            target: x86_64-apple-darwin
+            name: macos-x86_64
+    steps:
+      - uses: actions/checkout@v4
+      
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      
+      - name: Build wheels
+        uses: PyO3/maturin-action@v1
+        with:
+          target: ${{ matrix.target }}
+          args: --release --out dist
+          sccache: 'true'
+      
+      - name: Test wheel
+        run: |
+          pip install dist/*.whl
+          python -c "import quantforge; print(f'QuantForge {quantforge.__version__} imported successfully')"
+          python -c "from quantforge import BlackScholes, Black76, AmericanOption; print('Models imported successfully')"
+      
+      - uses: actions/upload-artifact@v4
+        with:
+          name: wheels-${{ matrix.name }}
+          path: dist
+
+  # Source distribution
+  sdist:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Build sdist
+        uses: PyO3/maturin-action@v1
+        with:
+          command: sdist
+          args: --out dist
+      
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sdist
+          path: dist
+
+  # Quality checks on built wheels
+  check-wheels:
+    needs: [linux, windows, macos, sdist]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+      
+      - name: Check wheel sizes
+        run: |
+          echo "📦 Wheel size check (target: <500KB)"
+          for wheel in dist/*.whl; do
+            size=$(du -k "$wheel" | cut -f1)
+            name=$(basename "$wheel")
+            if [ "$size" -gt 500 ]; then
+              echo "⚠️ WARNING: $name is ${size}KB (exceeds 500KB target)"
+            else
+              echo "✅ $name: ${size}KB"
+            fi
+          done
+      
+      - name: Check wheel metadata
+        run: |
+          pip install check-wheel-contents
+          for wheel in dist/*.whl; do
+            echo "Checking $wheel..."
+            check-wheel-contents "$wheel"
+          done

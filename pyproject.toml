@@ -4,10 +4,10 @@ build-backend = "maturin"
 
 [project]
 name = "quantforge"
-version = "0.1.0"
+version = "0.0.1"
 description = "高性能オプション価格計算エンジン - Rust + PyO3実装"
 readme = "README.md"
-requires-python = ">=3.11"
+requires-python = ">=3.12"
 dependencies = [
     "numpy>=1.20",
 ]
