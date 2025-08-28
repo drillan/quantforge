@@ -1,0 +1,145 @@
+# Quick Start
+
+Start calculating option prices in just 5 minutes using QuantForge.
+
+## Installation
+
+```bash
+# TestPyPIから最新開発版をインストール（現在利用可能）
+pip install -i https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ quantforge
+
+# PyPIから安定版をインストール（安定版リリース後）
+pip install quantforge
+
+# またはソースから開発版をインストール
+git clone https://github.com/drillan/quantforge.git
+cd quantforge
+pip install maturin
+maturin develop --release
+```
+
+## First Calculation
+
+### Module-Based API
+
+```python
+from quantforge.models import black_scholes
+
+# Black-Scholesモデルでコールオプション価格を計算
+price = black_scholes.call_price(
+    s=100.0,      # 現在価格
+    k=110.0,      # 権利行使価格
+    t=1.0,        # 満期（年）
+    r=0.05,       # 無リスク金利
+    sigma=0.2     # ボラティリティ
+)
+
+print(f"Call Option Price: ${price:.2f}")
+```
+
+### The Greeks' Calculations
+
+```python
+# グリークスを含む詳細な計算
+greeks = black_scholes.greeks(
+    s=100.0,
+    k=100.0,
+    t=1.0,
+    r=0.05,
+    sigma=0.2,
+    is_call=True
+)
+
+print(f"Delta: {greeks.delta:.4f}")
+print(f"Gamma: {greeks.gamma:.4f}")
+print(f"Vega: {greeks.vega:.4f}")
+print(f"Theta: {greeks.theta:.4f}")
+print(f"Rho: {greeks.rho:.4f}")
+```
+
+## Batch Processing
+
+QuantForge's true value lies in its ability to process massive datasets at high speed:
+
+```python
+import numpy as np
+import time
+from quantforge.models import black_scholes
+
+# 100万件のオプションデータ
+n = 1_000_000
+spots = np.random.uniform(90, 110, n)
+
+# 高速バッチ処理
+start = time.perf_counter()
+prices = black_scholes.call_price_batch(
+    spots=spots,
+    k=100.0,
+    t=1.0,
+    r=0.05,
+    sigma=0.2
+)
+elapsed = (time.perf_counter() - start) * 1000
+
+print(f"計算時間: {elapsed:.1f}ms")
+print(f"1オプションあたり: {elapsed/n*1000:.1f}ns")
+```
+
+## implied volatility
+
+Deriving volatility from market prices:
+
+```python
+# 市場価格からIVを計算
+market_price = 10.45
+iv = black_scholes.implied_volatility(
+    price=market_price,
+    s=100.0,
+    k=100.0,
+    t=1.0,
+    r=0.05,
+    is_call=True
+)
+print(f"Implied Volatility: {iv:.1%}")
+```
+
+
+## Real-Time Risk Management
+
+```python
+from quantforge.models import black_scholes
+
+# ポートフォリオのデルタ計算
+positions = [
+    {"spot": 100, "strike": 95, "contracts": 10},
+    {"spot": 100, "strike": 105, "contracts": -5},
+]
+
+total_delta = 0
+for pos in positions:
+    greeks = black_scholes.greeks(
+        s=pos["spot"], k=pos["strike"], t=1.0, r=0.05, sigma=0.2, is_call=True
+    )
+    total_delta += pos["contracts"] * greeks.delta * 100
+
+print(f"Portfolio Delta: {total_delta:.2f} shares")
+```
+
+## Performance
+
+QuantForge benchmark results (AMD Ryzen 5 5600G, CUI mode):
+
+| Operation | Processing Time |
+|------|----------|
+| Single Price Calculation | 1.4 μs |
+| all Greeks | Scheduled Measurement |
+| IV Calculation | 1.5 μs |
+| 1 million batch | 55.6 ms |
+
+For detailed measurement results, refer to the [Benchmarks](performance/benchmarks.md).
+
+## Next Step
+
+- [Basic Usage](user_guide/basic_usage.md) - Detailed API documentation
+- [NumPy Integration](user_guide/numpy_integration.md) - Large-scale data processing
+- [API Reference](api/python/index.md) - Complete API documentation

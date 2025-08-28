@@ -18,7 +18,12 @@ html_context = {
     "github_user": "drillan",
     "github_repo": "quantforge",
     "github_version": "main",
-    "conf_py_path": "/docs/",
+    "conf_py_path": "/docs/ja/",
+    'languages': [
+        ('English', '../'),
+        ('日本語', '/ja/'),
+    ],
+    'current_language': '日本語',
 }
 
 # -- General configuration ---------------------------------------------------
@@ -45,6 +50,7 @@ exclude_patterns = ["_build", "Thumbs.db", ".DS_Store", "internal"]
 html_theme = "sphinx_rtd_theme"
 html_static_path = ["_static"]
 html_css_files = ["custom.css"]
+html_title = 'QuantForge ドキュメント'
 
 # テーマ設定
 html_theme_options = {
