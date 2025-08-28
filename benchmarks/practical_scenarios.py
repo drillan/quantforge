@@ -16,11 +16,16 @@ import numpy as np
 class PracticalScenariosBenchmark:
     """実トレーディングシナリオでのベンチマーク."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """ベンチマークランナーを初期化."""
         # QuantForgeモデルのインポート（エラー処理付き）
         try:
-            from quantforge.models import american, black76, black_scholes, merton
+            from quantforge import models
+
+            american = models.american
+            black76 = models.black76
+            black_scholes = models
+            merton = models.merton
 
             self.black_scholes = black_scholes
             self.black76 = black76
@@ -190,7 +195,7 @@ class PracticalScenariosBenchmark:
         s_flat = np.full_like(k_flat, spot)
         r_flat = np.full_like(k_flat, rate)
 
-        results = {}
+        results: dict[str, Any] = {}
 
         # Black-Scholesモデル
         market_prices_bs = self._simulate_market_prices_bs(s_flat, k_flat, t_flat, r_flat)
@@ -288,7 +293,7 @@ class PracticalScenariosBenchmark:
         american_mask = positions["is_american"]
         american_count = np.sum(american_mask)
 
-        results = {
+        results: dict[str, Any] = {
             "portfolio_size": portfolio_size,
             "american_options": int(american_count),
             "european_options": portfolio_size - int(american_count),
@@ -398,7 +403,7 @@ class PracticalScenariosBenchmark:
         rates = np.full(total_options, 0.05)
         true_vols = np.random.uniform(0.15, 0.35, total_options)
 
-        results = {"total_options": total_options, "underlyings": num_underlyings}
+        results: dict[str, Any] = {"total_options": total_options, "underlyings": num_underlyings}
 
         # 価格計算（市場価格シミュレーション）
         start = time.perf_counter()

@@ -7,7 +7,7 @@ Black-Scholesモデルによるオプション価格計算の単一計算とバ�
 import time
 
 import numpy as np
-from quantforge import calculate_call_price, calculate_call_price_batch
+from quantforge import models
 
 
 def demonstrate_single_calculation() -> None:
@@ -19,7 +19,7 @@ def demonstrate_single_calculation() -> None:
     r = 0.05  # リスクフリーレート
     v = 0.2  # ボラティリティ
 
-    price = calculate_call_price(s, k, t, r, v)
+    price = models.call_price(s, k, t, r, v)
     print(f"   スポット価格: ${s:.2f}")
     print(f"   権利行使価格: ${k:.2f}")
     print(f"   満期: {t:.1f}年")
@@ -37,7 +37,7 @@ def demonstrate_batch_calculation() -> None:
     v = 0.2  # ボラティリティ
 
     spots = np.linspace(80, 120, 5)
-    prices = calculate_call_price_batch(spots, k, t, r, v)
+    prices = models.call_price_batch(spots, k, t, r, v)
 
     for spot, price in zip(spots, prices, strict=False):
         moneyness = "ITM" if spot > k else "ATM" if spot == k else "OTM"
@@ -53,7 +53,7 @@ def run_performance_test() -> None:
     n_single = 10000
     start = time.perf_counter()
     for _ in range(n_single):
-        calculate_call_price(100.0, 100.0, 1.0, 0.05, 0.2)
+        models.call_price(100.0, 100.0, 1.0, 0.05, 0.2)
     single_time = time.perf_counter() - start
     print(f"   単一計算: {n_single:,}回 in {single_time:.3f}秒")
     print(f"   → {single_time / n_single * 1e9:.0f} ns/計算")
@@ -62,7 +62,7 @@ def run_performance_test() -> None:
     n_batch = 100_000
     spots_large = np.random.uniform(80, 120, n_batch)
     start = time.perf_counter()
-    _ = calculate_call_price_batch(spots_large, 100.0, 1.0, 0.05, 0.2)
+    _ = models.call_price_batch(spots_large, 100.0, 1.0, 0.05, 0.2)
     batch_time = time.perf_counter() - start
     print(f"   バッチ計算: {n_batch:,}件 in {batch_time:.3f}秒")
     print(f"   → {batch_time / n_batch * 1e9:.0f} ns/計算")

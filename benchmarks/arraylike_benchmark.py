@@ -28,11 +28,11 @@ class ArrayLikeBenchmark:
 
         # QuantForgeモデルのインポート（エラー処理付き）
         try:
-            from quantforge.models import black76, black_scholes, merton
+            from quantforge import models
 
-            self.black_scholes = black_scholes
-            self.black76 = black76
-            self.merton = merton
+            self.black_scholes = models
+            self.black76 = models.black76
+            self.merton = models.merton
             self.models_available = True
         except ImportError as e:
             print(f"Warning: QuantForge models not available: {e}")
@@ -60,7 +60,7 @@ class ArrayLikeBenchmark:
         k, t, r = 100.0, 1.0, 0.05
         sigma = 0.2
 
-        results = {"size": size}
+        results: dict[str, Any] = {"size": size}
 
         # ウォームアップ
         if hasattr(self.black_scholes, "call_price_batch"):
@@ -74,7 +74,7 @@ class ArrayLikeBenchmark:
             self.black_scholes.call_price_batch(spots_array, k, t, r, sigma)
             times.append(time.perf_counter() - start)
         array_time = np.median(times)
-        results["numpy_ms"] = array_time * 1000
+        results["numpy_ms"] = float(array_time * 1000)
 
         # Python list
         times = []
@@ -121,7 +121,7 @@ class ArrayLikeBenchmark:
         spots = np.random.uniform(80, 120, size).astype(np.float64)
         strikes = np.random.uniform(80, 120, size).astype(np.float64)
 
-        results = {"size": size}
+        results: dict[str, Any] = {"size": size}
 
         if not hasattr(self.black_scholes, "call_price_batch"):
             return {"error": "Batch API not available"}
@@ -134,9 +134,7 @@ class ArrayLikeBenchmark:
 
         for _ in range(self.measure_runs):
             start = time.perf_counter()
-            self.black_scholes.call_price_batch(
-                spots, strikes, full_arrays_t, full_arrays_r, full_arrays_sigma
-            )
+            self.black_scholes.call_price_batch(spots, strikes, full_arrays_t, full_arrays_r, full_arrays_sigma)
             times.append(time.perf_counter() - start)
         full_array_time = np.median(times)
         results["full_array_ms"] = full_array_time * 1000
@@ -185,7 +183,7 @@ class ArrayLikeBenchmark:
             return {"error": "QuantForge models not available"}
 
         np.random.seed(42)
-        results = {"size": size}
+        results: dict[str, Any] = {"size": size}
 
         # データ準備
         spots_array = np.random.uniform(80, 120, size)
@@ -250,7 +248,7 @@ class ArrayLikeBenchmark:
             return {"error": "QuantForge models not available"}
 
         np.random.seed(42)
-        results = {"size": size}
+        results: dict[str, Any] = {"size": size}
 
         # 共通データ
         spots_array = np.random.uniform(80, 120, size)

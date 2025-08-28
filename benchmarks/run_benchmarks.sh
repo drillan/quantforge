@@ -23,11 +23,13 @@ echo "------------------------"
 cd "$SCRIPT_DIR"
 uv run python run_comparison.py
 
-# 結果をMarkdown形式で出力
+# 結果をMarkdown形式で出力（resultsディレクトリに保存）
 echo ""
 echo "📝 結果をMarkdown形式で保存中..."
-uv run python format_results.py > "$PROJECT_ROOT/docs/performance/benchmarks_$(date +%Y%m%d).md"
+RESULTS_DIR="$SCRIPT_DIR/results"
+mkdir -p "$RESULTS_DIR"
+uv run python format_results.py > "$RESULTS_DIR/benchmark_$(date +%Y%m%d_%H%M%S).md"
 
 echo ""
 echo "✅ ベンチマーク完了"
-echo "結果: docs/performance/benchmarks_$(date +%Y%m%d).md"
+echo "結果: benchmarks/results/benchmark_$(date +%Y%m%d_%H%M%S).md"

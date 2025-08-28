@@ -7,6 +7,45 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Complete PyO3 type stub system (`quantforge.pyi`) for full IDE support and type checking
+- ArrayLike input validation for flexible batch operations (scalar/array inputs)
+- Python comparison benchmarks for performance validation against pure Python/NumPy/SciPy
+- Smart commit command (`/commit-ai`) with `--path` option for selective file commits
+- Comprehensive documentation improvements across README files (English/Japanese)
+- Structured benchmark result management system
+
+### Changed
+- **BREAKING**: Removed Python wrapper layer - now using direct Rust module imports
+- **BREAKING**: Migrated from `quantforge.models` to direct `quantforge` module namespace
+  - All imports must now use `from quantforge import models` instead of `from quantforge.models import ...`
+- Batch API redesign with full NumPy array support and broadcasting capabilities
+- Unified Greeks batch return format to `Dict[str, np.ndarray]` for consistency
+- Test suite updated for direct Rust module imports (89.8% pass rate - 309/344 tests)
+- Refactored models to eliminate code duplication using generic traits and base classes
+
+### Fixed
+- Documentation formatting issues in Rust code (`Vec<f64>` type annotations)
+- Type checking errors - reduced from 75 mypy errors to 0 with full type safety
+- Import errors in benchmarks and test files
+- Version synchronization across package files
+
+### Removed
+- Python wrapper layer (`models.py`, `models/__init__.py`, `models/base.py`, `models/merton.py`)
+- Redundant Python model implementations in favor of direct Rust bindings
+- Intermediate Python type conversion layers
+
+### Performance
+- Single Black-Scholes calculation: ~196ns (includes Python binding overhead)
+- Batch processing (1M options): ~72ms
+- Maintains 500-1000x performance advantage over pure Python implementations
+
+### Technical Improvements
+- Zero mypy errors with comprehensive type annotations
+- Full IDE autocompletion support through type stubs
+- Reduced maintenance overhead by eliminating Python wrapper layer
+- Direct Rust module access for better performance
+
 ## [0.0.2] - 2025-08-27
 
 ### Added

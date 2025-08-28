@@ -27,9 +27,9 @@ def black_scholes_price_scipy(s: float, k: float, t: float, r: float, sigma: flo
     d2 = d1 - sigma * np.sqrt(t)
 
     if is_call:
-        return s * norm.cdf(d1) - k * np.exp(-r * t) * norm.cdf(d2)
+        return s * norm.cdf(d1) - k * np.exp(-r * t) * norm.cdf(d2)  # type: ignore[no-any-return]
     else:
-        return k * np.exp(-r * t) * norm.cdf(-d2) - s * norm.cdf(-d1)
+        return k * np.exp(-r * t) * norm.cdf(-d2) - s * norm.cdf(-d1)  # type: ignore[no-any-return]
 
 
 def black76_price(f: float, k: float, t: float, r: float, sigma: float, is_call: bool = True) -> float:
@@ -51,9 +51,9 @@ def black76_price(f: float, k: float, t: float, r: float, sigma: float, is_call:
     discount = np.exp(-r * t)
 
     if is_call:
-        return discount * (f * norm.cdf(d1) - k * norm.cdf(d2))
+        return discount * (f * norm.cdf(d1) - k * norm.cdf(d2))  # type: ignore[no-any-return]
     else:
-        return discount * (k * norm.cdf(-d2) - f * norm.cdf(-d1))
+        return discount * (k * norm.cdf(-d2) - f * norm.cdf(-d1))  # type: ignore[no-any-return]
 
 
 def merton_price(s: float, k: float, t: float, r: float, q: float, sigma: float, is_call: bool = True) -> float:
@@ -75,9 +75,9 @@ def merton_price(s: float, k: float, t: float, r: float, q: float, sigma: float,
     d2 = d1 - sigma * np.sqrt(t)
 
     if is_call:
-        return s * np.exp(-q * t) * norm.cdf(d1) - k * np.exp(-r * t) * norm.cdf(d2)
+        return s * np.exp(-q * t) * norm.cdf(d1) - k * np.exp(-r * t) * norm.cdf(d2)  # type: ignore[no-any-return]
     else:
-        return k * np.exp(-r * t) * norm.cdf(-d2) - s * np.exp(-q * t) * norm.cdf(-d1)
+        return k * np.exp(-r * t) * norm.cdf(-d2) - s * np.exp(-q * t) * norm.cdf(-d1)  # type: ignore[no-any-return]
 
 
 def american_price_approx(
@@ -124,7 +124,7 @@ def vega_scipy(s: float, k: float, t: float, r: float, sigma: float) -> float:
         Vega（ボラティリティ感応度）
     """
     d1 = (np.log(s / k) + (r + sigma**2 / 2) * t) / (sigma * np.sqrt(t))
-    return s * norm.pdf(d1) * np.sqrt(t)
+    return s * norm.pdf(d1) * np.sqrt(t)  # type: ignore[no-any-return]
 
 
 def vega_merton(s: float, k: float, t: float, r: float, q: float, sigma: float) -> float:
@@ -142,7 +142,7 @@ def vega_merton(s: float, k: float, t: float, r: float, q: float, sigma: float) 
         Vega（ボラティリティ感応度）
     """
     d1 = (np.log(s / k) + (r - q + sigma**2 / 2) * t) / (sigma * np.sqrt(t))
-    return s * np.exp(-q * t) * norm.pdf(d1) * np.sqrt(t)
+    return s * np.exp(-q * t) * norm.pdf(d1) * np.sqrt(t)  # type: ignore[no-any-return]
 
 
 def implied_volatility_scipy(price: float, s: float, k: float, t: float, r: float, is_call: bool = True) -> float:

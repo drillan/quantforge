@@ -11,15 +11,27 @@ from pathlib import Path
 from typing import Any
 
 import numpy as np
-from iv_baseline import (
-    american_iv_scipy,
-    black76_iv_scipy,
-    implied_volatility_batch_newton,
-    implied_volatility_batch_scipy,
-    implied_volatility_newton,
-    implied_volatility_scipy,
-    merton_iv_scipy,
-)
+
+try:
+    from benchmarks.iv_baseline import (
+        american_iv_scipy,
+        black76_iv_scipy,
+        implied_volatility_batch_newton,
+        implied_volatility_batch_scipy,
+        implied_volatility_newton,
+        implied_volatility_scipy,
+        merton_iv_scipy,
+    )
+except ImportError:
+    from iv_baseline import (  # type: ignore[no-redef]
+        american_iv_scipy,
+        black76_iv_scipy,
+        implied_volatility_batch_newton,
+        implied_volatility_batch_scipy,
+        implied_volatility_newton,
+        implied_volatility_scipy,
+        merton_iv_scipy,
+    )
 
 
 class ComprehensiveIVBenchmark:
@@ -37,13 +49,13 @@ class ComprehensiveIVBenchmark:
 
         # QuantForgeモデルのインポート（エラー処理付き）
         try:
-            from quantforge.models import american, black76, black_scholes, merton
+            from quantforge import models
 
-            self.models = {
-                "black_scholes": black_scholes,
-                "black76": black76,
-                "merton": merton,
-                "american": american,
+            self.models: dict[str, Any] = {
+                "black_scholes": models,
+                "black76": models.black76,
+                "merton": models.merton,
+                "american": models.american,
             }
         except ImportError as e:
             print(f"Warning: QuantForge models not available: {e}")
@@ -244,7 +256,7 @@ class ComprehensiveIVBenchmark:
             # SciPy バッチ処理（小サイズのみ）
             if size <= 1000:
                 start = time.perf_counter()
-                implied_volatility_batch_scipy(prices, spots, strikes, times, rates, is_calls, model="bs")
+                implied_volatility_batch_scipy(prices, spots, strikes, times, rates, is_calls)
                 scipy_time = time.perf_counter() - start
             else:
                 scipy_time = None
@@ -324,9 +336,7 @@ class ComprehensiveIVBenchmark:
             # SciPy バッチ処理（小サイズのみ）
             if size <= 100:
                 start = time.perf_counter()
-                implied_volatility_batch_scipy(
-                    prices, spots, strikes, times, rates, is_calls, model="merton", dividends=q_values
-                )
+                implied_volatility_batch_scipy(prices, spots, strikes, times, rates, is_calls)
                 scipy_time = time.perf_counter() - start
             else:
                 scipy_time = None

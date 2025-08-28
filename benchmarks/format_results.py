@@ -45,7 +45,7 @@ def format_markdown(results: dict[str, Any]) -> str:
     md.append("| 実装 | 時間 | 説明 |")
     md.append("|------|------|------|")
     md.append(f"| QuantForge (Rust) | {format_time(single['quantforge'])} | 最適化されたRust実装 |")
-    md.append(f"| SciPy | {format_time(single['scipy'])} | 一般的なPython実装 |")
+    md.append(f"| NumPy+SciPy | {format_time(single['numpy_scipy'])} | NumPy+SciPy実装 |")
     md.append(f"| Pure Python | {format_time(single['pure_python'])} | 外部ライブラリなし |")
     md.append("")
 
@@ -53,7 +53,7 @@ def format_markdown(results: dict[str, Any]) -> str:
     md.append("| 比較 | 高速化率 |")
     md.append("|------|----------|")
     md.append(f"| QuantForge vs Pure Python | **{single['speedup_vs_pure_python']:.0f}倍** 高速 |")
-    md.append(f"| QuantForge vs SciPy | **{single['speedup_vs_scipy']:.1f}倍** 高速 |")
+    md.append(f"| QuantForge vs NumPy+SciPy | **{single['speedup_vs_numpy_scipy']:.1f}倍** 高速 |")
     md.append("")
 
     # バッチ処理結果
@@ -85,7 +85,7 @@ def format_markdown(results: dict[str, Any]) -> str:
     # 単一計算の要約
     md.append("### 単一計算")
     md.append(f"- QuantForgeはPure Pythonより**{results['single']['speedup_vs_pure_python']:.0f}倍**高速")
-    md.append(f"- QuantForgeはSciPyより**{results['single']['speedup_vs_scipy']:.1f}倍**高速")
+    md.append(f"- QuantForgeはSciPyより**{results['single']['speedup_vs_numpy_scipy']:.1f}倍**高速")
     md.append("")
 
     # バッチ処理の要約

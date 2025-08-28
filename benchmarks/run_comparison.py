@@ -7,13 +7,13 @@ from typing import Any
 
 import numpy as np
 import psutil
-from python_baseline import (  # type: ignore[import-not-found]
+from python_baseline import (
     black_scholes_numpy_batch,
     black_scholes_pure_python,
     black_scholes_pure_python_batch,
     black_scholes_scipy_single,
 )
-from quantforge.models import black_scholes
+from quantforge import models
 
 
 class BenchmarkRunner:
@@ -43,12 +43,12 @@ class BenchmarkRunner:
 
         # QuantForge (Rust)
         for _ in range(self.warmup_runs):
-            black_scholes.call_price(s, k, t, r, sigma)
+            models.call_price(s, k, t, r, sigma)
 
         times = []
         for _ in range(self.measure_runs):
             start = time.perf_counter()
-            black_scholes.call_price(s, k, t, r, sigma)
+            models.call_price(s, k, t, r, sigma)
             times.append(time.perf_counter() - start)
         qf_time = np.median(times)  # 中央値を使用（外れ値の影響を軽減）
         results["quantforge"] = qf_time
@@ -65,7 +65,7 @@ class BenchmarkRunner:
         py_time = np.median(times)
         results["pure_python"] = py_time
 
-        # SciPy（一般的な実装）
+        # NumPy+SciPy（一般的な実装）
         for _ in range(self.warmup_runs):
             black_scholes_scipy_single(s, k, t, r, sigma)
 
@@ -74,12 +74,12 @@ class BenchmarkRunner:
             start = time.perf_counter()
             black_scholes_scipy_single(s, k, t, r, sigma)
             times.append(time.perf_counter() - start)
-        scipy_time = np.median(times)
-        results["scipy"] = scipy_time
+        numpy_scipy_time = np.median(times)
+        results["numpy_scipy"] = numpy_scipy_time
 
         # 相対性能計算
         results["speedup_vs_pure_python"] = py_time / qf_time
-        results["speedup_vs_scipy"] = scipy_time / qf_time
+        results["speedup_vs_numpy_scipy"] = numpy_scipy_time / qf_time
 
         return results
 
@@ -92,10 +92,10 @@ class BenchmarkRunner:
         results: dict[str, Any] = {"size": size}
 
         # QuantForge
-        if black_scholes.call_price_batch:
-            _ = black_scholes.call_price_batch(spots[: min(100, size)], k, t, r, sigma)
+        if hasattr(models, "call_price_batch"):
+            _ = models.call_price_batch(spots[: min(100, size)], k, t, r, sigma)
             start = time.perf_counter()
-            _ = black_scholes.call_price_batch(spots, k, t, r, sigma)
+            _ = models.call_price_batch(spots, k, t, r, sigma)
         else:
             start = time.perf_counter()
         qf_time = time.perf_counter() - start
@@ -138,7 +138,7 @@ class BenchmarkRunner:
             results["batch"].append(self.benchmark_batch(size))
 
         # 結果を構造化データとして保存
-        from save_results import save_benchmark_result  # type: ignore[import-not-found]
+        from save_results import save_benchmark_result
 
         save_benchmark_result(results)
 
