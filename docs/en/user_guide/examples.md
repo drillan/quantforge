@@ -12,24 +12,24 @@ from quantforge.models import black_scholes
 import numpy as np
 import pandas as pd
 
-# ポートフォリオデータ
+# Portfolio data
 portfolio = pd.DataFrame({
     'instrument_id': ['OPT001', 'OPT002', 'OPT003', 'OPT004'],
     'type': ['call', 'put', 'call', 'put'],
     'spot': [100, 100, 105, 95],
     'strike': [105, 95, 110, 90],
-    'volume': [100, -50, 75, -25],  # 正=ロング、負=ショート
+    'volume': [100, -50, 75, -25],  # positive=long, negative=short
     'sigma': [0.20, 0.22, 0.25, 0.18],
     'time': [0.25, 0.5, 0.75, 1.0]
 })
 
-# 価格とグリークス計算
+# Calculate prices and Greeks
 def calculate_portfolio_metrics(df, rate=0.05):
-    """ポートフォリオの評価指標を計算"""
+    """Calculate portfolio valuation metrics"""
     results = []
     
     for _, row in df.iterrows():
-        # グリークス取得
+        # Get Greeks
         greeks = black_scholes.greeks(
             spot=row['spot'],
             strike=row['strike'],
@@ -39,7 +39,7 @@ def calculate_portfolio_metrics(df, rate=0.05):
             is_call=(row['type'] == 'call')
         )
         
-        # 価格計算
+        # Calculate price
         if row['type'] == 'call':
             price = black_scholes.call_price(
                 spot=row['spot'],
@@ -57,7 +57,7 @@ def calculate_portfolio_metrics(df, rate=0.05):
                 sigma=row['sigma']
             )
         
-        # ポジション調整
+        # Position adjustment
         position_value = price * row['volume']
         position_delta = greeks.delta * row['volume']
         position_gamma = greeks.gamma * row['volume']
@@ -76,11 +76,11 @@ def calculate_portfolio_metrics(df, rate=0.05):
     
     return pd.DataFrame(results)
 
-# 計算実行
+# Execute calculation
 metrics = calculate_portfolio_metrics(portfolio)
 print(metrics)
 
-# ポートフォリオ全体のリスク
+# Overall portfolio risk
 total_value = metrics['position_value'].sum()
 total_delta = metrics['delta'].sum()
 total_gamma = metrics['gamma'].sum()
@@ -99,7 +99,7 @@ print(f"Theta: {total_theta:.2f}")
 
 ```python
 def delta_hedge_portfolio(portfolio_delta, spot_price, shares_per_contract=100):
-    """デルタニュートラルにするためのヘッジ量計算"""
+    """Calculate hedge amount for delta neutral"""
     hedge_shares = -portfolio_delta * shares_per_contract
     hedge_value = hedge_shares * spot_price
     
@@ -109,7 +109,7 @@ def delta_hedge_portfolio(portfolio_delta, spot_price, shares_per_contract=100):
         'direction': 'buy' if hedge_shares > 0 else 'sell'
     }
 
-# デルタヘッジ計算
+# Calculate delta hedge
 hedge = delta_hedge_portfolio(total_delta, 100)
 print(f"\nDelta Hedge Required:")
 print(f"Action: {hedge['direction'].upper()} {abs(hedge['hedge_shares']):.0f} shares")
@@ -122,22 +122,22 @@ print(f"Value: ${abs(hedge['hedge_value']):,.2f}")
 
 ```python
 def calculate_var_options(spot, strike, rate, sigma, time, confidence=0.95, n_sims=10000):
-    """オプションポートフォリオのVaR計算"""
+    """Calculate VaR for options portfolio"""
     np.random.seed(42)
     
-    # 現在価値
+    # Current value
     current_value = black_scholes.call_price(
         spot=spot, strike=strike, time=time, rate=rate, sigma=sigma
     )
     
-    # モンテカルロシミュレーション
-    dt = 1/252  # 1日
+    # Monte Carlo simulation
+    dt = 1/252  # 1 day
     z = np.random.standard_normal(n_sims)
     
-    # 1日後のスポット価格
+    # Spot prices after 1 day
     future_spots = spot * np.exp((rate - 0.5*sigma**2)*dt + sigma*np.sqrt(dt)*z)
     
-    # 1日後のオプション価値
+    # Option values after 1 day
     future_values = black_scholes.call_price_batch(
         spots=future_spots,
         strike=strike,
@@ -146,10 +146,10 @@ def calculate_var_options(spot, strike, rate, sigma, time, confidence=0.95, n_si
         sigma=sigma
     )
     
-    # 損益分布
+    # P&L distribution
     pnl = future_values - current_value
     
-    # VaR計算
+    # VaR calculation
     var = -np.percentile(pnl, (1-confidence)*100)
     cvar = -np.mean(pnl[pnl <= -var])  # Conditional VaR
     
@@ -161,7 +161,7 @@ def calculate_var_options(spot, strike, rate, sigma, time, confidence=0.95, n_si
         'pnl_std': np.std(pnl)
     }
 
-# VaR計算例
+# VaR calculation example
 var_results = calculate_var_options(100, 105, 0.05, 0.25, 0.5)
 print(f"1-Day VaR (95%): ${var_results['var']:.2f}")
 print(f"1-Day CVaR (95%): ${var_results['cvar']:.2f}")
@@ -174,11 +174,11 @@ print(f"P&L Std Dev: ${var_results['pnl_std']:.2f}")
 ```python
 def stress_test_portfolio(base_spot, base_vol, portfolio_func, 
                          spot_shocks=None, vol_shocks=None):
-    """ポートフォリオのストレステスト"""
+    """Portfolio stress test"""
     if spot_shocks is None:
         spot_shocks = np.linspace(-0.2, 0.2, 9)  # ±20%
     if vol_shocks is None:
-        vol_shocks = np.linspace(-0.5, 0.5, 9)  # ±50%相対変化
+        vol_shocks = np.linspace(-0.5, 0.5, 9)  # ±50% relative change
     
     base_value = portfolio_func(base_spot, base_vol)
     results = np.zeros((len(spot_shocks), len(vol_shocks)))
@@ -192,9 +192,9 @@ def stress_test_portfolio(base_spot, base_vol, portfolio_func,
     
     return results, spot_shocks, vol_shocks
 
-# ポートフォリオ関数の定義
+# Define portfolio function
 def sample_portfolio(spot, sigma):
-    """サンプルポートフォリオ"""
+    """Sample portfolio"""
     call = black_scholes.call_price(
         spot=spot, strike=105, time=0.5, rate=0.05, sigma=sigma
     )
@@ -203,12 +203,12 @@ def sample_portfolio(spot, sigma):
     )
     return 100 * call - 50 * put
 
-# ストレステスト実行
+# Execute stress test
 stress_results, spot_shocks, vol_shocks = stress_test_portfolio(
     100, 0.2, sample_portfolio
 )
 
-# ヒートマップ表示
+# Display heatmap
 import matplotlib.pyplot as plt
 fig, ax = plt.subplots(figsize=(10, 8))
 im = ax.imshow(stress_results, cmap='RdGn', aspect='auto')
@@ -229,7 +229,7 @@ plt.show()
 
 ```python
 def build_iv_surface(market_prices, spot, strikes, times, rate=0.05):
-    """市場価格からIVサーフェスを構築"""
+    """Build IV surface from market prices"""
     iv_surface = np.zeros_like(market_prices)
     
     for i in range(len(strikes)):
@@ -247,12 +247,12 @@ def build_iv_surface(market_prices, spot, strikes, times, rate=0.05):
     
     return iv_surface
 
-# サンプルデータ生成
+# Generate sample data
 strikes = np.array([90, 95, 100, 105, 110])
 times = np.array([0.25, 0.5, 0.75, 1.0])
 spot = 100
 
-# 仮想的な市場価格（スマイル効果を含む）
+# Hypothetical market prices (including smile effect)
 market_prices = np.array([
     [12.5, 13.8, 15.0, 16.1],  # K=90
     [8.5, 10.2, 11.5, 12.7],   # K=95
@@ -261,10 +261,10 @@ market_prices = np.array([
     [1.3, 2.6, 3.9, 5.1],      # K=110
 ])
 
-# IVサーフェス構築
+# Build IV surface
 iv_surface = build_iv_surface(market_prices, spot, strikes, times)
 
-# 3Dプロット
+# 3D plot
 from mpl_toolkits.mplot3d import Axes3D
 fig = plt.figure(figsize=(12, 8))
 ax = fig.add_subplot(111, projection='3d')
@@ -284,16 +284,16 @@ plt.show()
 
 ```python
 def identify_vol_arbitrage(market_iv, model_vol, threshold=0.02):
-    """ボラティリティアービトラージ機会の特定"""
+    """Identify volatility arbitrage opportunities"""
     diff = market_iv - model_vol
     
     opportunities = []
     if abs(diff) > threshold:
         if diff > 0:
-            # 市場IVが高い → オプション売り
+            # Market IV is high → Sell options
             strategy = "Sell options (overpriced)"
         else:
-            # 市場IVが低い → オプション買い
+            # Market IV is low → Buy options
             strategy = "Buy options (underpriced)"
         
         opportunities.append({
@@ -305,7 +305,7 @@ def identify_vol_arbitrage(market_iv, model_vol, threshold=0.02):
     
     return opportunities
 
-# アービトラージ機会の検出
+# Detect arbitrage opportunities
 market_iv = 0.28
 model_vol = 0.22
 arb_opps = identify_vol_arbitrage(market_iv, model_vol)
@@ -329,8 +329,8 @@ class OptionMarketMaker:
         self.spread_bps = spread_bps / 10000
         
     def quote_option(self, spot, strike, rate, time, option_type='call'):
-        """ビッド・アスク価格を生成"""
-        # 中間価格
+        """Generate bid-ask prices"""
+        # Mid price
         if option_type == 'call':
             mid = black_scholes.call_price(
                 spot=spot, strike=strike, time=time, rate=rate, sigma=self.base_vol
@@ -340,11 +340,11 @@ class OptionMarketMaker:
                 spot=spot, strike=strike, time=time, rate=rate, sigma=self.base_vol
             )
         
-        # ボラティリティスプレッド
+        # Volatility spread
         bid_vol = self.base_vol * (1 - self.spread_bps)
         ask_vol = self.base_vol * (1 + self.spread_bps)
         
-        # ビッド・アスク価格
+        # Bid-ask prices
         if option_type == 'call':
             bid = black_scholes.call_price(
                 spot=spot, strike=strike, time=time, rate=rate, sigma=bid_vol
@@ -369,16 +369,16 @@ class OptionMarketMaker:
         }
     
     def adjust_quotes(self, inventory, max_inventory=1000):
-        """在庫に基づく価格調整"""
+        """Price adjustment based on inventory"""
         inventory_ratio = inventory / max_inventory
-        # 在庫が多い場合はスプレッドを広げる
+        # Widen spread when inventory is high
         adjusted_spread = self.spread_bps * (1 + abs(inventory_ratio))
-        self.spread_bps = min(adjusted_spread, 0.01)  # 最大1%
+        self.spread_bps = min(adjusted_spread, 0.01)  # Max 1%
 
-# マーケットメイカーの実行
+# Execute market maker
 mm = OptionMarketMaker(base_vol=0.25, spread_bps=25)
 
-# クォート生成
+# Generate quote
 quote = mm.quote_option(100, 105, 0.05, 0.5, 'call')
 print(f"Market Making Quote:")
 print(f"Bid: ${quote['bid']:.3f}")
@@ -386,7 +386,7 @@ print(f"Ask: ${quote['ask']:.3f}")
 print(f"Mid: ${quote['mid']:.3f}")
 print(f"Spread: ${quote['spread']:.3f} ({quote['spread_pct']:.2f}%)")
 
-# 在庫調整
+# Inventory adjustment
 mm.adjust_quotes(inventory=800)
 adjusted_quote = mm.quote_option(100, 105, 0.05, 0.5, 'call')
 print(f"\nAdjusted Quote (High Inventory):")
@@ -399,19 +399,19 @@ print(f"Spread: ${adjusted_quote['spread']:.3f} ({adjusted_quote['spread_pct']:.
 
 ```python
 def backtest_covered_call(price_path, strike, sigma, rate, dt=1/252):
-    """カバードコール戦略のバックテスト"""
+    """Backtest covered call strategy"""
     results = []
     
-    for i in range(len(price_path) - 21):  # 21営業日 = 1ヶ月
+    for i in range(len(price_path) - 21):  # 21 business days = 1 month
         spot = price_path[i]
         time_to_expiry = 21 * dt
         
-        # オプション売却
+        # Sell option
         premium = black_scholes.call_price(
             spot=spot, strike=strike, time=time_to_expiry, rate=rate, sigma=sigma
         )
         
-        # 満期時の損益
+        # P&L at expiry
         final_spot = price_path[i + 21]
         stock_pnl = final_spot - spot
         option_pnl = -max(final_spot - strike, 0) + premium
@@ -430,15 +430,15 @@ def backtest_covered_call(price_path, strike, sigma, rate, dt=1/252):
     
     return pd.DataFrame(results)
 
-# 価格パスの生成
+# Generate price path
 np.random.seed(42)
 n_days = 252
 price_path = [100]
 for _ in range(n_days):
-    ret = np.random.normal(0.0005, 0.015)  # 日次リターン
+    ret = np.random.normal(0.0005, 0.015)  # Daily return
     price_path.append(price_path[-1] * (1 + ret))
 
-# バックテスト実行
+# Execute backtest
 backtest_results = backtest_covered_call(
     price_path, 
     strike=105, 
@@ -446,7 +446,7 @@ backtest_results = backtest_covered_call(
     rate=0.05
 )
 
-# 結果分析
+# Analyze results
 total_return = backtest_results['return'].sum()
 avg_return = backtest_results['return'].mean()
 sharpe = avg_return / backtest_results['return'].std() * np.sqrt(252/21)

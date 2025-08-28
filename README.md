@@ -360,14 +360,16 @@ pytest tests/performance/ --benchmark-json=benchmark.json
 
 ## 📚 Documentation
 
-Comprehensive documentation available via Sphinx:
+Complete documentation is available at: **https://drillan.github.io/quantforge/**
+
+For local documentation building:
 
 ```bash
-# Build documentation
-uv run sphinx-build -M html docs docs/_build
+# Build documentation locally
+uv run sphinx-build -M html docs/en docs/en/_build
 
 # View in browser
-open docs/_build/html/index.html
+open docs/en/_build/html/index.html
 ```
 
 Documentation includes:

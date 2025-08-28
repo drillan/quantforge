@@ -364,14 +364,16 @@ cargo clippy -- -D warnings
 
 ## 📚 ドキュメント
 
-詳細なドキュメントはSphinxで生成できます：
+完全なドキュメントはこちら: **https://drillan.github.io/quantforge/ja/**
+
+ローカルでのドキュメントビルド：
 
 ```bash
 # ドキュメントのビルド
-uv run sphinx-build -M html docs docs/_build
+uv run sphinx-build -M html docs/ja docs/ja/_build
 
 # ブラウザで開く
-open docs/_build/html/index.html
+open docs/ja/_build/html/index.html
 ```
 
 ドキュメントには以下が含まれます：

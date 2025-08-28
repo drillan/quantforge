@@ -5,13 +5,13 @@ Start calculating option prices in just 5 minutes using QuantForge.
 ## Installation
 
 ```bash
-# TestPyPIから最新開発版をインストール（現在利用可能）
+# Install latest development version from TestPyPI (currently available)
 pip install -i https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ quantforge
 
-# PyPIから安定版をインストール（安定版リリース後）
+# Install stable version from PyPI (after stable release)
 pip install quantforge
 
-# またはソースから開発版をインストール
+# Or install development version from source
 git clone https://github.com/drillan/quantforge.git
 cd quantforge
 pip install maturin
@@ -25,13 +25,13 @@ maturin develop --release
 ```python
 from quantforge.models import black_scholes
 
-# Black-Scholesモデルでコールオプション価格を計算
+# Calculate call option price using Black-Scholes model
 price = black_scholes.call_price(
-    s=100.0,      # 現在価格
-    k=110.0,      # 権利行使価格
-    t=1.0,        # 満期（年）
-    r=0.05,       # 無リスク金利
-    sigma=0.2     # ボラティリティ
+    s=100.0,      # Spot price
+    k=110.0,      # Strike price
+    t=1.0,        # Time to maturity (years)
+    r=0.05,       # Risk-free rate
+    sigma=0.2     # Volatility
 )
 
 print(f"Call Option Price: ${price:.2f}")
@@ -40,7 +40,7 @@ print(f"Call Option Price: ${price:.2f}")
 ### The Greeks' Calculations
 
 ```python
-# グリークスを含む詳細な計算
+# Detailed calculation including Greeks
 greeks = black_scholes.greeks(
     s=100.0,
     k=100.0,
@@ -66,11 +66,11 @@ import numpy as np
 import time
 from quantforge.models import black_scholes
 
-# 100万件のオプションデータ
+# 1 million option data points
 n = 1_000_000
 spots = np.random.uniform(90, 110, n)
 
-# 高速バッチ処理
+# High-speed batch processing
 start = time.perf_counter()
 prices = black_scholes.call_price_batch(
     spots=spots,
@@ -81,8 +81,8 @@ prices = black_scholes.call_price_batch(
 )
 elapsed = (time.perf_counter() - start) * 1000
 
-print(f"計算時間: {elapsed:.1f}ms")
-print(f"1オプションあたり: {elapsed/n*1000:.1f}ns")
+print(f"Calculation time: {elapsed:.1f}ms")
+print(f"Per option: {elapsed/n*1000:.1f}ns")
 ```
 
 ## implied volatility
@@ -90,7 +90,7 @@ print(f"1オプションあたり: {elapsed/n*1000:.1f}ns")
 Deriving volatility from market prices:
 
 ```python
-# 市場価格からIVを計算
+# Calculate IV from market price
 market_price = 10.45
 iv = black_scholes.implied_volatility(
     price=market_price,
@@ -109,7 +109,7 @@ print(f"Implied Volatility: {iv:.1%}")
 ```python
 from quantforge.models import black_scholes
 
-# ポートフォリオのデルタ計算
+# Calculate portfolio delta
 positions = [
     {"spot": 100, "strike": 95, "contracts": 10},
     {"spot": 100, "strike": 105, "contracts": -5},
@@ -136,10 +136,10 @@ QuantForge benchmark results (AMD Ryzen 5 5600G, CUI mode):
 | IV Calculation | 1.5 μs |
 | 1 million batch | 55.6 ms |
 
-For detailed measurement results, refer to the [Benchmarks](performance/benchmarks.md).
+For detailed measurement results, see the performance section.
 
 ## Next Step
 
 - [Basic Usage](user_guide/basic_usage.md) - Detailed API documentation
 - [NumPy Integration](user_guide/numpy_integration.md) - Large-scale data processing
-- [API Reference](api/python/index.md) - Complete API documentation
+- API Reference - Complete API documentation (coming soon)

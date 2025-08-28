@@ -29,8 +29,8 @@ price = black_scholes.call_price(
     sigma=0.2
 )
 
-# バッチ処理
-# 100万件を約56msで処理（測定環境: AMD Ryzen 5 5600G、CUIモード）
+# Batch processing
+# Process 1 million records in ~56ms (tested on AMD Ryzen 5 5600G, CLI mode)
 spots = np.random.uniform(90, 110, 1_000_000)
 prices = black_scholes.call_price_batch(
     spots=spots,
@@ -46,7 +46,6 @@ prices = black_scholes.call_price_batch(
 :::{note}
 Measurement Environment: AMD Ryzen 5 5600G (6 cores/12 threads), 29.3GB RAM, Pop!_OS 22.04 (CLI mode)
 Measurement Date: 2025-08-28
-For more details, see the [benchmark results](performance/benchmarks.md).
 :::
 
 | Library | Single Calculation | million records processed | relative velocity |
@@ -58,7 +57,7 @@ For more details, see the [benchmark results](performance/benchmarks.md).
 ## Document Structure
 
 ```{toctree}
-:caption: はじめに
+:caption: Getting Started
 :maxdepth: 2
 
 quickstart
@@ -66,7 +65,7 @@ installation
 ```
 
 ```{toctree}
-:caption: ユーザーガイド
+:caption: User Guide
 :maxdepth: 2
 
 user_guide/index
@@ -76,8 +75,11 @@ user_guide/numpy_integration
 user_guide/examples
 ```
 
+<!---
+Future sections - currently under development
+
 ```{toctree}
-:caption: API リファレンス
+:caption: API Reference
 :maxdepth: 2
 
 api/python/index
@@ -93,7 +95,7 @@ api/rust/index
 ```
 
 ```{toctree}
-:caption: 数理モデル
+:caption: Mathematical Models
 :maxdepth: 2
 
 models/index
@@ -105,7 +107,7 @@ models/asian_options
 ```
 
 ```{toctree}
-:caption: パフォーマンス
+:caption: Performance
 :maxdepth: 2
 
 performance/benchmarks
@@ -114,7 +116,7 @@ performance/tuning
 ```
 
 ```{toctree}
-:caption: 開発者向け
+:caption: For Developers
 :maxdepth: 2
 
 development/setup
@@ -125,12 +127,13 @@ development/hardcode-prevention
 ```
 
 ```{toctree}
-:caption: プロジェクト情報
+:caption: Project Information
 :maxdepth: 2
 
 changelog
 faq
 ```
+-->
 
 ## index
 

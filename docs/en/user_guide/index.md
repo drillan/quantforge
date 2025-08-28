@@ -25,7 +25,7 @@ Learn step-by-step from basic to advanced features of QuantForge.
 | Asian Options | Average Price Option | Scheduled Measurement |
 | Spread Options | 2 Asset Spread | Scheduled Measurement |
 
-※ Measurement environment: AMD Ryzen 5 5600G, CUI mode. For details, see [Benchmarks](../performance/benchmarks.md).
+※ Measurement environment: AMD Ryzen 5 5600G, CUI mode.
 
 ### Greeks
 
@@ -39,13 +39,13 @@ Learn step-by-step from basic to advanced features of QuantForge.
 
 QuantForge achieves acceleration through the following technologies:
 
-```{admonition} 最適化技術
+```{admonition} Optimization Technologies
 :class: tip
 
-1. **並列処理**: Rayonによる効率的な並列計算（大規模データで有効）
-2. **SIMD最適化**: CPUのベクトル命令を活用
-3. **ゼロコピー**: NumPy配列の直接処理（PyO3経由）
-4. **キャッシュ最適化**: メモリアクセスパターンの最適化
+1. **Parallel Processing**: Efficient parallel computation using Rayon (effective for large datasets)
+2. **SIMD Optimization**: Utilizing CPU vector instructions
+3. **Zero-copy**: Direct processing of NumPy arrays (via PyO3)
+4. **Cache Optimization**: Memory access pattern optimization
 ```
 
 ## Usage Examples Overview
@@ -55,7 +55,7 @@ QuantForge achieves acceleration through the following technologies:
 ```python
 import quantforge as qf
 
-# 単一のオプション価格
+# Single option price
 price = qf.black_scholes_call(100, 110, 0.05, 0.2, 1.0)
 ```
 
@@ -64,7 +64,7 @@ price = qf.black_scholes_call(100, 110, 0.05, 0.2, 1.0)
 ```python
 import numpy as np
 
-# 100万件のオプションを一括計算
+# Batch calculate 1 million options
 spots = np.random.uniform(90, 110, 1_000_000)
 prices = qf.calculate(spots, strike=100, rate=0.05, vol=0.2, time=1.0)
 ```
@@ -72,7 +72,7 @@ prices = qf.calculate(spots, strike=100, rate=0.05, vol=0.2, time=1.0)
 ### Portfolio Evaluation
 
 ```python
-# 複数のオプションポジション
+# Multiple option positions
 portfolio = [
     {"type": "call", "spot": 100, "strike": 105, "quantity": 100},
     {"type": "put", "spot": 100, "strike": 95, "quantity": -50},
@@ -83,20 +83,16 @@ total_value = qf.evaluate_portfolio(portfolio, rate=0.05, vol=0.2, time=0.25)
 
 ## Recommended Workflow
 
-```{mermaid}
-graph TD
-    A[データ準備] --> B[NumPy配列化]
-    B --> C[QuantForge計算]
-    C --> D[結果の検証]
-    D --> E[可視化/レポート]
-    
-    B --> F[バッチサイズ最適化]
-    F --> C
-    
-    C --> G[パフォーマンス計測]
-    G --> H[チューニング]
-    H --> C
-```
+1. **Data Preparation** → Prepare your input data
+2. **NumPy Array Conversion** → Convert to NumPy arrays for optimal performance
+3. **QuantForge Calculation** → Execute pricing/Greeks calculations
+4. **Result Validation** → Verify results against expectations
+5. **Visualization/Report** → Generate outputs and visualizations
+
+Additional optimization steps:
+- **Batch Size Optimization** → Tune batch sizes for optimal performance
+- **Performance Measurement** → Monitor calculation times
+- **Tuning** → Adjust parameters based on measurements
 
 ## Best Practices
 
@@ -116,7 +112,7 @@ graph TD
 
 ## Troubleshooting
 
-For general issues, refer to the [FAQ](../faq.md).
+For general issues, check the FAQ section.
 
 ## Next Step
 

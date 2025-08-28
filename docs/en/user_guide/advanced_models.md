@@ -6,7 +6,7 @@ future_feature: true
 
 :::{warning}
 The features described on this page are currently under development.
-Currently, the only available model is the [Black-Scholes model](../models/black_scholes.md).
+Currently, the only available model is the Black-Scholes model.
 For implementation timelines, please refer to the project's development plan.
 :::
 
@@ -18,20 +18,20 @@ QuantForge plans to introduce advanced option pricing models beyond Black-Schole
 
 ```python
 import numpy as np
-# 将来実装予定のAPI
+# API to be implemented in the future
 # from quantforge.models import american, black_scholes
 
-# アメリカンコールオプション
+# American call option
 # american_call = american.call_price(
 #     spot=100,
 #     strike=95,
 #     time=1.0,
 #     rate=0.05,
 #     sigma=0.25,
-#     dividend=0.02  # 配当利回り
+#     dividend=0.02  # Dividend yield
 # )
 
-# ヨーロピアンとの比較
+# Comparison with European
 # european_call = black_scholes.call_price_with_dividend(
 #     spot=100,
 #     strike=95,
@@ -50,8 +50,8 @@ import numpy as np
 ### American Put Option
 
 ```python
-# アメリカンプット（早期行使がより重要）
-# 将来実装予定
+# American put (early exercise is more significant)
+# To be implemented in the future
 # american_put = american.put_price(
 #     spot=100,
 #     strike=105,
@@ -77,9 +77,9 @@ print(f"Early Exercise Premium: ${premium:.2f} ({premium/european_put*100:.1f}%)
 ### Early Exercise Boundary
 
 ```python
-# 早期行使境界の計算
+# Calculate early exercise boundary
 def early_exercise_boundary(strike, rate, vol, time_points):
-    """各時点での早期行使境界価格"""
+    """Early exercise boundary price at each time point"""
     boundaries = []
     for t in time_points:
         if t > 0:
@@ -92,15 +92,15 @@ def early_exercise_boundary(strike, rate, vol, time_points):
             )
             boundaries.append(boundary)
         else:
-            boundaries.append(strike)  # 満期時は行使価格
+            boundaries.append(strike)  # Strike price at maturity
     
     return np.array(boundaries)
 
-# 時間グリッド
+# Time grid
 times = np.linspace(0, 1, 50)
 boundaries = early_exercise_boundary(100, 0.05, 0.25, times)
 
-# 可視化
+# Visualization
 import matplotlib.pyplot as plt
 plt.figure(figsize=(10, 6))
 plt.plot(times, boundaries)
@@ -118,18 +118,18 @@ plt.show()
 ### Arithmetic Average Asian Option
 
 ```python
-# 算術平均価格オプション
+# Arithmetic average price option
 asian_call = qf.asian_arithmetic_call(
     spot=100,
     strike=100,
     rate=0.05,
     vol=0.2,
     time=1.0,
-    averaging_start=0.0,  # 平均開始時点
-    n_fixings=252  # 観測回数（日次）
+    averaging_start=0.0,  # Averaging start time
+    n_fixings=252  # Number of observations (daily)
 )
 
-# 対応するヨーロピアンとの比較
+# Comparison with corresponding European
 european = qf.black_scholes_call(100, 100, 0.05, 0.2, 1.0)
 print(f"Asian Call: ${asian_call:.2f}")
 print(f"European Call: ${european:.2f}")
@@ -139,7 +139,7 @@ print(f"Asian Discount: ${european - asian_call:.2f}")
 ### Geometric Asian Option
 
 ```python
-# 幾何平均（解析解あり）
+# Geometric average (has analytical solution)
 asian_geometric = qf.asian_geometric_call(
     spot=100,
     strike=100,
@@ -154,19 +154,19 @@ print(f"Geometric Asian: ${asian_geometric:.2f}")
 ### Considered Known Prices
 
 ```python
-# 部分的に観測済みのアジアンオプション
-observed_prices = [98, 102, 101, 99, 103]  # 既に観測された価格
-remaining_time = 0.5  # 残り期間
+# Partially observed Asian option
+observed_prices = [98, 102, 101, 99, 103]  # Already observed prices
+remaining_time = 0.5  # Remaining time
 
 adjusted_asian = qf.asian_call_partial(
-    spot=103,  # 現在価格
+    spot=103,  # Current price
     strike=100,
     rate=0.05,
     vol=0.2,
     remaining_time=remaining_time,
     observed_average=np.mean(observed_prices),
     n_observed=len(observed_prices),
-    n_total=252  # 総観測回数
+    n_total=252  # Total number of observations
 )
 
 print(f"Partial Asian Call: ${adjusted_asian:.2f}")
@@ -177,15 +177,15 @@ print(f"Partial Asian Call: ${adjusted_asian:.2f}")
 ### Spread Options Under the Kirk Approximation
 
 ```python
-# 2資産間のスプレッドオプション
+# Spread option between two assets
 spread_call = qf.spread_option_kirk(
-    spot1=100,    # 資産1の現在価格
-    spot2=95,     # 資産2の現在価格
-    strike=5,     # スプレッドの行使価格
+    spot1=100,    # Asset 1 current price
+    spot2=95,     # Asset 2 current price
+    strike=5,     # Spread strike price
     rate=0.05,
-    vol1=0.25,    # 資産1のボラティリティ
-    vol2=0.30,    # 資産2のボラティリティ
-    correlation=0.7,  # 相関係数
+    vol1=0.25,    # Asset 1 volatility
+    vol2=0.30,    # Asset 2 volatility
+    correlation=0.7,  # Correlation coefficient
     time=1.0
 )
 
@@ -195,7 +195,7 @@ print(f"Spread Option: ${spread_call:.2f}")
 ### Markov Spread Option
 
 ```python
-# より精密なマルコフモデル
+# More accurate Markov model
 spread_markov = qf.spread_option_markov(
     spot1=100,
     spot2=95,
@@ -205,7 +205,7 @@ spread_markov = qf.spread_option_markov(
     vol2=0.30,
     correlation=0.7,
     time=1.0,
-    n_steps=100  # 時間ステップ数
+    n_steps=100  # Number of time steps
 )
 
 print(f"Markov Spread: ${spread_markov:.2f}")
@@ -216,16 +216,16 @@ print(f"Markov Spread: ${spread_markov:.2f}")
 ### Knock-in/Knock-out Options
 
 ```python
-# アップアンドアウト・コールオプション
+# Up-and-out call option
 barrier_call = qf.barrier_call(
     spot=100,
     strike=105,
-    barrier=120,  # バリアレベル
+    barrier=120,  # Barrier level
     rate=0.05,
     vol=0.25,
     time=1.0,
     barrier_type="up_and_out",
-    rebate=0  # リベート（バリアヒット時の支払い）
+    rebate=0  # Rebate (payment when barrier is hit)
 )
 
 vanilla_call = qf.black_scholes_call(100, 105, 0.05, 0.25, 1.0)
@@ -237,7 +237,7 @@ print(f"Barrier Discount: ${vanilla_call - barrier_call:.2f}")
 ### Double Barrier Option
 
 ```python
-# ダブルバリア（上下両方）
+# Double barrier (both upper and lower)
 double_barrier = qf.double_barrier_call(
     spot=100,
     strike=100,
@@ -256,7 +256,7 @@ print(f"Double Barrier Call: ${double_barrier:.2f}")
 ### Fixed Strike Lookback
 
 ```python
-# 期間中の最大値に基づくコール
+# Call based on maximum value during the period
 lookback_call = qf.lookback_call_fixed(
     spot=100,
     strike=95,
@@ -271,10 +271,10 @@ print(f"Fixed Strike Lookback Call: ${lookback_call:.2f}")
 ### Variable Strike Lookback
 
 ```python
-# 最適な行使価格を選択
+# Choose optimal strike price
 lookback_floating = qf.lookback_call_floating(
     spot=100,
-    min_observed=95,  # これまでの最小値
+    min_observed=95,  # Minimum value observed so far
     rate=0.05,
     vol=0.25,
     time=1.0
@@ -288,17 +288,17 @@ print(f"Floating Strike Lookback: ${lookback_floating:.2f}")
 ### Cash-or-nothing
 
 ```python
-# デジタルコール（満期時にITMなら固定額支払い）
+# Digital call (pays fixed amount if ITM at maturity)
 digital_call = qf.digital_call(
     spot=100,
     strike=105,
     rate=0.05,
     vol=0.25,
     time=1.0,
-    cash_amount=10  # 支払額
+    cash_amount=10  # Payout amount
 )
 
-# 確率計算
+# Probability calculation
 prob_itm = qf.probability_itm(
     spot=100,
     strike=105,
@@ -315,7 +315,7 @@ print(f"Probability of ITM: {prob_itm:.1%}")
 ### Asset or Nothing
 
 ```python
-# 資産払いデジタルオプション
+# Asset-or-nothing digital option
 asset_or_nothing = qf.asset_or_nothing_call(
     spot=100,
     strike=105,
@@ -333,12 +333,12 @@ print(f"Asset-or-Nothing Call: ${asset_or_nothing:.2f}")
 
 ```python
 def straddle_value(spot, strike, rate, vol, time):
-    """ストラドル（同一行使価格のコール+プット）"""
+    """Straddle (call + put at same strike)"""
     call = qf.black_scholes_call(spot, strike, rate, vol, time)
     put = qf.black_scholes_put(spot, strike, rate, vol, time)
     return call + put
 
-# ストラドルのペイオフ
+# Straddle payoff
 spots = np.linspace(80, 120, 100)
 straddle_values = [straddle_value(s, 100, 0.05, 0.25, 0.25) for s in spots]
 
@@ -357,13 +357,13 @@ plt.show()
 
 ```python
 def butterfly_spread(spot, k1, k2, k3, rate, vol, time):
-    """バタフライスプレッド"""
+    """Butterfly spread"""
     c1 = qf.black_scholes_call(spot, k1, rate, vol, time)
     c2 = qf.black_scholes_call(spot, k2, rate, vol, time)
     c3 = qf.black_scholes_call(spot, k3, rate, vol, time)
     return c1 - 2*c2 + c3
 
-# バタフライの価値
+# Butterfly value
 spots = np.linspace(85, 115, 100)
 butterfly = [butterfly_spread(s, 95, 100, 105, 0.05, 0.25, 0.25) for s in spots]
 
@@ -384,7 +384,7 @@ plt.show()
 ### Performance Comparison of Each Model
 
 ```python
-# 異なるモデルの計算時間比較
+# Comparison of calculation time for different models
 import time
 
 n = 100000
@@ -399,7 +399,7 @@ models = {
 
 for name, func in models.items():
     start = time.perf_counter()
-    prices = [func(s) for s in spots[:1000]]  # サンプル計算
+    prices = [func(s) for s in spots[:1000]]  # Sample calculation
     elapsed = time.perf_counter() - start
     print(f"{name:15s}: {elapsed*1000:.2f}ms for 1000 options")
 ```

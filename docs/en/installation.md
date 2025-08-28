@@ -20,14 +20,14 @@
 The latest development version is available from TestPyPI:
 
 ```bash
-# TestPyPIから最新開発版をインストール
+# Install latest development version from TestPyPI
 pip install -i https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ quantforge
 ```
 
 ### Installing stable version from PyPI (in progress)
 
 ```bash
-# 安定版がリリースされた後
+# After stable version is released
 pip install quantforge
 ```
 
@@ -36,16 +36,16 @@ pip install quantforge
 uv is a fast and reliable Python package manager:
 
 ```bash
-# uvのインストール（未インストールの場合）
+# Install uv (if not already installed)
 curl -LsSf https://astral.sh/uv/install.sh | sh
 
-# 仮想環境の作成と有効化
+# Create and activate virtual environment
 uv venv
 source .venv/bin/activate  # Linux/macOS
-# または
+# or
 .venv\Scripts\activate     # Windows
 
-# TestPyPIからインストール
+# Install from TestPyPI
 uv pip install -i https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ quantforge
 ```
 
@@ -55,32 +55,32 @@ uv pip install -i https://test.pypi.org/simple/ --extra-index-url https://pypi.o
 ### Linux
 
 ```bash
-# 必要なシステムライブラリ（Ubuntu/Debian）
+# Required system libraries (Ubuntu/Debian)
 sudo apt-get update
 sudo apt-get install -y build-essential
 
-# 必要なシステムライブラリ（RHEL/CentOS/Fedora）
+# Required system libraries (RHEL/CentOS/Fedora)
 sudo yum groupinstall "Development Tools"
 ```
 
 ### macOS
 
 ```bash
-# Xcodeコマンドラインツールが必要
+# Xcode Command Line Tools required
 xcode-select --install
 
-# Apple Siliconの場合
-# Rosetta 2経由でも動作しますが、ネイティブビルドを推奨
+# For Apple Silicon
+# Works via Rosetta 2 but native build recommended
 arch -arm64 uv pip install quantforge
 ```
 
 ### Windows
 
 ```powershell
-# Visual Studio Build Toolsが必要な場合があります
+# Visual Studio Build Tools may be required
 # https://visualstudio.microsoft.com/downloads/#build-tools-for-visual-studio-2022
 
-# PowerShellでのインストール
+# Installation via PowerShell
 uv pip install quantforge
 ```
 
@@ -91,29 +91,29 @@ For development versions or access to latest features:
 ### Prerequisites
 
 ```bash
-# Rustのインストール
+# Install Rust
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 source $HOME/.cargo/env
 
-# Maturinのインストール
+# Install Maturin
 uv pip install maturin
 ```
 
 ### Build Procedure
 
 ```bash
-# リポジトリのクローン
+# Clone repository
 git clone https://github.com/drillan/quantforge.git
 cd quantforge
 
-# 仮想環境の作成と有効化
+# Create and activate virtual environment
 uv venv
 source .venv/bin/activate
 
-# 開発モードでインストール
+# Install in development mode
 maturin develop --release
 
-# または本番ビルド
+# Or production build
 maturin build --release
 uv pip install target/wheels/quantforge-*.whl
 ```
@@ -123,14 +123,14 @@ uv pip install target/wheels/quantforge-*.whl
 ### Basic Verification
 
 ```python
-# Pythonインタープリタで実行
+# Run in Python interpreter
 from quantforge.models import black_scholes
 import quantforge
 
-# バージョン確認
+# Check version
 print(quantforge.__version__)
 
-# 基本的な計算テスト
+# Basic calculation test
 price = black_scholes.call_price(
     s=100.0,
     k=100.0,
@@ -149,7 +149,7 @@ import numpy as np
 import time
 from quantforge.models import black_scholes
 
-# パフォーマンス測定
+# Performance measurement
 n = 100_000
 spots = np.random.uniform(90, 110, n)
 
@@ -174,36 +174,36 @@ print(f"Speed: {elapsed/n*1000:.1f}ns per option")
 #### ImportError: DLL load failed (Windows)
 
 ```powershell
-# Visual C++ Redistributableのインストール
+# Install Visual C++ Redistributable
 # https://aka.ms/vs/17/release/vc_redist.x64.exe
 ```
 
 #### Symbol not found (macOS)
 
 ```bash
-# macOSバージョンの確認
+# Check macOS version
 sw_vers
 
-# 最小要件: macOS 10.15以上
-# 古いバージョンの場合はソースからビルド
+# Minimum requirement: macOS 10.15 or later
+# For older versions, build from source
 ```
 
 #### Illegal instruction (Linux)
 
 ```bash
-# CPU機能の確認
+# Check CPU features
 lscpu | grep -E "avx|sse"
 
-# カスタムビルド
+# Custom build
 maturin build --release
 ```
 
 #### Out Of Memory Error
 
 ```python
-# バッチサイズを調整
-# 大きすぎるバッチを分割
-batch_size = 10_000  # 100万件ではなく1万件ずつ処理
+# Adjust batch size
+# Split batches that are too large
+batch_size = 10_000  # Process 10k at a time instead of 1M
 ```
 
 ### Performance Tuning
@@ -211,19 +211,19 @@ batch_size = 10_000  # 100万件ではなく1万件ずつ処理
 #### Environment Variables
 
 ```bash
-# スレッド数の制御
+# Control thread count
 export RAYON_NUM_THREADS=8
 
-# デバッグ用設定
+# Debug settings
 export RUST_LOG=debug
 ```
 
 #### Python Settings
 
 ```python
-# NumPyのスレッド制御
+# NumPy thread control
 import os
-os.environ["OMP_NUM_THREADS"] = "1"  # QuantForge側で並列化
+os.environ["OMP_NUM_THREADS"] = "1"  # Parallelized on QuantForge side
 os.environ["MKL_NUM_THREADS"] = "1"
 os.environ["NUMEXPR_NUM_THREADS"] = "1"
 ```
@@ -233,30 +233,30 @@ os.environ["NUMEXPR_NUM_THREADS"] = "1"
 ### Upgrade to Latest Version
 
 ```bash
-# uvを使用
+# Using uv
 uv pip install --upgrade quantforge
 
-# pipを使用
+# Using pip
 pip install --upgrade quantforge
 ```
 
 ### Install Specific Version
 
 ```bash
-# バージョン指定
+# Specify version
 uv pip install quantforge==0.2.0
 
-# 開発版
+# Development version
 uv pip install quantforge --pre
 ```
 
 ## Uninstall
 
 ```bash
-# uvを使用
+# Using uv
 uv pip uninstall quantforge
 
-# pipを使用
+# Using pip
 pip uninstall quantforge
 ```
 
@@ -266,12 +266,12 @@ After installation is complete:
 
 1. [Quickstart](quickstart.md) - Get started in 5 minutes
 2. [Basic Usage](user_guide/basic_usage.md) - Detailed usage instructions
-3. [API Reference](api/python/index.md) - Detailed overview of all features
+3. API Reference - Detailed overview of all features (coming soon)
 
 ## Support
 
 If the issue remains unresolved:
 
 - [GitHub Issues](https://github.com/drillan/quantforge/issues)
-- [FAQ](faq.md)
+- FAQ (coming soon)
 - [Project Page](https://github.com/drillan/quantforge)

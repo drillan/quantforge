@@ -11,10 +11,10 @@ import numpy as np
 import quantforge as qf
 from quantforge.models import black_scholes
 
-# NumPy配列の作成
+# Create NumPy array
 spots = np.random.uniform(90, 110, 1_000_000)
 
-# ゼロコピーで処理（メモリコピーなし）
+# Process with zero-copy (no memory copy)
 prices = black_scholes.call_price_batch(
     spots=spots,
     strike=100.0,
@@ -23,7 +23,7 @@ prices = black_scholes.call_price_batch(
     sigma=0.2
 )
 
-# prices もNumPy配列として返される
+# prices is also returned as a NumPy array
 print(f"Type: {type(prices)}")
 print(f"Shape: {prices.shape}")
 print(f"Memory shared: {prices.base is not None}")
@@ -32,15 +32,15 @@ print(f"Memory shared: {prices.base is not None}")
 ### Memory Layout Optimization
 
 ```python
-# C連続配列（推奨）
+# C-contiguous array (recommended)
 spots_c = np.ascontiguousarray(spots)
 print(f"C-contiguous: {spots_c.flags['C_CONTIGUOUS']}")
 
-# Fortran連続配列（自動変換される）
+# Fortran-contiguous array (auto-converted)
 spots_f = np.asfortranarray(spots)
 print(f"F-contiguous: {spots_f.flags['F_CONTIGUOUS']}")
 
-# パフォーマンス比較（100万要素）
+# Performance comparison (1 million elements)
 import time
 
 def benchmark_layout(array):
@@ -56,8 +56,8 @@ def benchmark_layout(array):
 
 time_c = benchmark_layout(spots_c)
 time_f = benchmark_layout(spots_f)
-print(f"C-layout: {time_c*1000:.2f}ms")  # 期待値: 約56ms
-print(f"F-layout: {time_f*1000:.2f}ms")  # わずかに遅い
+print(f"C-layout: {time_c*1000:.2f}ms")  # Expected: ~56ms
+print(f"F-layout: {time_f*1000:.2f}ms")  # Slightly slower
 ```
 
 ## broadcasting
@@ -65,14 +65,14 @@ print(f"F-layout: {time_f*1000:.2f}ms")  # わずかに遅い
 ### Automatic Broadcast
 
 ```python
-# スカラーと配列の組み合わせ
+# Combination of scalars and arrays
 spots = np.array([95, 100, 105])
-strike = 100.0  # スカラー
-rate = 0.05    # スカラー
-sigma = 0.20   # スカラー
-time = 1.0     # スカラー
+strike = 100.0  # Scalar
+rate = 0.05    # Scalar
+sigma = 0.20   # Scalar
+time = 1.0     # Scalar
 
-# 自動的にブロードキャスト
+# Automatic broadcast
 prices = black_scholes.call_price_batch(
     spots=spots,
     strike=strike,
@@ -86,11 +86,11 @@ print(f"Results: {prices}")
 ### multidimensional array
 
 ```python
-# 2次元配列での計算
+# Calculation with 2D arrays
 spots = np.random.uniform(90, 110, (100, 1000))
 strikes = np.full((100, 1000), 100.0)
 
-# フラット化して計算
+# Flatten and calculate
 flat_spots = spots.ravel()
 flat_prices = black_scholes.call_price_batch(
     spots=flat_spots,
@@ -100,7 +100,7 @@ flat_prices = black_scholes.call_price_batch(
     sigma=0.2
 )
 
-# 元の形状に復元
+# Restore to original shape
 prices = flat_prices.reshape(spots.shape)
 print(f"Shape: {prices.shape}")
 ```
@@ -110,14 +110,14 @@ print(f"Shape: {prices.shape}")
 ### Slices and Indices
 
 ```python
-# 大きな配列
+# Large array
 all_spots = np.random.uniform(80, 120, 1_000_000)
 
-# ビューを作成（コピーなし）
-subset = all_spots[::10]  # 10個おきに選択
+# Create view (no copy)
+subset = all_spots[::10]  # Select every 10th element
 print(f"Is view: {subset.base is all_spots}")
 
-# ビューでの計算
+# Calculate with view
 subset_prices = black_scholes.call_price_batch(
     spots=subset,
     strike=100.0,
@@ -130,11 +130,11 @@ subset_prices = black_scholes.call_price_batch(
 ### Conditional Processing
 
 ```python
-# 条件に基づく選択
+# Conditional selection
 spots = np.random.uniform(80, 120, 10000)
-mask = (spots > 95) & (spots < 105)  # ATM近辺のみ
+mask = (spots > 95) & (spots < 105)  # Near ATM only
 
-# マスクされた計算
+# Masked calculation
 atm_spots = spots[mask]
 atm_prices = black_scholes.call_price_batch(
     spots=atm_spots,
@@ -144,7 +144,7 @@ atm_prices = black_scholes.call_price_batch(
     sigma=0.2
 )
 
-# 結果を元の配列に戻す
+# Return results to original array
 full_prices = np.zeros_like(spots)
 full_prices[mask] = atm_prices
 ```
@@ -158,8 +158,8 @@ full_prices[mask] = atm_prices
 spots_f32 = np.random.uniform(90, 110, 100000).astype(np.float32)
 spots_f64 = np.random.uniform(90, 110, 100000).astype(np.float64)
 
-# QuantForgeは内部でfloat64を使用
-# float32は自動変換される
+# QuantForge uses float64 internally
+# float32 is automatically converted
 prices_f32 = black_scholes.call_price_batch(
     spots=spots_f32, strike=100.0, time=1.0, rate=0.05, sigma=0.2
 )
@@ -168,13 +168,13 @@ prices_f64 = black_scholes.call_price_batch(
 )
 
 print(f"Input f32 dtype: {spots_f32.dtype}")
-print(f"Output dtype: {prices_f32.dtype}")  # float64に変換される
+print(f"Output dtype: {prices_f32.dtype}")  # Converted to float64
 ```
 
 ### structured array
 
 ```python
-# オプションデータの構造化配列
+# Structured array for option data
 dtype = np.dtype([
     ('spot', 'f8'),
     ('strike', 'f8'),
@@ -188,9 +188,9 @@ options['strike'] = 100
 options['vol'] = np.random.uniform(0.1, 0.3, 1000)
 options['time'] = np.random.uniform(0.1, 2.0, 1000)
 
-# 構造化配列から計算
-# Note: 現在のAPIでは単一の時間とボラティリティのみサポート
-# 複数のパラメータはループで処理
+# Calculate from structured array
+# Note: Current API only supports single time and volatility
+# Multiple parameters are processed in a loop
 prices = np.array([
     black_scholes.call_price(
         spot=options['spot'][i],
@@ -208,15 +208,15 @@ prices = np.array([
 ### Processing Large Data
 
 ```python
-# メモリマップファイルの作成
+# Create memory-mapped file
 filename = 'large_spots.dat'
 shape = (10_000_000,)
 spots_mmap = np.memmap(filename, dtype='float64', mode='w+', shape=shape)
 
-# データの書き込み
+# Write data
 spots_mmap[:] = np.random.uniform(90, 110, shape)
 
-# チャンクごとの処理
+# Process by chunks
 chunk_size = 100_000
 results = []
 
@@ -231,10 +231,10 @@ for i in range(0, len(spots_mmap), chunk_size):
     )
     results.append(chunk_prices)
 
-# 結果の結合
+# Combine results
 all_prices = np.concatenate(results)
 
-# クリーンアップ
+# Cleanup
 del spots_mmap
 import os
 os.remove(filename)
@@ -245,24 +245,24 @@ os.remove(filename)
 ### Custom ufunc
 
 ```python
-# QuantForgeの関数をufuncとして使用
+# Use QuantForge functions as ufunc
 @np.vectorize
 def custom_pricer(spot, strike, moneyness_threshold=0.1):
-    """モネyネスに基づく条件付き価格計算"""
+    """Conditional pricing based on moneyness"""
     moneyness = abs(spot / strike - 1.0)
     
     if moneyness < moneyness_threshold:
-        # ATM近辺は高精度計算
+        # High precision calculation for near ATM
         return black_scholes.call_price(
             spot=spot, strike=strike, time=1.0, rate=0.05, sigma=0.2
         )
     else:
-        # OTMは簡易計算
+        # Simplified calculation for OTM
         return black_scholes.call_price(
             spot=spot, strike=strike, time=1.0, rate=0.05, sigma=0.15
         )
 
-# ベクトル化された使用
+# Vectorized usage
 spots = np.array([95, 100, 105, 120])
 strikes = np.array([100, 100, 100, 100])
 prices = custom_pricer(spots, strikes)
@@ -277,7 +277,7 @@ from multiprocessing import Pool
 import numpy as np
 
 def process_batch(args):
-    """バッチ処理関数"""
+    """Batch processing function"""
     spots, strike, rate, sigma, time = args
     return black_scholes.call_price_batch(
         spots=spots,
@@ -287,18 +287,18 @@ def process_batch(args):
         sigma=sigma
     )
 
-# データを分割
+# Split data
 n_total = 10_000_000
 n_chunks = 10
 spots = np.random.uniform(90, 110, n_total)
 chunks = np.array_split(spots, n_chunks)
 
-# 並列処理
+# Parallel processing
 with Pool() as pool:
     args = [(chunk, 100, 0.05, 0.2, 1.0) for chunk in chunks]
     results = pool.map(process_batch, args)
 
-# 結果の結合
+# Combine results
 all_prices = np.concatenate(results)
 ```
 
@@ -307,20 +307,20 @@ all_prices = np.concatenate(results)
 ### Optimize Alignment
 
 ```python
-# 64バイト境界にアラインメント（キャッシュライン）
+# Align to 64-byte boundary (cache line)
 def create_aligned_array(size, alignment=64):
-    """アラインメントされた配列を作成"""
+    """Create an aligned array"""
     dtype = np.float64
     itemsize = np.dtype(dtype).itemsize
     buf = np.empty(size * itemsize + alignment, dtype=np.uint8)
     offset = (-buf.ctypes.data) % alignment
     return np.frombuffer(buf[offset:offset+size*itemsize], dtype=dtype)
 
-# アラインメントされた配列での計算
+# Calculate with aligned array
 aligned_spots = create_aligned_array(1_000_000)
 aligned_spots[:] = np.random.uniform(90, 110, 1_000_000)
 
-# パフォーマンス測定
+# Performance measurement
 import time
 start = time.perf_counter()
 prices = black_scholes.call_price_batch(
@@ -331,7 +331,7 @@ prices = black_scholes.call_price_batch(
     sigma=0.2
 )
 elapsed = time.perf_counter() - start
-print(f"Aligned array: {elapsed*1000:.2f}ms")  # 期待値: 約56ms（100万要素）
+print(f"Aligned array: {elapsed*1000:.2f}ms")  # Expected: ~56ms (1M elements)
 ```
 
 ### Monitor Memory Usage
@@ -339,10 +339,10 @@ print(f"Aligned array: {elapsed*1000:.2f}ms")  # 期待値: 約56ms（100万要�
 ```python
 import tracemalloc
 
-# メモリ追跡開始
+# Start memory tracking
 tracemalloc.start()
 
-# 大規模計算
+# Large-scale calculation
 spots = np.random.uniform(90, 110, 5_000_000)
 prices = black_scholes.call_price_batch(
     spots=spots,
@@ -352,7 +352,7 @@ prices = black_scholes.call_price_batch(
     sigma=0.2
 )
 
-# メモリ使用量
+# Memory usage
 current, peak = tracemalloc.get_traced_memory()
 print(f"Current memory: {current / 1024 / 1024:.1f} MB")
 print(f"Peak memory: {peak / 1024 / 1024:.1f} MB")
@@ -365,13 +365,13 @@ tracemalloc.stop()
 ### Direct Result Writing
 
 ```python
-# 事前確保された配列
+# Pre-allocated arrays
 n = 1_000_000
 spots = np.random.uniform(90, 110, n)
-prices = np.empty(n)  # 結果用配列
+prices = np.empty(n)  # Array for results
 
-# インプレース計算（メモリ効率的）
-# Note: 現在のAPIではインプレース操作はサポートされていません
+# In-place calculation (memory efficient)
+# Note: Current API does not support in-place operations
 prices = black_scholes.call_price_batch(
     spots=spots,
     strike=100.0,
@@ -388,7 +388,7 @@ print(f"Prices array modified in-place: {prices[:5]}")
 ### Combining with NumPy Statistical Functions
 
 ```python
-# ポートフォリオ統計
+# Portfolio statistics
 spots = np.random.uniform(90, 110, 10000)
 prices = black_scholes.call_price_batch(
     spots=spots,
@@ -398,7 +398,7 @@ prices = black_scholes.call_price_batch(
     sigma=0.2
 )
 
-# 統計量
+# Statistics
 stats = {
     'mean': np.mean(prices),
     'std': np.std(prices),
@@ -422,6 +422,6 @@ NumPy integration enables:
 - **Memory Efficiency**: Efficient processing of large datasets
 - **High-Speed Batch Processing**: Processes 1 million records in approximately 56ms (AMD Ryzen 5 5600G)
 
-For detailed performance information, see the [Benchmarks](../performance/benchmarks.md).
+For detailed performance information, see the performance section.
 
 Next, explore [Advanced Models](advanced_models.md) to learn about complex pricing models like American options.
