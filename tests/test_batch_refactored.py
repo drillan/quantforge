@@ -1,8 +1,10 @@
 """Refactored batch processing tests using base classes."""
 
+from typing import Any
+
 import numpy as np
 import pytest
-from quantforge.models import american, black76, black_scholes, merton
+from quantforge import models
 from test_base import BaseBatchTest
 
 
@@ -10,9 +12,9 @@ class TestBlackScholesBatchRefactored(BaseBatchTest):
     """Test batch processing for Black-Scholes model."""
 
     @property
-    def model(self):
+    def model(self) -> Any:
         """Get Black-Scholes model instance."""
-        return black_scholes
+        return models
 
     def test_put_call_parity(self) -> None:
         """Test put-call parity for Black-Scholes."""
@@ -37,11 +39,11 @@ class TestBlack76BatchRefactored(BaseBatchTest):
     """Test batch processing for Black76 model."""
 
     @property
-    def model(self):
+    def model(self) -> Any:
         """Get Black76 model instance."""
-        return black76
+        return models.black76
 
-    def create_test_arrays(self, n: int = 5, broadcast: bool = False):
+    def create_test_arrays(self, n: int = 5, broadcast: bool = False) -> dict[str, Any]:
         """Create test arrays for Black76 (uses forwards instead of spots)."""
         if broadcast:
             return {
@@ -84,11 +86,11 @@ class TestMertonBatchRefactored(BaseBatchTest):
     """Test batch processing for Merton model."""
 
     @property
-    def model(self):
+    def model(self) -> Any:
         """Get Merton model instance."""
-        return merton
+        return models.merton
 
-    def create_test_arrays(self, n: int = 5, broadcast: bool = False):
+    def create_test_arrays(self, n: int = 5, broadcast: bool = False) -> dict[str, Any]:
         """Create test arrays for Merton (includes dividends)."""
         base_arrays = super().create_test_arrays(n, broadcast)
         # Add dividend yield
@@ -127,11 +129,11 @@ class TestAmericanBatchRefactored(BaseBatchTest):
     """Test batch processing for American model."""
 
     @property
-    def model(self):
+    def model(self) -> Any:
         """Get American model instance."""
-        return american
+        return models.american
 
-    def create_test_arrays(self, n: int = 5, broadcast: bool = False):
+    def create_test_arrays(self, n: int = 5, broadcast: bool = False) -> dict[str, Any]:
         """Create test arrays for American (includes dividends)."""
         base_arrays = super().create_test_arrays(n, broadcast)
         # Add dividend yield
@@ -150,8 +152,8 @@ class TestAmericanBatchRefactored(BaseBatchTest):
         am_puts = self.model.put_price_batch(**arrays)
 
         # European prices (using Merton as proxy)
-        eu_calls = merton.call_price_batch(**arrays)
-        eu_puts = merton.put_price_batch(**arrays)
+        eu_calls = models.merton.call_price_batch(**arrays)
+        eu_puts = models.merton.put_price_batch(**arrays)
 
         # American should be >= European
         assert all(am_calls[i] >= eu_calls[i] - 1e-10 for i in range(len(am_calls))), (
@@ -175,13 +177,13 @@ class TestAmericanBatchRefactored(BaseBatchTest):
 
 
 # Helper function for parameterized tests
-def get_all_models():
+def get_all_models() -> list[tuple[Any, str]]:
     """Get all model instances for parameterized testing."""
     return [
-        (black_scholes, "black_scholes"),
-        (black76, "black76"),
-        (merton, "merton"),
-        (american, "american"),
+        (models, "models"),
+        (models.black76, "models.black76"),
+        (models.merton, "models.merton"),
+        (models.american, "models.american"),
     ]
 
 
@@ -189,10 +191,10 @@ class TestGenericBatchOperations:
     """Generic batch operations that apply to all models."""
 
     @pytest.mark.parametrize("model,name", get_all_models())
-    def test_batch_size_consistency(self, model, name: str) -> None:
+    def test_batch_size_consistency(self, model: Any, name: str) -> None:
         """Test that batch functions return correct size."""
         # Create appropriate arrays based on model
-        if name == "black76":
+        if name == "models.black76":
             arrays = {
                 "forwards": np.linspace(70, 80, 10),
                 "strikes": np.full(10, 75.0),
@@ -209,7 +211,7 @@ class TestGenericBatchOperations:
                 "sigmas": np.full(10, 0.2),
             }
 
-            if name in ["merton", "american"]:
+            if name in ["models.merton", "american"]:
                 arrays["dividends"] = np.full(10, 0.02)
 
         if hasattr(model, "call_price_batch"):
@@ -217,10 +219,10 @@ class TestGenericBatchOperations:
             assert len(prices) == 10, f"{name}: Batch size mismatch"
 
     @pytest.mark.parametrize("model,name", get_all_models())
-    def test_no_negative_prices(self, model, name: str) -> None:
+    def test_no_negative_prices(self, model: Any, name: str) -> None:
         """Test that no negative prices are returned."""
         # Create appropriate arrays based on model
-        if name == "black76":
+        if name == "models.black76":
             arrays = {
                 "forwards": np.random.uniform(50, 100, 20),
                 "strikes": np.random.uniform(50, 100, 20),
@@ -237,7 +239,7 @@ class TestGenericBatchOperations:
                 "sigmas": np.random.uniform(0.1, 0.5, 20),
             }
 
-            if name in ["merton", "american"]:
+            if name in ["models.merton", "american"]:
                 arrays["dividends"] = np.random.uniform(0.0, 0.05, 20)
 
         if hasattr(model, "call_price_batch"):

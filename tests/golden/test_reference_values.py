@@ -6,7 +6,7 @@ from pathlib import Path
 import numpy as np
 import pytest
 from conftest import PRACTICAL_TOLERANCE, THEORETICAL_TOLERANCE
-from quantforge.models import black_scholes
+from quantforge import models
 from scipy import stats
 
 # 参照実装のインポート（存在する場合）
@@ -37,7 +37,7 @@ class TestGoldenMaster:
         ]
 
         for s, k, t, r, v, expected_call, expected_put in golden_values:
-            call_price = black_scholes.call_price(s, k, t, r, v)
+            call_price = models.call_price(s, k, t, r, v)
 
             # コール価格の検証（1%の許容誤差）
             rel_error = abs(call_price - expected_call) / expected_call
@@ -96,7 +96,7 @@ class TestGoldenMaster:
             assert isinstance(s, int | float) and isinstance(k, int | float)
             assert isinstance(t, int | float) and isinstance(r, int | float)
             assert isinstance(v, int | float)
-            price = black_scholes.call_price(float(s), float(k), float(t), float(r), float(v))
+            price = models.call_price(float(s), float(k), float(t), float(r), float(v))
 
             expected_range = scenario["expected_range"]
             assert isinstance(expected_range, tuple) and len(expected_range) == 2
@@ -123,7 +123,7 @@ class TestGoldenMaster:
             v = np.random.uniform(0.05, 0.8)
 
             # QuantForge計算
-            qf_price = black_scholes.call_price(s, k, t, r, v)
+            qf_price = models.call_price(s, k, t, r, v)
 
             # 参照実装計算
             # GBS_2025のBlackScholes関数を使用（配当なし）
@@ -202,7 +202,7 @@ class TestGoldenMaster:
             assert isinstance(s, int | float) and isinstance(k, int | float)
             assert isinstance(t, int | float) and isinstance(r, int | float)
             assert isinstance(v, int | float)
-            price = black_scholes.call_price(float(s), float(k), float(t), float(r), float(v))
+            price = models.call_price(float(s), float(k), float(t), float(r), float(v))
 
             # 1%の許容誤差
             expected_val = case["expected"]
@@ -228,8 +228,8 @@ class TestGoldenMaster:
 
         # デルタの近似計算
         ds = 0.01
-        price_base = black_scholes.call_price(s, k, t, r, sigma)
-        price_up = black_scholes.call_price(s + ds, k, t, r, sigma)
+        price_base = models.call_price(s, k, t, r, sigma)
+        price_up = models.call_price(s + ds, k, t, r, sigma)
         delta_numerical = (price_up - price_base) / ds
         delta_theoretical = stats.norm.cdf(d1)
 
@@ -238,7 +238,7 @@ class TestGoldenMaster:
         )
 
         # ガンマの近似計算
-        price_down = black_scholes.call_price(s - ds, k, t, r, sigma)
+        price_down = models.call_price(s - ds, k, t, r, sigma)
         gamma_numerical = (price_up - 2 * price_base + price_down) / (ds**2)
         gamma_theoretical = stats.norm.pdf(d1) / (s * sigma * np.sqrt(t))
 
@@ -264,7 +264,7 @@ class TestGoldenMaster:
             expected_prices.append(price)
 
         # バッチ計算
-        actual_prices = black_scholes.call_price_batch(spots, k, t, r, sigma)
+        actual_prices = models.call_price_batch(spots, k, t, r, sigma)
 
         # 比較
         np.testing.assert_allclose(
@@ -294,7 +294,7 @@ class TestIndustryBenchmarks:
         ]
 
         for case in bloomberg_cases:
-            price = black_scholes.call_price(
+            price = models.call_price(
                 float(case["s"]), float(case["k"]), float(case["t"]), float(case["r"]), float(case["v"])
             )
 
@@ -340,7 +340,7 @@ class TestIndustryBenchmarks:
             assert isinstance(s, int | float) and isinstance(k, int | float)
             assert isinstance(t, int | float) and isinstance(r, int | float)
             assert isinstance(v, int | float)
-            price = black_scholes.call_price(float(s), float(k), float(t), float(r), float(v))
+            price = models.call_price(float(s), float(k), float(t), float(r), float(v))
 
             expected_range = case["expected_range"]
             assert isinstance(expected_range, tuple) and len(expected_range) == 2
@@ -376,7 +376,7 @@ class TestIndustryBenchmarks:
             r_val = float(r)
             v_val = float(v)
 
-            price = black_scholes.call_price(s_val, k_val, t_val, r_val, v_val)
+            price = models.call_price(s_val, k_val, t_val, r_val, v_val)
 
             # SciPyによる理論価格
             d1 = (np.log(s_val / k_val) + (r_val + 0.5 * v_val**2) * t_val) / (v_val * np.sqrt(t_val))

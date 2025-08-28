@@ -8,7 +8,7 @@ from conftest import (
     PRACTICAL_TOLERANCE,
     THEORETICAL_TOLERANCE,
 )
-from quantforge.models import black_scholes
+from quantforge import models
 
 
 class TestImpliedVolatility:
@@ -24,10 +24,10 @@ class TestImpliedVolatility:
         true_vol = 0.25
 
         # 真のボラティリティで価格を計算
-        price = black_scholes.call_price(s, k, t, r, true_vol)
+        price = models.call_price(s, k, t, r, true_vol)
 
         # IVを逆算
-        iv = black_scholes.implied_volatility(price, s, k, t, r, is_call=True)
+        iv = models.implied_volatility(price, s, k, t, r, is_call=True)
 
         # 誤差チェック
         assert abs(iv - true_vol) < THEORETICAL_TOLERANCE
@@ -41,10 +41,10 @@ class TestImpliedVolatility:
         true_vol = 0.3
 
         # 真のボラティリティで価格を計算
-        price = black_scholes.put_price(s, k, t, r, true_vol)
+        price = models.put_price(s, k, t, r, true_vol)
 
         # IVを逆算
-        iv = black_scholes.implied_volatility(price, s, k, t, r, is_call=False)
+        iv = models.implied_volatility(price, s, k, t, r, is_call=False)
 
         # 誤差チェック
         assert abs(iv - true_vol) < THEORETICAL_TOLERANCE
@@ -61,22 +61,16 @@ class TestImpliedVolatility:
 
         for s, k, t, r, true_vol, is_call in test_cases:
             # Step 1: ボラティリティから価格を計算
-            if is_call:
-                price = black_scholes.call_price(s, k, t, r, true_vol)
-            else:
-                price = black_scholes.put_price(s, k, t, r, true_vol)
+            price = models.call_price(s, k, t, r, true_vol) if is_call else models.put_price(s, k, t, r, true_vol)
 
             # Step 2: 価格からIVを逆算
             if is_call:
-                iv = black_scholes.implied_volatility(price, s, k, t, r, is_call=True)
+                iv = models.implied_volatility(price, s, k, t, r, is_call=True)
             else:
-                iv = black_scholes.implied_volatility(price, s, k, t, r, is_call=False)
+                iv = models.implied_volatility(price, s, k, t, r, is_call=False)
 
             # Step 3: IVから価格を再計算
-            if is_call:
-                recalc_price = black_scholes.call_price(s, k, t, r, iv)
-            else:
-                recalc_price = black_scholes.put_price(s, k, t, r, iv)
+            recalc_price = models.call_price(s, k, t, r, iv) if is_call else models.put_price(s, k, t, r, iv)
 
             # 往復誤差チェック
             assert abs(recalc_price - price) < PRACTICAL_TOLERANCE
@@ -91,11 +85,11 @@ class TestImpliedVolatility:
 
         # 価格が低すぎる（内在価値以下）
         with pytest.raises(RuntimeError):
-            black_scholes.implied_volatility(0.01, s, k, t, r, is_call=True)
+            models.implied_volatility(0.01, s, k, t, r, is_call=True)
 
         # 価格が高すぎる（原資産価格以上）
         with pytest.raises(RuntimeError):
-            black_scholes.implied_volatility(101.0, s, k, t, r, is_call=True)
+            models.implied_volatility(101.0, s, k, t, r, is_call=True)
 
     def test_iv_batch(self) -> None:
         """バッチIV計算のテスト"""
@@ -111,9 +105,7 @@ class TestImpliedVolatility:
         ivs = []
         for i in range(len(prices)):
             try:
-                iv = black_scholes.implied_volatility(
-                    prices[i], spots[i], strikes[i], times[i], rates[i], is_call=is_calls[i]
-                )
+                iv = models.implied_volatility(prices[i], spots[i], strikes[i], times[i], rates[i], is_call=is_calls[i])
                 ivs.append(iv)
             except (ValueError, RuntimeError):
                 ivs.append(np.nan)
@@ -134,10 +126,10 @@ class TestImpliedVolatility:
         vol = 0.01  # 低ボラティリティ
 
         # 価格計算（ほぼ内在価値）
-        price = black_scholes.call_price(s, k, t, r, vol)
+        price = models.call_price(s, k, t, r, vol)
 
         # IV計算
-        iv = black_scholes.implied_volatility(price, s, k, t, r, is_call=True)
+        iv = models.implied_volatility(price, s, k, t, r, is_call=True)
 
         # Deep ITMは低ボラティリティになるはず
         assert iv < 0.1
@@ -149,8 +141,8 @@ class TestImpliedVolatility:
         r = 0.05
         vol = 0.5
 
-        price = black_scholes.call_price(s, k, t, r, vol)
-        iv = black_scholes.implied_volatility(price, s, k, t, r, is_call=True)
+        price = models.call_price(s, k, t, r, vol)
+        iv = models.implied_volatility(price, s, k, t, r, is_call=True)
 
         # 満期直前でも収束すること
         assert abs(iv - vol) < 0.1
@@ -165,8 +157,8 @@ class TestImpliedVolatility:
         vol = 0.25
 
         # コールとプットの価格を計算
-        call_price = black_scholes.call_price(s, k, t, r, vol)
-        put_price = black_scholes.put_price(s, k, t, r, vol)
+        call_price = models.call_price(s, k, t, r, vol)
+        put_price = models.put_price(s, k, t, r, vol)
 
         # バッチデータ
         prices = np.array([call_price, put_price, call_price, put_price])
@@ -179,9 +171,7 @@ class TestImpliedVolatility:
         # バッチIV計算（個別に計算）
         ivs = []
         for i in range(len(prices)):
-            iv = black_scholes.implied_volatility(
-                prices[i], spots[i], strikes[i], times[i], rates[i], is_call=is_calls[i]
-            )
+            iv = models.implied_volatility(prices[i], spots[i], strikes[i], times[i], rates[i], is_call=is_calls[i])
             ivs.append(iv)
 
         # 全て同じボラティリティに収束するはず
@@ -204,14 +194,14 @@ class TestImpliedVolatility:
             is_call = np.random.choice([True, False])
 
             # 価格計算
-            price = black_scholes.call_price(s, k, t, r, vol) if is_call else black_scholes.put_price(s, k, t, r, vol)
+            price = models.call_price(s, k, t, r, vol) if is_call else models.put_price(s, k, t, r, vol)
 
             # IV計算
             try:
                 if is_call:
-                    iv = black_scholes.implied_volatility(price, s, k, t, r, is_call=True)
+                    iv = models.implied_volatility(price, s, k, t, r, is_call=True)
                 else:
-                    iv = black_scholes.implied_volatility(price, s, k, t, r, is_call=False)
+                    iv = models.implied_volatility(price, s, k, t, r, is_call=False)
 
                 # 収束判定
                 if abs(iv - vol) < 1e-5:
@@ -242,9 +232,9 @@ class TestImpliedVolatility:
         prices = np.zeros(n)
         for i in range(n):
             if is_calls[i]:
-                prices[i] = black_scholes.call_price(spots[i], strikes[i], times[i], rates[i], vols[i])
+                prices[i] = models.call_price(spots[i], strikes[i], times[i], rates[i], vols[i])
             else:
-                prices[i] = black_scholes.put_price(spots[i], strikes[i], times[i], rates[i], vols[i])
+                prices[i] = models.put_price(spots[i], strikes[i], times[i], rates[i], vols[i])
 
         # バッチIV計算（並列処理）
         import time
@@ -255,9 +245,7 @@ class TestImpliedVolatility:
         ivs = []
         for i in range(n_test):
             try:
-                iv = black_scholes.implied_volatility(
-                    prices[i], spots[i], strikes[i], times[i], rates[i], is_call=is_calls[i]
-                )
+                iv = models.implied_volatility(prices[i], spots[i], strikes[i], times[i], rates[i], is_call=is_calls[i])
                 ivs.append(iv)
             except (ValueError, RuntimeError):
                 ivs.append(np.nan)

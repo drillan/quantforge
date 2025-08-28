@@ -5,7 +5,7 @@ from typing import Any
 
 import numpy as np
 import pytest
-from quantforge.models import black_scholes
+from quantforge import models
 
 
 @pytest.mark.benchmark
@@ -24,7 +24,7 @@ class TestPerformanceBenchmarks:
         sigma = 0.2
 
         # ベンチマーク実行
-        result = benchmark(black_scholes.call_price, s, k, t, r, sigma)
+        result = benchmark(models.call_price, s, k, t, r, sigma)
 
         # 結果の妥当性確認
         assert 10.0 < result < 11.0, f"計算結果が異常: {result}"
@@ -48,7 +48,7 @@ class TestPerformanceBenchmarks:
         sigma = 0.2
 
         # ベンチマーク実行
-        result = benchmark(black_scholes.call_price_batch, spots, k, t, r, sigma)
+        result = benchmark(models.call_price_batch, spots, k, t, r, sigma)
 
         # 結果の妥当性確認
         assert len(result) == n, f"結果サイズが不正: {len(result)}"
@@ -67,7 +67,7 @@ class TestPerformanceBenchmarks:
         r = 0.05
         sigma = 0.2
 
-        result = benchmark(black_scholes.call_price_batch, spots, k, t, r, sigma)
+        result = benchmark(models.call_price_batch, spots, k, t, r, sigma)
 
         assert len(result) == n
         # 小規模バッチは非常に高速であるべき
@@ -87,7 +87,7 @@ class TestPerformanceBenchmarks:
         def calculate_all() -> list[float]:
             results = []
             for i in range(n):
-                price = black_scholes.call_price(spots[i], strikes[i], times[i], rates[i], vols[i])
+                price = models.call_price(spots[i], strikes[i], times[i], rates[i], vols[i])
                 results.append(price)
             return results
 
@@ -112,7 +112,7 @@ class TestScalability:
         sigma = 0.2
 
         start = time.perf_counter()
-        results = black_scholes.call_price_batch(spots, k, t, r, sigma)
+        results = models.call_price_batch(spots, k, t, r, sigma)
         elapsed = time.perf_counter() - start
 
         assert len(results) == size
@@ -135,7 +135,7 @@ class TestScalability:
 
         # メモリ使用量の推定
         input_memory = spots.nbytes
-        results = black_scholes.call_price_batch(spots, k, t, r, sigma)
+        results = models.call_price_batch(spots, k, t, r, sigma)
         output_memory = results.nbytes
 
         # 出力は入力と同じサイズ
@@ -160,8 +160,8 @@ class TestOptimizationComparison:
         sigma = 0.2
 
         # ウォームアップ（初回実行時のオーバーヘッドを除去）
-        _ = black_scholes.call_price(100.0, k, t, r, sigma)
-        _ = black_scholes.call_price_batch(spots[:10], k, t, r, sigma)
+        _ = models.call_price(100.0, k, t, r, sigma)
+        _ = models.call_price_batch(spots[:10], k, t, r, sigma)
 
         # 複数回測定して最良値を採用（システムノイズの影響を軽減）
         speedups = []
@@ -170,13 +170,13 @@ class TestOptimizationComparison:
             start_single = time.perf_counter()
             single_results = []
             for spot in spots:
-                price = black_scholes.call_price(spot, k, t, r, sigma)
+                price = models.call_price(spot, k, t, r, sigma)
                 single_results.append(price)
             time_single = time.perf_counter() - start_single
 
             # バッチ計算（1回のFFI呼び出し）
             start_batch = time.perf_counter()
-            batch_results = black_scholes.call_price_batch(spots, k, t, r, sigma)
+            batch_results = models.call_price_batch(spots, k, t, r, sigma)
             time_batch = time.perf_counter() - start_batch
 
             speedups.append(time_single / time_batch)
@@ -206,14 +206,14 @@ class TestOptimizationComparison:
         # 小規模データ
         small_spots = np.random.uniform(50, 150, small_n)
         start_small = time.perf_counter()
-        _ = black_scholes.call_price_batch(small_spots, k, t, r, sigma)
+        _ = models.call_price_batch(small_spots, k, t, r, sigma)
         time_small = time.perf_counter() - start_small
         time_per_element_small = time_small / small_n
 
         # 大規模データ
         large_spots = np.random.uniform(50, 150, large_n)
         start_large = time.perf_counter()
-        _ = black_scholes.call_price_batch(large_spots, k, t, r, sigma)
+        _ = models.call_price_batch(large_spots, k, t, r, sigma)
         time_large = time.perf_counter() - start_large
         time_per_element_large = time_large / large_n
 
@@ -242,7 +242,7 @@ class TestStressPerformance:
         times = []
         for _ in range(n_iterations):
             start = time.perf_counter()
-            results = black_scholes.call_price_batch(spots, k, t, r, sigma)
+            results = models.call_price_batch(spots, k, t, r, sigma)
             elapsed = time.perf_counter() - start
             times.append(elapsed)
 
@@ -278,7 +278,7 @@ class TestStressPerformance:
         sigma = 0.2
 
         start = time.perf_counter()
-        results = black_scholes.call_price_batch(spots, k, t, r, sigma)
+        results = models.call_price_batch(spots, k, t, r, sigma)
         elapsed = time.perf_counter() - start
 
         assert len(results) == n
@@ -308,7 +308,7 @@ class TestPerformanceMetrics:
             times = []
             for _ in range(5):
                 start = time.perf_counter()
-                _ = black_scholes.call_price_batch(spots, k, t, r, sigma)
+                _ = models.call_price_batch(spots, k, t, r, sigma)
                 elapsed = time.perf_counter() - start
                 times.append(elapsed)
 
@@ -336,7 +336,7 @@ class TestPerformanceMetrics:
         latencies: list[float] = []
         for _ in range(n_samples):
             start = time.perf_counter()
-            _ = black_scholes.call_price(s, k, t, r, sigma)
+            _ = models.call_price(s, k, t, r, sigma)
             elapsed = time.perf_counter() - start
             latencies.append(elapsed)
 

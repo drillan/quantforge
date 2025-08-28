@@ -4,7 +4,7 @@ import math
 
 import numpy as np
 import pytest
-from quantforge.models import black76
+from quantforge import models
 
 
 class TestBlack76Pricing:
@@ -18,7 +18,7 @@ class TestBlack76Pricing:
         r = 0.05  # rate
         sigma = 0.2
 
-        call_price = black76.call_price(f, k, t, r, sigma)
+        call_price = models.black76.call_price(f, k, t, r, sigma)
 
         assert call_price > 0
         assert call_price < f  # Call price should be less than forward
@@ -31,7 +31,7 @@ class TestBlack76Pricing:
         r = 0.05  # rate
         sigma = 0.2
 
-        put_price = black76.put_price(f, k, t, r, sigma)
+        put_price = models.black76.put_price(f, k, t, r, sigma)
 
         assert put_price > 0
         assert put_price < k  # Put price should be less than strike
@@ -44,8 +44,8 @@ class TestBlack76Pricing:
         r = 0.05  # rate
         sigma = 0.25
 
-        call_price = black76.call_price(f, k, t, r, sigma)
-        put_price = black76.put_price(f, k, t, r, sigma)
+        call_price = models.black76.call_price(f, k, t, r, sigma)
+        put_price = models.black76.put_price(f, k, t, r, sigma)
 
         discount_factor = math.exp(-r * t)
         expected_diff = discount_factor * (f - k)
@@ -61,8 +61,8 @@ class TestBlack76Pricing:
         r = 0.05  # rate
         sigma = 0.2
 
-        call_price = black76.call_price(f, k, t, r, sigma)
-        put_price = black76.put_price(f, k, t, r, sigma)
+        call_price = models.black76.call_price(f, k, t, r, sigma)
+        put_price = models.black76.put_price(f, k, t, r, sigma)
 
         # For ATM with F = K, call and put should be equal
         assert abs(call_price - put_price) < 1e-10
@@ -75,7 +75,7 @@ class TestBlack76Pricing:
         r = 0.05  # rate
         sigma = 0.2
 
-        call_price = black76.call_price(f, k, t, r, sigma)
+        call_price = models.black76.call_price(f, k, t, r, sigma)
         discount_factor = math.exp(-r * t)
         intrinsic_value = discount_factor * (f - k)
 
@@ -90,7 +90,7 @@ class TestBlack76Pricing:
         r = 0.05  # rate
         sigma = 0.2
 
-        call_price = black76.call_price(f, k, t, r, sigma)
+        call_price = models.black76.call_price(f, k, t, r, sigma)
 
         # Deep OTM call should be nearly worthless
         assert call_price < 0.001
@@ -103,28 +103,28 @@ class TestBlack76Pricing:
         r = 0.05  # rate
         sigma = 0.2
 
-        batch_prices = black76.call_price_batch(fs, k, t, r, sigma)
+        batch_prices = models.black76.call_price_batch(fs, k, t, r, sigma)
 
         assert len(batch_prices) == len(fs)
 
         # Verify each price individually
         for i, forward in enumerate(fs):
-            individual_price = black76.call_price(forward, k, t, r, sigma)
+            individual_price = models.black76.call_price(forward, k, t, r, sigma)
             assert abs(batch_prices[i] - individual_price) < 1e-10
 
     def test_invalid_inputs(self) -> None:
         """Test that invalid inputs raise appropriate errors."""
         with pytest.raises(ValueError):
-            black76.call_price(-100, 100, 1.0, 0.05, 0.2)  # Negative forward
+            models.black76.call_price(-100, 100, 1.0, 0.05, 0.2)  # Negative forward
 
         with pytest.raises(ValueError):
-            black76.put_price(100, -100, 1.0, 0.05, 0.2)  # Negative strike
+            models.black76.put_price(100, -100, 1.0, 0.05, 0.2)  # Negative strike
 
         with pytest.raises(ValueError):
-            black76.call_price(100, 100, -1.0, 0.05, 0.2)  # Negative time
+            models.black76.call_price(100, 100, -1.0, 0.05, 0.2)  # Negative time
 
         with pytest.raises(ValueError):
-            black76.put_price(100, 100, 1.0, 0.05, -0.2)  # Negative volatility
+            models.black76.put_price(100, 100, 1.0, 0.05, -0.2)  # Negative volatility
 
 
 class TestBlack76Greeks:
@@ -138,7 +138,7 @@ class TestBlack76Greeks:
         r = 0.05  # rate
         sigma = 0.2
 
-        greeks = black76.greeks(f, k, t, r, sigma, is_call=True)
+        greeks = models.black76.greeks(f, k, t, r, sigma, is_call=True)
 
         assert hasattr(greeks, "delta")
         assert hasattr(greeks, "gamma")
@@ -155,8 +155,8 @@ class TestBlack76Greeks:
         sigma = 0.2
         discount_factor = math.exp(-r * t)
 
-        call_greeks = black76.greeks(f, k, t, r, sigma, is_call=True)
-        put_greeks = black76.greeks(f, k, t, r, sigma, is_call=False)
+        call_greeks = models.black76.greeks(f, k, t, r, sigma, is_call=True)
+        put_greeks = models.black76.greeks(f, k, t, r, sigma, is_call=False)
 
         # Call delta should be between 0 and discount factor
         assert 0 <= call_greeks.delta <= discount_factor
@@ -172,8 +172,8 @@ class TestBlack76Greeks:
         r = 0.05  # rate
         sigma = 0.2
 
-        call_greeks = black76.greeks(f, k, t, r, sigma, is_call=True)
-        put_greeks = black76.greeks(f, k, t, r, sigma, is_call=False)
+        call_greeks = models.black76.greeks(f, k, t, r, sigma, is_call=True)
+        put_greeks = models.black76.greeks(f, k, t, r, sigma, is_call=False)
 
         assert abs(call_greeks.gamma - put_greeks.gamma) < 1e-10
 
@@ -185,8 +185,8 @@ class TestBlack76Greeks:
         r = 0.05  # rate
         sigma = 0.2
 
-        call_greeks = black76.greeks(f, k, t, r, sigma, is_call=True)
-        put_greeks = black76.greeks(f, k, t, r, sigma, is_call=False)
+        call_greeks = models.black76.greeks(f, k, t, r, sigma, is_call=True)
+        put_greeks = models.black76.greeks(f, k, t, r, sigma, is_call=False)
 
         assert abs(call_greeks.vega - put_greeks.vega) < 1e-10
 
@@ -198,7 +198,7 @@ class TestBlack76Greeks:
         r = 0.05  # rate
         sigma = 0.2
 
-        call_greeks = black76.greeks(f, k, t, r, sigma, is_call=True)
+        call_greeks = models.black76.greeks(f, k, t, r, sigma, is_call=True)
 
         # Theta should be finite and reasonable
         assert abs(call_greeks.theta) < 1.0  # Daily theta should be small
@@ -218,10 +218,10 @@ class TestBlack76ImpliedVolatility:
         original_sigma = 0.25
 
         # Calculate price with known volatility
-        call_price = black76.call_price(f, k, t, r, original_sigma)
+        call_price = models.black76.call_price(f, k, t, r, original_sigma)
 
         # Recover implied volatility
-        recovered_iv = black76.implied_volatility(call_price, f, k, t, r, is_call=True)
+        recovered_iv = models.black76.implied_volatility(call_price, f, k, t, r, is_call=True)
 
         assert abs(recovered_iv - original_sigma) < 0.001
 
@@ -233,8 +233,8 @@ class TestBlack76ImpliedVolatility:
         true_sigma = 0.3
 
         for k in [80.0, 90.0, 100.0, 110.0, 120.0]:  # strike values
-            call_price = black76.call_price(f, k, t, r, true_sigma)
-            recovered_iv = black76.implied_volatility(call_price, f, k, t, r, is_call=True)
+            call_price = models.black76.call_price(f, k, t, r, true_sigma)
+            recovered_iv = models.black76.implied_volatility(call_price, f, k, t, r, is_call=True)
             assert abs(recovered_iv - true_sigma) < 0.001
 
     def test_iv_put_option(self) -> None:
@@ -245,8 +245,8 @@ class TestBlack76ImpliedVolatility:
         r = 0.05  # rate
         original_sigma = 0.2
 
-        put_price = black76.put_price(f, k, t, r, original_sigma)
-        recovered_iv = black76.implied_volatility(put_price, f, k, t, r, is_call=False)
+        put_price = models.black76.put_price(f, k, t, r, original_sigma)
+        recovered_iv = models.black76.implied_volatility(put_price, f, k, t, r, is_call=False)
 
         assert abs(recovered_iv - original_sigma) < 0.001
 
@@ -259,14 +259,14 @@ class TestBlack76ImpliedVolatility:
 
         # Negative price should raise error (now ValueError due to validation)
         with pytest.raises(ValueError):
-            black76.implied_volatility(-10.0, f, k, t, r, is_call=True)
+            models.black76.implied_volatility(-10.0, f, k, t, r, is_call=True)
 
         # Price below intrinsic value should raise error
         discount = math.exp(-r * t)
         intrinsic = discount * (f - k)
         if intrinsic > 0:
             with pytest.raises(RuntimeError):
-                black76.implied_volatility(intrinsic * 0.5, f, k, t, r, is_call=True)
+                models.black76.implied_volatility(intrinsic * 0.5, f, k, t, r, is_call=True)
 
 
 def test_spot_to_forward_conversion() -> None:
@@ -281,7 +281,7 @@ def test_spot_to_forward_conversion() -> None:
     expected_forward = s * math.exp((r - q) * t)
 
     # If the module provides this utility
-    # actual_forward = black76.spot_to_forward(spot, rate, div_yield, time)
+    # actual_forward = models.black76.spot_to_forward(spot, rate, div_yield, time)
     # assert abs(actual_forward - expected_forward) < 1e-10
 
     # For now, just verify the formula

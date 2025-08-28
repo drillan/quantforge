@@ -2,7 +2,7 @@
 
 import numpy as np
 from conftest import NUMERICAL_TOLERANCE, PRACTICAL_TOLERANCE
-from quantforge.models import black_scholes
+from quantforge import models
 
 
 class TestBlackScholesModuleAPI:
@@ -10,18 +10,18 @@ class TestBlackScholesModuleAPI:
 
     def test_call_price(self) -> None:
         """Test Black-Scholes call price calculation."""
-        price = black_scholes.call_price(100.0, 105.0, 1.0, 0.05, 0.2)
+        price = models.call_price(100.0, 105.0, 1.0, 0.05, 0.2)
         assert abs(price - 8.021352224079687) < PRACTICAL_TOLERANCE
 
     def test_put_price(self) -> None:
         """Test Black-Scholes put price calculation."""
-        price = black_scholes.put_price(100.0, 105.0, 1.0, 0.05, 0.2)
+        price = models.put_price(100.0, 105.0, 1.0, 0.05, 0.2)
         assert abs(price - 7.90044179918926) < PRACTICAL_TOLERANCE
 
     def test_call_price_batch(self) -> None:
         """Test batch call price calculation."""
         spots = np.array([95.0, 100.0, 105.0, 110.0])
-        prices = black_scholes.call_price_batch(spots, 100.0, 1.0, 0.05, 0.2)
+        prices = models.call_price_batch(spots, 100.0, 1.0, 0.05, 0.2)
 
         # Expected values calculated with current parameters
         expected = [7.510872, 10.450584, 13.857906, 17.662954]
@@ -30,7 +30,7 @@ class TestBlackScholesModuleAPI:
     def test_put_price_batch(self) -> None:
         """Test batch put price calculation."""
         spots = np.array([95.0, 100.0, 105.0, 110.0])
-        prices = black_scholes.put_price_batch(spots, 100.0, 1.0, 0.05, 0.2)
+        prices = models.put_price_batch(spots, 100.0, 1.0, 0.05, 0.2)
 
         # Expected values calculated with current parameters
         expected = [7.633815, 5.573526, 3.980849, 2.785896]
@@ -38,7 +38,7 @@ class TestBlackScholesModuleAPI:
 
     def test_greeks(self) -> None:
         """Test Greeks calculation."""
-        greeks = black_scholes.greeks(100.0, 100.0, 1.0, 0.05, 0.2, True)
+        greeks = models.greeks(100.0, 100.0, 1.0, 0.05, 0.2, True)
 
         assert hasattr(greeks, "delta")
         assert hasattr(greeks, "gamma")
@@ -54,10 +54,10 @@ class TestBlackScholesModuleAPI:
         """Test implied volatility calculation."""
         # First calculate a price with known volatility
         target_vol = 0.25
-        price = black_scholes.call_price(100.0, 100.0, 1.0, 0.05, target_vol)
+        price = models.call_price(100.0, 100.0, 1.0, 0.05, target_vol)
 
         # Then recover the volatility
-        iv = black_scholes.implied_volatility(price, 100.0, 100.0, 1.0, 0.05, True)
+        iv = models.implied_volatility(price, 100.0, 100.0, 1.0, 0.05, True)
 
         assert abs(iv - target_vol) < NUMERICAL_TOLERANCE
 
@@ -69,8 +69,8 @@ class TestBlackScholesModuleAPI:
         rate = 0.05
         sigma = 0.2
 
-        call = black_scholes.call_price(spot, strike, time, rate, sigma)
-        put = black_scholes.put_price(spot, strike, time, rate, sigma)
+        call = models.call_price(spot, strike, time, rate, sigma)
+        put = models.put_price(spot, strike, time, rate, sigma)
 
         # Put-Call Parity: C - P = S - K * exp(-r*T)
         lhs = call - put

@@ -10,7 +10,7 @@ from typing import Any
 import numpy as np
 import pytest
 from conftest import NUMERICAL_TOLERANCE
-from quantforge.models import black_scholes
+from quantforge import models
 
 
 class TestGreeksParameterized:
@@ -39,7 +39,7 @@ class TestGreeksParameterized:
         sign_check: Any,
     ) -> None:
         """単一のグリークス計算テスト（パラメータ化）"""
-        greeks = black_scholes.greeks(100.0, 100.0, 1.0, 0.05, 0.2, is_call=is_call)
+        greeks = models.greeks(100.0, 100.0, 1.0, 0.05, 0.2, is_call=is_call)
         greek_value = getattr(greeks, greek_name)
 
         # 符号チェック
@@ -70,7 +70,7 @@ class TestGreeksParameterized:
         is_call: bool,
     ) -> None:
         """Deltaのマネーネス依存性テスト"""
-        greeks = black_scholes.greeks(spot, strike, time, rate, sigma, is_call)
+        greeks = models.greeks(spot, strike, time, rate, sigma, is_call)
         delta = greeks.delta
 
         if is_call:
@@ -107,10 +107,10 @@ class TestGreeksParameterized:
         # Calculate greeks for each spot
         results = []
         for spot in spot_range:
-            greeks = black_scholes.greeks(spot, strike, time, rate, sigma, is_call=True)
+            greeks = models.greeks(spot, strike, time, rate, sigma, is_call=True)
             results.append(
                 {
-                    "spot": spot,
+                    "s": spot,
                     "delta": greeks.delta,
                     "gamma": greeks.gamma,
                     "vega": greeks.vega,
@@ -144,8 +144,8 @@ class TestGreeksPutCallParity:
     )
     def test_greek_relationships(self, spot: float, strike: float, time: float, rate: float, sigma: float) -> None:
         """グリークス間の関係性テスト"""
-        call_greeks = black_scholes.greeks(spot, strike, time, rate, sigma, is_call=True)
-        put_greeks = black_scholes.greeks(spot, strike, time, rate, sigma, is_call=False)
+        call_greeks = models.greeks(spot, strike, time, rate, sigma, is_call=True)
+        put_greeks = models.greeks(spot, strike, time, rate, sigma, is_call=False)
 
         # Delta parity: Call Delta - Put Delta = 1 (approximately, due to discounting)
         delta_diff = call_greeks.delta - put_greeks.delta
@@ -178,7 +178,7 @@ class TestGreeksEdgeCases:
 
         # Should not raise exception
         try:
-            greeks = black_scholes.greeks(spot, strike, time, rate, sigma, is_call=True)
+            greeks = models.greeks(spot, strike, time, rate, sigma, is_call=True)
 
             # Basic sanity checks
             assert np.isfinite(greeks.delta), f"{test_name}: Delta is not finite"
@@ -203,7 +203,7 @@ class TestGreeksConsistency:
         sigma = 0.2
 
         # Black-Scholes greeks
-        bs_greeks = black_scholes.greeks(spot, strike, time, rate, sigma, is_call=True)
+        bs_greeks = models.greeks(spot, strike, time, rate, sigma, is_call=True)
 
         # ここで他のモデル（Merton等）があれば比較
         # 例: merton_greeks = merton.greeks(spot, strike, time, rate, 0, sigma, is_call=True)
@@ -227,14 +227,14 @@ class TestGreeksConsistency:
         epsilon = 0.01
 
         # Calculate prices at shifted spots
-        price_base = black_scholes.call_price(base_spot, strike, time, rate, sigma)
-        price_shifted = black_scholes.call_price(base_spot + spot_shift * epsilon, strike, time, rate, sigma)
+        price_base = models.call_price(base_spot, strike, time, rate, sigma)
+        price_shifted = models.call_price(base_spot + spot_shift * epsilon, strike, time, rate, sigma)
 
         # Numerical delta
         numerical_delta = (price_shifted - price_base) / (spot_shift * epsilon)
 
         # Analytical delta
-        greeks = black_scholes.greeks(base_spot, strike, time, rate, sigma, is_call=True)
+        greeks = models.greeks(base_spot, strike, time, rate, sigma, is_call=True)
 
         # Should be approximately equal
         assert abs(numerical_delta - greeks.delta) < 0.01  # Larger tolerance for numerical diff
