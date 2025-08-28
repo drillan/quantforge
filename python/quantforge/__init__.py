@@ -1,6 +1,7 @@
 """QuantForge: 高性能オプション価格計算エンジン."""
 
-from .quantforge import models
+# Import the Rust extension module directly
+from quantforge.quantforge import models
 
 __all__ = ["models"]
 

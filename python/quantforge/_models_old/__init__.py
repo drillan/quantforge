@@ -1,7 +1,7 @@
 """QuantForge models module - option pricing models."""
 
 # Import the Rust models submodule
-from ..quantforge import models as _rust_models  # type: ignore[import-not-found]
+from ..quantforge import models as _rust_models
 from .base import BaseOptionModel
 
 

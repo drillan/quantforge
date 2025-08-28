@@ -4,7 +4,7 @@ This module provides the Python interface to the Rust-implemented
 Merton model for pricing options on assets with continuous dividend yields.
 """
 
-from quantforge.quantforge import models  # type: ignore[import-not-found]
+from quantforge.quantforge import models
 
 # Re-export all functions from the Rust module
 call_price = models.merton.call_price

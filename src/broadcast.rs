@@ -21,7 +21,7 @@ impl<'a> ArrayLike<'a> {
         }
     }
 
-    /// Convert ArrayLike to a Vec<f64>
+    /// Convert ArrayLike to a `Vec<f64>`
     /// For scalars, returns a single-element Vec
     pub fn to_vec(&self) -> Vec<f64> {
         match self {

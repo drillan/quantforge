@@ -112,10 +112,8 @@ class VectorizedValidator:
                 np.broadcast_arrays(*result.values())
             except ValueError as e:
                 # Find problematic shapes
-                shape_info = ", ".join(f"{name}={shape}" for name, shape in shapes)
-                raise DimensionError(
-                    expected=(-1,), actual=(-1,), parameter="arrays"
-                ) from e
+                _ = ", ".join(f"{name}={shape}" for name, shape in shapes)  # 形状情報（エラーメッセージには使用しない）
+                raise DimensionError(expected=(-1,), actual=(-1,), parameter="arrays") from e
 
         return result
 

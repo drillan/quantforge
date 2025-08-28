@@ -28,6 +28,7 @@ pub fn black_scholes(m: &Bound<'_, PyModule>) -> PyResult<()> {
 }
 
 /// Calculate Black-Scholes call option price
+
 #[pyfunction]
 #[pyo3(name = "call_price")]
 #[pyo3(signature = (s, k, t, r, sigma))]
@@ -47,6 +48,7 @@ fn bs_call_price(s: f64, k: f64, t: f64, r: f64, sigma: f64) -> PyResult<f64> {
 }
 
 /// Calculate Black-Scholes put option price
+
 #[pyfunction]
 #[pyo3(name = "put_price")]
 #[pyo3(signature = (s, k, t, r, sigma))]
@@ -106,6 +108,7 @@ fn bs_call_price_batch<'py>(
 }
 
 /// Calculate put prices for multiple parameters with broadcasting
+
 #[pyfunction]
 #[pyo3(name = "put_price_batch")]
 #[pyo3(signature = (spots, strikes, times, rates, sigmas))]
@@ -146,6 +149,7 @@ fn bs_put_price_batch<'py>(
 }
 
 /// Calculate implied volatilities for multiple parameters with broadcasting
+
 #[pyfunction]
 #[pyo3(name = "implied_volatility_batch")]
 #[pyo3(signature = (prices, spots, strikes, times, rates, is_calls))]
@@ -192,6 +196,7 @@ fn bs_implied_volatility_batch<'py>(
 
 /// Calculate Greeks for multiple parameters with broadcasting
 /// Returns a dictionary with arrays for each Greek
+
 #[pyfunction]
 #[pyo3(name = "greeks_batch")]
 #[pyo3(signature = (spots, strikes, times, rates, sigmas, is_calls))]
@@ -245,6 +250,7 @@ fn bs_greeks_batch<'py>(
 }
 
 /// Calculate all Greeks for Black-Scholes option
+
 #[pyfunction]
 #[pyo3(name = "greeks")]
 #[pyo3(signature = (s, k, t, r, sigma, is_call=true))]
@@ -272,6 +278,7 @@ fn bs_greeks(s: f64, k: f64, t: f64, r: f64, sigma: f64, is_call: bool) -> PyRes
 }
 
 /// Calculate implied volatility from Black-Scholes option price
+
 #[pyfunction]
 #[pyo3(name = "implied_volatility")]
 #[pyo3(signature = (price, s, k, t, r, is_call=true))]
@@ -303,6 +310,7 @@ fn bs_implied_volatility(
 }
 
 /// Python-friendly Greeks struct
+
 #[pyclass]
 #[derive(Clone)]
 pub struct PyGreeks {
@@ -344,6 +352,7 @@ pub fn black76(m: &Bound<'_, PyModule>) -> PyResult<()> {
 }
 
 /// Calculate Black76 call option price
+
 #[pyfunction]
 #[pyo3(name = "call_price")]
 #[pyo3(signature = (f, k, t, r, sigma))]
@@ -364,6 +373,7 @@ fn b76_call_price(f: f64, k: f64, t: f64, r: f64, sigma: f64) -> PyResult<f64> {
 }
 
 /// Calculate Black76 put option price
+
 #[pyfunction]
 #[pyo3(name = "put_price")]
 #[pyo3(signature = (f, k, t, r, sigma))]
@@ -384,6 +394,7 @@ fn b76_put_price(f: f64, k: f64, t: f64, r: f64, sigma: f64) -> PyResult<f64> {
 }
 
 /// Calculate call prices with broadcasting support
+
 #[pyfunction]
 #[pyo3(name = "call_price_batch")]
 #[pyo3(signature = (fs, ks, ts, rs, sigmas))]
@@ -419,6 +430,7 @@ fn b76_call_price_batch<'py>(
 }
 
 /// Calculate put prices with broadcasting support
+
 #[pyfunction]
 #[pyo3(name = "put_price_batch")]
 #[pyo3(signature = (fs, ks, ts, rs, sigmas))]
@@ -454,6 +466,7 @@ fn b76_put_price_batch<'py>(
 }
 
 /// Calculate all Greeks for Black76 option
+
 #[pyfunction]
 #[pyo3(name = "greeks")]
 #[pyo3(signature = (f, k, t, r, sigma, is_call=true))]
@@ -482,6 +495,7 @@ fn b76_greeks(f: f64, k: f64, t: f64, r: f64, sigma: f64, is_call: bool) -> PyRe
 }
 
 /// Calculate implied volatility from Black76 option price
+
 #[pyfunction]
 #[pyo3(name = "implied_volatility")]
 #[pyo3(signature = (price, f, k, t, r, is_call=true))]
@@ -512,6 +526,7 @@ fn b76_implied_volatility(
 }
 
 /// Calculate implied volatility for multiple option prices (Black76)
+
 #[pyfunction]
 #[pyo3(name = "implied_volatility_batch")]
 #[pyo3(signature = (prices, fs, ks, ts, rs, is_calls))]
@@ -558,6 +573,7 @@ fn b76_implied_volatility_batch<'py>(
 }
 
 /// Calculate Greeks with broadcasting support (Black76)
+
 #[pyfunction]
 #[pyo3(name = "greeks_batch")]
 #[pyo3(signature = (fs, ks, ts, rs, sigmas, is_calls))]
@@ -628,6 +644,7 @@ pub fn merton(m: &Bound<'_, PyModule>) -> PyResult<()> {
 }
 
 /// Calculate Merton model call option price
+
 #[pyfunction]
 #[pyo3(name = "call_price")]
 #[pyo3(signature = (s, k, t, r, q, sigma))]
@@ -654,6 +671,7 @@ fn merton_call_price(s: f64, k: f64, t: f64, r: f64, q: f64, sigma: f64) -> PyRe
 }
 
 /// Calculate Merton model put option price
+
 #[pyfunction]
 #[pyo3(name = "put_price")]
 #[pyo3(signature = (s, k, t, r, q, sigma))]
@@ -680,6 +698,7 @@ fn merton_put_price(s: f64, k: f64, t: f64, r: f64, q: f64, sigma: f64) -> PyRes
 }
 
 /// Calculate call prices with broadcasting support
+
 #[pyfunction]
 #[pyo3(name = "call_price_batch")]
 #[pyo3(signature = (spots, strikes, times, rates, qs, sigmas))]
@@ -726,6 +745,7 @@ fn merton_call_price_batch<'py>(
 }
 
 /// Calculate put prices with broadcasting support
+
 #[pyfunction]
 #[pyo3(name = "put_price_batch")]
 #[pyo3(signature = (spots, strikes, times, rates, qs, sigmas))]
@@ -772,6 +792,7 @@ fn merton_put_price_batch<'py>(
 }
 
 /// Calculate all Greeks for Merton model option
+
 #[pyfunction]
 #[pyo3(name = "greeks")]
 #[pyo3(signature = (s, k, t, r, q, sigma, is_call=true))]
@@ -815,6 +836,7 @@ fn merton_greeks(
 }
 
 /// Calculate implied volatility from Merton model option price
+
 #[pyfunction]
 #[pyo3(name = "implied_volatility")]
 #[pyo3(signature = (price, s, k, t, r, q, is_call=true))]
@@ -852,6 +874,7 @@ fn merton_implied_volatility(
 }
 
 /// Calculate implied volatility for multiple option prices (Merton)
+
 #[pyfunction]
 #[pyo3(name = "implied_volatility_batch")]
 #[pyo3(signature = (prices, spots, strikes, times, rates, qs, is_calls))]
@@ -904,6 +927,7 @@ fn merton_implied_volatility_batch<'py>(
 }
 
 /// Calculate Greeks with broadcasting support (Merton)
+
 #[pyfunction]
 #[pyo3(name = "greeks_batch")]
 #[pyo3(signature = (spots, strikes, times, rates, qs, sigmas, is_calls))]
@@ -969,6 +993,7 @@ fn merton_greeks_batch<'py>(
 }
 
 /// Python-friendly Merton Greeks struct with dividend_rho
+
 #[pyclass]
 #[derive(Clone)]
 pub struct PyMertonGreeks {
@@ -1014,6 +1039,7 @@ pub fn american(m: &Bound<'_, PyModule>) -> PyResult<()> {
 }
 
 /// Calculate American call option price using Bjerksund-Stensland 2002
+
 #[pyfunction]
 #[pyo3(name = "call_price")]
 #[pyo3(signature = (s, k, t, r, q, sigma))]
@@ -1026,6 +1052,7 @@ fn american_call_price(s: f64, k: f64, t: f64, r: f64, q: f64, sigma: f64) -> Py
 }
 
 /// Calculate American put option price using Bjerksund-Stensland 2002
+
 #[pyfunction]
 #[pyo3(name = "put_price")]
 #[pyo3(signature = (s, k, t, r, q, sigma))]
@@ -1038,6 +1065,7 @@ fn american_put_price(s: f64, k: f64, t: f64, r: f64, q: f64, sigma: f64) -> PyR
 }
 
 /// Calculate call prices for multiple spots
+
 #[pyfunction]
 #[pyo3(name = "call_price_batch")]
 #[pyo3(signature = (spots, strikes, times, rates, qs, sigmas))]
@@ -1083,6 +1111,7 @@ fn american_call_price_batch<'py>(
 }
 
 /// Calculate put prices for multiple spots
+
 #[pyfunction]
 #[pyo3(name = "put_price_batch")]
 #[pyo3(signature = (spots, strikes, times, rates, qs, sigmas))]
@@ -1128,6 +1157,7 @@ fn american_put_price_batch<'py>(
 }
 
 /// Calculate all Greeks for American option
+
 #[pyfunction]
 #[pyo3(name = "greeks")]
 #[pyo3(signature = (s, k, t, r, q, sigma, is_call=true))]
@@ -1156,6 +1186,7 @@ fn american_greeks(
 }
 
 /// Calculate implied volatility from American option price
+
 #[pyfunction]
 #[pyo3(name = "implied_volatility")]
 #[pyo3(signature = (price, s, k, t, r, q, is_call=true, initial_guess=None))]
@@ -1199,6 +1230,7 @@ fn american_implied_volatility(
 }
 
 /// Calculate implied volatility for multiple option prices (American)
+
 #[pyfunction]
 #[pyo3(name = "implied_volatility_batch")]
 #[pyo3(signature = (prices, spots, strikes, times, rates, qs, is_calls))]
@@ -1250,6 +1282,7 @@ fn american_implied_volatility_batch<'py>(
 }
 
 /// Calculate Greeks for multiple spot prices (American)
+
 #[pyfunction]
 #[pyo3(name = "greeks_batch")]
 #[pyo3(signature = (spots, strikes, times, rates, qs, sigmas, is_calls))]
@@ -1313,6 +1346,7 @@ fn american_greeks_batch<'py>(
 }
 
 /// Calculate early exercise boundary for American option
+
 #[pyfunction]
 #[pyo3(name = "exercise_boundary")]
 #[pyo3(signature = (s, k, t, r, q, sigma, is_call=true))]
@@ -1333,6 +1367,7 @@ fn american_exercise_boundary(
 }
 
 /// Calculate early exercise boundaries for multiple spot prices
+
 #[pyfunction]
 #[pyo3(name = "exercise_boundary_batch")]
 #[pyo3(signature = (spots, strikes, times, rates, qs, sigmas, is_calls))]
