@@ -23,26 +23,25 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-      
       - name: Install uv
-        run: pip install uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
+      
+      - name: Setup Python
+        run: uv python install 3.11
       
       - name: Install dependencies
         run: uv sync --extra docs
       
       - name: Build English docs (default)
         run: |
-          cd docs/en
-          sphinx-build -b html . _build/html
+          uv run sphinx-build -b html docs/en docs/en/_build/html
       
       - name: Build Japanese docs
         run: |
-          cd docs/ja
-          sphinx-build -b html . _build/html
+          uv run sphinx-build -b html docs/ja docs/ja/_build/html
       
       - name: Combine builds for deployment
         run: |
