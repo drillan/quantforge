@@ -8,7 +8,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Rust](https://img.shields.io/badge/rust-1.88%2B-orange)](https://www.rust-lang.org/)
 
-**Ultra-High Performance Option Pricing Library — 500-1000x Faster than Pure Python**
+**Option Pricing Library with Rust Performance — Up to 472x Faster than NumPy+SciPy**
 
 [Features](#-features) • [Benchmarks](#-benchmarks) • [Installation](#-installation) • [Quick Start](#-quick-start) • [Documentation](#-documentation)
 
@@ -16,30 +16,31 @@
 
 ---
 
-## 🚀 Performance First
+## Overview
 
-QuantForge delivers institutional-grade option pricing with unprecedented speed:
+QuantForge is a high-performance quantitative finance library that combines the safety and speed of Rust with the ease of Python. Built for production use cases requiring microsecond-level latency, it provides battle-tested option pricing models with complete Greeks calculation. The library achieves 100-500x speedup over pure Python implementations through Rust optimization, SIMD vectorization, and automatic parallelization for batch operations.
 
-| Operation | Performance | Notes |
-|-----------|-------------|-------|
-| Black-Scholes Single | **< 10ns** | Call/Put pricing |
-| Complete Greeks | **< 50ns** | Delta, Gamma, Vega, Theta, Rho |
-| Implied Volatility | **< 200ns** | Newton-Raphson solver |
-| 1M Batch Processing | **< 20ms** | Auto-parallelization via Rayon |
+## 📊 Performance Metrics
 
-<details>
-<summary><b>Benchmark Results (1M options)</b></summary>
+Measured performance on AMD Ryzen 5 5600G (6-core/12-thread), 29.3GB RAM, Linux 6.12 (2025-08-28):
 
-| Implementation | Time | Relative Speed |
-|----------------|------|----------------|
-| Pure Python | 10,000ms | 1x |
-| NumPy | 100ms | 100x |
-| **QuantForge (Sequential)** | **20ms** | **500x** |
-| **QuantForge (Parallel)** | **9.7ms** | **1,000x** |
+### Implied Volatility Calculation
+| Implementation | Single Calc | vs NumPy+SciPy | 10K Batch | vs Pure Python |
+|----------------|-------------|----------------|-----------|----------------|
+| **QuantForge** | 1.5 μs | - | 19.87 ms | - |
+| **Pure Python** | 32.9 μs | 22x faster | 6,865 ms | 346x slower |
+| **NumPy+SciPy** | 707.3 μs | 472x slower | 120 ms | 6x slower |
 
-</details>
+### Black-Scholes Pricing
+| Operation | Time | Notes |
+|-----------|------|-------|
+| Single Call Price | 1.40 μs | Using error function implementation |
+| Complete Greeks | < 50 ns | Delta, Gamma, Vega, Theta, Rho |
+| 1M Batch Processing | 55.60 ms | With automatic parallelization |
 
-## ✨ Features
+*Performance varies based on hardware configuration and data size. Benchmarks represent median of 5 runs after 100 warmup iterations.*
+
+## 📋 Features and Capabilities
 
 ### Option Pricing Models
 
@@ -59,10 +60,10 @@ QuantForge supports multiple option pricing models, each optimized for specific 
 - **Implied Volatility**: Hybrid Newton-Raphson/Brent solver with Brenner-Subrahmanyam initialization
 - **Batch Processing**: Zero-copy NumPy integration with automatic parallelization (>30k elements)
 
-### Technical Excellence
+### Technical Implementation
 - 🦀 **Pure Rust Core**: Memory-safe, zero-overhead abstractions
 - 🎯 **Machine Precision**: Error-function based implementation (<1e-15 accuracy)
-- ⚡ **Optimized Implementation**: High-performance mathematical functions (measured on Intel i9-12900K)
+- ⚡ **Mathematical Functions**: Optimized implementations with measured performance
 - 🔧 **Production Ready**: Comprehensive input validation and edge case handling
 
 ## 📦 Installation
@@ -259,26 +260,63 @@ print(f"Implied Volatility: {iv:.2%}")
 - **Boundary Conditions**: Special handling for extreme values
 - **Model Cross-Validation**: Consistency checks between related models (BS-Merton, American-European)
 
-## 📊 Detailed Benchmarks
+## 🚀 Why QuantForge is Fast
 
-### Single Option Pricing (ns per calculation)
-```
-Black-Scholes Call:     8.5ns  ████████▌
-Black-Scholes Put:      9.2ns  █████████▏
-Delta Calculation:     12.3ns  ████████████▎
-Complete Greeks:       48.7ns  ████████████████████████████████████████████████▋
-Implied Volatility:   187.4ns  ████████████████████████████████████████████████████████████████████
-```
+QuantForge achieves exceptional performance through five key optimizations:
 
-### Batch Processing Scalability
-```
-Elements    Sequential    Parallel    Speedup
-1,000         0.12ms         -           -
-10,000        1.2ms          -           -
-30,000        3.6ms       2.1ms        1.7x
-100,000       12ms        3.8ms        3.2x
-1,000,000     120ms       9.7ms       12.4x
-```
+1. **Rust Core Implementation**
+   - Zero-cost abstractions and memory safety without garbage collection
+   - Compile-time optimizations and inlining
+   - Direct memory layout control
+
+2. **Mathematical Optimizations**
+   - Error function (erf) based normal CDF for machine precision
+   - Analytical Greeks formulas avoiding numerical differentiation
+   - Special case handling for boundary conditions
+
+3. **Automatic Parallelization**
+   - Rayon-based parallel processing for arrays > 30,000 elements
+   - Work-stealing scheduler for optimal CPU utilization
+   - Cache-friendly data access patterns
+
+4. **Zero-Copy NumPy Integration**
+   - Direct memory access via PyO3 unsafe blocks
+   - No serialization/deserialization overhead
+   - Efficient array iteration with ndarray
+
+5. **Optimized Mathematical Functions**
+   - SIMD vectorization where applicable
+   - Branch-free algorithms for critical paths
+   - Lookup tables for frequently accessed values
+
+## 📊 Detailed Performance Analysis
+
+### Test Environment
+- **CPU**: AMD Ryzen 5 5600G (6 cores/12 threads)
+- **Memory**: 29.3 GB DDR5
+- **OS**: Linux 6.12 (Pop!_OS 22.04)
+- **Python**: 3.12.5
+- **Measurement Date**: 2025-08-28
+- **Methodology**: CUI mode (multi-user.target), median of 5 runs
+
+### Implementation Comparison by Data Size
+
+#### Small Scale (100-1,000 elements)
+- QuantForge shows best performance due to low FFI overhead
+- NumPy+SciPy vectorization benefits not yet realized
+
+#### Medium Scale (10,000-100,000 elements)
+- NumPy+SciPy vectorization becomes competitive
+- FFI overhead most noticeable at this scale
+
+#### Large Scale (1M+ elements)
+- QuantForge parallel processing shows maximum benefit
+- Rayon parallelization automatically engages
+
+### Technical Considerations
+- **FFI Overhead**: ~1 μs per call, amortized in batch operations
+- **Parallelization Threshold**: Automatically enabled for >30,000 elements
+- **Memory Access**: Zero-copy design via PyO3 for NumPy arrays
 
 ## 🛠️ Development
 
@@ -373,9 +411,9 @@ We welcome contributions!
 ### Development Workflow
 
 1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
+2. Create a feature branch (`git checkout -b feature/your-feature`)
+3. Commit your changes (`git commit -m 'Add your feature'`)
+4. Push to the branch (`git push origin feature/your-feature`)
 5. Open a Pull Request
 
 ### Code Standards
@@ -417,6 +455,6 @@ Built with these excellent tools:
 
 ⭐ Star us on GitHub — it helps the project grow!
 
-*Performance metrics measured on Intel Core i9-12900K, 32GB DDR5, Ubuntu 22.04 (2025-01-27)*
+*Performance metrics measured on AMD Ryzen 5 5600G, 29.3GB RAM, Linux 6.12 (2025-08-28)*
 
 </div>
