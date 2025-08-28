@@ -73,6 +73,9 @@ instance/
 
 # Sphinx documentation
 docs/_build/
+docs/_site/
+docs/en/_build/
+docs/ja/_build/
 
 # PyBuilder
 .pybuilder/
@@ -258,3 +261,6 @@ benchmark_results.json       # 一時的な互換性ファイル
 benchmarks/benchmark_results.json  # 明示的にパスも指定
 benchmarks/results/
 perf_*.log
+
+# Local translation system (private work area)
+translations/
