@@ -127,14 +127,16 @@ print(f"Portfolio Delta: {total_delta:.2f} shares")
 
 ## パフォーマンス
 
-QuantForgeは高速計算を実現：
+QuantForgeの実測値（AMD Ryzen 5 5600G、CUIモード）：
 
 | 操作 | 処理時間 |
 |------|----------|
-| 単一価格計算 | < 10ns |
-| 全グリークス | < 50ns |
-| IV計算 | < 200ns |
-| 100万件バッチ | < 20ms |
+| 単一価格計算 | 1.4 μs |
+| 全グリークス | 計測予定 |
+| IV計算 | 1.5 μs |
+| 100万件バッチ | 55.6 ms |
+
+詳細な測定結果は[ベンチマーク](performance/benchmarks.md)を参照してください。
 
 ## 次のステップ
 

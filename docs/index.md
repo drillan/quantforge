@@ -7,7 +7,7 @@ Pythonの使いやすさを保ちながら、高速な計算性能を提供し�
 
 :::{note}
 **主要機能**
-- Python実装比 500-1000倍の処理速度（Intel i9-12900K測定値）
+- Pure Python実装比 最大40倍の処理速度（AMD Ryzen 5 5600G測定値）
 - 数値誤差 < 1e-15（倍精度演算）
 - シンプルなPython API
 - Black-Scholes、アメリカン、アジアン、スプレッドオプション対応
@@ -30,7 +30,7 @@ price = black_scholes.call_price(
 )
 
 # バッチ処理
-# 100万件を20ms以下で処理（測定環境: Intel i9-12900K）
+# 100万件を約56msで処理（測定環境: AMD Ryzen 5 5600G、CUIモード）
 spots = np.random.uniform(90, 110, 1_000_000)
 prices = black_scholes.call_price_batch(
     spots=spots,
@@ -44,15 +44,16 @@ prices = black_scholes.call_price_batch(
 ## パフォーマンス比較
 
 :::{note}
-測定環境: Intel Core i9-12900K、32GB DDR5、Ubuntu 22.04
-測定日: 2025-01-24
+測定環境: AMD Ryzen 5 5600G（6コア/12スレッド）、29.3GB RAM、Pop!_OS 22.04（CUIモード）
+測定日: 2025-08-28
+詳細は[ベンチマーク結果](performance/benchmarks.md)を参照
 :::
 
-| ライブラリ | 100万件処理時間 | 相対速度 |
-|------------|----------------|----------|
-| QuantForge | 15ms | 1.0x |
-| NumPy実装 | 7,500ms | 500x |
-| Pure Python | 15,000ms | 1000x |
+| ライブラリ | 単一計算 | 100万件処理時間 | 相対速度 |
+|------------|----------|----------------|----------|
+| QuantForge | 1.4 μs | 55.6ms | 1.0x |
+| NumPy+SciPy | 77.7 μs | 63.9ms | 1.15x遅い |
+| Pure Python | 2.4 μs | - | （単一）1.7x遅い |
 
 ## ドキュメント構成
 
@@ -127,7 +128,6 @@ development/hardcode-prevention
 :caption: プロジェクト情報
 :maxdepth: 2
 
-roadmap
 changelog
 faq
 ```

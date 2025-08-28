@@ -1,141 +1,141 @@
-# Batch Processing API
+# バッチ処理 API
 
-## Overview
+## 概要
 
-QuantForge provides high-performance batch processing capabilities for all option pricing models. The batch APIs support full array inputs with NumPy-style broadcasting, enabling efficient processing of large portfolios and market data.
+QuantForgeはすべてのオプション価格モデルに対して高性能なバッチ処理機能を提供します。バッチAPIはNumPyスタイルのブロードキャスティングを備えた完全な配列入力をサポートし、大規模なポートフォリオと市場データの効率的な処理を可能にします。
 
-## Key Features
+## 主要機能
 
-- **Full Array Support**: All parameters accept arrays, not just single parameter variation
-- **Broadcasting**: Automatic expansion of scalar values and length-1 arrays
-- **Zero-Copy Performance**: Direct NumPy array processing without intermediate conversions
-- **Parallel Execution**: Automatic parallelization using Rayon for large datasets
-- **Consistent API**: Uniform interface across all models
+- **完全な配列サポート**: すべてのパラメータが配列を受け入れ、単一パラメータの変化だけでなく対応
+- **ブロードキャスティング**: スカラー値と長さ1の配列の自動拡張
+- **ゼロコピーパフォーマンス**: 中間変換なしの直接NumPy配列処理
+- **並列実行**: Rayonを使用した大規模データセットの自動並列化
+- **一貫したAPI**: すべてのモデルで統一されたインターフェース
 
-## Broadcasting Rules
+## ブロードキャスティングルール
 
-The batch APIs follow NumPy-style broadcasting rules:
+バッチAPIはNumPyスタイルのブロードキャスティングルールに従います：
 
-1. **Scalar values** are automatically expanded to match the output size
-2. **Length-1 arrays** are expanded to the required length
-3. **Different length arrays** (except length 1) raise an error
-4. **Output size** is determined by the maximum input array length
+1. **スカラー値**は出力サイズに合わせて自動的に拡張される
+2. **長さ1の配列**は必要な長さに拡張される
+3. **異なる長さの配列**（長さ1を除く）はエラーを発生させる
+4. **出力サイズ**は最大入力配列長によって決定される
 
-### Example
+### 例
 
 ```python
 import numpy as np
 from quantforge.models import black_scholes
 
-# Mixed scalar and array inputs
+# スカラーと配列の混合入力
 prices = black_scholes.call_price_batch(
-    spots=np.array([95, 100, 105]),  # Array of 3 spot prices
-    strikes=100.0,                    # Scalar, expanded to [100, 100, 100]
-    times=1.0,                        # Scalar, expanded to [1.0, 1.0, 1.0]
-    rates=0.05,                       # Scalar, expanded to [0.05, 0.05, 0.05]
-    sigmas=np.array([0.2, 0.25, 0.3]) # Array of 3 volatilities
+    spots=np.array([95, 100, 105]),  # 3つのスポット価格の配列
+    strikes=100.0,                    # スカラー、[100, 100, 100]に拡張
+    times=1.0,                        # スカラー、[1.0, 1.0, 1.0]に拡張
+    rates=0.05,                       # スカラー、[0.05, 0.05, 0.05]に拡張
+    sigmas=np.array([0.2, 0.25, 0.3]) # 3つのボラティリティの配列
 )
-# Result: array of 3 prices
+# 結果: 3つの価格の配列
 ```
 
-## API Reference
+## APIリファレンス
 
-### Black-Scholes Model
+### Black-Scholesモデル
 
 #### call_price_batch
 
-Calculate call option prices for multiple inputs.
+複数の入力に対するコールオプション価格を計算。
 
 ```python
 call_price_batch(spots, strikes, times, rates, sigmas) -> np.ndarray
 ```
 
-**Parameters:**
-- `spots`: Spot prices (scalar or array)
-- `strikes`: Strike prices (scalar or array)
-- `times`: Time to maturity in years (scalar or array)
-- `rates`: Risk-free rates (scalar or array)
-- `sigmas`: Volatilities (scalar or array)
+**パラメータ:**
+- `spots`: スポット価格（スカラーまたは配列）
+- `strikes`: 権利行使価格（スカラーまたは配列）
+- `times`: 満期までの時間（年）（スカラーまたは配列）
+- `rates`: 無リスク金利（スカラーまたは配列）
+- `sigmas`: ボラティリティ（スカラーまたは配列）
 
-**Returns:**
-- NumPy array of call option prices
+**戻り値:**
+- コールオプション価格のNumPy配列
 
 #### put_price_batch
 
-Calculate put option prices for multiple inputs.
+複数の入力に対するプットオプション価格を計算。
 
 ```python
 put_price_batch(spots, strikes, times, rates, sigmas) -> np.ndarray
 ```
 
-**Parameters:**
-- Same as `call_price_batch`
+**パラメータ:**
+- `call_price_batch`と同じ
 
-**Returns:**
-- NumPy array of put option prices
+**戻り値:**
+- プットオプション価格のNumPy配列
 
 #### implied_volatility_batch
 
-Calculate implied volatilities from market prices.
+市場価格からインプライドボラティリティを計算。
 
 ```python
 implied_volatility_batch(prices, spots, strikes, times, rates, is_calls) -> np.ndarray
 ```
 
-**Parameters:**
-- `prices`: Market prices (scalar or array)
-- `spots`: Spot prices (scalar or array)
-- `strikes`: Strike prices (scalar or array)
-- `times`: Time to maturity in years (scalar or array)
-- `rates`: Risk-free rates (scalar or array)
-- `is_calls`: Option types - True for calls, False for puts (scalar or array)
+**パラメータ:**
+- `prices`: 市場価格（スカラーまたは配列）
+- `spots`: スポット価格（スカラーまたは配列）
+- `strikes`: 権利行使価格（スカラーまたは配列）
+- `times`: 満期までの時間（年）（スカラーまたは配列）
+- `rates`: 無リスク金利（スカラーまたは配列）
+- `is_calls`: オプションタイプ - Trueでコール、Falseでプット（スカラーまたは配列）
 
-**Returns:**
-- NumPy array of implied volatilities
+**戻り値:**
+- インプライドボラティリティのNumPy配列
 
 #### greeks_batch
 
-Calculate all Greeks for multiple inputs.
+複数の入力に対するすべてのグリークスを計算。
 
 ```python
 greeks_batch(spots, strikes, times, rates, sigmas, is_calls) -> Dict[str, np.ndarray]
 ```
 
-**Parameters:**
-- `spots`: Spot prices (scalar or array)
-- `strikes`: Strike prices (scalar or array)
-- `times`: Time to maturity in years (scalar or array)
-- `rates`: Risk-free rates (scalar or array)
-- `sigmas`: Volatilities (scalar or array)
-- `is_calls`: Option types (scalar or array)
+**パラメータ:**
+- `spots`: スポット価格（スカラーまたは配列）
+- `strikes`: 権利行使価格（スカラーまたは配列）
+- `times`: 満期までの時間（年）（スカラーまたは配列）
+- `rates`: 無リスク金利（スカラーまたは配列）
+- `sigmas`: ボラティリティ（スカラーまたは配列）
+- `is_calls`: オプションタイプ（スカラーまたは配列）
 
-**Returns:**
-- Dictionary with keys: 'delta', 'gamma', 'vega', 'theta', 'rho'
-- Each value is a NumPy array of the corresponding Greek
+**戻り値:**
+- キー: 'delta', 'gamma', 'vega', 'theta', 'rho'を持つ辞書
+- 各値は対応するグリークスのNumPy配列
 
-### Black76 Model
+### Black76モデル
 
 #### call_price_batch
 
-Calculate call option prices for futures/forwards.
+先物/フォワードに対するコールオプション価格を計算。
 
 ```python
 call_price_batch(forwards, strikes, times, rates, sigmas) -> np.ndarray
 ```
 
-**Parameters:**
-- `forwards`: Forward/futures prices (scalar or array)
-- `strikes`: Strike prices (scalar or array)
-- `times`: Time to maturity in years (scalar or array)
-- `rates`: Risk-free rates (scalar or array)
-- `sigmas`: Volatilities (scalar or array)
+**パラメータ:**
+- `forwards`: フォワード/先物価格（スカラーまたは配列）
+- `strikes`: 権利行使価格（スカラーまたは配列）
+- `times`: 満期までの時間（年）（スカラーまたは配列）
+- `rates`: 無リスク金利（スカラーまたは配列）
+- `sigmas`: ボラティリティ（スカラーまたは配列）
 
-**Returns:**
-- NumPy array of call option prices
+**戻り値:**
+- コールオプション価格のNumPy配列
 
 #### put_price_batch
 
-Calculate put option prices for futures/forwards.
+先物/フォワードに対するプットオプション価格を計算。
 
 ```python
 put_price_batch(forwards, strikes, times, rates, sigmas) -> np.ndarray
@@ -153,26 +153,26 @@ implied_volatility_batch(prices, forwards, strikes, times, rates, is_calls) -> n
 greeks_batch(forwards, strikes, times, rates, sigmas, is_calls) -> Dict[str, np.ndarray]
 ```
 
-### Merton Model (Dividend-Adjusted)
+### Mertonモデル（配当調整）
 
 #### call_price_batch
 
-Calculate call option prices with continuous dividend yield.
+連続配当利回りを持つコールオプション価格を計算。
 
 ```python
 call_price_batch(spots, strikes, times, rates, dividend_yields, sigmas) -> np.ndarray
 ```
 
-**Parameters:**
-- `spots`: Spot prices (scalar or array)
-- `strikes`: Strike prices (scalar or array)
-- `times`: Time to maturity in years (scalar or array)
-- `rates`: Risk-free rates (scalar or array)
-- `dividend_yields`: Continuous dividend yields (scalar or array)
-- `sigmas`: Volatilities (scalar or array)
+**パラメータ:**
+- `spots`: スポット価格（スカラーまたは配列）
+- `strikes`: 権利行使価格（スカラーまたは配列）
+- `times`: 満期までの時間（年）（スカラーまたは配列）
+- `rates`: 無リスク金利（スカラーまたは配列）
+- `dividend_yields`: 連続配当利回り（スカラーまたは配列）
+- `sigmas`: ボラティリティ（スカラーまたは配列）
 
-**Returns:**
-- NumPy array of call option prices
+**戻り値:**
+- コールオプション価格のNumPy配列
 
 #### put_price_batch
 
@@ -192,14 +192,14 @@ implied_volatility_batch(prices, spots, strikes, times, rates, dividend_yields, 
 greeks_batch(spots, strikes, times, rates, dividend_yields, sigmas, is_calls) -> Dict[str, np.ndarray]
 ```
 
-**Returns:**
-- Dictionary with keys: 'delta', 'gamma', 'vega', 'theta', 'rho', 'dividend_rho'
+**戻り値:**
+- キー: 'delta', 'gamma', 'vega', 'theta', 'rho', 'dividend_rho'を持つ辞書
 
-### American Model
+### アメリカンモデル
 
 #### call_price_batch
 
-Calculate American call option prices using Barone-Adesi-Whaley approximation.
+Barone-Adesi-Whaley近似を使用したアメリカンコールオプション価格を計算。
 
 ```python
 call_price_batch(spots, strikes, times, rates, dividend_yields, sigmas) -> np.ndarray
@@ -223,70 +223,70 @@ implied_volatility_batch(prices, spots, strikes, times, rates, dividend_yields, 
 greeks_batch(spots, strikes, times, rates, dividend_yields, sigmas, is_calls) -> Dict[str, np.ndarray]
 ```
 
-**Returns:**
-- Dictionary with keys: 'delta', 'gamma', 'vega', 'theta', 'rho', 'dividend_rho'
-- Each value is a NumPy array of the corresponding Greek
+**戻り値:**
+- キー: 'delta', 'gamma', 'vega', 'theta', 'rho', 'dividend_rho'を持つ辞書
+- 各値は対応するグリークスのNumPy配列
 
 #### exercise_boundary_batch
 
-Calculate optimal exercise boundaries for American options.
+アメリカンオプションの最適行使境界を計算。
 
 ```python
 exercise_boundary_batch(spots, strikes, times, rates, dividend_yields, sigmas, is_calls) -> np.ndarray
 ```
 
-**Returns:**
-- NumPy array of optimal exercise prices
+**戻り値:**
+- 最適行使価格のNumPy配列
 
-## Usage Examples
+## 使用例
 
-### Portfolio Valuation
+### ポートフォリオ評価
 
 ```python
 import numpy as np
 from quantforge.models import black_scholes
 
-# Portfolio of 1000 different options
+# 1000個の異なるオプションのポートフォリオ
 n = 1000
 spots = np.random.uniform(90, 110, n)
 strikes = np.random.uniform(95, 105, n)
 times = np.random.uniform(0.1, 2.0, n)
 sigmas = np.random.uniform(0.15, 0.35, n)
-rate = 0.05  # Same rate for all
+rate = 0.05  # すべてに同じ金利
 
-# Calculate all prices at once
+# すべての価格を一度に計算
 prices = black_scholes.call_price_batch(spots, strikes, times, rate, sigmas)
 ```
 
-### Greeks for Risk Management
+### リスク管理のためのグリークス
 
 ```python
-# Calculate all Greeks for a portfolio
+# ポートフォリオのすべてのグリークスを計算
 greeks = black_scholes.greeks_batch(spots, strikes, times, rate, sigmas, is_calls=True)
 
-# Extract individual Greeks as arrays
+# 個々のグリークスを配列として抽出
 portfolio_delta = greeks['delta'].sum()
 portfolio_vega = greeks['vega'].sum()
 portfolio_gamma = greeks['gamma'].sum()
 ```
 
-### Implied Volatility Surface
+### インプライドボラティリティサーフェス
 
 ```python
-# Create volatility surface from market prices
-spots = 100.0  # Current spot
+# 市場価格からボラティリティサーフェスを作成
+spots = 100.0  # 現在のスポット
 strikes = np.linspace(80, 120, 41)
 times = np.array([0.25, 0.5, 1.0, 2.0])
 
-# Create grid
+# グリッドを作成
 K, T = np.meshgrid(strikes, times)
 strikes_flat = K.flatten()
 times_flat = T.flatten()
 
-# Market prices (example)
+# 市場価格（例）
 market_prices = np.random.uniform(5, 25, len(strikes_flat))
 
-# Calculate implied volatilities
+# インプライドボラティリティを計算
 ivs = black_scholes.implied_volatility_batch(
     prices=market_prices,
     spots=spots,
@@ -296,140 +296,140 @@ ivs = black_scholes.implied_volatility_batch(
     is_calls=True
 )
 
-# Reshape for surface plot
+# サーフェスプロット用に再形成
 iv_surface = ivs.reshape(K.shape)
 ```
 
-### Sensitivity Analysis
+### 感応度分析
 
 ```python
-# Analyze option sensitivity to spot price changes
+# スポット価格変化に対するオプション感応度を分析
 base_spot = 100.0
 spot_range = np.linspace(80, 120, 100)
 
 prices = black_scholes.call_price_batch(
     spots=spot_range,
-    strikes=100.0,      # Fixed strike
-    times=1.0,          # Fixed maturity
-    rates=0.05,         # Fixed rate
-    sigmas=0.2          # Fixed volatility
+    strikes=100.0,      # 固定ストライク
+    times=1.0,          # 固定満期
+    rates=0.05,         # 固定金利
+    sigmas=0.2          # 固定ボラティリティ
 )
 
-# Price sensitivity curve
+# 価格感応度曲線
 import matplotlib.pyplot as plt
 plt.plot(spot_range, prices)
-plt.xlabel('Spot Price')
-plt.ylabel('Option Price')
-plt.title('Call Option Price Sensitivity')
+plt.xlabel('スポット価格')
+plt.ylabel('オプション価格')
+plt.title('コールオプション価格感応度')
 ```
 
-## Performance Considerations
+## パフォーマンスに関する考慮事項
 
-### Automatic Optimization
+### 自動最適化
 
-The batch APIs automatically optimize based on input size:
+バッチAPIは入力サイズに基づいて自動的に最適化します：
 
-- **Small batches (< 1,000)**: Direct sequential processing
-- **Medium batches (1,000 - 10,000)**: Vectorized operations
-- **Large batches (10,000 - 100,000)**: Chunked processing
-- **Very large batches (> 100,000)**: Parallel processing with Rayon
+- **小規模バッチ (< 1,000)**: 直接逐次処理
+- **中規模バッチ (1,000 - 10,000)**: ベクトル化演算
+- **大規模バッチ (10,000 - 100,000)**: チャンク処理
+- **超大規模バッチ (> 100,000)**: Rayonによる並列処理
 
-### Memory Efficiency
+### メモリ効率
 
-- Input arrays are accessed directly without copying (zero-copy)
-- Output arrays are pre-allocated for efficiency
-- Broadcasting doesn't create intermediate arrays
+- 入力配列はコピーなしで直接アクセスされる（ゼロコピー）
+- 出力配列は効率のために事前割り当てされる
+- ブロードキャスティングは中間配列を作成しない
 
-### Best Practices
+### ベストプラクティス
 
-1. **Use arrays when possible**: Even for uniform parameters, arrays can be more efficient than broadcasting scalars
-2. **Pre-allocate output arrays**: For repeated calculations, reuse output arrays
-3. **Batch similar calculations**: Group calculations with similar parameters together
-4. **Monitor memory usage**: Very large batches may require chunking for memory-constrained systems
+1. **可能な限り配列を使用**: 均一なパラメータでも、配列はスカラーのブロードキャスティングより効率的な場合がある
+2. **出力配列を事前割り当て**: 繰り返し計算では出力配列を再利用
+3. **類似計算をバッチ化**: 似たパラメータを持つ計算をグループ化
+4. **メモリ使用量を監視**: 非常に大きなバッチはメモリ制約システムではチャンキングが必要な場合がある
 
-## Error Handling
+## エラーハンドリング
 
-### Broadcasting Errors
+### ブロードキャスティングエラー
 
 ```python
-# This will raise an error - incompatible array lengths
+# これはエラーを発生させる - 互換性のない配列長
 try:
     prices = black_scholes.call_price_batch(
-        spots=np.array([100, 101, 102]),  # Length 3
-        strikes=np.array([95, 100]),      # Length 2 - ERROR!
+        spots=np.array([100, 101, 102]),  # 長さ3
+        strikes=np.array([95, 100]),      # 長さ2 - エラー！
         times=1.0,
         rates=0.05,
         sigmas=0.2
     )
 except ValueError as e:
-    print(f"Broadcasting error: {e}")
+    print(f"ブロードキャスティングエラー: {e}")
 ```
 
-### Numerical Errors
+### 数値エラー
 
 ```python
-# Implied volatility may return NaN for invalid inputs
+# インプライドボラティリティは無効な入力に対してNaNを返す可能性がある
 ivs = black_scholes.implied_volatility_batch(
-    prices=np.array([0.01, 50.0, -1.0]),  # Invalid negative price
+    prices=np.array([0.01, 50.0, -1.0]),  # 無効な負の価格
     spots=100.0,
     strikes=100.0,
     times=1.0,
     rates=0.05,
     is_calls=True
 )
-# ivs[2] will be NaN due to negative price
+# 負の価格のためivs[2]はNaNになる
 ```
 
-## Migration Guide
+## 移行ガイド
 
-### From Single Parameter Variation
+### 単一パラメータ変化から
 
-Old API (single parameter variation):
+旧API（単一パラメータ変化）:
 ```python
-# OLD - Only spots could be an array
+# 旧 - spotsのみが配列可能
 prices = black_scholes.call_price_batch(
-    spots=[95, 100, 105],  # Array
-    k=100.0,                # Scalar only
-    t=1.0,                  # Scalar only
-    r=0.05,                 # Scalar only
-    sigma=0.2               # Scalar only
+    spots=[95, 100, 105],  # 配列
+    k=100.0,                # スカラーのみ
+    t=1.0,                  # スカラーのみ
+    r=0.05,                 # スカラーのみ
+    sigma=0.2               # スカラーのみ
 )
 ```
 
-New API (full array support):
+新API（完全配列サポート）:
 ```python
-# NEW - All parameters can be arrays
+# 新 - すべてのパラメータが配列可能
 prices = black_scholes.call_price_batch(
-    spots=[95, 100, 105],   # Array
-    strikes=100.0,          # Can be scalar or array
-    times=1.0,              # Can be scalar or array
-    rates=0.05,             # Can be scalar or array
-    sigmas=0.2              # Can be scalar or array
+    spots=[95, 100, 105],   # 配列
+    strikes=100.0,          # スカラーまたは配列
+    times=1.0,              # スカラーまたは配列
+    rates=0.05,             # スカラーまたは配列
+    sigmas=0.2              # スカラーまたは配列
 )
 ```
 
-### From List[PyGreeks] to Dict
+### List[PyGreeks]からDictへ
 
-Old API:
+旧API:
 ```python
-# OLD - Returns list of Greek objects
+# 旧 - Greekオブジェクトのリストを返す
 greeks_list = black_scholes.greeks_batch(...)
 for greek in greeks_list:
     print(greek.delta, greek.gamma)
 ```
 
-New API:
+新API:
 ```python
-# NEW - Returns dictionary of arrays
+# 新 - 配列の辞書を返す
 greeks_dict = black_scholes.greeks_batch(...)
-print(greeks_dict['delta'])  # NumPy array of all deltas
-print(greeks_dict['gamma'])  # NumPy array of all gammas
+print(greeks_dict['delta'])  # すべてのデルタのNumPy配列
+print(greeks_dict['gamma'])  # すべてのガンマのNumPy配列
 ```
 
-## See Also
+## 関連情報
 
-- [Black-Scholes Model](black_scholes.md)
-- [Black76 Model](black76.md)
-- [Merton Model](merton.md)
-- [American Options](american.md)
-- [Performance Optimization](../../performance/optimization.md)
+- [Black-Scholesモデル](black_scholes.md)
+- [Black76モデル](black76.md)
+- [Mertonモデル](merton.md)
+- [アメリカンオプション](american.md)
+- [パフォーマンス最適化](../../performance/optimization.md)

@@ -7,7 +7,7 @@ future_feature: true
 :::{warning}
 このページで説明されている機能は現在開発中です。
 現在利用可能なのは[Black-Scholesモデル](../models/black_scholes.md)のみです。
-実装予定時期については[ロードマップ](../roadmap.md)をご確認ください。
+実装予定時期についてはプロジェクトの開発計画をご確認ください。
 :::
 
 QuantForgeは、Black-Scholesを超えた高度なオプション価格モデルを将来提供予定です。

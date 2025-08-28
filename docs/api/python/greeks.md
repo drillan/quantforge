@@ -1,82 +1,82 @@
-# Greeks API Reference
+# グリークス API リファレンス
 
-## Overview
+## 概要
 
-Greeks are financial risk measures that describe how option prices change with respect to various factors. QuantForge provides unified, high-performance Greeks calculations across all option pricing models.
+グリークスはオプション価格が様々な要因に対してどのように変化するかを表す金融リスク指標です。QuantForgeはすべてのオプション価格モデルに対して統一された高性能なグリークス計算を提供します。
 
-## Return Format Specification
+## 戻り値形式の仕様
 
-All Greeks functions in QuantForge follow a unified return format for consistency and ease of use:
+QuantForgeのすべてのグリークス関数は、一貫性と使いやすさのために統一された戻り値形式に従います：
 
-### Single Option Greeks
+### 単一オプションのグリークス
 
-For single option calculations, Greeks are returned as a `dict` with the following structure:
-
-```python
-{
-    'delta': float,    # Rate of change in option price with respect to spot price
-    'gamma': float,    # Rate of change in delta with respect to spot price
-    'theta': float,    # Rate of change in option price with respect to time
-    'vega': float,     # Rate of change in option price with respect to volatility
-    'rho': float       # Rate of change in option price with respect to interest rate
-}
-```
-
-### Batch Greeks Calculations
-
-For batch calculations, Greeks are returned as a `Dict[str, np.ndarray]` where each Greek is a NumPy array:
+単一オプション計算の場合、グリークスは以下の構造を持つ `dict` として返されます：
 
 ```python
 {
-    'delta': np.ndarray,    # Array of delta values
-    'gamma': np.ndarray,    # Array of gamma values
-    'theta': np.ndarray,    # Array of theta values
-    'vega': np.ndarray,     # Array of vega values
-    'rho': np.ndarray       # Array of rho values
+    'delta': float,    # スポット価格に対するオプション価格の変化率
+    'gamma': float,    # スポット価格に対するデルタの変化率
+    'theta': float,    # 時間に対するオプション価格の変化率
+    'vega': float,     # ボラティリティに対するオプション価格の変化率
+    'rho': float       # 金利に対するオプション価格の変化率
 }
 ```
 
-This format is consistent across all models:
+### バッチグリークス計算
+
+バッチ計算の場合、グリークスは `Dict[str, np.ndarray]` として返され、各グリークスはNumPy配列になります：
+
+```python
+{
+    'delta': np.ndarray,    # デルタ値の配列
+    'gamma': np.ndarray,    # ガンマ値の配列
+    'theta': np.ndarray,    # シータ値の配列
+    'vega': np.ndarray,     # ベガ値の配列
+    'rho': np.ndarray       # ロー値の配列
+}
+```
+
+この形式はすべてのモデルで一貫しています：
 - Black-Scholes (`quantforge.black_scholes_greeks_batch`)
 - Black76 (`quantforge.black76_greeks_batch`)
 - Merton Jump Diffusion (`quantforge.merton_greeks_batch`)
-- American Options (`quantforge.american_greeks_batch`)
+- アメリカンオプション (`quantforge.american_greeks_batch`)
 
-## Memory Efficiency
+## メモリ効率
 
-The batch format uses NumPy arrays for optimal memory efficiency:
+バッチ形式は最適なメモリ効率のためにNumPy配列を使用します：
 
 ```python
-# Structure of Arrays (SoA) - Memory efficient
+# Structure of Arrays (SoA) - メモリ効率的
 greeks_dict = {
-    'delta': np.array([0.5, 0.6, 0.7]),    # Contiguous memory
+    'delta': np.array([0.5, 0.6, 0.7]),    # 連続メモリ
     'gamma': np.array([0.02, 0.03, 0.04]),
-    # ... other Greeks
+    # ... その他のグリークス
 }
 
-# This is more efficient than Array of Structures (AoS):
+# これはArray of Structures (AoS)より効率的：
 # greeks_list = [
-#     {'delta': 0.5, 'gamma': 0.02, ...},  # Scattered memory
+#     {'delta': 0.5, 'gamma': 0.02, ...},  # 分散メモリ
 #     {'delta': 0.6, 'gamma': 0.03, ...},
 #     {'delta': 0.7, 'gamma': 0.04, ...},
 # ]
 ```
 
-## Usage Examples
+## 使用例
 
-### Single Option Greeks
+### 単一オプションのグリークス
 
 ```python
 import quantforge as qf
 
-# Black-Scholes model
+# Black-Scholesモデル
 greeks = qf.black_scholes_greeks(
-    s=100.0,      # Spot price
-    k=110.0,      # Strike price
-    t=0.25,       # Time to maturity
-    r=0.05,       # Risk-free rate
-    sigma=0.2,    # Volatility
-    is_call=True  # Call option
+    s=100.0,      # スポット価格
+    k=110.0,      # 権利行使価格
+    t=0.25,       # 満期までの時間
+    r=0.05,       # 無リスク金利
+    sigma=0.2,    # ボラティリティ
+    is_call=True  # コールオプション
 )
 
 print(f"Delta: {greeks['delta']:.4f}")
@@ -86,13 +86,13 @@ print(f"Vega: {greeks['vega']:.4f}")
 print(f"Rho: {greeks['rho']:.4f}")
 ```
 
-### Batch Greeks Calculations
+### バッチグリークス計算
 
 ```python
 import numpy as np
 import quantforge as qf
 
-# Prepare batch inputs
+# バッチ入力の準備
 n = 1000
 spots = np.random.uniform(90, 110, n)
 strikes = np.full(n, 100.0)
@@ -101,7 +101,7 @@ rates = np.full(n, 0.05)
 volatilities = np.random.uniform(0.15, 0.35, n)
 is_calls = np.ones(n, dtype=bool)
 
-# Calculate Greeks for all options at once
+# すべてのオプションのグリークスを一度に計算
 greeks_batch = qf.black_scholes_greeks_batch(
     s=spots,
     k=strikes,
@@ -111,24 +111,24 @@ greeks_batch = qf.black_scholes_greeks_batch(
     is_call=is_calls
 )
 
-# Access individual Greek arrays
-deltas = greeks_batch['delta']  # np.ndarray of shape (n,)
-gammas = greeks_batch['gamma']  # np.ndarray of shape (n,)
+# 個々のグリークス配列へのアクセス
+deltas = greeks_batch['delta']  # 形状 (n,) のnp.ndarray
+gammas = greeks_batch['gamma']  # 形状 (n,) のnp.ndarray
 
-# Statistical analysis
-print(f"Average Delta: {np.mean(deltas):.4f}")
-print(f"Max Gamma: {np.max(gammas):.4f}")
+# 統計分析
+print(f"平均デルタ: {np.mean(deltas):.4f}")
+print(f"最大ガンマ: {np.max(gammas):.4f}")
 ```
 
-### American Option Greeks
+### アメリカンオプションのグリークス
 
-American options follow the same unified format:
+アメリカンオプションも同じ統一形式に従います：
 
 ```python
 import quantforge as qf
 import numpy as np
 
-# Single American option Greeks
+# 単一アメリカンオプションのグリークス
 greeks = qf.american_greeks(
     s=100.0,
     k=110.0,
@@ -136,10 +136,10 @@ greeks = qf.american_greeks(
     r=0.05,
     sigma=0.2,
     is_call=True,
-    steps=100  # Number of binomial tree steps
+    steps=100  # 二項ツリーのステップ数
 )
 
-# Batch American Greeks (unified format)
+# バッチアメリカングリークス（統一形式）
 n = 100
 greeks_batch = qf.american_greeks_batch(
     s=np.random.uniform(90, 110, n),
@@ -151,23 +151,23 @@ greeks_batch = qf.american_greeks_batch(
     steps=100
 )
 
-# Returns Dict[str, np.ndarray] - same as other models
-print(f"Delta range: [{greeks_batch['delta'].min():.4f}, {greeks_batch['delta'].max():.4f}]")
+# Dict[str, np.ndarray]を返す - 他のモデルと同じ
+print(f"デルタ範囲: [{greeks_batch['delta'].min():.4f}, {greeks_batch['delta'].max():.4f}]")
 ```
 
-## Model-Specific Notes
+## モデル固有の注記
 
-### Black-Scholes Greeks
+### Black-Scholesグリークス
 
-Standard Greeks for European options under Black-Scholes assumptions.
+Black-Scholes仮定下でのヨーロピアンオプションの標準的なグリークス。
 
-### Black76 Greeks
+### Black76グリークス
 
-Greeks for futures options. The spot price `s` represents the forward/futures price.
+先物オプションのグリークス。スポット価格 `s` はフォワード/先物価格を表します。
 
-### Merton Jump Diffusion Greeks
+### Merton Jump Diffusionグリークス
 
-Greeks accounting for jump risk:
+ジャンプリスクを考慮したグリークス：
 ```python
 greeks = qf.merton_greeks(
     s=100.0,
@@ -175,36 +175,36 @@ greeks = qf.merton_greeks(
     t=0.25,
     r=0.05,
     sigma=0.2,
-    lambda_=0.1,  # Jump intensity
-    mu_j=-0.05,   # Mean jump size
-    sigma_j=0.1,  # Jump volatility
+    lambda_=0.1,  # ジャンプ強度
+    mu_j=-0.05,   # 平均ジャンプサイズ
+    sigma_j=0.1,  # ジャンプボラティリティ
     is_call=True
 )
 ```
 
-### American Option Greeks
+### アメリカンオプショングリークス
 
-Calculated using the binomial tree method. The `steps` parameter controls accuracy:
-- More steps = higher accuracy but slower computation
-- Default: 100 steps (good balance)
-- For high precision: 200-500 steps
-- For quick estimates: 50 steps
+二項ツリー法を使用して計算。`steps`パラメータが精度を制御します：
+- ステップ数が多い = 高精度だが計算が遅い
+- デフォルト: 100ステップ（バランスが良い）
+- 高精度の場合: 200-500ステップ
+- 概算の場合: 50ステップ
 
-## Performance Considerations
+## パフォーマンスに関する考慮事項
 
-1. **Batch Processing**: Always prefer batch functions when calculating multiple options
-2. **Memory Layout**: Dict format with NumPy arrays provides optimal cache locality
-3. **Parallelization**: Batch functions automatically use parallel processing for large inputs
-4. **Type Consistency**: All batch functions return the same Dict[str, np.ndarray] format
+1. **バッチ処理**: 複数のオプションを計算する場合は常にバッチ関数を優先
+2. **メモリレイアウト**: NumPy配列を持つDict形式は最適なキャッシュ局所性を提供
+3. **並列化**: バッチ関数は大規模入力に対して自動的に並列処理を使用
+4. **型の一貫性**: すべてのバッチ関数は同じDict[str, np.ndarray]形式を返す
 
-## Error Handling
+## エラーハンドリング
 
-All Greeks functions validate inputs and raise appropriate errors:
+すべてのグリークス関数は入力を検証し、適切なエラーを発生させます：
 
 ```python
 try:
     greeks = qf.black_scholes_greeks(
-        s=-100.0,  # Invalid: negative spot
+        s=-100.0,  # 無効: 負のスポット
         k=110.0,
         t=0.25,
         r=0.05,
@@ -212,11 +212,11 @@ try:
         is_call=True
     )
 except ValueError as e:
-    print(f"Error: {e}")  # "s must be positive"
+    print(f"エラー: {e}")  # "s must be positive"
 ```
 
-## See Also
+## 関連情報
 
-- [Pricing Functions](pricing.md) - Option price calculations
-- [Implied Volatility](implied_vol.md) - IV calculations
-- [Batch Processing](batch_processing.md) - Efficient bulk calculations
+- [価格計算関数](pricing.md) - オプション価格計算
+- [インプライドボラティリティ](implied_vol.md) - IV計算
+- [バッチ処理](batch_processing.md) - 効率的な一括計算

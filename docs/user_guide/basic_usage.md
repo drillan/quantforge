@@ -241,4 +241,7 @@ elapsed = (time.perf_counter() - start) * 1000
 
 print(f"Processed {n:,} options in {elapsed:.1f}ms")
 print(f"Average time per option: {elapsed/n*1000:.1f}ns")
+# 期待される結果（AMD Ryzen 5 5600G）: 約55.6ms、56ns/option
 ```
+
+詳細な測定結果とマシン別の性能は[ベンチマーク](../performance/benchmarks.md)を参照してください。

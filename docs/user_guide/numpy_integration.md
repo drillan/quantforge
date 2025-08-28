@@ -40,7 +40,7 @@ print(f"C-contiguous: {spots_c.flags['C_CONTIGUOUS']}")
 spots_f = np.asfortranarray(spots)
 print(f"F-contiguous: {spots_f.flags['F_CONTIGUOUS']}")
 
-# パフォーマンス比較
+# パフォーマンス比較（100万要素）
 import time
 
 def benchmark_layout(array):
@@ -56,8 +56,8 @@ def benchmark_layout(array):
 
 time_c = benchmark_layout(spots_c)
 time_f = benchmark_layout(spots_f)
-print(f"C-layout: {time_c*1000:.2f}ms")
-print(f"F-layout: {time_f*1000:.2f}ms")
+print(f"C-layout: {time_c*1000:.2f}ms")  # 期待値: 約56ms
+print(f"F-layout: {time_f*1000:.2f}ms")  # わずかに遅い
 ```
 
 ## ブロードキャスティング
@@ -331,7 +331,7 @@ prices = black_scholes.call_price_batch(
     sigma=0.2
 )
 elapsed = time.perf_counter() - start
-print(f"Aligned array: {elapsed*1000:.2f}ms")
+print(f"Aligned array: {elapsed*1000:.2f}ms")  # 期待値: 約56ms（100万要素）
 ```
 
 ### メモリ使用量の監視
@@ -417,9 +417,11 @@ for key, value in stats.items():
 
 NumPy統合により以下が実現できます：
 
-- **ゼロコピー処理**: メモリコピーなしの高速計算
+- **ゼロコピー処理**: メモリコピーなしの高速計算（PyO3経由）
 - **ブロードキャスティング**: 柔軟な配列操作
 - **メモリ効率**: 大規模データの効率的な処理
-- **並列処理**: NumPyとの組み合わせで更なる高速化
+- **高速バッチ処理**: 100万件を約56ms（AMD Ryzen 5 5600G）で処理
+
+パフォーマンスの詳細は[ベンチマーク](../performance/benchmarks.md)を参照してください。
 
 次は[高度なモデル](advanced_models.md)で、アメリカンオプションなどの複雑な価格モデルを学びましょう。

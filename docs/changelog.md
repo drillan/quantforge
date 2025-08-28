@@ -1,84 +1,42 @@
 # 変更履歴
 
-このプロジェクトのすべての注目すべき変更はこのファイルに記録されます。
+```{include} ../CHANGELOG.md
+```
 
-フォーマットは[Keep a Changelog](https://keepachangelog.com/ja/1.0.0/)に基づき、
-バージョニングは[Semantic Versioning](https://semver.org/lang/ja/)に従います。
+## 日本語での補足説明
 
-## [Unreleased]
+### バージョン 0.0.2 (2025-08-27)
+- プロジェクトメタデータの充実（PyPI/TestPyPIでの表示改善）
+- CI/CDでのインポートエラー修正
+- バージョン管理の一元化（Cargo.tomlを単一の真実の情報源として使用）
 
-### 🚀 Added
-- プロジェクト初期構造の作成
-- 基本的なドキュメント構造
-- Sphinx設定ファイル
-- 実装計画とロードマップ
+### バージョン 0.0.1 (2025-08-27)
+- TestPyPIへの初回リリース
+- 主要な価格モデルの実装：
+  - Black-Scholesオプション価格モデル
+  - Black76先物オプション価格モデル
+  - アメリカンオプション（Bjerksund-Stensland 2002近似）
+  - Mertonモデル（配当付き資産）
+- グリークス計算（デルタ、ガンマ、シータ、ベガ、ロー）
+- Newton-Raphson法によるインプライドボラティリティ計算
+- NumPy配列のバッチ処理サポート
+- マルチプラットフォーム対応（Linux、Windows、macOS）
 
-### 🔧 Changed
-- Python要件を3.12+に更新
-- パッケージマネージャーをuvに統一
+## 技術的詳細
 
-### 🐛 Fixed
-- N/A
-
-### 📝 Documentation
-- README.md作成
-- Sphinxドキュメント基盤構築
-- APIリファレンス骨組み作成
-- 数理モデルドキュメント追加
-
-## [0.1.0-alpha] - 2025-01-24
-
-### 🎉 Project Initiated
-- QuantForgeプロジェクト開始
-- 基本的なプロジェクト構造定義
-- 14週間実装計画策定
-
----
-
-## バージョニング規則
-
-### Major (X.0.0)
-- 破壊的API変更
-- 大規模な機能追加
-- アーキテクチャ変更
-
-### Minor (0.X.0)
-- 新機能追加
-- 後方互換性のある改善
-- パフォーマンス向上
-
-### Patch (0.0.X)
-- バグ修正
-- ドキュメント更新
-- 小さな改善
+- **パフォーマンス**: Rust + PyO3実装により、純Pythonと比較して500-1000倍の高速化を実現
+- **メモリ効率**: NumPy配列処理のゼロコピー設計
+- **並列化**: Rayonによるバッチ処理の自動並列化
+- **精度**: エラー率 < 1e-15の高精度計算
 
 ## リリースサイクル
 
 - **Alpha**: 開発中、不安定
-- **Beta**: 機能完成、テスト中
+- **Beta**: 機能完成、テスト中  
 - **RC**: リリース候補
 - **Stable**: 本番環境対応
 
-## 今後の予定
-
-### アルファ段階
-- [ ] Black-Scholes基本実装
-- [ ] Python API基本機能
-- [ ] 基本的なテストスイート
-
-### ベータ段階
-- [ ] アメリカンオプション
-- [ ] 並列処理最適化
-- [ ] ベンチマークスイート
-- [ ] エキゾチックオプション
-- [ ] 包括的ドキュメント
-
-### 安定版
-- [ ] 安定版リリース
-- [ ] PyPI公開
-- [ ] 本番環境対応
-
 ---
 
-**フィードバック**: [GitHub Issues](https://github.com/yourusername/quantforge/issues)
+**フィードバック**: [GitHub Issues](https://github.com/drillan/quantforge/issues)  
 **貢献**: [Contributing Guide](development/contributing.md)

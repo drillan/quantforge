@@ -100,8 +100,8 @@
 
 ## 変更履歴
 
-最新の変更は[CHANGELOG](changelog.md)を参照してください。
+最新の変更は[CHANGELOG](../changelog.md)を参照してください。
 
 ## コントリビューション
 
-開発に参加したい方は[Contributing Guide](development/contributing.md)をご覧ください。
+開発に参加したい方は[Contributing Guide](../development/contributing.md)をご覧ください。
