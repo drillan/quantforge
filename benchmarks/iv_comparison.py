@@ -23,7 +23,7 @@ try:
         merton_iv_scipy,
     )
 except ImportError:
-    from iv_baseline import (  # type: ignore[no-redef]
+    from benchmarks.iv_baseline import (
         american_iv_scipy,
         black76_iv_scipy,
         implied_volatility_batch_newton,

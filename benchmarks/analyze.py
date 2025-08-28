@@ -8,7 +8,7 @@ from typing import Any
 
 def analyze_performance_trends() -> dict[str, Any]:
     """パフォーマンストレンドを分析."""
-    from save_results import load_history
+    from benchmarks.save_results import load_history
 
     history = load_history()
     if len(history) < 2:
@@ -93,13 +93,13 @@ def generate_summary_table() -> str:
 def plot_history(output_file: str = "results/performance_history.png") -> None:
     """パフォーマンス履歴をプロット."""
     try:
-        import matplotlib.dates as mdates
-        import matplotlib.pyplot as plt
+        import matplotlib.dates as mdates  # type: ignore[import-not-found]
+        import matplotlib.pyplot as plt  # type: ignore[import-not-found]
     except ImportError:
         print("matplotlib not installed. Skipping plot generation.")
         return
 
-    from save_results import load_history
+    from benchmarks.save_results import load_history
 
     history = load_history()
     if len(history) < 2:

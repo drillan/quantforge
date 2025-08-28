@@ -12,8 +12,8 @@ from typing import Any
 import numpy as np
 
 # Baseline implementations
-from iv_baseline import black_scholes_price_scipy
-from python_baseline import black_scholes_pure_python, norm_cdf_pure
+from benchmarks.iv_baseline import black_scholes_price_scipy
+from benchmarks.python_baseline import black_scholes_pure_python, norm_cdf_pure
 
 
 def pure_python_implied_volatility(price: float, s: float, k: float, t: float, r: float, is_call: bool = True) -> float:
@@ -80,7 +80,7 @@ def benchmark_volatility_surface_small() -> dict[str, float]:
     results["pure_python_ms"] = pure_python_time * 1000
 
     # 2. NumPy+SciPy実装（ベクトル化）
-    from iv_vectorized import implied_volatility_newton_vectorized
+    from benchmarks.iv_vectorized import implied_volatility_newton_vectorized
 
     start = time.perf_counter()
     implied_volatility_newton_vectorized(
@@ -131,7 +131,7 @@ def benchmark_volatility_surface_large() -> dict[str, float]:
     results = {}
 
     # 1. NumPy+SciPy実装（ベクトル化）
-    from iv_vectorized import implied_volatility_newton_vectorized
+    from benchmarks.iv_vectorized import implied_volatility_newton_vectorized
 
     start = time.perf_counter()
     implied_volatility_newton_vectorized(
@@ -188,7 +188,7 @@ def benchmark_portfolio_risk_small() -> dict[str, float]:
     results["pure_python_ms"] = pure_python_time * 1000
 
     # 2. NumPy+SciPy実装（ベクトル化）
-    from iv_vectorized import black_scholes_vectorized, vega_vectorized
+    from benchmarks.iv_vectorized import black_scholes_vectorized, vega_vectorized
 
     start = time.perf_counter()
     # ベクトル化された価格計算
@@ -234,7 +234,7 @@ def benchmark_portfolio_risk_large() -> dict[str, float]:
     results = {}
 
     # 1. NumPy+SciPy実装（ベクトル化）
-    from iv_vectorized import black_scholes_vectorized, vega_vectorized
+    from benchmarks.iv_vectorized import black_scholes_vectorized, vega_vectorized
 
     start = time.perf_counter()
     # ベクトル化された価格計算
