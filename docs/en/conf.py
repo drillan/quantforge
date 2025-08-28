@@ -1,10 +1,20 @@
 # Configuration file for the Sphinx documentation builder.
 
+import tomllib  # Python 3.11+
+from pathlib import Path
+
 # -- Project information -----------------------------------------------------
 project = 'QuantForge'
 copyright = '2025, QuantForge Team'
 author = 'QuantForge Team'
-release = '0.1.0'
+
+# Cargo.tomlからバージョンを自動取得（Single Source of Truth）
+root_dir = Path(__file__).resolve().parent.parent.parent
+cargo_toml_path = root_dir / 'Cargo.toml'
+
+with open(cargo_toml_path, 'rb') as f:
+    cargo_data = tomllib.load(f)
+    version = release = cargo_data['package']['version']
 
 # -- General configuration ---------------------------------------------------
 extensions = [

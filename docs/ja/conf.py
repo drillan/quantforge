@@ -3,14 +3,23 @@
 # For the full list of built-in configuration values, see the documentation:
 # https://www.sphinx-doc.org/en/master/usage/configuration.html
 
+import tomllib  # Python 3.11+
+from pathlib import Path
+
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
 project = "quantforge"
 copyright = "2025, driller"
 author = "driller"
-release = "0.0.2"
-version = "0.0.2"
+
+# Cargo.tomlからバージョンを自動取得（Single Source of Truth）
+root_dir = Path(__file__).resolve().parent.parent.parent
+cargo_toml_path = root_dir / 'Cargo.toml'
+
+with open(cargo_toml_path, 'rb') as f:
+    cargo_data = tomllib.load(f)
+    version = release = cargo_data['package']['version']
 
 # -- Project URLs ------------------------------------------------------------
 html_context = {
