@@ -97,6 +97,19 @@ api/rust/index
 
 models/index
 models/american_options
+models/asian_options
+models/black_scholes
+models/black76
+models/merton
+```
+
+```{toctree}
+:caption: Performance
+:maxdepth: 2
+
+performance/benchmarks
+performance/optimization
+performance/tuning
 ```
 
 ```{toctree}
