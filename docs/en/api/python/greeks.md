@@ -46,8 +46,10 @@ This format is consistent across all models:
 
 The batch format uses NumPy arrays for optimal memory efficiency:
 
-```python
-# Structure of Arrays (SoA) - memory efficient
+```{code-block} python
+:name: greeks-code-structure-of-arrays-soa
+:caption: Structure of Arrays (SoA) - memory efficient
+:linenos:
 greeks_dict = {
     'delta': np.array([0.5, 0.6, 0.7]),    # Contiguous memory
     'gamma': np.array([0.02, 0.03, 0.04]),
@@ -66,7 +68,11 @@ greeks_dict = {
 
 ### Single Option Greeks
 
-```python
+```{code-block} python
+:name: greeks-code-single-option-example
+:caption: Single option Greeks calculation
+:linenos:
+
 import quantforge as qf
 
 # Black-Scholes model
@@ -88,7 +94,11 @@ print(f"Rho: {greeks['rho']:.4f}")
 
 ### Batch Greeks Calculation
 
-```python
+```{code-block} python
+:name: greeks-code-batch-calculation-example
+:caption: Batch Greeks calculation
+:linenos:
+
 import numpy as np
 import quantforge as qf
 
@@ -124,7 +134,11 @@ print(f"Maximum gamma: {np.max(gammas):.4f}")
 
 American options also follow this unified format:
 
-```python
+```{code-block} python
+:name: greeks-code-american-option-example
+:caption: American option Greeks
+:linenos:
+
 import quantforge as qf
 import numpy as np
 
@@ -168,7 +182,12 @@ Greeks for futures options. The spot price `s` represents the forward/futures pr
 ### Merton Jump Diffusion Greeks
 
 Jump-Risk-Adjusted Greeks:
-```python
+
+```{code-block} python
+:name: greeks-code-merton-greeks-example
+:caption: Merton Jump Diffusion Greeks
+:linenos:
+
 greeks = qf.merton_greeks(
     s=100.0,
     k=110.0,
@@ -201,7 +220,11 @@ Calculated using the binary tree method. The `steps` parameter controls precisio
 
 All Greek functions validate their inputs and raise appropriate errors:
 
-```python
+```{code-block} python
+:name: greeks-code-error-handling-example
+:caption: Error handling example
+:linenos:
+
 try:
     greeks = qf.black_scholes_greeks(
         s=-100.0,  # Invalid: negative spot

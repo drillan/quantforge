@@ -69,7 +69,11 @@ greeks_dict = {
 
 ### 単一オプションのグリークス
 
-```python
+```{code-block} python
+:name: greeks-code-single-option-example
+:caption: 単一オプションのグリークス計算
+:linenos:
+
 import quantforge as qf
 
 # Black-Scholesモデル
@@ -91,7 +95,11 @@ print(f"Rho: {greeks['rho']:.4f}")
 
 ### バッチグリークス計算
 
-```python
+```{code-block} python
+:name: greeks-code-batch-calculation-example
+:caption: バッチグリークス計算
+:linenos:
+
 import numpy as np
 import quantforge as qf
 
@@ -127,7 +135,11 @@ print(f"最大ガンマ: {np.max(gammas):.4f}")
 
 アメリカンオプションも同じ統一形式に従います：
 
-```python
+```{code-block} python
+:name: greeks-code-american-option-example
+:caption: アメリカンオプションのグリークス
+:linenos:
+
 import quantforge as qf
 import numpy as np
 
@@ -171,7 +183,12 @@ Black-Scholes仮定下でのヨーロピアンオプションの標準的なグ�
 ### Merton Jump Diffusionグリークス
 
 ジャンプリスクを考慮したグリークス：
-```python
+
+```{code-block} python
+:name: greeks-code-merton-greeks-example
+:caption: Merton Jump Diffusionグリークス
+:linenos:
+
 greeks = qf.merton_greeks(
     s=100.0,
     k=110.0,
@@ -204,7 +221,11 @@ greeks = qf.merton_greeks(
 
 すべてのグリークス関数は入力を検証し、適切なエラーを発生させます：
 
-```python
+```{code-block} python
+:name: greeks-code-error-handling-example
+:caption: エラーハンドリングの例
+:linenos:
+
 try:
     greeks = qf.black_scholes_greeks(
         s=-100.0,  # 無効: 負のスポット

@@ -4,7 +4,11 @@ Start calculating option prices in just 5 minutes using QuantForge.
 
 ## Installation
 
-```bash
+```{code-block} bash
+:name: quickstart-code-testpypi
+:caption: Install latest development version from TestPyPI (currently available)
+:linenos:
+
 # Install latest development version from TestPyPI (currently available)
 pip install -i https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ quantforge
 
@@ -39,7 +43,11 @@ print(f"Call Option Price: ${price:.2f}")
 
 ### The Greeks' Calculations
 
-```python
+```{code-block} python
+:name: quickstart-code-section
+:caption: Detailed calculation including Greeks
+:linenos:
+
 # Detailed calculation including Greeks
 greeks = black_scholes.greeks(
     s=100.0,
@@ -89,7 +97,11 @@ print(f"Per option: {elapsed/n*1000:.1f}ns")
 
 Deriving volatility from market prices:
 
-```python
+```{code-block} python
+:name: quickstart-code-iv
+:caption: Calculate IV from market price
+:linenos:
+
 # Calculate IV from market price
 market_price = 10.45
 iv = black_scholes.implied_volatility(

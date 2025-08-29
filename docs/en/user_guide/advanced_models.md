@@ -49,7 +49,11 @@ import numpy as np
 
 ### American Put Option
 
-```python
+```{code-block} python
+:name: advanced-models-code-section
+:caption: American put (early exercise is more significant)
+:linenos:
+
 # American put (early exercise is more significant)
 # To be implemented in the future
 # american_put = american.put_price(
@@ -76,7 +80,11 @@ print(f"Early Exercise Premium: ${premium:.2f} ({premium/european_put*100:.1f}%)
 
 ### Early Exercise Boundary
 
-```python
+```{code-block} python
+:name: advanced-models-code-section
+:caption: Calculate early exercise boundary
+:linenos:
+
 # Calculate early exercise boundary
 def early_exercise_boundary(strike, rate, vol, time_points):
     """Early exercise boundary price at each time point"""
@@ -117,7 +125,11 @@ plt.show()
 
 ### Arithmetic Average Asian Option
 
-```python
+```{code-block} python
+:name: advanced-models-code-section
+:caption: Arithmetic average price option
+:linenos:
+
 # Arithmetic average price option
 asian_call = qf.asian_arithmetic_call(
     spot=100,
@@ -138,7 +150,11 @@ print(f"Asian Discount: ${european - asian_call:.2f}")
 
 ### Geometric Asian Option
 
-```python
+```{code-block} python
+:name: advanced-models-code-section
+:caption: Geometric average (has analytical solution)
+:linenos:
+
 # Geometric average (has analytical solution)
 asian_geometric = qf.asian_geometric_call(
     spot=100,
@@ -153,7 +169,11 @@ print(f"Geometric Asian: ${asian_geometric:.2f}")
 
 ### Considered Known Prices
 
-```python
+```{code-block} python
+:name: advanced-models-code-section
+:caption: Partially observed Asian option
+:linenos:
+
 # Partially observed Asian option
 observed_prices = [98, 102, 101, 99, 103]  # Already observed prices
 remaining_time = 0.5  # Remaining time
@@ -176,7 +196,11 @@ print(f"Partial Asian Call: ${adjusted_asian:.2f}")
 
 ### Spread Options Under the Kirk Approximation
 
-```python
+```{code-block} python
+:name: advanced-models-code-2
+:caption: Spread option between two assets
+:linenos:
+
 # Spread option between two assets
 spread_call = qf.spread_option_kirk(
     spot1=100,    # Asset 1 current price
@@ -194,7 +218,11 @@ print(f"Spread Option: ${spread_call:.2f}")
 
 ### Markov Spread Option
 
-```python
+```{code-block} python
+:name: advanced-models-code-section
+:caption: More accurate Markov model
+:linenos:
+
 # More accurate Markov model
 spread_markov = qf.spread_option_markov(
     spot1=100,
@@ -215,7 +243,11 @@ print(f"Markov Spread: ${spread_markov:.2f}")
 
 ### Knock-in/Knock-out Options
 
-```python
+```{code-block} python
+:name: advanced-models-code-section
+:caption: Up-and-out call option
+:linenos:
+
 # Up-and-out call option
 barrier_call = qf.barrier_call(
     spot=100,
@@ -236,7 +268,11 @@ print(f"Barrier Discount: ${vanilla_call - barrier_call:.2f}")
 
 ### Double Barrier Option
 
-```python
+```{code-block} python
+:name: advanced-models-code-section
+:caption: Double barrier (both upper and lower)
+:linenos:
+
 # Double barrier (both upper and lower)
 double_barrier = qf.double_barrier_call(
     spot=100,
@@ -255,7 +291,11 @@ print(f"Double Barrier Call: ${double_barrier:.2f}")
 
 ### Fixed Strike Lookback
 
-```python
+```{code-block} python
+:name: advanced-models-code-section
+:caption: Call based on maximum value during the period
+:linenos:
+
 # Call based on maximum value during the period
 lookback_call = qf.lookback_call_fixed(
     spot=100,
@@ -270,7 +310,11 @@ print(f"Fixed Strike Lookback Call: ${lookback_call:.2f}")
 
 ### Variable Strike Lookback
 
-```python
+```{code-block} python
+:name: advanced-models-code-section
+:caption: Choose optimal strike price
+:linenos:
+
 # Choose optimal strike price
 lookback_floating = qf.lookback_call_floating(
     spot=100,
@@ -287,7 +331,11 @@ print(f"Floating Strike Lookback: ${lookback_floating:.2f}")
 
 ### Cash-or-nothing
 
-```python
+```{code-block} python
+:name: advanced-models-code-itm
+:caption: Digital call (pays fixed amount if ITM at maturity)
+:linenos:
+
 # Digital call (pays fixed amount if ITM at maturity)
 digital_call = qf.digital_call(
     spot=100,
@@ -314,7 +362,11 @@ print(f"Probability of ITM: {prob_itm:.1%}")
 
 ### Asset or Nothing
 
-```python
+```{code-block} python
+:name: advanced-models-code-section
+:caption: Asset-or-nothing digital option
+:linenos:
+
 # Asset-or-nothing digital option
 asset_or_nothing = qf.asset_or_nothing_call(
     spot=100,
@@ -331,7 +383,11 @@ print(f"Asset-or-Nothing Call: ${asset_or_nothing:.2f}")
 
 ### straddling
 
-```python
+```{code-block} python
+:name: advanced-models-code-straddle_value
+:caption: straddle_value
+:linenos:
+
 def straddle_value(spot, strike, rate, vol, time):
     """Straddle (call + put at same strike)"""
     call = qf.black_scholes_call(spot, strike, rate, vol, time)
@@ -355,7 +411,11 @@ plt.show()
 
 ### Butterfly Spread
 
-```python
+```{code-block} python
+:name: advanced-models-code-butterfly_spread
+:caption: butterfly_spread
+:linenos:
+
 def butterfly_spread(spot, k1, k2, k3, rate, vol, time):
     """Butterfly spread"""
     c1 = qf.black_scholes_call(spot, k1, rate, vol, time)
@@ -383,7 +443,11 @@ plt.show()
 
 ### Performance Comparison of Each Model
 
-```python
+```{code-block} python
+:name: advanced-models-code-section
+:caption: Comparison of calculation time for different models
+:linenos:
+
 # Comparison of calculation time for different models
 import time
 

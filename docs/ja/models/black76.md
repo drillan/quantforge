@@ -75,8 +75,12 @@ C = e^{-rT}[F N(d_1) - K N(d_2)]
 ```
 
 where:
-- $d_1 = \frac{\ln(F/K) + \sigma^2 T/2}{\sigma\sqrt{T}}$
-- $d_2 = d_1 - \sigma\sqrt{T}$
+
+```{math}
+:name: black76-eq-d1-d2
+
+d_1 = \frac{\ln(F/K) + \sigma^2 T/2}{\sigma\sqrt{T}}, \quad d_2 = d_1 - \sigma\sqrt{T}
+```
 - $N(x)$: 標準正規分布の累積分布関数
 
 (black76-european-put)=

@@ -131,11 +131,57 @@ def call_price(s, k, t, r, sigma):
 - caption属性のみ翻訳
 - コード内容は基本的に同一
 
+## よくある間違いと修正例
+
+### ❌ 悪い例：汎用的すぎる名前（重複の原因）
+
+```markdown
+:name: batch-processing-code-section  # 6回重複！
+:name: pricing-code-section          # 3回重複！
+:name: american-code-section         # 2回重複！
+```
+
+これらの名前は汎用的すぎて、同じファイル内で重複を引き起こします。
+
+### ✅ 良い例：具体的で一意な名前
+
+```markdown
+# batch_processing.mdの例
+:name: batch-processing-portfolio-greeks      # ポートフォリオグリークス計算
+:name: batch-processing-volatility-surface    # ボラティリティサーフェス作成
+:name: batch-processing-sensitivity-analysis  # 感応度分析
+
+# pricing.mdの例
+:name: pricing-call-put-price       # コール/プット価格計算
+:name: pricing-greeks-calculation   # グリークス計算
+:name: pricing-implied-volatility   # インプライドボラティリティ
+
+# american.mdの例
+:name: american-greeks-calculation    # アメリカンオプションのグリークス
+:name: american-exercise-boundary     # 早期行使境界
+```
+
+### 重複を防ぐためのチェックリスト
+
+1. **caption内容を反映**: captionの内容から意味のある識別子を作成
+2. **機能を明確に**: 「section」ではなく具体的な機能名を使用
+3. **ビルド時に確認**: Sphinxビルド時の警告をチェック
+
+```bash
+# 重複チェックコマンド
+sphinx-build -b html -d _build/doctrees ja _build/html/ja 2>&1 | grep "WARNING: Duplicate"
+```
+
 ## よくある質問
 
 ### Q: 同じ種類の要素が複数ある場合は？
-A: 連番を付けます
+A: captionの内容を反映した名前にするか、連番を付けます
 ```
+# captionベース（推奨）
+black-scholes-code-call-calculation
+black-scholes-code-put-calculation
+
+# 連番（最終手段）
 black-scholes-code-example-1
 black-scholes-code-example-2
 ```

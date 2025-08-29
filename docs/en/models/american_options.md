@@ -51,13 +51,13 @@ Formulated as a free boundary problem:
 Early exercise conditions:
 
 ```{math}
-:name: american-options-eq-exercise-conditions
+:name: american-options-eq-exercise-call
 
 V(S,t) \geq \max(S-K, 0) \text{ for call}
 ```
 
 ```{math}
-:name: american-options-eq-exercise-conditions-put
+:name: american-options-eq-exercise-put
 
 V(S,t) \geq \max(K-S, 0) \text{ for put}
 ```
@@ -77,16 +77,16 @@ Put Option:
 - $V(S^*, t) = K - S^*$ (early exercise boundary)
 - $\frac{\partial V}{\partial S}(S^*, t) = -1$ (smooth pasting)
 
-(american-options-solutions)=
-## analytical solution
+(american-options-analytical-solution)=
+## Analytical Solutions
 
-(american-options-call-formula)=
-### European Coal (Bjerksund-Stensland 2002)
+(american-options-european-call)=
+### European Call (Bjerksund-Stensland 2002)
 
 Approximate solution for American call:
 
 ```{math}
-:name: american-options-eq-call-bs2002
+:name: american-options-eq-call-formula
 
 C_{Am} = \alpha S_0^{\beta} - \alpha \phi(S_0, T, \beta, I, I) + \phi(S_0, T, 1, I, I) - \phi(S_0, T, 1, K, I) - K\phi(S_0, T, 0, I, I) + K\phi(S_0, T, 0, K, I)
 ```
@@ -96,7 +96,7 @@ where:
 - $\alpha, \beta$ are auxiliary parameters
 - $\phi$ is the auxiliary function
 
-(american-options-put-formula)=
+(american-options-european-put)=
 ### European Put
 
 The approximate solution for American puts has a more complex structure than call options:
@@ -145,7 +145,7 @@ Price sensitivity indicators for American options:
   - Negative (default)
 ```
 
-(american-options-unique-characteristics)=
+(american-options-specific-features)=
 ### Characteristics Unique to American Options
 
 1. **Impact of Early Exercise Bounds**
@@ -160,27 +160,21 @@ Price sensitivity indicators for American options:
    - Since no analytical expression exists, approximate using finite difference methods or Monte Carlo methods
    - Fast calculations are also possible using the Bjerksund-Stensland approximation
 
-(american-options-black-scholes-relationship)=
+(american-options-black-scholes-relation)=
 ## Relationship with Black-Scholes
 
-(american-options-value-relationships)=
-### value relationships
+(american-options-value-relation)=
+### Value Relationships
 
 American option value ≥ European option value:
 
 ```{math}
-:name: american-options-eq-value-inequality
+:name: american-options-eq-value-relation
 
-C_{American} \geq C_{European}
+C_{American} \geq C_{European}, \quad P_{American} \geq P_{European}
 ```
 
-```{math}
-:name: american-options-eq-value-inequality-put
-
-P_{American} \geq P_{European}
-```
-
-(american-options-dividend-impact)=
+(american-options-dividend-effect)=
 ### Dividend Impact
 
 - **Dividend-Arbitrage Call**: American = European (not exercised early)
@@ -201,29 +195,29 @@ In the limit of short maturity, both approaches converge:
 (american-options-applications)=
 ## Applications
 
-(american-options-stock-options)=
+(american-options-equity-options)=
 ### Stock Options
 - Individual Stock Options (During Dividend Payment)
 - Employee Stock Options
 - Early Exercise Option Warrants
 
-(american-options-product-derivatives)=
+(american-options-commodity-derivatives)=
 ### Product Derivatives
 - Commodity Futures Options
 - Energy Options (Crude Oil, Natural Gas)
 - Agricultural Options
 
-(american-options-interest-rate)=
+(american-options-interest-rate-derivatives)=
 ### Interest Rate Derivatives
 - Bermuda swaptions
 - Mortgage-Backed Securities (MBS)
 - Prepayment Options
 
-(american-options-numerical)=
+(american-options-numerical-considerations)=
 ## Numerical Computation Considerations
 
-(american-options-precision)=
-### Precision Requirements
+(american-options-accuracy-requirements)=
+### Accuracy Requirements
 - Price Accuracy: Error < 0.1% from true value
 - Greeks Precision: Relative error < 1%
 - Early exercise boundary: error < 0.5%
@@ -243,28 +237,28 @@ In the limit of short maturity, both approaches converge:
    - Solution: Use Bjerksund-Stensland approximation
    - Calculation time: < 50ns/option
 
-(american-options-limitations)=
-## Limitations and Extensions of Models
+(american-options-limitations-extensions)=
+## Model Limitations and Extensions
 
-(american-options-model-limitations)=
-### limit
+(american-options-limitations)=
+### Limitations
 - **Discrete Dividends**: Discontinuities on ex-dividend dates
 - **Stochastic Parameters**: Ignores fluctuations in volatility and interest rates
 - **Trading Constraints**: Does not account for real-world market limitations
 - **Taxation**: Taxes are ignored
 
-(american-options-extended-models)=
-### Extended Model
+(american-options-extensions)=
+### Extended Models
 - **Least Squares Monte Carlo**: Longstaff-Schwartz Method
 - **Stochastic Volatility**: American Heston Model
 - **Jump Diffusion**: American Merton Jump Model
 - **Multi-Asset**: Basket American Option
 
-(american-options-implementation)=
+(american-options-implementation-example)=
 ## Implementation Example (Conceptual)
 
 ```{code-block} python
-:name: american-options-code-call-price
+:name: american-options-code-example
 :caption: American call option pricing
 :linenos:
 
@@ -319,7 +313,7 @@ def american_call_price(s, k, t, r, sigma, q=0.0):
 
 4. Barone-Adesi, G. and Whaley, R.E. (1987). "Efficient Analytic Approximation of American Option Values." *Journal of Finance*, 42(2), 301-320.
 
-(american-options-related)=
+(american-options-related-docs)=
 ## Related Documents
 
 - [American Option API](../api/python/american.md)

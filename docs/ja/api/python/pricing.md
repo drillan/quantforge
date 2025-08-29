@@ -7,7 +7,11 @@ QuantForgeの価格計算APIは、複数のオプション価格モデルを統�
 ### Black-Scholesモデル
 株式オプションの標準的な価格モデル。スポット価格を入力として使用します。
 
-```python
+```{code-block} python
+:name: pricing-code-black-scholes-import
+:caption: Black-Scholesモデルのインポート
+:linenos:
+
 from quantforge.models import black_scholes
 
 # パラメータ: s(spot), k(strike), t(time), r(rate), sigma
@@ -19,7 +23,11 @@ price = black_scholes.call_price(100.0, 105.0, 1.0, 0.05, 0.2)
 ### Black76モデル
 商品先物・金利デリバティブ向けの価格モデル。フォワード価格を入力として使用します。
 
-```python
+```{code-block} python
+:name: pricing-code-black76-import
+:caption: Black76モデルのインポート
+:linenos:
+
 from quantforge.models import black76
 
 # パラメータ: f(forward), k(strike), t(time), r(rate), sigma
@@ -31,7 +39,11 @@ price = black76.call_price(75.0, 70.0, 0.25, 0.05, 0.3)
 ### Mertonモデル
 配当を支払う資産のオプション価格モデル。連続的な配当利回りを考慮します。
 
-```python
+```{code-block} python
+:name: pricing-code-merton-import
+:caption: Mertonモデルのインポート
+:linenos:
+
 from quantforge.models import merton
 
 # パラメータ: s(spot), k(strike), t(time), r(rate), q(dividend), sigma
@@ -43,7 +55,11 @@ price = merton.call_price(100.0, 105.0, 1.0, 0.05, 0.03, 0.2)
 ### アメリカンオプションモデル
 早期行使権を持つオプションの価格モデル。Bjerksund-Stensland (2002) による高精度近似解を提供します。
 
-```python
+```{code-block} python
+:name: pricing-code-american-import
+:caption: アメリカンオプションモデルのインポート
+:linenos:
+
 from quantforge.models import american
 
 # パラメータ: s(spot), k(strike), t(time), r(rate), q(dividend), sigma
@@ -83,7 +99,7 @@ price = american.call_price(100.0, 105.0, 1.0, 0.05, 0.03, 0.2)
 
 ### 価格計算
 ```{code-block} python
-:name: pricing-code-section
+:name: pricing-call-put-price
 :caption: コールオプション価格
 
 # コールオプション価格
@@ -94,7 +110,11 @@ put_price = model.put_price(...)
 ```
 
 ### バッチ処理
-```python
+```{code-block} python
+:name: pricing-code-batch-processing
+:caption: バッチ処理の例
+:linenos:
+
 import numpy as np
 
 # 複数の価格で一括計算
@@ -104,7 +124,7 @@ results = model.call_price_batch(prices, ...)
 
 ### グリークス計算
 ```{code-block} python
-:name: pricing-code-section
+:name: pricing-greeks-calculation
 :caption: 全グリークスを一括取得
 
 # 全グリークスを一括取得
@@ -119,7 +139,7 @@ print(f"Rho: {greeks.rho}")      # 金利感応度
 
 ### インプライドボラティリティ
 ```{code-block} python
-:name: pricing-code-section
+:name: pricing-implied-volatility
 :caption: 市場価格からボラティリティを逆算
 
 # 市場価格からボラティリティを逆算
@@ -154,7 +174,11 @@ iv = model.implied_volatility(market_price, ...)
 ## 使用例の比較
 
 ### 株式オプション（Black-Scholes）
-```python
+```{code-block} python
+:name: pricing-code-stock-options-example
+:caption: 株式オプションの例
+:linenos:
+
 from quantforge.models import black_scholes
 
 # 現在の株価から計算
@@ -170,7 +194,11 @@ call_price = black_scholes.call_price(
 ```
 
 ### 原油先物オプション（Black76）
-```python
+```{code-block} python
+:name: pricing-code-crude-oil-options-example
+:caption: 原油先物オプションの例
+:linenos:
+
 from quantforge.models import black76
 
 # 先物価格から計算

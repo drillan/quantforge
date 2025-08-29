@@ -46,13 +46,13 @@ They are primarily used in commodity markets, foreign exchange markets, and ener
 (asian-options-derivation)=
 ## Derivation of Pricing Formula
 
-(asian-options-arithmetic)=
+(asian-options-arithmetic-average)=
 ### Arithmetic Average Asian Options
 
 Arithmetic average price:
 
 ```{math}
-:name: asian-options-eq-arithmetic-avg
+:name: asian-options-eq-arithmetic-average
 
 A_T = \frac{1}{n}\sum_{i=1}^{n} S_{t_i}
 ```
@@ -76,10 +76,10 @@ Put option:
 - $V(S, A, T) = \max(K - A, 0)$ (average price type)
 - $V(S, A, T) = \max(K - S, 0)$ (average strike type)
 
-(asian-options-solutions)=
+(asian-options-analytical-solution)=
 ## Analytical Solutions
 
-(asian-options-geometric-call)=
+(asian-options-geometric-average-call)=
 ### Geometric Average Asian Call
 
 Closed-form solution exists for geometric average:
@@ -104,13 +104,13 @@ where:
 d_1 = \frac{\ln(S_0/K) + (r - q + \sigma_A^2/2)T}{\sigma_A\sqrt{T}}, \quad d_2 = d_1 - \sigma_A\sqrt{T}
 ```
 
-(asian-options-turnbull-wakeman)=
+(asian-options-arithmetic-approximation)=
 ### Arithmetic Average Approximation (Turnbull-Wakeman)
 
 Approximation for arithmetic average:
 
 ```{math}
-:name: asian-options-eq-arithmetic-approx
+:name: asian-options-eq-arithmetic-approximation
 
 C_{arith} \approx C_{BS}(S_0, K, T, r, \sigma_{adj})
 ```
@@ -118,7 +118,7 @@ C_{arith} \approx C_{BS}(S_0, K, T, r, \sigma_{adj})
 Adjusted volatility:
 
 ```{math}
-:name: asian-options-eq-adjusted-vol
+:name: asian-options-eq-adjusted-volatility
 
 \sigma_{adj} = \sqrt{\frac{\ln(M_2) - 2\ln(M_1)}{T}}
 ```
@@ -155,7 +155,7 @@ Greeks for Asian options:
   - Similar to vanilla
 ```
 
-(asian-options-black-scholes-relationship)=
+(asian-options-black-scholes-relation)=
 ## Relationship with Black-Scholes
 
 (asian-options-volatility-reduction)=
@@ -165,13 +165,13 @@ Volatility decreases due to averaging:
 - Continuous observation: $\sigma_{asian} = \sigma / \sqrt{3}$
 - Discrete observation: $\sigma_{asian} = \sigma \sqrt{\frac{n+1}{3n}}$
 
-(asian-options-price-relationship)=
+(asian-options-price-relation)=
 ### Price Relationship
 
 Asian price < Vanilla price (typically):
 
 ```{math}
-:name: asian-options-eq-price-inequality
+:name: asian-options-eq-price-relation
 
 C_{Asian} < C_{Black-Scholes}
 ```
@@ -190,34 +190,34 @@ With one observation, matches vanilla option:
 (asian-options-applications)=
 ## Applications
 
-(asian-options-commodity-markets)=
+(asian-options-commodity-market)=
 ### Commodity Markets
 Used for monthly average oil price options and seasonal average price options for agricultural products.
 In metal markets, utilized for quarterly average price hedging, reducing price manipulation risks.
 Settlement based on average prices significantly reduces single point-in-time price volatility risk.
 
-(asian-options-fx-markets)=
+(asian-options-fx-market)=
 ### Foreign Exchange Markets
 Suitable for hedging continuous FX exposure of corporations.
 Monthly average rate options are popular among companies with regular overseas remittances.
 Used in the tourism industry for managing seasonal FX volatility risks.
 
-(asian-options-energy-markets)=
+(asian-options-energy-market)=
 ### Energy Markets
 Daily average electricity price options are essential for power company risk management.
 Monthly average natural gas swaps function as hedges against seasonal demand fluctuations.
 Also contribute to long-term revenue stabilization for renewable energy operators.
 
-(asian-options-equity-markets)=
+(asian-options-equity-market)=
 ### Equity Markets
 Employee stock ownership plans reduce participant risk through average acquisition price guarantees.
 Used for index fund period average return guarantees and pension fund average price protection.
 Also applicable to investment strategy implementation combined with dollar-cost averaging.
 
-(asian-options-numerical)=
+(asian-options-numerical-considerations)=
 ## Numerical Computation Considerations
 
-(asian-options-precision)=
+(asian-options-accuracy-requirements)=
 ### Precision Requirements
 - Price precision: Relative error < $10^{-6}$
 - Greeks precision: Relative error < $10^{-5}$
@@ -238,28 +238,28 @@ Also applicable to investment strategy implementation combined with dollar-cost 
    - Countermeasure: Use conditional expectations
    - Incorporation of observed averages
 
-(asian-options-limitations)=
+(asian-options-limitations-extensions)=
 ## Model Limitations and Extensions
 
-(asian-options-model-limitations)=
+(asian-options-limitations)=
 ### Limitations
 - **No analytical solution for arithmetic average**: Depends on approximation methods
 - **Path dependency**: High computational burden
 - **Discrete observation**: Continuous approximation errors
 - **Early exercise**: American-style is very complex
 
-(asian-options-extended-models)=
+(asian-options-extensions)=
 ### Extended Models
 - **Stochastic volatility**: Asian Heston model
 - **Jump diffusion**: Asian Merton model
 - **Multi-asset**: Basket Asian options
 - **Double Asian**: Using two average prices
 
-(asian-options-implementation)=
+(asian-options-implementation-example)=
 ## Implementation Example (Conceptual)
 
 ```{code-block} python
-:name: asian-options-code-implementation
+:name: asian-options-code-geometric-call
 :caption: Asian option pricing implementation
 :linenos:
 
@@ -346,7 +346,7 @@ def arithmetic_asian_call_approximation(s, k, t, r, sigma, n_fixings):
 
 4. Vecer, J. (2001). "A New PDE Approach for Pricing Arithmetic Average Asian Options." *Journal of Computational Finance*, 4(4), 105-113.
 
-(asian-options-related)=
+(asian-options-related-docs)=
 ## Related Documents
 
 - Asian Options API (under development)

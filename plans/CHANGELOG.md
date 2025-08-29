@@ -1,5 +1,13 @@
 # 計画変更履歴
 
+## 2025-08-29（Documentation Structure and Synchronization）
+- `2025-01-29-both-myst-structure-comparison-system.md` → archive/ ✅
+  - MyST記法によるドキュメント構造管理システム完全実装
+  - 構造比較ツール v1.1.0（メタデータ・階層情報・親子関係実装）
+  - 日英ドキュメント同期率94.7%達成
+  - name属性重複問題の解決（汎用名から具体的な名前へ）
+  - 不要ファイル削除による構造簡潔化（changelog.md, faq.md）
+
 ## 2025-08-29（Documentation and API Enhancement）
 - `2025-08-28-readme-sync-implementation.md` → archive/ ✅
   - README.mdのプロジェクト現状同期（0.0.2）

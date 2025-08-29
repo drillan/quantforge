@@ -31,7 +31,11 @@ print(f"Memory shared: {prices.base is not None}")
 
 ### Memory Layout Optimization
 
-```python
+```{code-block} python
+:name: numpy-integration-code-c
+:caption: C-contiguous array (recommended)
+:linenos:
+
 # C-contiguous array (recommended)
 spots_c = np.ascontiguousarray(spots)
 print(f"C-contiguous: {spots_c.flags['C_CONTIGUOUS']}")
@@ -64,7 +68,11 @@ print(f"F-layout: {time_f*1000:.2f}ms")  # Slightly slower
 
 ### Automatic Broadcast
 
-```python
+```{code-block} python
+:name: numpy-integration-code-section
+:caption: Combination of scalars and arrays
+:linenos:
+
 # Combination of scalars and arrays
 spots = np.array([95, 100, 105])
 strike = 100.0  # Scalar
@@ -85,7 +93,11 @@ print(f"Results: {prices}")
 
 ### multidimensional array
 
-```python
+```{code-block} python
+:name: numpy-integration-code-2
+:caption: Calculation with 2D arrays
+:linenos:
+
 # Calculation with 2D arrays
 spots = np.random.uniform(90, 110, (100, 1000))
 strikes = np.full((100, 1000), 100.0)
@@ -109,7 +121,11 @@ print(f"Shape: {prices.shape}")
 
 ### Slices and Indices
 
-```python
+```{code-block} python
+:name: numpy-integration-code-section
+:caption: Large array
+:linenos:
+
 # Large array
 all_spots = np.random.uniform(80, 120, 1_000_000)
 
@@ -129,7 +145,11 @@ subset_prices = black_scholes.call_price_batch(
 
 ### Conditional Processing
 
-```python
+```{code-block} python
+:name: numpy-integration-code-section
+:caption: Conditional selection
+:linenos:
+
 # Conditional selection
 spots = np.random.uniform(80, 120, 10000)
 mask = (spots > 95) & (spots < 105)  # Near ATM only
@@ -153,7 +173,11 @@ full_prices[mask] = atm_prices
 
 ### Type Conversion Optimization
 
-```python
+```{code-block} python
+:name: numpy-integration-code-float32-vs-float64
+:caption: float32 vs float64
+:linenos:
+
 # float32 vs float64
 spots_f32 = np.random.uniform(90, 110, 100000).astype(np.float32)
 spots_f64 = np.random.uniform(90, 110, 100000).astype(np.float64)
@@ -173,7 +197,11 @@ print(f"Output dtype: {prices_f32.dtype}")  # Converted to float64
 
 ### structured array
 
-```python
+```{code-block} python
+:name: numpy-integration-code-section
+:caption: Structured array for option data
+:linenos:
+
 # Structured array for option data
 dtype = np.dtype([
     ('spot', 'f8'),
@@ -207,7 +235,11 @@ prices = np.array([
 
 ### Processing Large Data
 
-```python
+```{code-block} python
+:name: numpy-integration-code-section
+:caption: Create memory-mapped file
+:linenos:
+
 # Create memory-mapped file
 filename = 'large_spots.dat'
 shape = (10_000_000,)
@@ -244,7 +276,11 @@ os.remove(filename)
 
 ### Custom ufunc
 
-```python
+```{code-block} python
+:name: numpy-integration-code-quantforgeufunc
+:caption: Use QuantForge functions as ufunc
+:linenos:
+
 # Use QuantForge functions as ufunc
 @np.vectorize
 def custom_pricer(spot, strike, moneyness_threshold=0.1):
@@ -306,7 +342,11 @@ all_prices = np.concatenate(results)
 
 ### Optimize Alignment
 
-```python
+```{code-block} python
+:name: numpy-integration-code-64
+:caption: Align to 64-byte boundary (cache line)
+:linenos:
+
 # Align to 64-byte boundary (cache line)
 def create_aligned_array(size, alignment=64):
     """Create an aligned array"""
@@ -364,7 +404,11 @@ tracemalloc.stop()
 
 ### Direct Result Writing
 
-```python
+```{code-block} python
+:name: numpy-integration-code-section
+:caption: Pre-allocated arrays
+:linenos:
+
 # Pre-allocated arrays
 n = 1_000_000
 spots = np.random.uniform(90, 110, n)
@@ -387,7 +431,11 @@ print(f"Prices array modified in-place: {prices[:5]}")
 
 ### Combining with NumPy Statistical Functions
 
-```python
+```{code-block} python
+:name: numpy-integration-code-section
+:caption: Portfolio statistics
+:linenos:
+
 # Portfolio statistics
 spots = np.random.uniform(90, 110, 10000)
 prices = black_scholes.call_price_batch(

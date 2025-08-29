@@ -20,7 +20,7 @@ When there is a dividend yield `q`, the stock price after dividend payment becom
 1. **Log-normal distribution**: Dividend-adjusted stock prices follow geometric Brownian motion
    
    ```{math}
-   :name: merton-eq-gbm
+   :name: merton-eq-gbm-dividend
    
    dS_t = (\mu - q) S_t dt + \sigma S_t dW_t
    ```
@@ -60,10 +60,10 @@ Put option:
 - $V(0, t) = Ke^{-r(T-t)}$
 - $V(S, t) \to 0$ as $S \to \infty$
 
-(merton-solutions)=
+(merton-analytical-solution)=
 ## Analytical Solutions
 
-(merton-call-formula)=
+(merton-european-call)=
 ### European Call
 
 ```{math}
@@ -81,7 +81,7 @@ d_1 = \frac{\ln(S_0/K) + (r - q + \sigma^2/2)T}{\sigma\sqrt{T}}, \quad d_2 = d_1
 ```
 - $N(x)$: Cumulative distribution function of standard normal distribution
 
-(merton-put-formula)=
+(merton-european-put)=
 ### European Put
 
 ```{math}
@@ -158,10 +158,10 @@ Put:
 \Theta_{\text{put}} = -\frac{S_0 e^{-qT} \phi(d_1) \sigma}{2\sqrt{T}} - qS_0 e^{-qT}N(-d_1) + rKe^{-rT}N(-d_2)
 ```
 
-(merton-black-scholes-relationship)=
+(merton-black-scholes-relation)=
 ## Relationship with Black-Scholes
 
-(merton-mathematical-relationship)=
+(merton-mathematical-relation)=
 ### Mathematical Relationship
 
 When dividend yield `q = 0`, the Merton model perfectly matches the Black-Scholes model:
@@ -203,10 +203,10 @@ Can be applied to FX option pricing by treating foreign currency interest rates 
 
 Storage costs or convenience yields are incorporated into the dividend yield parameter for price calculation.
 
-(merton-numerical)=
+(merton-numerical-considerations)=
 ## Numerical Computation Considerations
 
-(merton-precision)=
+(merton-precision-requirements)=
 ### Precision Requirements
 
 ```{list-table} Precision Requirements
@@ -244,10 +244,10 @@ Storage costs or convenience yields are incorporated into the dividend yield par
    - Pre-calculate common terms: $e^{-rT}$, $e^{-qT}$
    - Speed up through batch calculation in parallel processing
 
-(merton-limitations)=
+(merton-limitations-extensions)=
 ## Model Limitations and Extensions
 
-(merton-model-limitations)=
+(merton-limitations)=
 ### Limitations
 
 1. **Continuous dividend assumption**: Actual dividends are discrete
@@ -263,7 +263,7 @@ Storage costs or convenience yields are incorporated into the dividend yield par
 3. **American option support**: Combination with numerical methods (binomial trees, finite differences)
 4. **Jump-Diffusion models**: Consider ex-dividend jumps
 
-(merton-implementation)=
+(merton-implementation-example)=
 ## Implementation Example (Conceptual)
 
 ```{code-block} python
@@ -312,7 +312,7 @@ def merton_call(s, k, t, r, q, sigma):
 
 4. Haug, E.G. (2007). *The Complete Guide to Option Pricing Formulas* (2nd ed.). McGraw-Hill.
 
-(merton-related)=
+(merton-related-docs)=
 ## Related Documents
 
 - [Merton API](../api/python/merton.md) - Python API usage

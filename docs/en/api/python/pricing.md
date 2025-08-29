@@ -7,7 +7,11 @@ QuantForge's pricing calculation API provides multiple option pricing models thr
 ### Black-Scholes Model
 A standard pricing model for stock options, using the spot price as the input.
 
-```python
+```{code-block} python
+:name: pricing-code-black-scholes-import
+:caption: Black-Scholes model import
+:linenos:
+
 from quantforge.models import black_scholes
 
 # Parameters: s(spot), k(strike), t(time), r(rate), sigma
@@ -19,7 +23,11 @@ Details: [Black-Scholes Model API](black_scholes.md)
 ### Black76 Model
 Price model for commodity futures and interest rate derivatives. Forward price is used as input.
 
-```python
+```{code-block} python
+:name: pricing-code-black76-import
+:caption: Black76 model import
+:linenos:
+
 from quantforge.models import black76
 
 # Parameters: f(forward), k(strike), t(time), r(rate), sigma
@@ -31,7 +39,11 @@ Details: [Black76 Model API](black76.md)
 ### Merton Model
 An option pricing model for assets paying dividends, accounting for continuous dividend yields.
 
-```python
+```{code-block} python
+:name: pricing-code-merton-import
+:caption: Merton model import
+:linenos:
+
 from quantforge.models import merton
 
 # Parameters: s(spot), k(strike), t(time), r(rate), q(dividend), sigma
@@ -43,7 +55,11 @@ Details: [Merton Model API](merton.md)
 ### American Option Models
 A pricing model for options with early exercise rights, providing high-precision approximate solutions based on Bjerksund-Stensland (2002).
 
-```python
+```{code-block} python
+:name: pricing-code-american-import
+:caption: American option model import
+:linenos:
+
 from quantforge.models import american
 
 # Parameters: s(spot), k(strike), t(time), r(rate), q(dividend), sigma
@@ -82,7 +98,10 @@ Details: [American Option Model API](american.md)
 All models provide the following identical functionality:
 
 ### Price Calculation
-```python
+```{code-block} python
+:name: pricing-call-put-price
+:caption: Call option price
+
 # Call option price
 call_price = model.call_price(...)
 
@@ -91,7 +110,11 @@ put_price = model.put_price(...)
 ```
 
 ### Batch Processing
-```python
+```{code-block} python
+:name: pricing-code-batch-processing
+:caption: Batch processing example
+:linenos:
+
 import numpy as np
 
 # Batch calculation with multiple prices
@@ -100,7 +123,10 @@ results = model.call_price_batch(prices, ...)
 ```
 
 ### Greek Calculations
-```python
+```{code-block} python
+:name: pricing-greeks-calculation
+:caption: Get all Greeks at once
+
 # Get all Greeks at once
 greeks = model.greeks(..., is_call=True)
 
@@ -112,7 +138,10 @@ print(f"Rho: {greeks.rho}")      # Interest rate sensitivity
 ```
 
 ### implied volatility
-```python
+```{code-block} python
+:name: pricing-implied-volatility
+:caption: Calculate volatility from market prices
+
 # Calculate volatility from market prices
 iv = model.implied_volatility(market_price, ...)
 ```
@@ -145,7 +174,11 @@ Measurement Method: Actual values refer to [benchmarks](../../performance/benchm
 ## Comparison of Examples
 
 ### Stock Options (Black-Scholes)
-```python
+```{code-block} python
+:name: pricing-code-stock-options-example
+:caption: Stock options example
+:linenos:
+
 from quantforge.models import black_scholes
 
 # Calculate from current stock price
@@ -161,7 +194,11 @@ call_price = black_scholes.call_price(
 ```
 
 ### Crude Oil Futures Options (Black76)
-```python
+```{code-block} python
+:name: pricing-code-crude-oil-options-example
+:caption: Crude oil futures options example
+:linenos:
+
 from quantforge.models import black76
 
 # Calculate from futures price

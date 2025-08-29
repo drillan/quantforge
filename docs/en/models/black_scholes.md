@@ -60,10 +60,10 @@ Put option:
 - $V(0, t) = Ke^{-r(T-t)}$
 - $V(S, t) \to 0$ as $S \to \infty$
 
-(black-scholes-solutions)=
+(black-scholes-analytical-solution)=
 ## Analytical Solutions
 
-(black-scholes-call-formula)=
+(black-scholes-european-call)=
 ### European Call
 
 ```{math}
@@ -81,7 +81,7 @@ d_1 = \frac{\ln(S_0/K) + (r + \sigma^2/2)T}{\sigma\sqrt{T}}, \quad d_2 = d_1 - \
 ```
 - $N(x)$: Cumulative distribution function of standard normal distribution
 
-(black-scholes-put-formula)=
+(black-scholes-european-put)=
 ### European Put
 
 ```{math}
@@ -136,16 +136,16 @@ Option price sensitivity measures:
 
 where $\phi(x) = \frac{1}{\sqrt{2\pi}}e^{-x^2/2}$ is the standard normal probability density function
 
-(black-scholes-merton-relationship)=
+(black-scholes-merton-relation)=
 ## Relationship with Merton Model
 
-(black-scholes-continuous-dividends)=
+(black-scholes-continuous-dividend)=
 ### Extension to Continuous Dividends
 
 Merton model considering dividend yield $q$:
 
 ```{math}
-:name: black-scholes-eq-merton-call
+:name: black-scholes-eq-merton-extension
 
 C = S_0 e^{-qT} N(d_1) - Ke^{-rT} N(d_2)
 ```
@@ -159,13 +159,13 @@ d_1 = \frac{\ln(S_0/K) + (r - q + \sigma^2/2)T}{\sigma\sqrt{T}}
 ```
 - When $q = 0$, reduces to the standard Black-Scholes model
 
-(black-scholes-discrete-dividends)=
+(black-scholes-discrete-dividend)=
 ### Treatment of Discrete Dividends
 
 Considering dividends $D_i$ on ex-dividend dates $t_i$:
 
 ```{math}
-:name: black-scholes-eq-discrete-div
+:name: black-scholes-eq-ex-dividend
 
 S_{\text{ex-div}} = S_0 - \sum_{t_i < T} D_i e^{-rt_i}
 ```
@@ -173,7 +173,7 @@ S_{\text{ex-div}} = S_0 - \sum_{t_i < T} D_i e^{-rt_i}
 (black-scholes-applications)=
 ## Applications
 
-(black-scholes-stock-options)=
+(black-scholes-equity-options)=
 ### Stock Options
 This model forms the foundation for pricing individual stock options and risk management.
 It is also used for valuing employee stock options (ESO) and warrant pricing.
@@ -191,16 +191,16 @@ The Garman-Kohlhagen extension enables pricing of foreign exchange options.
 It considers both domestic and foreign interest rates, treating foreign rates as dividend yields.
 Used for corporate FX risk hedging and speculative FX trading valuations.
 
-(black-scholes-derivatives-general)=
+(black-scholes-derivative-pricing)=
 ### Derivatives Pricing in General
 This theory serves as the foundation for more complex models (stochastic volatility, jump diffusion, etc.).
 Essential for understanding volatility surface calibration and risk-neutral valuation concepts.
 Functions as the core of risk management systems in financial institutions and as a benchmark model for VaR and stress testing.
 
-(black-scholes-numerical)=
+(black-scholes-numerical-considerations)=
 ## Numerical Computation Considerations
 
-(black-scholes-precision)=
+(black-scholes-precision-requirements)=
 ### Precision Requirements
 - Price precision: Relative error < $10^{-8}$
 - Greeks precision: Relative error < $10^{-7}$
@@ -222,10 +222,10 @@ Functions as the core of risk management systems in financial institutions and a
    - Parallel computation using Rayon
    - Improved processing speed in batch processing
 
-(black-scholes-limitations)=
+(black-scholes-limitations-extensions)=
 ## Model Limitations and Extensions
 
-(black-scholes-model-limitations)=
+(black-scholes-limitations)=
 ### Limitations
 
 :::{important}
@@ -244,7 +244,7 @@ The Black-Scholes model has the following limitations:
 - **Local volatility**: Dupire model
 - **American options**: Binomial tree, finite difference methods
 
-(black-scholes-implementation)=
+(black-scholes-implementation-example)=
 ## Implementation Example (Conceptual)
 
 :::{note}
@@ -252,7 +252,7 @@ The following is a conceptual implementation example (not available in the curre
 :::
 
 ```{code-block} python
-:name: black-scholes-code-call-price
+:name: black-scholes-code-implementation-example
 :caption: Black-Scholes call price calculation
 :linenos:
 
@@ -302,7 +302,7 @@ def black_scholes_call_price(s, k, t, r, sigma):
 
 4. Wilmott, P. (2006). *Paul Wilmott on Quantitative Finance* (2nd ed.). Wiley.
 
-(black-scholes-related)=
+(black-scholes-related-docs)=
 ## Related Documents
 
 - [Black-Scholes API](../api/python/black_scholes.md)

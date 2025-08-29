@@ -112,7 +112,7 @@ Additional optimization steps:
 
 ## Troubleshooting
 
-For general issues, check the FAQ section.
+For issues and questions, please check the [GitHub Issues](https://github.com/drillan/quantforge/issues).
 
 ## Next Step
 

@@ -91,9 +91,18 @@ C_{geo} = S_0 e^{(r-q-\sigma_A^2/2)T} N(d_1) - K e^{-rT} N(d_2)
 ```
 
 where:
-- $\sigma_A = \sigma / \sqrt{3}$ （連続観測の場合）
-- $d_1 = \frac{\ln(S_0/K) + (r - q + \sigma_A^2/2)T}{\sigma_A\sqrt{T}}$
-- $d_2 = d_1 - \sigma_A\sqrt{T}$
+
+```{math}
+:name: asian-options-eq-geometric-params
+
+\sigma_A = \sigma / \sqrt{3} \text{ （連続観測の場合）}
+```
+
+```{math}
+:name: asian-options-eq-geometric-d1-d2
+
+d_1 = \frac{\ln(S_0/K) + (r - q + \sigma_A^2/2)T}{\sigma_A\sqrt{T}}, \quad d_2 = d_1 - \sigma_A\sqrt{T}
+```
 
 (asian-options-arithmetic-approximation)=
 ### 算術平均の近似（Turnbull-Wakeman）

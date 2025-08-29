@@ -54,7 +54,7 @@ boundaries = american.exercise_boundary_batch(spots, strikes, times, rates, divi
 ### グリークス計算
 
 ```{code-block} python
-:name: american-code-section
+:name: american-greeks-calculation
 :caption: 全グリークスを一括計算
 
 # 全グリークスを一括計算
@@ -83,7 +83,7 @@ print(f"Implied Volatility: {iv:.4f}")
 ### 早期行使境界
 
 ```{code-block} python
-:name: american-code-section
+:name: american-exercise-boundary
 :caption: 早期行使境界の計算
 
 # 早期行使境界の計算

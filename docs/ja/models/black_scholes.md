@@ -73,8 +73,12 @@ C = S_0 N(d_1) - Ke^{-rT} N(d_2)
 ```
 
 where:
-- $d_1 = \frac{\ln(S_0/K) + (r + \sigma^2/2)T}{\sigma\sqrt{T}}$
-- $d_2 = d_1 - \sigma\sqrt{T}$
+
+```{math}
+:name: black-scholes-eq-d1-d2
+
+d_1 = \frac{\ln(S_0/K) + (r + \sigma^2/2)T}{\sigma\sqrt{T}}, \quad d_2 = d_1 - \sigma\sqrt{T}
+```
 - $N(x)$: 標準正規分布の累積分布関数
 
 (black-scholes-european-put)=
@@ -147,7 +151,12 @@ C = S_0 e^{-qT} N(d_1) - Ke^{-rT} N(d_2)
 ```
 
 where:
-- $d_1 = \frac{\ln(S_0/K) + (r - q + \sigma^2/2)T}{\sigma\sqrt{T}}$
+
+```{math}
+:name: black-scholes-eq-merton-d1
+
+d_1 = \frac{\ln(S_0/K) + (r - q + \sigma^2/2)T}{\sigma\sqrt{T}}
+```
 - $q = 0$ の場合、標準のBlack-Scholesモデルに帰着
 
 (black-scholes-discrete-dividend)=

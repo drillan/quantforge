@@ -66,8 +66,8 @@ For details, refer to the [Batch Processing API](batch_processing.md).
 Bulk calculate optional sensitivities (Greeks):
 
 ```{code-block} python
-:name: api-black-scholes-code-greeks
-:caption: Greeks calculation
+:name: black-scholes-code-section
+:caption: Calculate all Greeks at once
 :linenos:
 # Calculate all Greeks at once
 # Parameters: s(spot), k, t, r, sigma, is_call
@@ -87,8 +87,8 @@ print(f"Rho: {greeks.rho:.4f}")      # Interest rate sensitivity
 Deriving volatility from market prices:
 
 ```{code-block} python
-:name: api-black-scholes-code-iv
-:caption: Implied volatility calculation
+:name: black-scholes-code-price-s-k-t-r-iscall
+:caption: Parameters: price, s, k, t, r, is_call
 :linenos:
 # Parameters: price, s, k, t, r, is_call
 iv = black_scholes.implied_volatility(10.45, 100.0, 100.0, 1.0, 0.05, True)

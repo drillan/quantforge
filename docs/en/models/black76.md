@@ -62,10 +62,10 @@ Put option:
 - $V(0, t) = Ke^{-r(T-t)}$
 - $V(F, t) \to 0$ as $F \to \infty$
 
-(black76-solutions)=
+(black76-analytical-solution)=
 ## Analytical Solutions
 
-(black76-call-formula)=
+(black76-european-call)=
 ### European Call
 
 ```{math}
@@ -83,7 +83,7 @@ d_1 = \frac{\ln(F/K) + \sigma^2 T/2}{\sigma\sqrt{T}}, \quad d_2 = d_1 - \sigma\s
 ```
 - $N(x)$: Cumulative distribution function of standard normal distribution
 
-(black76-put-formula)=
+(black76-european-put)=
 ### European Put
 
 ```{math}
@@ -151,7 +151,7 @@ Put:
 \Theta_P = -e^{-rT} \left[ \frac{F \phi(d_1) \sigma}{2\sqrt{T}} - rK N(-d_2) + rF N(-d_1) \right] / 365
 ```
 
-(black76-black-scholes-relationship)=
+(black76-black-scholes-relation)=
 ## Relationship with Black-Scholes
 
 (black76-mathematical-equivalence)=
@@ -213,10 +213,10 @@ Pricing is performed by treating foreign currency as a commodity and interest ra
 Using forward exchange rates provides prices consistent with covered interest rate parity.
 A standard pricing model for corporate FX hedging and currency option trading.
 
-(black76-numerical)=
+(black76-numerical-considerations)=
 ## Numerical Computation Considerations
 
-(black76-precision)=
+(black76-precision-requirements)=
 ### Precision Requirements
 
 ```{list-table} Precision Requirements
@@ -253,10 +253,10 @@ A standard pricing model for corporate FX hedging and currency option trading.
    - Special treatment for $\sigma < 0.001$
    - Ensure convergence to intrinsic value
 
-(black76-limitations)=
+(black76-limitations-extensions)=
 ## Model Limitations and Extensions
 
-(black76-model-limitations)=
+(black76-limitations)=
 ### Limitations
 
 1. **Volatility smile**: Limitation of constant volatility assumption
@@ -270,11 +270,11 @@ A standard pricing model for corporate FX hedging and currency option trading.
 2. **Stochastic volatility models**: Heston, SVI models
 3. **Jump diffusion models**: Merton, Kou models
 
-(black76-implementation)=
+(black76-implementation-example)=
 ## Implementation Example (Conceptual)
 
 ```{code-block} python
-:name: black76-code-implementation
+:name: black76-code-implementation-example
 :caption: Black76 model implementation
 :linenos:
 
@@ -311,7 +311,7 @@ def black76_put(F, K, T, r, sigma):
 
 5. Musiela, M., & Rutkowski, M. (2005). *Martingale Methods in Financial Modelling*. Springer.
 
-(black76-related)=
+(black76-related-docs)=
 ## Related Documents
 
 - [Black76 Model API](../api/python/black76.md) - Python API usage

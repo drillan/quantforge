@@ -19,14 +19,22 @@
 
 The latest development version is available from TestPyPI:
 
-```bash
+```{code-block} bash
+:name: installation-code-testpypi
+:caption: Install latest development version from TestPyPI
+:linenos:
+
 # Install latest development version from TestPyPI
 pip install -i https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ quantforge
 ```
 
 ### Installing stable version from PyPI (in progress)
 
-```bash
+```{code-block} bash
+:name: installation-code-section
+:caption: After stable version is released
+:linenos:
+
 # After stable version is released
 pip install quantforge
 ```
@@ -35,7 +43,11 @@ pip install quantforge
 
 uv is a fast and reliable Python package manager:
 
-```bash
+```{code-block} bash
+:name: installation-code-uv
+:caption: Install uv (if not already installed)
+:linenos:
+
 # Install uv (if not already installed)
 curl -LsSf https://astral.sh/uv/install.sh | sh
 
@@ -54,7 +66,11 @@ uv pip install -i https://test.pypi.org/simple/ --extra-index-url https://pypi.o
 
 ### Linux
 
-```bash
+```{code-block} bash
+:name: installation-code-ubuntudebian
+:caption: Required system libraries (Ubuntu/Debian)
+:linenos:
+
 # Required system libraries (Ubuntu/Debian)
 sudo apt-get update
 sudo apt-get install -y build-essential
@@ -65,7 +81,11 @@ sudo yum groupinstall "Development Tools"
 
 ### macOS
 
-```bash
+```{code-block} bash
+:name: installation-code-xcode
+:caption: Xcode Command Line Tools required
+:linenos:
+
 # Xcode Command Line Tools required
 xcode-select --install
 
@@ -76,7 +96,11 @@ arch -arm64 uv pip install quantforge
 
 ### Windows
 
-```powershell
+```{code-block} powershell
+:name: installation-code-visual-studio-build-tools
+:caption: Visual Studio Build Tools may be required
+:linenos:
+
 # Visual Studio Build Tools may be required
 # https://visualstudio.microsoft.com/downloads/#build-tools-for-visual-studio-2022
 
@@ -90,7 +114,11 @@ For development versions or access to latest features:
 
 ### Prerequisites
 
-```bash
+```{code-block} bash
+:name: installation-code-rust
+:caption: Install Rust
+:linenos:
+
 # Install Rust
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 source $HOME/.cargo/env
@@ -101,7 +129,11 @@ uv pip install maturin
 
 ### Build Procedure
 
-```bash
+```{code-block} bash
+:name: installation-code-clone-repo
+:caption: Clone repository
+:linenos:
+
 # Clone repository
 git clone https://github.com/drillan/quantforge.git
 cd quantforge
@@ -122,7 +154,11 @@ uv pip install target/wheels/quantforge-*.whl
 
 ### Basic Verification
 
-```python
+```{code-block} python
+:name: installation-code-python
+:caption: Run in Python interpreter
+:linenos:
+
 # Run in Python interpreter
 from quantforge.models import black_scholes
 import quantforge
@@ -173,14 +209,22 @@ print(f"Speed: {elapsed/n*1000:.1f}ns per option")
 
 #### ImportError: DLL load failed (Windows)
 
-```powershell
+```{code-block} powershell
+:name: installation-code-visual-c-redistributable
+:caption: Install Visual C++ Redistributable
+:linenos:
+
 # Install Visual C++ Redistributable
 # https://aka.ms/vs/17/release/vc_redist.x64.exe
 ```
 
 #### Symbol not found (macOS)
 
-```bash
+```{code-block} bash
+:name: installation-code-macos
+:caption: Check macOS version
+:linenos:
+
 # Check macOS version
 sw_vers
 
@@ -190,7 +234,11 @@ sw_vers
 
 #### Illegal instruction (Linux)
 
-```bash
+```{code-block} bash
+:name: installation-code-cpu
+:caption: Check CPU features
+:linenos:
+
 # Check CPU features
 lscpu | grep -E "avx|sse"
 
@@ -200,7 +248,11 @@ maturin build --release
 
 #### Out Of Memory Error
 
-```python
+```{code-block} python
+:name: installation-code-batch-size
+:caption: Adjust batch size
+:linenos:
+
 # Adjust batch size
 # Split batches that are too large
 batch_size = 10_000  # Process 10k at a time instead of 1M
@@ -210,7 +262,11 @@ batch_size = 10_000  # Process 10k at a time instead of 1M
 
 #### Environment Variables
 
-```bash
+```{code-block} bash
+:name: installation-code-thread-control
+:caption: Control thread count
+:linenos:
+
 # Control thread count
 export RAYON_NUM_THREADS=8
 
@@ -220,7 +276,11 @@ export RUST_LOG=debug
 
 #### Python Settings
 
-```python
+```{code-block} python
+:name: installation-code-numpy
+:caption: NumPy thread control
+:linenos:
+
 # NumPy thread control
 import os
 os.environ["OMP_NUM_THREADS"] = "1"  # Parallelized on QuantForge side
@@ -232,7 +292,11 @@ os.environ["NUMEXPR_NUM_THREADS"] = "1"
 
 ### Upgrade to Latest Version
 
-```bash
+```{code-block} bash
+:name: installation-code-uv-upgrade
+:caption: Using uv
+:linenos:
+
 # Using uv
 uv pip install --upgrade quantforge
 
@@ -242,7 +306,11 @@ pip install --upgrade quantforge
 
 ### Install Specific Version
 
-```bash
+```{code-block} bash
+:name: installation-code-version-specify
+:caption: Specify version
+:linenos:
+
 # Specify version
 uv pip install quantforge==0.2.0
 
@@ -252,7 +320,11 @@ uv pip install quantforge --pre
 
 ## Uninstall
 
-```bash
+```{code-block} bash
+:name: installation-code-uv-uninstall
+:caption: Using uv
+:linenos:
+
 # Using uv
 uv pip uninstall quantforge
 
@@ -273,5 +345,4 @@ After installation is complete:
 If the issue remains unresolved:
 
 - [GitHub Issues](https://github.com/drillan/quantforge/issues)
-- FAQ (coming soon)
 - [Project Page](https://github.com/drillan/quantforge)

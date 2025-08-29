@@ -261,7 +261,7 @@ prices = black_scholes.call_price_batch(spots, strikes, times, rate, sigmas)
 ### リスク管理のためのグリークス
 
 ```{code-block} python
-:name: batch-processing-code-section
+:name: batch-processing-portfolio-greeks
 :caption: ポートフォリオのすべてのグリークスを計算
 
 # ポートフォリオのすべてのグリークスを計算
@@ -276,7 +276,7 @@ portfolio_gamma = greeks['gamma'].sum()
 ### インプライドボラティリティサーフェス
 
 ```{code-block} python
-:name: batch-processing-code-section
+:name: batch-processing-volatility-surface
 :caption: 市場価格からボラティリティサーフェスを作成
 
 # 市場価格からボラティリティサーフェスを作成
@@ -309,7 +309,7 @@ iv_surface = ivs.reshape(K.shape)
 ### 感応度分析
 
 ```{code-block} python
-:name: batch-processing-code-section
+:name: batch-processing-sensitivity-analysis
 :caption: スポット価格変化に対するオプション感応度を分析
 
 # スポット価格変化に対するオプション感応度を分析
@@ -361,7 +361,7 @@ plt.title('コールオプション価格感応度')
 ### ブロードキャスティングエラー
 
 ```{code-block} python
-:name: batch-processing-code-section
+:name: batch-processing-broadcast-error
 :caption: これはエラーを発生させる - 互換性のない配列長
 
 # これはエラーを発生させる - 互換性のない配列長
@@ -416,7 +416,7 @@ prices = black_scholes.call_price_batch(
 
 新API（完全配列サポート）:
 ```{code-block} python
-:name: batch-processing-code-section
+:name: batch-processing-new-api
 :caption: 新 - すべてのパラメータが配列可能
 
 # 新 - すべてのパラメータが配列可能
@@ -444,7 +444,7 @@ for greek in greeks_list:
 
 新API:
 ```{code-block} python
-:name: batch-processing-code-section
+:name: batch-processing-dict-output
 :caption: 新 - 配列の辞書を返す
 
 # 新 - 配列の辞書を返す

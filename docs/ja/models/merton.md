@@ -73,8 +73,12 @@ C = S_0 e^{-qT} N(d_1) - Ke^{-rT} N(d_2)
 ```
 
 where:
-- $d_1 = \frac{\ln(S_0/K) + (r - q + \sigma^2/2)T}{\sigma\sqrt{T}}$
-- $d_2 = d_1 - \sigma\sqrt{T}$
+
+```{math}
+:name: merton-eq-d1-d2
+
+d_1 = \frac{\ln(S_0/K) + (r - q + \sigma^2/2)T}{\sigma\sqrt{T}}, \quad d_2 = d_1 - \sigma\sqrt{T}
+```
 - $N(x)$: 標準正規分布の累積分布関数
 
 (merton-european-put)=
@@ -263,7 +267,7 @@ d_1 = \frac{\ln(F/K) + \sigma^2T/2}{\sigma\sqrt{T}}
 ## 実装例（概念）
 
 ```{code-block} python
-:name: merton-code-implementation-example
+:name: merton-code-call-price
 :caption: Mertonモデルの実装例
 :linenos:
 

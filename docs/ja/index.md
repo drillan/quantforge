@@ -150,14 +150,6 @@ development/testing
 development/hardcode-prevention
 ```
 
-```{toctree}
-:caption: プロジェクト情報
-:maxdepth: 2
-
-changelog
-faq
-```
-
 (index-indices)=
 ## インデックス
 

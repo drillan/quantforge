@@ -1,17 +1,25 @@
+(api-black-scholes)=
 # Black-Scholesモデル API
 
 ヨーロピアンオプションの価格計算のための標準的なモデルです。
 
+(api-black-scholes-overview)=
 ## 概要
 
 Black-Scholesモデルは、株式オプションの理論価格を計算するための基本モデルです。
 対数正規分布に従う株価プロセスを仮定し、解析的な価格式を提供します。
 
+(api-black-scholes-usage)=
 ## API使用方法
 
+(api-black-scholes-basic-calculation)=
 ### 基本的な価格計算
 
-```python
+```{code-block} python
+:name: api-black-scholes-code-basic
+:caption: 基本的な価格計算
+:linenos:
+
 from quantforge.models import black_scholes
 
 # コールオプション価格
@@ -23,11 +31,16 @@ call_price = black_scholes.call_price(100.0, 105.0, 1.0, 0.05, 0.2)
 put_price = black_scholes.put_price(100.0, 105.0, 1.0, 0.05, 0.2)
 ```
 
+(api-black-scholes-batch-processing)=
 ### バッチ処理
 
 完全配列サポートとBroadcastingによる効率的な計算：
 
-```python
+```{code-block} python
+:name: api-black-scholes-code-batch
+:caption: バッチ処理の例
+:linenos:
+
 import numpy as np
 
 # すべてのパラメータが配列を受け付ける（Broadcasting対応）
@@ -49,6 +62,7 @@ portfolio_vega = greeks['vega'].sum()
 
 詳細は[Batch Processing API](batch_processing.md)を参照してください。
 
+(api-black-scholes-greeks-calculation)=
 ### グリークス計算
 
 オプションの感応度（グリークス）を一括計算：
@@ -69,6 +83,7 @@ print(f"Theta: {greeks.theta:.4f}")  # 時間価値減衰
 print(f"Rho: {greeks.rho:.4f}")      # 金利感応度
 ```
 
+(api-black-scholes-implied-volatility)=
 ### インプライドボラティリティ
 
 市場価格からボラティリティを逆算：
@@ -82,43 +97,105 @@ iv = black_scholes.implied_volatility(10.45, 100.0, 100.0, 1.0, 0.05, True)
 print(f"Implied Volatility: {iv:.4f}")
 ```
 
+(api-black-scholes-parameters)=
 ## パラメータ説明
 
+(api-black-scholes-input-parameters)=
 ### 入力パラメータ
 
-| パラメータ | 型 | 説明 | 有効範囲 |
-|-----------|-----|------|----------|
-| `s` | float | スポット価格（現在の株価） | > 0 |
-| `k` | float | 権利行使価格（ストライク） | > 0 |
-| `t` | float | 満期までの時間（年） | > 0 |
-| `r` | float | 無リスク金利（年率） | 任意 |
-| `sigma` | float | ボラティリティ（年率） | > 0 |
-| `is_call` | bool | オプションタイプ | True: コール, False: プット |
+```{list-table} 入力パラメータ
+:name: api-black-scholes-table-parameters
+:header-rows: 1
+:widths: 20 20 40 20
 
+* - パラメータ
+  - 型
+  - 説明
+  - 有効範囲
+* - `s`
+  - float
+  - スポット価格（現在の株価）
+  - > 0
+* - `k`
+  - float
+  - 権利行使価格（ストライク）
+  - > 0
+* - `t`
+  - float
+  - 満期までの時間（年）
+  - > 0
+* - `r`
+  - float
+  - 無リスク金利（年率）
+  - 任意
+* - `sigma`
+  - float
+  - ボラティリティ（年率）
+  - > 0
+* - `is_call`
+  - bool
+  - オプションタイプ
+  - True: コール, False: プット
+```
+
+(api-black-scholes-batch-parameters)=
 ### バッチ処理用パラメータ
 
-| パラメータ | 型 | 説明 |
-|-----------|-----|------|
-| `spots` | np.ndarray | 複数のスポット価格 |
-| `k` | float | 権利行使価格（共通） |
-| `t` | float | 満期までの時間（共通） |
-| `r` | float | 無リスク金利（共通） |
-| `sigma` | float | ボラティリティ（共通） |
+```{list-table} バッチ処理用パラメータ
+:name: api-black-scholes-table-batch-params
+:header-rows: 1
+:widths: 30 30 40
 
+* - パラメータ
+  - 型
+  - 説明
+* - `spots`
+  - np.ndarray
+  - 複数のスポット価格
+* - `k`
+  - float
+  - 権利行使価格（共通）
+* - `t`
+  - float
+  - 満期までの時間（共通）
+* - `r`
+  - float
+  - 無リスク金利（共通）
+* - `sigma`
+  - float
+  - ボラティリティ（共通）
+```
+
+(api-black-scholes-formulas)=
 ## 価格式（参考）
 
 コールオプション:
-$$C = S_0 \cdot N(d_1) - K \cdot e^{-rT} \cdot N(d_2)$$
+
+```{math}
+:name: api-black-scholes-eq-call
+
+C = S_0 \cdot N(d_1) - K \cdot e^{-rT} \cdot N(d_2)
+```
 
 プットオプション:
-$$P = K \cdot e^{-rT} \cdot N(-d_2) - S_0 \cdot N(-d_1)$$
+
+```{math}
+:name: api-black-scholes-eq-put
+
+P = K \cdot e^{-rT} \cdot N(-d_2) - S_0 \cdot N(-d_1)
+```
 
 where:
-- $d_1 = \frac{\ln(S_0/K) + (r + \sigma^2/2)T}{\sigma\sqrt{T}}$
-- $d_2 = d_1 - \sigma\sqrt{T}$
+
+```{math}
+:name: api-black-scholes-eq-d1-d2
+
+d_1 = \frac{\ln(S_0/K) + (r + \sigma^2/2)T}{\sigma\sqrt{T}}, \quad d_2 = d_1 - \sigma\sqrt{T}
+```
 
 詳細な理論的背景は[数理モデル](../../models/black_scholes.md)を参照してください。
 
+(api-black-scholes-error-handling)=
 ## エラーハンドリング
 
 すべての価格計算関数は以下の条件でエラーを返します：
@@ -129,7 +206,11 @@ where:
 - sigma ≤ 0（ボラティリティが負または0）
 - 数値がNaNまたは無限大
 
-```python
+```{code-block} python
+:name: api-black-scholes-code-error
+:caption: エラーハンドリングの例
+:linenos:
+
 try:
     # パラメータ: s(spot), k, t, r, sigma
     price = black_scholes.call_price(-100, 100, 1.0, 0.05, 0.2)  # 無効な負の値
@@ -137,6 +218,7 @@ except ValueError as e:
     print(f"入力エラー: {e}")
 ```
 
+(api-black-scholes-performance)=
 ## パフォーマンス指標
 
 :::{note}
@@ -144,14 +226,29 @@ except ValueError as e:
 測定方法: 実測値は[ベンチマーク](../../performance/benchmarks.md)を参照
 :::
 
-| 操作 | 単一計算 | 100万件バッチ |
-|------|----------|--------------:|
-| コール/プット価格 | 1.4 μs | 55.6ms |
-| 全グリークス | 計測予定 | 計測予定 |
-| インプライドボラティリティ | 1.5 μs | 計測予定 |
+```{list-table} パフォーマンス指標
+:name: api-black-scholes-table-performance
+:header-rows: 1
+:widths: 40 30 30
 
+* - 操作
+  - 単一計算
+  - 100万件バッチ
+* - コール/プット価格
+  - 1.4 μs
+  - 55.6ms
+* - 全グリークス
+  - 計測予定
+  - 計測予定
+* - インプライドボラティリティ
+  - 1.5 μs
+  - 計測予定
+```
+
+(api-black-scholes-examples)=
 ## 使用例
 
+(api-black-scholes-atm-example)=
 ### ATMオプションの価格とグリークス
 
 ```python

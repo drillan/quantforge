@@ -56,7 +56,11 @@ For details, refer to the [Batch Processing API](batch_processing.md).
 
 Bulk calculation of option sensitivities (Greeks) considering dividends:
 
-```python
+```{code-block} python
+:name: merton-code-section
+:caption: Calculate all Greeks at once
+:linenos:
+
 # Calculate all Greeks at once
 # Parameters: s(spot), k, t, r, q, sigma, is_call
 greeks = merton.greeks(100.0, 100.0, 1.0, 0.05, 0.03, 0.2, True)
@@ -74,7 +78,11 @@ print(f"Dividend Rho: {greeks.dividend_rho:.4f}")  # Dividend yield sensitivity 
 
 Deriving volatility from market prices:
 
-```python
+```{code-block} python
+:name: merton-code-price-s-k-t-r-q-iscall
+:caption: Parameters: price, s, k, t, r, q, is_call
+:linenos:
+
 # Parameters: price, s, k, t, r, q, is_call
 iv = merton.implied_volatility(10.45, 100.0, 100.0, 1.0, 0.05, 0.03, True)
 print(f"Implied Volatility: {iv:.4f}")

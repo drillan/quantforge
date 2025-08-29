@@ -260,7 +260,10 @@ prices = black_scholes.call_price_batch(spots, strikes, times, rate, sigmas)
 
 ### Greeks for Risk Management
 
-```python
+```{code-block} python
+:name: batch-processing-portfolio-greeks
+:caption: Calculate all Greeks for the portfolio
+
 # Calculate all Greeks for the portfolio
 greeks = black_scholes.greeks_batch(spots, strikes, times, rate, sigmas, is_calls=True)
 
@@ -272,7 +275,10 @@ portfolio_gamma = greeks['gamma'].sum()
 
 ### implied volatility surface
 
-```python
+```{code-block} python
+:name: batch-processing-volatility-surface
+:caption: Create volatility surface from market prices
+
 # Create volatility surface from market prices
 spots = 100.0  # Current spot
 strikes = np.linspace(80, 120, 41)
@@ -302,7 +308,10 @@ iv_surface = ivs.reshape(K.shape)
 
 ### Sensitivity Analysis
 
-```python
+```{code-block} python
+:name: batch-processing-sensitivity-analysis
+:caption: Analyze option sensitivity to spot price changes
+
 # Analyze option sensitivity to spot price changes
 base_spot = 100.0
 spot_range = np.linspace(80, 120, 100)
@@ -351,7 +360,10 @@ The batch API automatically optimizes based on input size:
 
 ### Broadcasting Error
 
-```python
+```{code-block} python
+:name: batch-processing-broadcast-error
+:caption: This will raise an error - incompatible array lengths
+
 # This will raise an error - incompatible array lengths
 try:
     prices = black_scholes.call_price_batch(
@@ -367,7 +379,10 @@ except ValueError as e:
 
 ### numerical error
 
-```python
+```{code-block} python
+:name: batch-processing-code-nan
+:caption: Implied volatility may return NaN for invalid inputs
+
 # Implied volatility may return NaN for invalid inputs
 ivs = black_scholes.implied_volatility_batch(
     prices=np.array([0.01, 50.0, -1.0]),  # Invalid negative price
@@ -385,7 +400,10 @@ ivs = black_scholes.implied_volatility_batch(
 ### from a single parameter change
 
 Old API (Single Parameter Change):
-```python
+```{code-block} python
+:name: batch-processing-code-spots
+:caption: Old - Only spots can be an array
+
 # Old - Only spots can be an array
 prices = black_scholes.call_price_batch(
     spots=[95, 100, 105],  # Array
@@ -397,7 +415,10 @@ prices = black_scholes.call_price_batch(
 ```
 
 New API (Full Array Support):
-```python
+```{code-block} python
+:name: batch-processing-new-api
+:caption: New - All parameters can be arrays
+
 # New - All parameters can be arrays
 prices = black_scholes.call_price_batch(
     spots=[95, 100, 105],   # Array
@@ -411,7 +432,10 @@ prices = black_scholes.call_price_batch(
 ### List[PyGreeks] to Dict
 
 Old API:
-```python
+```{code-block} python
+:name: batch-processing-code-greek
+:caption: Old - Returns list of Greek objects
+
 # Old - Returns list of Greek objects
 greeks_list = black_scholes.greeks_batch(...)
 for greek in greeks_list:
@@ -419,7 +443,10 @@ for greek in greeks_list:
 ```
 
 New API:
-```python
+```{code-block} python
+:name: batch-processing-dict-output
+:caption: New - Returns dictionary of arrays
+
 # New - Returns dictionary of arrays
 greeks_dict = black_scholes.greeks_batch(...)
 print(greeks_dict['delta'])  # NumPy array of all deltas

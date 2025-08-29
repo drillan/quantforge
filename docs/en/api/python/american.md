@@ -53,7 +53,11 @@ For details, refer to the [Batch Processing API](batch_processing.md).
 
 ### Greek Calculations
 
-```python
+```{code-block} python
+:name: american-greeks-calculation
+:caption: Calculate all Greeks at once
+:linenos:
+
 # Calculate all Greeks at once
 # Parameters: s, k, t, r, q, sigma, is_call
 greeks = american.greeks(100.0, 100.0, 1.0, 0.05, 0.03, 0.2, True)
@@ -68,7 +72,11 @@ print(f"Rho: {greeks.rho:.4f}")      # Interest rate sensitivity
 
 ### implied volatility
 
-```python
+```{code-block} python
+:name: american-code-price-s-k-t-r-q-iscall
+:caption: Parameters: price, s, k, t, r, q, is_call
+:linenos:
+
 # Parameters: price, s, k, t, r, q, is_call
 iv = american.implied_volatility(15.50, 100.0, 100.0, 1.0, 0.05, 0.03, True)
 print(f"Implied Volatility: {iv:.4f}")
@@ -76,7 +84,11 @@ print(f"Implied Volatility: {iv:.4f}")
 
 ### Early Exercise Boundary
 
-```python
+```{code-block} python
+:name: american-exercise-boundary
+:caption: Early exercise boundary calculation
+:linenos:
+
 # Early exercise boundary calculation
 # Parameters: s, k, t, r, q, sigma, is_call
 boundary = american.exercise_boundary(100.0, 100.0, 1.0, 0.05, 0.03, 0.2, True)

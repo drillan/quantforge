@@ -104,7 +104,11 @@ for i, (spot, call, put) in enumerate(zip(spots, call_prices, put_prices)):
 
 ### Multiple Parameter Sets
 
-```python
+```{code-block} python
+:name: basic-usage-code-section
+:caption: Options with different maturities
+:linenos:
+
 # Options with different maturities
 times = [0.25, 0.5, 1.0, 2.0]
 for time_val in times:
@@ -196,7 +200,11 @@ print(f"Hedge position: {hedge_shares:.0f} shares")
 
 ### Portfolio Greeks
 
-```python
+```{code-block} python
+:name: basic-usage-code-section
+:caption: Portfolio of multiple options
+:linenos:
+
 # Portfolio of multiple options
 positions = [
     {"spot": 100, "strike": 95, "time": 0.5, "contracts": 10, "is_call": True},

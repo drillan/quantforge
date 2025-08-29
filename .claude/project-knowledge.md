@@ -384,6 +384,35 @@ pub struct PyMertonGreeks {
 2. **Python APIパス**: `quantforge.quantforge.models.merton`
 3. **定数管理**: IV_MAX_ITERATIONS等、既存定数を再利用
 
+## ドキュメント構造管理（2025-08-29）
+
+### MyST記法によるクロスリファレンス管理
+- **決定**: Sphinx + MyST記法でname属性を使った構造管理
+- **理由**: 日英ドキュメントの構造的な対応関係を機械的に検証可能
+- **実装**: 
+  - 各要素に`{file-basename}-{element-type}-{descriptor}`形式のname属性
+  - 言語非依存のname（英語ベース）で日英を統一
+  - caption属性のみ翻訳
+
+### 構造比較ツールの実装知見
+- **メタデータ管理**: ツールバージョン、タイムスタンプ、ファイルパスを記録
+- **階層情報**: ヘッダーレベル、親子関係をJSONで表現
+- **エラーコード**: exit 0（完全同期）、1（軽微な問題）、2（要対応）
+- **レポート形式**: JSON（AI処理用）、CSV（人間レビュー用）
+
+### name属性の重複問題と解決
+- **問題**: `{file-basename}-code-section`のような汎用名で大量重複
+- **原因**: 機械的な名前生成による意味の欠如
+- **解決**: captionから意味のある識別子を生成
+  - 例: `batch-processing-code-section` → `batch-processing-portfolio-greeks`
+- **検証**: Sphinxビルド時のWARNINGで重複検出
+
+### ドキュメントファイル管理原則
+- **CHANGELOG**: プロジェクトルートで英語一元管理（技術文書として）
+- **FAQ**: 既存ユーザーがいない段階では作成しない（YAGNIの適用）
+- **言語別ディレクトリ**: `docs/ja/`と`docs/en/`で完全分離
+- **同期率**: 94.7%達成（19ファイル中18ファイル完全同期）
+
 ## API設計決定（2025-01-27）
 
 ### Greeks戻り値形式の統一
