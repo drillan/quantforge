@@ -82,7 +82,10 @@ price = american.call_price(100.0, 105.0, 1.0, 0.05, 0.03, 0.2)
 全モデルは以下の同一機能を提供します：
 
 ### 価格計算
-```python
+```{code-block} python
+:name: pricing-code-section
+:caption: コールオプション価格
+
 # コールオプション価格
 call_price = model.call_price(...)
 
@@ -100,7 +103,10 @@ results = model.call_price_batch(prices, ...)
 ```
 
 ### グリークス計算
-```python
+```{code-block} python
+:name: pricing-code-section
+:caption: 全グリークスを一括取得
+
 # 全グリークスを一括取得
 greeks = model.greeks(..., is_call=True)
 
@@ -112,7 +118,10 @@ print(f"Rho: {greeks.rho}")      # 金利感応度
 ```
 
 ### インプライドボラティリティ
-```python
+```{code-block} python
+:name: pricing-code-section
+:caption: 市場価格からボラティリティを逆算
+
 # 市場価格からボラティリティを逆算
 iv = model.implied_volatility(market_price, ...)
 ```

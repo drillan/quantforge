@@ -61,7 +61,10 @@
 - パラメータ説明は1行コメント
 
 **コード例:**
-```python
+```{code-block} python
+:name: model-documentation-guidelines-code-section
+:caption: ✅ 良い例
+
 # ✅ 良い例
 # パラメータ: s(spot), k(strike), t(time), r(rate), sigma
 price = black_scholes.call_price(100.0, 105.0, 1.0, 0.05, 0.2)
@@ -75,7 +78,10 @@ price = black_scholes.call_price(spot=100.0, strike=105.0, ...)  # キーワー�
 ### 4.1 良い例・悪い例
 
 **概要セクション:**
-```markdown
+```{code-block} markdown
+:name: model-documentation-guidelines-code-2-3
+:caption: ✅ 良い例（2-3行）
+
 # ✅ 良い例（2-3行）
 株式オプションの理論価格を計算するための基本モデルです。
 対数正規分布に従う株価プロセスを仮定し、解析的な価格式を提供します。
@@ -86,7 +92,10 @@ Black-Scholesモデルは1973年にFischer BlackとMyron Scholesによって開�
 ```
 
 **パラメータ説明:**
-```markdown
+```{code-block} markdown
+:name: model-documentation-guidelines-code-section
+:caption: ✅ 良い例（簡潔）
+
 # ✅ 良い例（簡潔）
 | `s` | float | スポット価格 | > 0 |
 
@@ -95,7 +104,10 @@ Black-Scholesモデルは1973年にFischer BlackとMyron Scholesによって開�
 ```
 
 **使用例:**
-```markdown
+```{code-block} markdown
+:name: model-documentation-guidelines-code-15-20
+:caption: ✅ 良い例（実務的、15-20行）
+
 # ✅ 良い例（実務的、15-20行）
 ### ATMオプションの価格とグリークス
 （実際に動く完全なコード例）
@@ -155,7 +167,10 @@ future_feature: true
 
 ### 6.1 pricing.md更新
 
-```markdown
+```{code-block} markdown
+:name: model-documentation-guidelines-code-section
+:caption: ## [新モデル名]
+
 ### [新モデル名]
 [1行説明]。[主要入力パラメータ]を入力として使用します。
 

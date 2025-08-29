@@ -11,7 +11,10 @@
 
 ### Linux
 
-```bash
+```{code-block} bash
+:name: tuning-code-cpu
+:caption: CPU ガバナー設定
+
 # CPU ガバナー設定
 sudo cpupower frequency-set -g performance
 
@@ -24,7 +27,10 @@ numactl --cpunodebind=0 --membind=0 python script.py
 
 ### macOS
 
-```bash
+```{code-block} bash
+:name: tuning-code-apple-silicon
+:caption: Apple Silicon最適化
+
 # Apple Silicon最適化
 export CARGO_BUILD_TARGET=aarch64-apple-darwin
 
@@ -34,7 +40,10 @@ arch -arm64 python script.py
 
 ### Windows
 
-```powershell
+```{code-block} powershell
+:name: tuning-code-section
+:caption: 電源プラン
+
 # 電源プラン
 powercfg /setactive SCHEME_MIN
 
@@ -46,7 +55,10 @@ Start-Process python.exe -ArgumentList "script.py" -Priority High
 
 ### Intel
 
-```python
+```{code-block} python
+:name: tuning-code-section
+:caption: 高度な並列化
+
 # 高度な並列化
 import quantforge as qf
 
@@ -57,7 +69,10 @@ os.environ["RAYON_NUM_THREADS"] = "16"
 
 ### AMD
 
-```python
+```{code-block} python
+:name: tuning-code-zen3
+:caption: Zen3以降の最適化
+
 # Zen3以降の最適化
 qf.set_compute_strategy("amd_zen3")
 qf.enable_feature("avx2_256bit")  # 256ビット演算
@@ -65,7 +80,10 @@ qf.enable_feature("avx2_256bit")  # 256ビット演算
 
 ### Apple Silicon
 
-```python
+```{code-block} python
+:name: tuning-code-m1m2
+:caption: M1/M2最適化
+
 # M1/M2最適化
 qf.set_compute_strategy("apple_silicon")
 qf.set_efficiency_cores(False)  # 高性能コアのみ使用
@@ -75,7 +93,10 @@ qf.set_efficiency_cores(False)  # 高性能コアのみ使用
 
 ### リアルタイム処理
 
-```python
+```{code-block} python
+:name: tuning-code-section
+:caption: 低レイテンシ設定（将来実装予定）
+
 # 低レイテンシ設定（将来実装予定）
 # config APIは将来実装予定
 # qf.config.set({
@@ -94,7 +115,10 @@ _ = black_scholes.call_price_batch(dummy_data, 100, 1.0, 0.05, 0.2)
 
 ### バッチ処理
 
-```python
+```{code-block} python
+:name: tuning-code-section
+:caption: 高スループット設定（将来実装予定）
+
 # 高スループット設定（将来実装予定）
 # config APIは将来実装予定
 # qf.config.set({
@@ -113,7 +137,10 @@ prices = black_scholes.call_price_batch(spots, 100, 1.0, 0.05, 0.2)
 
 ### メモリ制限環境
 
-```python
+```{code-block} python
+:name: tuning-code-section
+:caption: 省メモリ設定（将来実装予定）
+
 # 省メモリ設定（将来実装予定）
 # config APIは将来実装予定
 # qf.config.set({
@@ -134,7 +161,10 @@ for chunk in np.array_split(spots, 10):
 
 ### 自動チューニング
 
-```python
+```{code-block} python
+:name: tuning-code-find_optimal_batch_size
+:caption: find_optimal_batch_size
+
 def find_optimal_batch_size(data_size, sample_rate=0.1):
     """最適なバッチサイズを自動検出"""
     
@@ -170,7 +200,10 @@ print(f"Optimal batch size: {optimal}")
 
 ### プリフェッチ
 
-```python
+```{code-block} python
+:name: tuning-code-section
+:caption: データプリフェッチ
+
 # データプリフェッチ
 def prefetch_calculate(spots, strikes, rate, vol, time):
     # 次のバッチをプリフェッチ
@@ -214,7 +247,10 @@ def numa_aware_processing(data):
 
 ### 省電力モード
 
-```python
+```{code-block} python
+:name: tuning-code-section
+:caption: バッテリー動作時の設定
+
 # バッテリー動作時の設定
 def battery_optimized_config():
     # 将来実装予定の電力効率設定
@@ -256,7 +292,10 @@ def thermal_aware_processing(data):
 
 ### 包括的ベンチマーク
 
-```python
+```{code-block} python
+:name: tuning-code-comprehensive_benchmark
+:caption: comprehensive_benchmark
+
 def comprehensive_benchmark():
     """詳細なベンチマーク"""
     
@@ -292,7 +331,10 @@ def comprehensive_benchmark():
 
 ### パフォーマンス診断
 
-```python
+```{code-block} python
+:name: tuning-code-diagnose_performance
+:caption: diagnose_performance
+
 def diagnose_performance():
     """パフォーマンス問題の診断"""
     

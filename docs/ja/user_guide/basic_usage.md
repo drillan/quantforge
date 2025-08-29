@@ -104,7 +104,10 @@ for i, (spot, call, put) in enumerate(zip(spots, call_prices, put_prices)):
 
 ### 複数のパラメータセット
 
-```python
+```{code-block} python
+:name: basic-usage-code-section
+:caption: 異なる満期のオプション
+
 # 異なる満期のオプション
 times = [0.25, 0.5, 1.0, 2.0]
 for time_val in times:
@@ -196,7 +199,10 @@ print(f"Hedge position: {hedge_shares:.0f} shares")
 
 ### ポートフォリオのグリークス
 
-```python
+```{code-block} python
+:name: basic-usage-code-section
+:caption: 複数オプションのポートフォリオ
+
 # 複数オプションのポートフォリオ
 positions = [
     {"spot": 100, "strike": 95, "time": 0.5, "contracts": 10, "is_call": True},

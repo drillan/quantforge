@@ -90,7 +90,10 @@ pub fn black_scholes_parallel(
 
 ### 高度な並列化
 
-```rust
+```{code-block} rust
+:name: index-code-[cfg(target_feature-=-"avx512f")]
+:caption: [cfg(target_feature = "avx512f")]
+
 #[cfg(target_feature = "avx512f")]
 pub mod avx512 {
     pub unsafe fn black_scholes_avx512(
@@ -153,7 +156,10 @@ impl ComputeStrategy {
 
 ### Greeks構造体
 
-```rust
+```{code-block} rust
+:name: index-code-[derive(debug,-clone,-copy)]
+:caption: [derive(Debug, Clone, Copy)]
+
 #[derive(Debug, Clone, Copy)]
 pub struct Greeks {
     pub delta: f64,
@@ -218,7 +224,10 @@ pub fn calculate_inplace(
 
 ### アラインメント最適化
 
-```rust
+```{code-block} rust
+:name: index-code-[repr(align(64))]
+:caption: [repr(align(64))]
+
 #[repr(align(64))]
 pub struct AlignedBuffer<T> {
     data: Vec<T>,
@@ -344,7 +353,10 @@ fn quantforge(_py: Python, m: &PyModule) -> PyResult<()> {
 
 ### コンパイル時最適化
 
-```toml
+```{code-block} toml
+:name: index-code-cargo.toml
+:caption: Cargo.toml
+
 # Cargo.toml
 [profile.release]
 opt-level = 3
@@ -372,7 +384,10 @@ pub fn detect_cpu_features() -> CpuFeatures {
 
 ### 単体テスト
 
-```rust
+```{code-block} rust
+:name: index-code-[cfg(test)]
+:caption: [cfg(test)]
+
 #[cfg(test)]
 mod tests {
     use super::*;

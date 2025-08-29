@@ -14,7 +14,10 @@ QuantForgeへの貢献を歓迎します！このガイドでは、プロジェ�
 
 Issue作成時に含めるべき情報：
 
-```markdown
+```{code-block} markdown
+:name: contributing-code-section
+:caption: # 環境
+
 ## 環境
 - OS: [例: Ubuntu 22.04]
 - Python: [例: 3.12.1]
@@ -36,7 +39,10 @@ Issue作成時に含めるべき情報：
 
 ### ✨ 機能提案
 
-```markdown
+```{code-block} markdown
+:name: contributing-code-section
+:caption: # 提案内容
+
 ## 提案内容
 ...
 
@@ -63,7 +69,10 @@ Issue作成時に含めるべき情報：
 
 ### 1. 環境セットアップ
 
-```bash
+```{code-block} bash
+:name: contributing-code-section
+:caption: リポジトリをフォーク
+
 # リポジトリをフォーク
 git clone https://github.com/yourusername/quantforge.git
 cd quantforge
@@ -85,7 +94,10 @@ cargo build
 
 #### Rust
 
-```rust
+```{code-block} rust
+:name: contributing-code-good
+:caption: ✅ Good
+
 // ✅ Good
 pub fn calculate_price(
     spot: f64,
@@ -106,7 +118,10 @@ pub fn calc(s: f64, k: f64, r: f64, v: f64, t: f64) -> f64 {
 
 #### Python
 
-```python
+```{code-block} python
+:name: contributing-code-good
+:caption: ✅ Good
+
 # ✅ Good
 def calculate_implied_volatility(
     price: float,
@@ -140,7 +155,10 @@ def calculate_implied_volatility(
 
 #### Rust テスト
 
-```rust
+```{code-block} rust
+:name: contributing-code-[cfg(test)]
+:caption: [cfg(test)]
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -194,7 +212,10 @@ def test_moneyness(spot, strike, time, expected):
 
 ### 4. ドキュメント
 
-```python
+```{code-block} python
+:name: contributing-code-new_feature
+:caption: new_feature
+
 def new_feature(param1: float, param2: str) -> dict:
     """
     Brief description of the feature.
@@ -231,7 +252,10 @@ def new_feature(param1: float, param2: str) -> dict:
 
 ### 5. コミット
 
-```bash
+```{code-block} bash
+:name: contributing-code-section
+:caption: 変更の確認
+
 # 変更の確認
 git status
 git diff
@@ -281,7 +305,10 @@ Types:
 
 ### 6. プルリクエスト
 
-```markdown
+```{code-block} markdown
+:name: contributing-code-section
+:caption: # 概要
+
 ## 概要
 この PR は...
 
@@ -314,7 +341,10 @@ Closes #123
 - 具体的な改善提案
 - 良い点も指摘
 
-```markdown
+```{code-block} markdown
+:name: contributing-code-section
+:caption: 良いフィードバック例
+
 # 良いフィードバック例
 この実装は効率的ですね！さらに改善するなら、
 ここで事前計算を使うと約20%高速化できそうです：

@@ -6,7 +6,10 @@ QuantForgeの開発環境構築手順です。
 
 ### Rust環境
 
-```bash
+```{code-block} bash
+:name: setup-code-rust
+:caption: Rustインストール
+
 # Rustインストール
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 source $HOME/.cargo/env
@@ -18,7 +21,10 @@ cargo --version
 
 ### Python環境
 
-```bash
+```{code-block} bash
+:name: setup-code-python-312
+:caption: Python 3.12以降が必要
+
 # Python 3.12以降が必要
 python --version  # 3.12.0以上を確認
 
@@ -34,7 +40,10 @@ source .venv/bin/activate  # Linux/macOS
 
 ### 開発ツール
 
-```bash
+```{code-block} bash
+:name: setup-code-maturinrust-python
+:caption: Maturin（Rust-Pythonブリッジ）
+
 # Maturin（Rust-Pythonブリッジ）
 uv pip install maturin
 
@@ -64,7 +73,10 @@ quantforge/
 
 ### 開発ビルド
 
-```bash
+```{code-block} bash
+:name: setup-code-section
+:caption: デバッグビルド（高速コンパイル）
+
 # デバッグビルド（高速コンパイル）
 maturin develop
 
@@ -74,7 +86,10 @@ maturin develop --release
 
 ### テスト実行
 
-```bash
+```{code-block} bash
+:name: setup-code-rust
+:caption: Rustテスト
+
 # Rustテスト
 cargo test
 
@@ -113,7 +128,10 @@ cargo bench
 
 ### Rustデバッグ
 
-```bash
+```{code-block} bash
+:name: setup-code-section
+:caption: デバッグ情報付きビルド
+
 # デバッグ情報付きビルド
 RUST_BACKTRACE=1 cargo build
 
@@ -149,7 +167,10 @@ logging.basicConfig(level=logging.DEBUG)
 
 ### プロファイリング
 
-```bash
+```{code-block} bash
+:name: setup-code-rust
+:caption: Rust プロファイリング
+
 # Rust プロファイリング
 cargo install flamegraph
 cargo flamegraph
@@ -160,7 +181,10 @@ python -m cProfile -o profile.out script.py
 
 ### ベンチマーク
 
-```bash
+```{code-block} bash
+:name: setup-code-criterionrs
+:caption: Criterion.rs ベンチマーク
+
 # Criterion.rs ベンチマーク
 cargo bench
 
@@ -172,7 +196,10 @@ python benchmarks/benchmark.py
 
 ### ビルドエラー
 
-```bash
+```{code-block} bash
+:name: setup-code-section
+:caption: クリーンビルド
+
 # クリーンビルド
 cargo clean
 rm -rf target/
@@ -181,7 +208,10 @@ maturin develop --release
 
 ### リンクエラー
 
-```bash
+```{code-block} bash
+:name: setup-code-macos
+:caption: macOS
+
 # macOS
 export DYLD_LIBRARY_PATH=$HOME/.rustup/toolchains/stable-*/lib
 

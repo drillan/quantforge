@@ -8,7 +8,10 @@ QuantForgeのパフォーマンスを最大化するための詳細な最適化�
 
 8要素並列処理：
 
-```rust
+```{code-block} rust
+:name: optimization-code-[cfg(target_feature-=-"avx2")]
+:caption: [cfg(target_feature = "avx2")]
+
 #[cfg(target_feature = "avx2")]
 unsafe fn calculate_avx2(data: &[f64]) -> Vec<f64> {
     use std::arch::x86_64::*;
@@ -33,7 +36,10 @@ unsafe fn calculate_avx2(data: &[f64]) -> Vec<f64> {
 現在は、内部的に並列化が自動的に適用されます。
 ```
 
-```python
+```{code-block} python
+:name: optimization-code-api
+:caption: 将来的なAPI（現在は未実装）
+
 # 将来的なAPI（現在は未実装）
 # from quantforge import system_info
 # 現在はQuantForgeが内部で自動的に並列化を適用
@@ -64,7 +70,10 @@ aligned_data = create_aligned_array(1_000_000)
 
 ### キャッシュ最適化
 
-```python
+```{code-block} python
+:name: optimization-code-l2
+:caption: 最適なバッチサイズ（L2キャッシュに収まる）
+
 # 最適なバッチサイズ（L2キャッシュに収まる）
 OPTIMAL_BATCH = 50_000
 
@@ -94,7 +103,10 @@ os.environ["MKL_NUM_THREADS"] = "1"
 
 ### ワークロード分散
 
-```python
+```{code-block} python
+:name: optimization-code-optimal_parallel_strategy
+:caption: optimal_parallel_strategy
+
 def optimal_parallel_strategy(data_size):
     """データサイズに基づく最適戦略"""
     if data_size < 1_000:
@@ -115,7 +127,10 @@ strategy = optimal_parallel_strategy(len(data))
 
 ### メモリ割り当て削減
 
-```python
+```{code-block} python
+:name: optimization-code-section
+:caption: 事前確保された配列への直接書き込み
+
 # 事前確保された配列への直接書き込み
 n = 1_000_000
 results = np.empty(n)
@@ -200,7 +215,10 @@ for label, elapsed in timer.times.items():
 
 ### Rust側の最適化
 
-```toml
+```{code-block} toml
+:name: optimization-code-cargo.toml
+:caption: Cargo.toml
+
 # Cargo.toml
 [profile.release]
 opt-level = 3
@@ -215,7 +233,10 @@ opt-level = 3
 
 ### CPU固有の最適化
 
-```bash
+```{code-block} bash
+:name: optimization-code-cpu
+:caption: ターゲットCPU向けビルド
+
 # ターゲットCPU向けビルド
 RUSTFLAGS="-C target-cpu=native" maturin build --release
 ```
@@ -225,7 +246,10 @@ RUSTFLAGS="-C target-cpu=native" maturin build --release
 ### Do's ✅
 
 1. **NumPy配列を使用**
-```python
+```{code-block} python
+:name: optimization-code-good
+:caption: Good
+
 # Good
 spots = np.array([100, 105, 110])
 from quantforge.models import black_scholes
@@ -233,13 +257,19 @@ prices = black_scholes.call_price_batch(spots, 100, 1.0, 0.05, 0.2)
 ```
 
 2. **適切なバッチサイズ**
-```python
+```{code-block} python
+:name: optimization-code-good-10000-100000
+:caption: Good: 10,000-100,000要素
+
 # Good: 10,000-100,000要素
 batch_size = 50_000
 ```
 
 3. **型の統一**
-```python
+```{code-block} python
+:name: optimization-code-good-float64
+:caption: Good: float64で統一
+
 # Good: float64で統一
 data = data.astype(np.float64)
 ```
@@ -247,13 +277,19 @@ data = data.astype(np.float64)
 ### Don'ts ❌
 
 1. **Python リストの使用**
-```python
+```{code-block} python
+:name: optimization-code-bad
+:caption: Bad
+
 # Bad
 spots = [100, 105, 110]  # 内部で変換が発生
 ```
 
 2. **小さすぎる/大きすぎるバッチ**
-```python
+```{code-block} python
+:name: optimization-code-bad
+:caption: Bad: オーバーヘッドが大きい
+
 # Bad: オーバーヘッドが大きい
 for spot in spots:
     from quantforge.models import black_scholes
@@ -261,7 +297,10 @@ for spot in spots:
 ```
 
 3. **頻繁な型変換**
-```python
+```{code-block} python
+:name: optimization-code-bad
+:caption: Bad
+
 # Bad
 data = data.astype(np.float32)  # 変換が発生
 ```

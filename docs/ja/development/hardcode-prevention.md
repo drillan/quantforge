@@ -27,14 +27,20 @@ QuantForgeプロジェクトでは、技術的負債ゼロの原則に基づき�
 
 #### 精度レベル（Rust/Python共通）
 
-```rust
+```{code-block} rust
+:name: hardcode-prevention-code-src/constants.rs
+:caption: src/constants.rs
+
 // src/constants.rs
 pub const PRACTICAL_TOLERANCE: f64 = 1e-3;   // 実務精度
 pub const THEORETICAL_TOLERANCE: f64 = 1e-5; // 理論精度
 pub const NUMERICAL_TOLERANCE: f64 = 1e-7;   // 数値精度
 ```
 
-```python
+```{code-block} python
+:name: hardcode-prevention-code-tests/conftest.py
+:caption: tests/conftest.py
+
 # tests/conftest.py
 PRACTICAL_TOLERANCE: Final[float] = 1e-3   # 実務精度
 THEORETICAL_TOLERANCE: Final[float] = 1e-5 # 理論精度
@@ -45,7 +51,10 @@ NUMERICAL_TOLERANCE: Final[float] = 1e-7   # 数値精度
 
 ### 1. 新規実装時
 
-```bash
+```{code-block} bash
+:name: hardcode-prevention-code-step-1
+:caption: Step 1: 既存定数の確認
+
 # Step 1: 既存定数の確認
 grep -r "使いたい値" src/constants.rs tests/conftest.py
 
@@ -64,7 +73,10 @@ use crate::constants::NEW_CONSTANT;
 
 ハードコードを見つけた場合：
 
-```rust
+```{code-block} rust
+:name: hardcode-prevention-code-before
+:caption: Before（悪い例）
+
 // Before（悪い例）
 if x > 8.0 { return 1.0; }
 
@@ -75,7 +87,10 @@ if x > NORM_CDF_UPPER_BOUND { return 1.0; }
 
 ### 3. テストコード作成時
 
-```python
+```{code-block} python
+:name: hardcode-prevention-code-before
+:caption: Before（悪い例）
+
 # Before（悪い例）
 assert abs(actual - expected) < 1e-5
 
@@ -88,7 +103,10 @@ assert abs(actual - expected) < THEORETICAL_TOLERANCE
 
 ### 自動検出スクリプト
 
-```bash
+```{code-block} bash
+:name: hardcode-prevention-code-section
+:caption: 実行方法
+
 # 実行方法
 ./scripts/detect_hardcode.sh
 
@@ -125,7 +143,10 @@ A: playground/とscratch/は例外ですが、可能な限り定数を使用す�
 
 A: 意味を明確化するため、可能な限り再定義します：
 
-```rust
+```{code-block} rust
+:name: hardcode-prevention-code-stdf64epsilon
+:caption: std::f64::EPSILON より
+
 // std::f64::EPSILON より
 pub const MACHINE_EPSILON: f64 = std::f64::EPSILON;
 ```

@@ -97,7 +97,10 @@ allowed_differences:
 
 README更新時は以下を必ず確認：
 
-```markdown
+```{code-block} markdown
+:name: readme-internationalization-rules-code-pr
+:caption: # PR提出前チェックリスト
+
 ## PR提出前チェックリスト
 - [ ] 両言語版を同時に更新した
 - [ ] セクション構造が一致している
@@ -285,7 +288,10 @@ docs: sync README sections between en/ja
 
 ### PR説明テンプレート
 
-```markdown
+```{code-block} markdown
+:name: readme-internationalization-rules-code-#-readme-synchronization-update
+:caption: # README Synchronization Update
+
 ## README Synchronization Update
 
 ### Changes

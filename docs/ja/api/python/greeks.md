@@ -46,7 +46,10 @@ QuantForgeのすべてのグリークス関数は、一貫性と使いやすさ�
 
 バッチ形式は最適なメモリ効率のためにNumPy配列を使用します：
 
-```python
+```{code-block} python
+:name: greeks-code-structure-of-arrays-soa
+:caption: Structure of Arrays (SoA) - メモリ効率的
+
 # Structure of Arrays (SoA) - メモリ効率的
 greeks_dict = {
     'delta': np.array([0.5, 0.6, 0.7]),    # 連続メモリ

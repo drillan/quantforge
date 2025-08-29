@@ -111,12 +111,18 @@ implied_{parameter}           # パラメータ逆算: implied_volatility
 ## 4. 例：新モデル追加時の命名
 
 ### American Options追加の場合
-```python
+```{code-block} python
+:name: naming-conventions-code-python-api
+:caption: Python API定義（関数パラメータは省略形）
+
 # Python API定義（関数パラメータは省略形）
 american.call_price(s, k, t, r, sigma, n_steps=100)
 ```
 
-```rust
+```{code-block} rust
+:name: naming-conventions-code-rust
+:caption: Rust実装
+
 // Rust実装
 #[pyfunction]
 #[pyo3(name = "call_price")]
@@ -147,7 +153,10 @@ fn american_call_price(
 ```
 
 ### Asian Options追加の場合
-```python
+```{code-block} python
+:name: naming-conventions-code-api
+:caption: API定義（既存の命名規則に従う）
+
 # API定義（既存の命名規則に従う）
 asian.call_price(s, k, t, r, sigma, avg_type='arithmetic')
 
@@ -156,7 +165,10 @@ asian.call_price(s, k, t, r, sigma, avg_type='arithmetic')
 ```
 
 ### Heston Model追加の場合
-```python
+```{code-block} python
+:name: naming-conventions-code-api
+:caption: API定義（確立された記号を使用）
+
 # API定義（確立された記号を使用）
 heston.call_price(s, k, t, r, v0, kappa, theta_v, xi, rho_sv)
 
@@ -176,7 +188,10 @@ heston.call_price(s, k, t, r, v0, kappa, theta_v, xi, rho_sv)
 - `q` の複数形は `dividend_yields` とする（説明的）
 - すべてのパラメータが配列を受け付ける（Broadcasting対応）
 
-```python
+```{code-block} python
+:name: naming-conventions-code-black-scholes-batch
+:caption: Black-Scholes batch（完全配列サポート）
+
 # Black-Scholes batch（完全配列サポート）
 call_prices = black_scholes.call_price_batch(
     spots=np.array([100, 105, 110]),     # 複数のスポット価格
@@ -211,7 +226,10 @@ call_prices = merton.call_price_batch(
 - キー名はgreek名の小文字（'delta', 'gamma', 'vega', 'theta', 'rho'）
 - モデル固有のgreek（'dividend_rho'等）も同様
 
-```python
+```{code-block} python
+:name: naming-conventions-code-section
+:caption: 戻り値形式
+
 # 戻り値形式
 greeks = black_scholes.greeks_batch(...)
 # {'delta': np.ndarray, 'gamma': np.ndarray, 'vega': np.ndarray, ...}
@@ -222,7 +240,10 @@ greeks = black_scholes.greeks_batch(...)
 ### パラメータ名の参照
 エラーメッセージでは、APIで使用される省略形を使用：
 
-```python
+```{code-block} python
+:name: naming-conventions-code-section
+:caption: 良い例
+
 # 良い例
 raise ValueError("s must be positive")
 raise ValueError("k, t, and sigma must be positive")
@@ -237,7 +258,10 @@ raise ValueError("strike must be positive")      # APIでは 'k' を使用
 ### パラメータ説明
 ドキュメントでは初出時にフルネームを併記：
 
-```markdown
+```{code-block} markdown
+:name: naming-conventions-code-section
+:caption: 良い例
+
 # 良い例
 パラメータ: s (spot price), k (strike), t (time to maturity)
 
@@ -248,7 +272,10 @@ s = 100.0, k = 105.0
 ### コード例での命名
 ドキュメント内のコード例では、API通りの省略形を使用：
 
-```python
+```{code-block} python
+:name: naming-conventions-code-api
+:caption: 良い例（API通り）
+
 # 良い例（API通り）
 call_price = black_scholes.call_price(s, k, t, r, sigma)
 

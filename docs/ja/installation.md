@@ -19,14 +19,20 @@
 
 最新の開発版はTestPyPIから入手可能です：
 
-```bash
+```{code-block} bash
+:name: installation-code-testpypi
+:caption: TestPyPIから最新開発版をインストール
+
 # TestPyPIから最新開発版をインストール
 pip install -i https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ quantforge
 ```
 
 ### PyPIから安定版をインストール（準備中）
 
-```bash
+```{code-block} bash
+:name: installation-code-section
+:caption: 安定版がリリースされた後
+
 # 安定版がリリースされた後
 pip install quantforge
 ```
@@ -35,7 +41,10 @@ pip install quantforge
 
 uvは高速で信頼性の高いPythonパッケージマネージャーです：
 
-```bash
+```{code-block} bash
+:name: installation-code-uv
+:caption: uvのインストール（未インストールの場合）
+
 # uvのインストール（未インストールの場合）
 curl -LsSf https://astral.sh/uv/install.sh | sh
 
@@ -54,7 +63,10 @@ uv pip install -i https://test.pypi.org/simple/ --extra-index-url https://pypi.o
 
 ### Linux
 
-```bash
+```{code-block} bash
+:name: installation-code-ubuntudebian
+:caption: 必要なシステムライブラリ（Ubuntu/Debian）
+
 # 必要なシステムライブラリ（Ubuntu/Debian）
 sudo apt-get update
 sudo apt-get install -y build-essential
@@ -65,7 +77,10 @@ sudo yum groupinstall "Development Tools"
 
 ### macOS
 
-```bash
+```{code-block} bash
+:name: installation-code-xcode
+:caption: Xcodeコマンドラインツールが必要
+
 # Xcodeコマンドラインツールが必要
 xcode-select --install
 
@@ -76,7 +91,10 @@ arch -arm64 uv pip install quantforge
 
 ### Windows
 
-```powershell
+```{code-block} powershell
+:name: installation-code-visual-studio-build-tools
+:caption: Visual Studio Build Toolsが必要な場合があります
+
 # Visual Studio Build Toolsが必要な場合があります
 # https://visualstudio.microsoft.com/downloads/#build-tools-for-visual-studio-2022
 
@@ -90,7 +108,10 @@ uv pip install quantforge
 
 ### 前提条件
 
-```bash
+```{code-block} bash
+:name: installation-code-rust
+:caption: Rustのインストール
+
 # Rustのインストール
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 source $HOME/.cargo/env
@@ -101,7 +122,10 @@ uv pip install maturin
 
 ### ビルド手順
 
-```bash
+```{code-block} bash
+:name: installation-code-section
+:caption: リポジトリのクローン
+
 # リポジトリのクローン
 git clone https://github.com/drillan/quantforge.git
 cd quantforge
@@ -122,7 +146,10 @@ uv pip install target/wheels/quantforge-*.whl
 
 ### 基本的な確認
 
-```python
+```{code-block} python
+:name: installation-code-python
+:caption: Pythonインタープリタで実行
+
 # Pythonインタープリタで実行
 from quantforge.models import black_scholes
 import quantforge
@@ -173,14 +200,20 @@ print(f"Speed: {elapsed/n*1000:.1f}ns per option")
 
 #### ImportError: DLL load failed (Windows)
 
-```powershell
+```{code-block} powershell
+:name: installation-code-visual-c-redistributable
+:caption: Visual C++ Redistributableのインストール
+
 # Visual C++ Redistributableのインストール
 # https://aka.ms/vs/17/release/vc_redist.x64.exe
 ```
 
 #### Symbol not found (macOS)
 
-```bash
+```{code-block} bash
+:name: installation-code-macos
+:caption: macOSバージョンの確認
+
 # macOSバージョンの確認
 sw_vers
 
@@ -190,7 +223,10 @@ sw_vers
 
 #### Illegal instruction (Linux)
 
-```bash
+```{code-block} bash
+:name: installation-code-cpu
+:caption: CPU機能の確認
+
 # CPU機能の確認
 lscpu | grep -E "avx|sse"
 
@@ -200,7 +236,10 @@ maturin build --release
 
 #### メモリ不足エラー
 
-```python
+```{code-block} python
+:name: installation-code-section
+:caption: バッチサイズを調整
+
 # バッチサイズを調整
 # 大きすぎるバッチを分割
 batch_size = 10_000  # 100万件ではなく1万件ずつ処理
@@ -210,7 +249,10 @@ batch_size = 10_000  # 100万件ではなく1万件ずつ処理
 
 #### 環境変数
 
-```bash
+```{code-block} bash
+:name: installation-code-section
+:caption: スレッド数の制御
+
 # スレッド数の制御
 export RAYON_NUM_THREADS=8
 
@@ -220,7 +262,10 @@ export RUST_LOG=debug
 
 #### Python設定
 
-```python
+```{code-block} python
+:name: installation-code-numpy
+:caption: NumPyのスレッド制御
+
 # NumPyのスレッド制御
 import os
 os.environ["OMP_NUM_THREADS"] = "1"  # QuantForge側で並列化
@@ -232,7 +277,10 @@ os.environ["NUMEXPR_NUM_THREADS"] = "1"
 
 ### 最新版へのアップグレード
 
-```bash
+```{code-block} bash
+:name: installation-code-uv
+:caption: uvを使用
+
 # uvを使用
 uv pip install --upgrade quantforge
 
@@ -242,7 +290,10 @@ pip install --upgrade quantforge
 
 ### 特定バージョンのインストール
 
-```bash
+```{code-block} bash
+:name: installation-code-section
+:caption: バージョン指定
+
 # バージョン指定
 uv pip install quantforge==0.2.0
 
@@ -252,7 +303,10 @@ uv pip install quantforge --pre
 
 ## アンインストール
 
-```bash
+```{code-block} bash
+:name: installation-code-uv
+:caption: uvを使用
+
 # uvを使用
 uv pip uninstall quantforge
 

@@ -31,7 +31,10 @@ print(f"Memory shared: {prices.base is not None}")
 
 ### メモリレイアウトの最適化
 
-```python
+```{code-block} python
+:name: numpy-integration-code-c
+:caption: C連続配列（推奨）
+
 # C連続配列（推奨）
 spots_c = np.ascontiguousarray(spots)
 print(f"C-contiguous: {spots_c.flags['C_CONTIGUOUS']}")
@@ -64,7 +67,10 @@ print(f"F-layout: {time_f*1000:.2f}ms")  # わずかに遅い
 
 ### 自動ブロードキャスト
 
-```python
+```{code-block} python
+:name: numpy-integration-code-section
+:caption: スカラーと配列の組み合わせ
+
 # スカラーと配列の組み合わせ
 spots = np.array([95, 100, 105])
 strike = 100.0  # スカラー
@@ -85,7 +91,10 @@ print(f"Results: {prices}")
 
 ### 多次元配列
 
-```python
+```{code-block} python
+:name: numpy-integration-code-2
+:caption: 2次元配列での計算
+
 # 2次元配列での計算
 spots = np.random.uniform(90, 110, (100, 1000))
 strikes = np.full((100, 1000), 100.0)
@@ -109,7 +118,10 @@ print(f"Shape: {prices.shape}")
 
 ### スライスとインデックス
 
-```python
+```{code-block} python
+:name: numpy-integration-code-section
+:caption: 大きな配列
+
 # 大きな配列
 all_spots = np.random.uniform(80, 120, 1_000_000)
 
@@ -129,7 +141,10 @@ subset_prices = black_scholes.call_price_batch(
 
 ### 条件付き処理
 
-```python
+```{code-block} python
+:name: numpy-integration-code-section
+:caption: 条件に基づく選択
+
 # 条件に基づく選択
 spots = np.random.uniform(80, 120, 10000)
 mask = (spots > 95) & (spots < 105)  # ATM近辺のみ
@@ -153,7 +168,10 @@ full_prices[mask] = atm_prices
 
 ### 型変換の最適化
 
-```python
+```{code-block} python
+:name: numpy-integration-code-float32-vs-float64
+:caption: float32 vs float64
+
 # float32 vs float64
 spots_f32 = np.random.uniform(90, 110, 100000).astype(np.float32)
 spots_f64 = np.random.uniform(90, 110, 100000).astype(np.float64)
@@ -173,7 +191,10 @@ print(f"Output dtype: {prices_f32.dtype}")  # float64に変換される
 
 ### 構造化配列
 
-```python
+```{code-block} python
+:name: numpy-integration-code-section
+:caption: オプションデータの構造化配列
+
 # オプションデータの構造化配列
 dtype = np.dtype([
     ('spot', 'f8'),
@@ -207,7 +228,10 @@ prices = np.array([
 
 ### 大規模データの処理
 
-```python
+```{code-block} python
+:name: numpy-integration-code-section
+:caption: メモリマップファイルの作成
+
 # メモリマップファイルの作成
 filename = 'large_spots.dat'
 shape = (10_000_000,)
@@ -244,7 +268,10 @@ os.remove(filename)
 
 ### カスタムufunc
 
-```python
+```{code-block} python
+:name: numpy-integration-code-quantforgeufunc
+:caption: QuantForgeの関数をufuncとして使用
+
 # QuantForgeの関数をufuncとして使用
 @np.vectorize
 def custom_pricer(spot, strike, moneyness_threshold=0.1):
@@ -306,7 +333,10 @@ all_prices = np.concatenate(results)
 
 ### アラインメントの最適化
 
-```python
+```{code-block} python
+:name: numpy-integration-code-64
+:caption: 64バイト境界にアラインメント（キャッシュライン）
+
 # 64バイト境界にアラインメント（キャッシュライン）
 def create_aligned_array(size, alignment=64):
     """アラインメントされた配列を作成"""
@@ -364,7 +394,10 @@ tracemalloc.stop()
 
 ### 結果の直接書き込み
 
-```python
+```{code-block} python
+:name: numpy-integration-code-section
+:caption: 事前確保された配列
+
 # 事前確保された配列
 n = 1_000_000
 spots = np.random.uniform(90, 110, n)
@@ -387,7 +420,10 @@ print(f"Prices array modified in-place: {prices[:5]}")
 
 ### NumPy統計関数との組み合わせ
 
-```python
+```{code-block} python
+:name: numpy-integration-code-section
+:caption: ポートフォリオ統計
+
 # ポートフォリオ統計
 spots = np.random.uniform(90, 110, 10000)
 prices = black_scholes.call_price_batch(

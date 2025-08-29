@@ -53,7 +53,10 @@ boundaries = american.exercise_boundary_batch(spots, strikes, times, rates, divi
 
 ### グリークス計算
 
-```python
+```{code-block} python
+:name: american-code-section
+:caption: 全グリークスを一括計算
+
 # 全グリークスを一括計算
 # パラメータ: s, k, t, r, q, sigma, is_call
 greeks = american.greeks(100.0, 100.0, 1.0, 0.05, 0.03, 0.2, True)
@@ -68,7 +71,10 @@ print(f"Rho: {greeks.rho:.4f}")      # 金利感応度
 
 ### インプライドボラティリティ
 
-```python
+```{code-block} python
+:name: american-code-price-s-k-t-r-q-iscall
+:caption: パラメータ: price, s, k, t, r, q, is_call
+
 # パラメータ: price, s, k, t, r, q, is_call
 iv = american.implied_volatility(15.50, 100.0, 100.0, 1.0, 0.05, 0.03, True)
 print(f"Implied Volatility: {iv:.4f}")
@@ -76,7 +82,10 @@ print(f"Implied Volatility: {iv:.4f}")
 
 ### 早期行使境界
 
-```python
+```{code-block} python
+:name: american-code-section
+:caption: 早期行使境界の計算
+
 # 早期行使境界の計算
 # パラメータ: s, k, t, r, q, sigma, is_call
 boundary = american.exercise_boundary(100.0, 100.0, 1.0, 0.05, 0.03, 0.2, True)

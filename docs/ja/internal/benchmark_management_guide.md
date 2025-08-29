@@ -26,7 +26,10 @@ docs/performance/
 
 ### 1. ベンチマーク実行と記録
 
-```bash
+```{code-block} bash
+:name: benchmark-management-guide-code-section
+:caption: ベンチマーク実行（自動的に履歴に追加）
+
 # ベンチマーク実行（自動的に履歴に追加）
 cd benchmarks
 ./run_benchmarks.sh
@@ -74,7 +77,10 @@ print(generate_summary_table())
 
 #### 方法C: テンプレートベースの更新
 
-```python
+```{code-block} python
+:name: benchmark-management-guide-code-benchmarksupdatedocspy
+:caption: benchmarks/update_docs.py として保存
+
 # benchmarks/update_docs.py として保存
 from pathlib import Path
 import json
@@ -146,7 +152,10 @@ else:
 
 ### 履歴の統計情報
 
-```bash
+```{code-block} bash
+:name: benchmark-management-guide-code-section
+:caption: 全履歴の要約統計
+
 # 全履歴の要約統計
 cd benchmarks
 uv run python -c "
@@ -172,7 +181,10 @@ print(f'  平均: {sum(qf_times)/len(qf_times):.2f} μs')
 
 ### CSV出力と外部ツール連携
 
-```bash
+```{code-block} bash
+:name: benchmark-management-guide-code-csv
+:caption: CSV生成
+
 # CSV生成
 cd benchmarks
 uv run python save_results.py

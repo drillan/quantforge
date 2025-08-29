@@ -97,7 +97,10 @@ print(f"Theta: {total_theta:.2f}")
 
 ### デルタヘッジング
 
-```python
+```{code-block} python
+:name: examples-code-delta_hedge_portfolio
+:caption: delta_hedge_portfolio
+
 def delta_hedge_portfolio(portfolio_delta, spot_price, shares_per_contract=100):
     """デルタニュートラルにするためのヘッジ量計算"""
     hedge_shares = -portfolio_delta * shares_per_contract
@@ -120,7 +123,10 @@ print(f"Value: ${abs(hedge['hedge_value']):,.2f}")
 
 ### VaR（Value at Risk）計算
 
-```python
+```{code-block} python
+:name: examples-code-calculate_var_options
+:caption: calculate_var_options
+
 def calculate_var_options(spot, strike, rate, sigma, time, confidence=0.95, n_sims=10000):
     """オプションポートフォリオのVaR計算"""
     np.random.seed(42)
@@ -171,7 +177,10 @@ print(f"P&L Std Dev: ${var_results['pnl_std']:.2f}")
 
 ### ストレステスト
 
-```python
+```{code-block} python
+:name: examples-code-stress_test_portfolio
+:caption: stress_test_portfolio
+
 def stress_test_portfolio(base_spot, base_vol, portfolio_func, 
                          spot_shocks=None, vol_shocks=None):
     """ポートフォリオのストレステスト"""
@@ -227,7 +236,10 @@ plt.show()
 
 ### インプライドボラティリティサーフェス
 
-```python
+```{code-block} python
+:name: examples-code-build_iv_surface
+:caption: build_iv_surface
+
 def build_iv_surface(market_prices, spot, strikes, times, rate=0.05):
     """市場価格からIVサーフェスを構築"""
     iv_surface = np.zeros_like(market_prices)
@@ -282,7 +294,10 @@ plt.show()
 
 ### ボラティリティアービトラージ
 
-```python
+```{code-block} python
+:name: examples-code-identify_vol_arbitrage
+:caption: identify_vol_arbitrage
+
 def identify_vol_arbitrage(market_iv, model_vol, threshold=0.02):
     """ボラティリティアービトラージ機会の特定"""
     diff = market_iv - model_vol
@@ -397,7 +412,10 @@ print(f"Spread: ${adjusted_quote['spread']:.3f} ({adjusted_quote['spread_pct']:.
 
 ### オプション戦略のバックテスト
 
-```python
+```{code-block} python
+:name: examples-code-backtest_covered_call
+:caption: backtest_covered_call
+
 def backtest_covered_call(price_path, strike, sigma, rate, dt=1/252):
     """カバードコール戦略のバックテスト"""
     results = []

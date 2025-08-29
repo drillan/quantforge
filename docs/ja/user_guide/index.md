@@ -71,7 +71,10 @@ prices = qf.calculate(spots, strike=100, rate=0.05, vol=0.2, time=1.0)
 
 ### ポートフォリオ評価
 
-```python
+```{code-block} python
+:name: index-code-section
+:caption: 複数のオプションポジション
+
 # 複数のオプションポジション
 portfolio = [
     {"type": "call", "spot": 100, "strike": 105, "quantity": 100},

@@ -1,5 +1,7 @@
+(index)=
 # QuantForge Documentation
 
+(index-overview)=
 ## 高性能オプション価格計算ライブラリ
 
 QuantForgeは、Rust + PyO3で構築された金融デリバティブ価格計算ライブラリです。
@@ -15,9 +17,14 @@ Pythonの使いやすさを保ちながら、高速な計算性能を提供し�
 - NumPy配列のゼロコピー処理
 :::
 
+(index-quickstart)=
 ## クイックスタート
 
-```python
+```{code-block} python
+:name: index-code-quickstart
+:caption: クイックスタートコード例
+:linenos:
+
 import numpy as np
 from quantforge.models import black_scholes
 
@@ -41,6 +48,7 @@ prices = black_scholes.call_price_batch(
 )
 ```
 
+(index-performance)=
 ## パフォーマンス比較
 
 :::{note}
@@ -49,12 +57,30 @@ prices = black_scholes.call_price_batch(
 詳細は[ベンチマーク結果](performance/benchmarks.md)を参照
 :::
 
-| ライブラリ | 単一計算 | 100万件処理時間 | 相対速度 |
-|------------|----------|----------------|----------|
-| QuantForge | 1.4 μs | 55.6ms | 1.0x |
-| NumPy+SciPy | 77.7 μs | 63.9ms | 1.15x遅い |
-| Pure Python | 2.4 μs | - | （単一）1.7x遅い |
+```{list-table} パフォーマンス比較
+:name: index-table-performance
+:header-rows: 1
+:widths: 25 25 25 25
 
+* - ライブラリ
+  - 単一計算
+  - 100万件処理時間
+  - 相対速度
+* - QuantForge
+  - 1.4 μs
+  - 55.6ms
+  - 1.0x
+* - NumPy+SciPy
+  - 77.7 μs
+  - 63.9ms
+  - 1.15x遅い
+* - Pure Python
+  - 2.4 μs
+  - -
+  - （単一）1.7x遅い
+```
+
+(index-documentation-structure)=
 ## ドキュメント構成
 
 ```{toctree}
@@ -132,12 +158,14 @@ changelog
 faq
 ```
 
+(index-indices)=
 ## インデックス
 
 * {ref}`genindex`
 * {ref}`modindex`
 * {ref}`search`
 
+(index-project-links)=
 ## プロジェクトリンク
 
 - [GitHub Repository](https://github.com/yourusername/quantforge)

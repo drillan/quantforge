@@ -131,7 +131,10 @@ $$P = 価格式$$
 
 ## 実装例（概念）
 
-```python
+```{code-block} python
+:name: theory-model-template-code-api
+:caption: 概念的な実装例（実際のAPIとは異なる）
+
 # 概念的な実装例（実際のAPIとは異なる）
 def {model_name}_call_price(s, k, t, r, sigma):
     """

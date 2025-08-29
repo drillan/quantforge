@@ -53,7 +53,10 @@ portfolio_vega = greeks['vega'].sum()
 
 オプションの感応度（グリークス）を一括計算：
 
-```python
+```{code-block} python
+:name: black-scholes-code-section
+:caption: 全グリークスを一括計算
+
 # 全グリークスを一括計算
 # パラメータ: s(spot), k, t, r, sigma, is_call
 greeks = black_scholes.greeks(100.0, 100.0, 1.0, 0.05, 0.2, True)
@@ -70,7 +73,10 @@ print(f"Rho: {greeks.rho:.4f}")      # 金利感応度
 
 市場価格からボラティリティを逆算：
 
-```python
+```{code-block} python
+:name: black-scholes-code-price-s-k-t-r-iscall
+:caption: パラメータ: price, s, k, t, r, is_call
+
 # パラメータ: price, s, k, t, r, is_call
 iv = black_scholes.implied_volatility(10.45, 100.0, 100.0, 1.0, 0.05, True)
 print(f"Implied Volatility: {iv:.4f}")

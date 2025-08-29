@@ -49,7 +49,10 @@ import numpy as np
 
 ### アメリカンプットオプション
 
-```python
+```{code-block} python
+:name: advanced-models-code-section
+:caption: アメリカンプット（早期行使がより重要）
+
 # アメリカンプット（早期行使がより重要）
 # 将来実装予定
 # american_put = american.put_price(
@@ -76,7 +79,10 @@ print(f"Early Exercise Premium: ${premium:.2f} ({premium/european_put*100:.1f}%)
 
 ### 早期行使境界
 
-```python
+```{code-block} python
+:name: advanced-models-code-section
+:caption: 早期行使境界の計算
+
 # 早期行使境界の計算
 def early_exercise_boundary(strike, rate, vol, time_points):
     """各時点での早期行使境界価格"""
@@ -117,7 +123,10 @@ plt.show()
 
 ### 算術平均アジアンオプション
 
-```python
+```{code-block} python
+:name: advanced-models-code-section
+:caption: 算術平均価格オプション
+
 # 算術平均価格オプション
 asian_call = qf.asian_arithmetic_call(
     spot=100,
@@ -138,7 +147,10 @@ print(f"Asian Discount: ${european - asian_call:.2f}")
 
 ### 幾何平均アジアンオプション
 
-```python
+```{code-block} python
+:name: advanced-models-code-section
+:caption: 幾何平均（解析解あり）
+
 # 幾何平均（解析解あり）
 asian_geometric = qf.asian_geometric_call(
     spot=100,
@@ -153,7 +165,10 @@ print(f"Geometric Asian: ${asian_geometric:.2f}")
 
 ### 既観測価格を考慮
 
-```python
+```{code-block} python
+:name: advanced-models-code-section
+:caption: 部分的に観測済みのアジアンオプション
+
 # 部分的に観測済みのアジアンオプション
 observed_prices = [98, 102, 101, 99, 103]  # 既に観測された価格
 remaining_time = 0.5  # 残り期間
@@ -176,7 +191,10 @@ print(f"Partial Asian Call: ${adjusted_asian:.2f}")
 
 ### Kirk近似によるスプレッドオプション
 
-```python
+```{code-block} python
+:name: advanced-models-code-2
+:caption: 2資産間のスプレッドオプション
+
 # 2資産間のスプレッドオプション
 spread_call = qf.spread_option_kirk(
     spot1=100,    # 資産1の現在価格
@@ -194,7 +212,10 @@ print(f"Spread Option: ${spread_call:.2f}")
 
 ### マルコフ・スプレッドオプション
 
-```python
+```{code-block} python
+:name: advanced-models-code-section
+:caption: より精密なマルコフモデル
+
 # より精密なマルコフモデル
 spread_markov = qf.spread_option_markov(
     spot1=100,
@@ -215,7 +236,10 @@ print(f"Markov Spread: ${spread_markov:.2f}")
 
 ### ノックイン/ノックアウトオプション
 
-```python
+```{code-block} python
+:name: advanced-models-code-section
+:caption: アップアンドアウト・コールオプション
+
 # アップアンドアウト・コールオプション
 barrier_call = qf.barrier_call(
     spot=100,
@@ -236,7 +260,10 @@ print(f"Barrier Discount: ${vanilla_call - barrier_call:.2f}")
 
 ### ダブルバリアオプション
 
-```python
+```{code-block} python
+:name: advanced-models-code-section
+:caption: ダブルバリア（上下両方）
+
 # ダブルバリア（上下両方）
 double_barrier = qf.double_barrier_call(
     spot=100,
@@ -255,7 +282,10 @@ print(f"Double Barrier Call: ${double_barrier:.2f}")
 
 ### 固定行使価格ルックバック
 
-```python
+```{code-block} python
+:name: advanced-models-code-section
+:caption: 期間中の最大値に基づくコール
+
 # 期間中の最大値に基づくコール
 lookback_call = qf.lookback_call_fixed(
     spot=100,
@@ -270,7 +300,10 @@ print(f"Fixed Strike Lookback Call: ${lookback_call:.2f}")
 
 ### 変動行使価格ルックバック
 
-```python
+```{code-block} python
+:name: advanced-models-code-section
+:caption: 最適な行使価格を選択
+
 # 最適な行使価格を選択
 lookback_floating = qf.lookback_call_floating(
     spot=100,
@@ -287,7 +320,10 @@ print(f"Floating Strike Lookback: ${lookback_floating:.2f}")
 
 ### キャッシュオアナッシング
 
-```python
+```{code-block} python
+:name: advanced-models-code-itm
+:caption: デジタルコール（満期時にITMなら固定額支払い）
+
 # デジタルコール（満期時にITMなら固定額支払い）
 digital_call = qf.digital_call(
     spot=100,
@@ -314,7 +350,10 @@ print(f"Probability of ITM: {prob_itm:.1%}")
 
 ### アセットオアナッシング
 
-```python
+```{code-block} python
+:name: advanced-models-code-section
+:caption: 資産払いデジタルオプション
+
 # 資産払いデジタルオプション
 asset_or_nothing = qf.asset_or_nothing_call(
     spot=100,
@@ -331,7 +370,10 @@ print(f"Asset-or-Nothing Call: ${asset_or_nothing:.2f}")
 
 ### ストラドル
 
-```python
+```{code-block} python
+:name: advanced-models-code-straddle_value
+:caption: straddle_value
+
 def straddle_value(spot, strike, rate, vol, time):
     """ストラドル（同一行使価格のコール+プット）"""
     call = qf.black_scholes_call(spot, strike, rate, vol, time)
@@ -355,7 +397,10 @@ plt.show()
 
 ### バタフライスプレッド
 
-```python
+```{code-block} python
+:name: advanced-models-code-butterfly_spread
+:caption: butterfly_spread
+
 def butterfly_spread(spot, k1, k2, k3, rate, vol, time):
     """バタフライスプレッド"""
     c1 = qf.black_scholes_call(spot, k1, rate, vol, time)
@@ -383,7 +428,10 @@ plt.show()
 
 ### 各モデルのパフォーマンス比較
 
-```python
+```{code-block} python
+:name: advanced-models-code-section
+:caption: 異なるモデルの計算時間比較
+
 # 異なるモデルの計算時間比較
 import time
 

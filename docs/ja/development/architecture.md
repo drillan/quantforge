@@ -40,7 +40,10 @@ graph TB
 
 ### Python API層
 
-```python
+```{code-block} python
+:name: architecture-code-quantforge/__init__.py
+:caption: quantforge/__init__.py
+
 # quantforge/__init__.py
 class QuantForgeAPI:
     """Pythonユーザー向けインターフェース"""
@@ -59,7 +62,10 @@ class QuantForgeAPI:
 
 ### Rust コア層
 
-```rust
+```{code-block} rust
+:name: architecture-code-src/lib.rs
+:caption: src/lib.rs
+
 // src/lib.rs
 pub struct QuantForgeCore {
     parallel_executor: ParallelExecutor,
@@ -84,7 +90,10 @@ impl QuantForgeCore {
 
 ### データ構造
 
-```rust
+```{code-block} rust
+:name: architecture-code-[repr(c)]
+:caption: [repr(C)]
+
 #[repr(C)]
 pub struct OptionData {
     spot: f64,
@@ -184,7 +193,10 @@ pub type Result<T> = std::result::Result<T, QuantForgeError>;
 
 ### コンパイル時最適化
 
-```rust
+```{code-block} rust
+:name: architecture-code-section
+:caption: 定数畳み込み
+
 // 定数畳み込み
 const SQRT_2PI: f64 = 2.5066282746310007;
 
@@ -202,7 +214,10 @@ fn fast_exp(x: f64) -> f64 {
 
 ### 実行時最適化
 
-```rust
+```{code-block} rust
+:name: architecture-code-cpu
+:caption: CPU機能の動的検出
+
 // CPU機能の動的検出
 fn select_implementation() -> fn(&[f64]) -> Vec<f64> {
     if is_x86_feature_detected!("avx512f") {
@@ -219,7 +234,10 @@ fn select_implementation() -> fn(&[f64]) -> Vec<f64> {
 
 ### 多層テスト戦略
 
-```rust
+```{code-block} rust
+:name: architecture-code-[cfg(test)]
+:caption: [cfg(test)]
+
 #[cfg(test)]
 mod tests {
     // 単体テスト
@@ -280,7 +298,10 @@ python-source = "python"
 
 ### マルチプラットフォーム
 
-```yaml
+```{code-block} yaml
+:name: architecture-code-.github/workflows/build.yml
+:caption: .github/workflows/build.yml
+
 # .github/workflows/build.yml
 strategy:
   matrix:

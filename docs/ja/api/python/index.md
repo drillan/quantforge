@@ -70,7 +70,10 @@ prices_b76 = black76.call_price_batch(forwards, 75.0, 0.5, 0.05, 0.25)
 
 ### グリークス計算
 
-```python
+```{code-block} python
+:name: index-code-black-scholes
+:caption: Black-Scholesグリークス
+
 # Black-Scholesグリークス
 # パラメータ: s(spot), k, t, r, sigma, is_call
 greeks = black_scholes.greeks(100, 100, 1.0, 0.05, 0.2, True)

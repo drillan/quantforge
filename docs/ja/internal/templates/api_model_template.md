@@ -43,7 +43,10 @@ print(greeks['delta'])  # NumPy配列
 
 ### グリークス計算
 
-```python
+```{code-block} python
+:name: api-model-template-code-section
+:caption: 全グリークスを一括計算
+
 # 全グリークスを一括計算
 # パラメータ: {params}, is_call
 greeks = {module_name}.greeks({params}, True)
@@ -59,7 +62,10 @@ print(f"Rho: {greeks.rho:.4f}")      # 金利感応度
 
 ### インプライドボラティリティ
 
-```python
+```{code-block} python
+:name: api-model-template-code-price-params-iscall
+:caption: パラメータ: price, {params}, is_call
+
 # パラメータ: price, {params}, is_call
 iv = {module_name}.implied_volatility({iv_params})
 print(f"Implied Volatility: {iv:.4f}")

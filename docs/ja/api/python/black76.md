@@ -49,7 +49,10 @@ print(greeks['vega'])   # NumPy配列
 
 ### グリークス計算
 
-```python
+```{code-block} python
+:name: black76-code-section
+:caption: 全グリークスを一括計算
+
 # 全グリークスを一括計算
 # パラメータ: f(forward), k(strike), t(time), r(rate), sigma, is_call
 greeks = black76.greeks(75.50, 75.00, 0.5, 0.05, 0.3, True)
@@ -64,7 +67,10 @@ print(f"Rho: {greeks.rho:.4f}")      # 金利感応度
 
 ### インプライドボラティリティ
 
-```python
+```{code-block} python
+:name: black76-code-price-fforward-kstrike-ttime-rrate-iscall
+:caption: パラメータ: price, f(forward), k(strike), t(time), r(rate), is_call
+
 # パラメータ: price, f(forward), k(strike), t(time), r(rate), is_call
 iv = black76.implied_volatility(5.50, 75.00, 75.00, 0.5, 0.05, True)
 print(f"Implied Volatility: {iv:.4f}")

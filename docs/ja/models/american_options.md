@@ -1,9 +1,12 @@
+(american-options)=
 # アメリカンオプションモデル
 
 早期行使権を持つオプションの価格評価モデルです。
 
+(american-options-theory)=
 ## 理論的背景
 
+(american-options-basic-concepts)=
 ### 基本概念
 
 アメリカンオプションは、満期日以前の任意の時点で行使可能なオプションです。
@@ -12,10 +15,16 @@
 Bjerksund-Stensland（2002）モデルは、アメリカンオプションの解析的近似解を提供する高精度な手法で、
 数値解法（二項ツリー、有限差分法）と比較して100倍以上高速でありながら、誤差0.1%未満を達成します。
 
+(american-options-assumptions)=
 ### 基本仮定
 
 1. **対数正規分布**: 株価は幾何ブラウン運動に従う
-   $$dS_t = (\mu - q) S_t dt + \sigma S_t dW_t$$
+   
+   ```{math}
+   :name: american-options-eq-gbm
+   
+   dS_t = (\mu - q) S_t dt + \sigma S_t dW_t
+   ```
 
 2. **効率的市場**: 取引コスト、税金なし、無制限の借入・貸出
 
@@ -25,18 +34,35 @@ Bjerksund-Stensland（2002）モデルは、アメリカンオプションの解
 
 5. **最適行使戦略**: 投資家は価値を最大化する戦略を選択
 
+(american-options-derivation)=
 ## 価格式の導出
 
+(american-options-pde)=
 ### アメリカンオプション評価の偏微分方程式
 
 自由境界問題として定式化：
 
-$$\frac{\partial V}{\partial t} + \frac{1}{2}\sigma^2 S^2 \frac{\partial^2 V}{\partial S^2} + (r-q)S\frac{\partial V}{\partial S} - rV = 0$$
+```{math}
+:name: american-options-eq-pde
+
+\frac{\partial V}{\partial t} + \frac{1}{2}\sigma^2 S^2 \frac{\partial^2 V}{\partial S^2} + (r-q)S\frac{\partial V}{\partial S} - rV = 0
+```
 
 早期行使条件：
-$$V(S,t) \geq \max(S-K, 0) \text{ for call}$$
-$$V(S,t) \geq \max(K-S, 0) \text{ for put}$$
 
+```{math}
+:name: american-options-eq-exercise-call
+
+V(S,t) \geq \max(S-K, 0) \text{ for call}
+```
+
+```{math}
+:name: american-options-eq-exercise-put
+
+V(S,t) \geq \max(K-S, 0) \text{ for put}
+```
+
+(american-options-boundary-conditions)=
 ### 境界条件
 
 コールオプション:
@@ -51,39 +77,75 @@ $$V(S,t) \geq \max(K-S, 0) \text{ for put}$$
 - $V(S^*, t) = K - S^*$ （早期行使境界）
 - $\frac{\partial V}{\partial S}(S^*, t) = -1$ （スムースペースティング）
 
+(american-options-analytical-solution)=
 ## 解析解
 
+(american-options-european-call)=
 ### ヨーロピアンコール（Bjerksund-Stensland 2002）
 
 アメリカンコールの近似解：
 
-$$C_{Am} = \alpha S_0^{\beta} - \alpha \phi(S_0, T, \beta, I, I) + \phi(S_0, T, 1, I, I) - \phi(S_0, T, 1, K, I) - K\phi(S_0, T, 0, I, I) + K\phi(S_0, T, 0, K, I)$$
+```{math}
+:name: american-options-eq-call-formula
+
+C_{Am} = \alpha S_0^{\beta} - \alpha \phi(S_0, T, \beta, I, I) + \phi(S_0, T, 1, I, I) - \phi(S_0, T, 1, K, I) - K\phi(S_0, T, 0, I, I) + K\phi(S_0, T, 0, K, I)
+```
 
 where:
 - $I = B_0 + (B_\infty - B_0)(1 - e^{h(T)})$ は早期行使境界
 - $\alpha, \beta$ は補助パラメータ
 - $\phi$ は補助関数
 
+(american-options-european-put)=
 ### ヨーロピアンプット
 
 アメリカンプットの近似解は、コールオプションよりも複雑な構造を持ちます：
 
-$$P_{Am} = K - S_0 + \text{European Put} + \text{Early Exercise Premium}$$
+```{math}
+:name: american-options-eq-put-formula
+
+P_{Am} = K - S_0 + \text{European Put} + \text{Early Exercise Premium}
+```
 
 早期行使プレミアムは、最適停止理論を用いて計算されます。
 
+(american-options-greeks)=
 ## グリークス
 
 アメリカンオプションの価格感応度指標：
 
-| グリーク | 意味 | コール | プット |
-|---------|------|--------|--------|
-| Delta | 株価感応度 $\partial V/\partial S$ | 早期行使境界で不連続 | 早期行使境界で不連続 |
-| Gamma | デルタの変化率 $\partial^2 V/\partial S^2$ | 境界近傍で急増 | 境界近傍で急増 |
-| Vega | ボラティリティ感応度 $\partial V/\partial \sigma$ | ヨーロピアンより小さい | ヨーロピアンより小さい |
-| Theta | 時間価値減衰 $-\partial V/\partial T$ | 早期行使により複雑 | 早期行使により複雑 |
-| Rho | 金利感応度 $\partial V/\partial r$ | 正（通常） | 負（通常） |
+```{list-table} アメリカンオプションのグリークス
+:name: american-options-table-greeks
+:header-rows: 1
+:widths: 20 30 25 25
 
+* - グリーク
+  - 意味
+  - コール
+  - プット
+* - Delta
+  - 株価感応度 $\partial V/\partial S$
+  - 早期行使境界で不連続
+  - 早期行使境界で不連続
+* - Gamma
+  - デルタの変化率 $\partial^2 V/\partial S^2$
+  - 境界近傍で急増
+  - 境界近傍で急増
+* - Vega
+  - ボラティリティ感応度 $\partial V/\partial \sigma$
+  - ヨーロピアンより小さい
+  - ヨーロピアンより小さい
+* - Theta
+  - 時間価値減衰 $-\partial V/\partial T$
+  - 早期行使により複雑
+  - 早期行使により複雑
+* - Rho
+  - 金利感応度 $\partial V/\partial r$
+  - 正（通常）
+  - 負（通常）
+```
+
+(american-options-specific-features)=
 ### アメリカンオプション特有の特徴
 
 1. **早期行使境界の影響**
@@ -98,49 +160,71 @@ $$P_{Am} = K - S_0 + \text{European Put} + \text{Early Exercise Premium}$$
    - 解析的な式が存在しないため、有限差分法やモンテカルロ法で近似
    - Bjerksund-Stensland近似を使用した高速計算も可能
 
+(american-options-black-scholes-relation)=
 ## Black-Scholesとの関係
 
+(american-options-value-relation)=
 ### 価値の関係
 
 アメリカンオプション価値 ≥ ヨーロピアンオプション価値：
-$$C_{American} \geq C_{European}$$
-$$P_{American} \geq P_{European}$$
 
+```{math}
+:name: american-options-eq-value-relation
+
+C_{American} \geq C_{European}
+
+P_{American} \geq P_{European}
+```
+
+(american-options-dividend-effect)=
 ### 配当の影響
 
 - **配当なしコール**: アメリカン = ヨーロピアン（早期行使しない）
 - **配当ありコール**: アメリカン > ヨーロピアン（配当直前に行使可能）
 - **プット**: 配当に関わらずアメリカン > ヨーロピアン
 
+(american-options-convergence)=
 ### 収束条件
 
 満期が短い極限で、両者は一致：
-$$\lim_{T \to 0} (American - European) = 0$$
 
+```{math}
+:name: american-options-eq-convergence
+
+\lim_{T \to 0} (American - European) = 0
+```
+
+(american-options-applications)=
 ## 応用分野
 
+(american-options-equity-options)=
 ### 株式オプション
 - 個別株オプション（配当支払い時）
 - 従業員ストックオプション
 - 早期行使特約付きワラント
 
+(american-options-commodity-derivatives)=
 ### 商品デリバティブ
 - 商品先物オプション
 - エネルギーオプション（原油、天然ガス）
 - 農産物オプション
 
+(american-options-interest-rate-derivatives)=
 ### 金利デリバティブ
 - バミューダンスワップション
 - モーゲージ担保証券（MBS）
 - プリペイメントオプション
 
+(american-options-numerical-considerations)=
 ## 数値計算上の考慮事項
 
+(american-options-accuracy-requirements)=
 ### 精度要件
 - 価格精度: 真値との誤差 < 0.1%
 - グリークス精度: 相対誤差 < 1%
 - 早期行使境界: 誤差 < 0.5%
 
+(american-options-numerical-challenges)=
 ### 数値的課題と対策
 
 1. **自由境界問題**
@@ -155,23 +239,31 @@ $$\lim_{T \to 0} (American - European) = 0$$
    - 対策: Bjerksund-Stensland近似の使用
    - 計算時間: < 50ns/オプション
 
+(american-options-limitations-extensions)=
 ## モデルの限界と拡張
 
+(american-options-limitations)=
 ### 限界
 - **離散配当**: 配当落ち日での不連続性
 - **確率的パラメータ**: ボラティリティ・金利の変動を無視
 - **取引制約**: 現実の市場制約を考慮しない
 - **税制**: 税金の影響を無視
 
+(american-options-extensions)=
 ### 拡張モデル
 - **最小二乗モンテカルロ**: Longstaff-Schwartz法
 - **確率的ボラティリティ**: アメリカンHestonモデル
 - **ジャンプ拡散**: アメリカンMertonジャンプモデル
 - **多資産**: バスケットアメリカンオプション
 
+(american-options-implementation-example)=
 ## 実装例（概念）
 
-```python
+```{code-block} python
+:name: american-options-code-example
+:caption: アメリカンコール価格の計算（概念）
+:linenos:
+
 # 概念的な実装例（実際のAPIとは異なる）
 def american_call_price(s, k, t, r, sigma, q=0.0):
     """
@@ -212,6 +304,7 @@ def american_call_price(s, k, t, r, sigma, q=0.0):
     return price
 ```
 
+(american-options-references)=
 ## 参考文献
 
 1. Bjerksund, P. and Stensland, G. (2002). "Closed Form Valuation of American Options." *Working Paper, NHH Bergen*.
@@ -222,6 +315,7 @@ def american_call_price(s, k, t, r, sigma, q=0.0):
 
 4. Barone-Adesi, G. and Whaley, R.E. (1987). "Efficient Analytic Approximation of American Option Values." *Journal of Finance*, 42(2), 301-320.
 
+(american-options-related-docs)=
 ## 関連ドキュメント
 
 - [アメリカンオプション API](../api/python/american.md)

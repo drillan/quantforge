@@ -4,7 +4,10 @@ QuantForgeを使って5分でオプション価格計算を始めましょう。
 
 ## インストール
 
-```bash
+```{code-block} bash
+:name: quickstart-code-testpypi
+:caption: TestPyPIから最新開発版をインストール（現在利用可能）
+
 # TestPyPIから最新開発版をインストール（現在利用可能）
 pip install -i https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ quantforge
 
@@ -39,7 +42,10 @@ print(f"Call Option Price: ${price:.2f}")
 
 ### グリークスの計算
 
-```python
+```{code-block} python
+:name: quickstart-code-section
+:caption: グリークスを含む詳細な計算
+
 # グリークスを含む詳細な計算
 greeks = black_scholes.greeks(
     s=100.0,
@@ -89,7 +95,10 @@ print(f"1オプションあたり: {elapsed/n*1000:.1f}ns")
 
 市場価格からボラティリティを逆算：
 
-```python
+```{code-block} python
+:name: quickstart-code-iv
+:caption: 市場価格からIVを計算
+
 # 市場価格からIVを計算
 market_price = 10.45
 iv = black_scholes.implied_volatility(

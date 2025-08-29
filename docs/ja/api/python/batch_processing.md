@@ -260,7 +260,10 @@ prices = black_scholes.call_price_batch(spots, strikes, times, rate, sigmas)
 
 ### リスク管理のためのグリークス
 
-```python
+```{code-block} python
+:name: batch-processing-code-section
+:caption: ポートフォリオのすべてのグリークスを計算
+
 # ポートフォリオのすべてのグリークスを計算
 greeks = black_scholes.greeks_batch(spots, strikes, times, rate, sigmas, is_calls=True)
 
@@ -272,7 +275,10 @@ portfolio_gamma = greeks['gamma'].sum()
 
 ### インプライドボラティリティサーフェス
 
-```python
+```{code-block} python
+:name: batch-processing-code-section
+:caption: 市場価格からボラティリティサーフェスを作成
+
 # 市場価格からボラティリティサーフェスを作成
 spots = 100.0  # 現在のスポット
 strikes = np.linspace(80, 120, 41)
@@ -302,7 +308,10 @@ iv_surface = ivs.reshape(K.shape)
 
 ### 感応度分析
 
-```python
+```{code-block} python
+:name: batch-processing-code-section
+:caption: スポット価格変化に対するオプション感応度を分析
+
 # スポット価格変化に対するオプション感応度を分析
 base_spot = 100.0
 spot_range = np.linspace(80, 120, 100)
@@ -351,7 +360,10 @@ plt.title('コールオプション価格感応度')
 
 ### ブロードキャスティングエラー
 
-```python
+```{code-block} python
+:name: batch-processing-code-section
+:caption: これはエラーを発生させる - 互換性のない配列長
+
 # これはエラーを発生させる - 互換性のない配列長
 try:
     prices = black_scholes.call_price_batch(
@@ -367,7 +379,10 @@ except ValueError as e:
 
 ### 数値エラー
 
-```python
+```{code-block} python
+:name: batch-processing-code-nan
+:caption: インプライドボラティリティは無効な入力に対してNaNを返す可能性がある
+
 # インプライドボラティリティは無効な入力に対してNaNを返す可能性がある
 ivs = black_scholes.implied_volatility_batch(
     prices=np.array([0.01, 50.0, -1.0]),  # 無効な負の価格
@@ -385,7 +400,10 @@ ivs = black_scholes.implied_volatility_batch(
 ### 単一パラメータ変化から
 
 旧API（単一パラメータ変化）:
-```python
+```{code-block} python
+:name: batch-processing-code-spots
+:caption: 旧 - spotsのみが配列可能
+
 # 旧 - spotsのみが配列可能
 prices = black_scholes.call_price_batch(
     spots=[95, 100, 105],  # 配列
@@ -397,7 +415,10 @@ prices = black_scholes.call_price_batch(
 ```
 
 新API（完全配列サポート）:
-```python
+```{code-block} python
+:name: batch-processing-code-section
+:caption: 新 - すべてのパラメータが配列可能
+
 # 新 - すべてのパラメータが配列可能
 prices = black_scholes.call_price_batch(
     spots=[95, 100, 105],   # 配列
@@ -411,7 +432,10 @@ prices = black_scholes.call_price_batch(
 ### List[PyGreeks]からDictへ
 
 旧API:
-```python
+```{code-block} python
+:name: batch-processing-code-greek
+:caption: 旧 - Greekオブジェクトのリストを返す
+
 # 旧 - Greekオブジェクトのリストを返す
 greeks_list = black_scholes.greeks_batch(...)
 for greek in greeks_list:
@@ -419,7 +443,10 @@ for greek in greeks_list:
 ```
 
 新API:
-```python
+```{code-block} python
+:name: batch-processing-code-section
+:caption: 新 - 配列の辞書を返す
+
 # 新 - 配列の辞書を返す
 greeks_dict = black_scholes.greeks_batch(...)
 print(greeks_dict['delta'])  # すべてのデルタのNumPy配列

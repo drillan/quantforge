@@ -79,7 +79,10 @@ MyST Parserのadmonition構文を使用し、絵文字や太字での警告を�
 ### 3.3 用語の一貫性
 翻訳用語集を管理し、全文書で統一：
 
-```yaml
+```{code-block} yaml
+:name: documentation-refactoring-rules-code-docs/locale/glossary.yml
+:caption: docs/locale/glossary.yml
+
 # docs/locale/glossary.yml
 terms:
   - en: "option pricing"
@@ -129,7 +132,10 @@ terms:
 - 絵文字: 原則使用禁止（GitHubのissue/PRを除く）
 
 ### 5.2 見出しレベルの統一
-```markdown
+```{code-block} markdown
+:name: documentation-refactoring-rules-code-1
+:caption: ドキュメントタイトル（1つのみ）
+
 # ドキュメントタイトル（1つのみ）
 ## 主要セクション
 ### サブセクション
@@ -139,7 +145,10 @@ terms:
 ## 6. コード例の正確性
 
 ### 6.1 実行可能性の明記
-```python
+```{code-block} python
+:name: documentation-refactoring-rules-code-api
+:caption: 実装済みのAPI（そのまま実行可能）
+
 # 実装済みのAPI（そのまま実行可能）
 from quantforge.models import black_scholes
 price = black_scholes.call_price(100, 110, 1.0, 0.05, 0.2)
@@ -153,7 +162,10 @@ def future_feature():
 ```
 
 ### 6.2 import文の完全性
-```python
+```{code-block} python
+:name: documentation-refactoring-rules-code-import
+:caption: 必要なimportをすべて記載
+
 # 必要なimportをすべて記載
 import numpy as np
 from quantforge.models import black_scholes
@@ -214,7 +226,10 @@ where:
 ## 9. 参考文献の標準形式
 
 ### 9.1 学術文献の引用
-```markdown
+```{code-block} markdown
+:name: documentation-refactoring-rules-code-section
+:caption: # 参考文献
+
 ## 参考文献
 
 1. Black, F. and Scholes, M. (1973). "The Pricing of Options and Corporate Liabilities." 
@@ -254,7 +269,10 @@ docs/
 ## 11. 自動検証とレビュー
 
 ### 11.1 検証スクリプト
-```bash
+```{code-block} bash
+:name: documentation-refactoring-rules-code-!/bin/bash
+:caption: !/bin/bash
+
 #!/bin/bash
 # docs/scripts/validate_docs.sh
 

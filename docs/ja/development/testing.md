@@ -18,7 +18,10 @@ QuantForgeの包括的なテスト方針とガイドラインです。
 
 ### Rust単体テスト
 
-```rust
+```{code-block} rust
+:name: testing-code-src/models/black_scholes.rs
+:caption: src/models/black_scholes.rs
+
 // src/models/black_scholes.rs
 #[cfg(test)]
 mod tests {
@@ -52,7 +55,10 @@ mod tests {
 
 ### Python単体テスト
 
-```python
+```{code-block} python
+:name: testing-code-tests/test_pricing.py
+:caption: tests/test_pricing.py
+
 # tests/test_pricing.py
 import pytest
 import numpy as np
@@ -137,7 +143,10 @@ quickcheck! {
 
 ### Python-Rust統合
 
-```python
+```{code-block} python
+:name: testing-code-tests/test_integration.py
+:caption: tests/test_integration.py
+
 # tests/test_integration.py
 def test_numpy_integration():
     """Test NumPy array processing."""
@@ -172,7 +181,10 @@ def test_zero_copy():
 
 ### ベンチマーク
 
-```python
+```{code-block} python
+:name: testing-code-tests/test_performance.py
+:caption: tests/test_performance.py
+
 # tests/test_performance.py
 import pytest
 import time
@@ -241,7 +253,10 @@ criterion_main!(benches);
 
 ### cargo-fuzz
 
-```rust
+```{code-block} rust
+:name: testing-code-fuzz/fuzz_targets/pricing.rs
+:caption: fuzz/fuzz_targets/pricing.rs
+
 // fuzz/fuzz_targets/pricing.rs
 #![no_main]
 use libfuzzer_sys::fuzz_target;
@@ -271,7 +286,10 @@ cargo fuzz run pricing -- -max_total_time=60
 
 ### ゴールデンファイルテスト
 
-```python
+```{code-block} python
+:name: testing-code-tests/test_regression.py
+:caption: tests/test_regression.py
+
 # tests/test_regression.py
 import json
 import pytest
@@ -296,7 +314,10 @@ def test_regression_black_scholes():
 
 ## エラーケーステスト
 
-```python
+```{code-block} python
+:name: testing-code-test_invalid_inputs
+:caption: test_invalid_inputs
+
 def test_invalid_inputs():
     """Test error handling."""
     with pytest.raises(ValueError, match="Spot price must be positive"):
@@ -333,7 +354,10 @@ def test_numerical_stability():
 
 ### 全テスト実行
 
-```bash
+```{code-block} bash
+:name: testing-code-rust
+:caption: Rust テスト
+
 # Rust テスト
 cargo test --all-features
 
@@ -349,7 +373,10 @@ pytest -n auto
 
 ### 継続的インテグレーション
 
-```yaml
+```{code-block} yaml
+:name: testing-code-.github/workflows/test.yml
+:caption: .github/workflows/test.yml
+
 # .github/workflows/test.yml
 name: Tests
 

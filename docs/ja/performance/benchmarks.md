@@ -177,14 +177,20 @@ FFIは、PythonからRust関数を呼び出す際のデータ変換・転送コ�
 ## ベンチマーク実行と分析
 
 ### 測定実行
-```bash
+```{code-block} bash
+:name: benchmarks-code-section
+:caption: ベンチマーク実行
+
 # ベンチマーク実行
 cd benchmarks
 ./run_benchmarks.sh
 ```
 
 ### データ分析
-```bash
+```{code-block} bash
+:name: benchmarks-code-section
+:caption: 履歴分析
+
 # 履歴分析
 cd benchmarks
 uv run python analyze.py
@@ -197,7 +203,10 @@ uv run python -c "from analyze import analyze_performance_trends; print(analyze_
 ```
 
 ### レポート生成
-```bash
+```{code-block} bash
+:name: benchmarks-code-markdown
+:caption: Markdownレポート生成
+
 # Markdownレポート生成
 cd benchmarks
 uv run python format_results.py > ../docs/performance/latest_benchmark.md
