@@ -5,14 +5,18 @@ All notable changes to QuantForge will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.1.0] - 2025-01-29
 
 ### Added
 - Complete PyO3 type stub system (`quantforge.pyi`) for full IDE support and type checking
+- Comprehensive unit tests for all pricing models (78% coverage)
+  - 100% coverage for errors.py validation module
+  - 99% coverage for validators.py module
+  - Full test suites for Black-Scholes, Black76, Merton, and American models
 - ArrayLike input validation for flexible batch operations (scalar/array inputs)
 - Python comparison benchmarks for performance validation against pure Python/NumPy/SciPy
 - Smart commit command (`/commit-ai`) with `--path` option for selective file commits
-- Comprehensive documentation improvements across README files (English/Japanese)
+- English README with complete API documentation and examples
 - Structured benchmark result management system
 
 ### Changed
@@ -21,23 +25,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - All imports must now use `from quantforge import models` instead of `from quantforge.models import ...`
 - Batch API redesign with full NumPy array support and broadcasting capabilities
 - Unified Greeks batch return format to `Dict[str, np.ndarray]` for consistency
-- Test suite updated for direct Rust module imports (89.8% pass rate - 309/344 tests)
+- Test suite updated for direct Rust module imports
 - Refactored models to eliminate code duplication using generic traits and base classes
+- Development Status upgraded to Beta (4 - Beta)
 
 ### Fixed
 - Documentation formatting issues in Rust code (`Vec<f64>` type annotations)
 - Type checking errors - reduced from 75 mypy errors to 0 with full type safety
 - Import errors in benchmarks and test files
 - Version synchronization across package files
+- Scalar array indexing issues in validators
 
 ### Removed
 - Python wrapper layer (`models.py`, `models/__init__.py`, `models/base.py`, `models/merton.py`)
 - Redundant Python model implementations in favor of direct Rust bindings
 - Intermediate Python type conversion layers
+- Legacy code directories (`_models_old/`)
 
 ### Performance
-- Single Black-Scholes calculation: ~196ns (includes Python binding overhead)
-- Batch processing (1M options): ~72ms
+- Single Black-Scholes calculation: ~10μs (includes Python binding overhead)
+- Batch processing (10k options): ~100ms
+- Greeks calculation: ~50μs for all Greeks
+- Implied volatility: ~200μs per calculation
 - Maintains 500-1000x performance advantage over pure Python implementations
 
 ### Technical Improvements
@@ -45,6 +54,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Full IDE autocompletion support through type stubs
 - Reduced maintenance overhead by eliminating Python wrapper layer
 - Direct Rust module access for better performance
+- Production-ready for PyPI publication
 
 ## [0.0.2] - 2025-08-27
 

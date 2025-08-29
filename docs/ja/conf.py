@@ -15,11 +15,11 @@ author = "driller"
 
 # Cargo.tomlからバージョンを自動取得（Single Source of Truth）
 root_dir = Path(__file__).resolve().parent.parent.parent
-cargo_toml_path = root_dir / 'Cargo.toml'
+cargo_toml_path = root_dir / "Cargo.toml"
 
-with open(cargo_toml_path, 'rb') as f:
+with open(cargo_toml_path, "rb") as f:
     cargo_data = tomllib.load(f)
-    version = release = cargo_data['package']['version']
+    version = release = cargo_data["package"]["version"]
 
 # -- Project URLs ------------------------------------------------------------
 html_context = {
@@ -28,11 +28,11 @@ html_context = {
     "github_repo": "quantforge",
     "github_version": "main",
     "conf_py_path": "/docs/ja/",
-    'languages': [
-        ('English', '../'),
-        ('日本語', '/ja/'),
+    "languages": [
+        ("English", "../"),
+        ("日本語", "/ja/"),
     ],
-    'current_language': '日本語',
+    "current_language": "日本語",
 }
 
 # -- General configuration ---------------------------------------------------
@@ -59,7 +59,7 @@ exclude_patterns = ["_build", "Thumbs.db", ".DS_Store", "internal"]
 html_theme = "sphinx_rtd_theme"
 html_static_path = ["_static"]
 html_css_files = ["custom.css"]
-html_title = 'QuantForge ドキュメント'
+html_title = "QuantForge ドキュメント"
 
 # テーマ設定
 html_theme_options = {

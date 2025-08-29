@@ -63,14 +63,26 @@ class VectorizedValidator:
         if np.any(invalid_mask):
             # Find first invalid index for better error message
             first_bad = np.argmax(invalid_mask)
-            raise ValidationError(name, f"element at index {first_bad} = {arr[first_bad]}", error_msg)
+            if arr.ndim == 0:
+                # Scalar case
+                raise ValidationError(name, f"value = {arr.item()}", error_msg)
+            else:
+                # Array case
+                bad_value = arr.flat[first_bad]
+                raise ValidationError(name, f"element at index {first_bad} = {bad_value}", error_msg)
 
         # Check for NaN/Inf
         if not np.all(np.isfinite(arr)):
             first_bad = np.argmax(~np.isfinite(arr))
-            raise ValidationError(
-                name, f"element at index {first_bad} = {arr[first_bad]}", "all elements must be finite"
-            )
+            if arr.ndim == 0:
+                # Scalar case
+                raise ValidationError(name, f"value = {arr.item()}", "all elements must be finite")
+            else:
+                # Array case
+                bad_value = arr.flat[first_bad]
+                raise ValidationError(
+                    name, f"element at index {first_bad} = {bad_value}", "all elements must be finite"
+                )
 
         return arr
 

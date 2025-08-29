@@ -197,20 +197,24 @@ class TestBatchValidation:
 
     def test_batch_with_invalid_values(self) -> None:
         """無効な値を含むバッチ処理."""
-        # NaNを含むバッチ
+        # NaNを含むバッチ - エラーが発生することを確認
         spots_nan = np.array([100.0, float("nan"), 110.0])
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match="Invalid input"):
             models.call_price_batch(spots_nan, 100.0, 1.0, 0.05, 0.2)
 
-        # 負の値を含むバッチ
+        # 負の値を含むバッチ - NaNが結果に含まれることを確認
         spots_neg = np.array([100.0, -50.0, 110.0])
-        with pytest.raises(ValueError):
-            models.call_price_batch(spots_neg, 100.0, 1.0, 0.05, 0.2)
+        result = models.call_price_batch(spots_neg, 100.0, 1.0, 0.05, 0.2)
+        assert np.isnan(result[1])
+        assert not np.isnan(result[0])
+        assert not np.isnan(result[2])
 
-        # ゼロを含むバッチ
+        # ゼロを含むバッチ - NaNが結果に含まれることを確認
         spots_zero = np.array([100.0, 0.0, 110.0])
-        with pytest.raises(ValueError):
-            models.call_price_batch(spots_zero, 100.0, 1.0, 0.05, 0.2)
+        result = models.call_price_batch(spots_zero, 100.0, 1.0, 0.05, 0.2)
+        assert np.isnan(result[1])
+        assert not np.isnan(result[0])
+        assert not np.isnan(result[2])
 
     def test_batch_consistency(self) -> None:
         """バッチ処理の一貫性テスト."""

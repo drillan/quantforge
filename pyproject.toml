@@ -5,15 +5,15 @@ build-backend = "maturin"
 [project]
 name = "quantforge"
 dynamic = ["version"]
-description = "高性能オプション価格計算エンジン - Rust + PyO3実装"
-readme = "README.md"
+description = "High-performance option pricing library powered by Rust + PyO3"
+readme = "README_en.md"
 requires-python = ">=3.12"
 dependencies = [
     "numpy>=1.20",
     "psutil>=7.0.0",
 ]
 classifiers = [
-    "Development Status :: 3 - Alpha",
+    "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
     "Intended Audience :: Financial and Insurance Industry",
     "Intended Audience :: Science/Research",
@@ -24,8 +24,16 @@ classifiers = [
     "Programming Language :: Python :: Implementation :: CPython",
     "Programming Language :: Rust",
     "Topic :: Office/Business :: Financial",
+    "Topic :: Office/Business :: Financial :: Investment",
     "Topic :: Scientific/Engineering :: Mathematics",
     "Operating System :: OS Independent",
+]
+keywords = ["quantitative-finance", "options", "derivatives", "black-scholes", "option-pricing", "financial-engineering", "rust", "high-performance"]
+authors = [
+    {name = "driller", email = ""}
+]
+maintainers = [
+    {name = "driller", email = ""}
 ]
 
 [project.urls]
@@ -120,6 +128,45 @@ markers = [
     "golden: marks tests as golden master tests",
 ]
 
+[tool.coverage.run]
+source = ["python/quantforge"]
+omit = [
+    "*/tests/*",
+    "*/test_*.py",
+    "*/__pycache__/*",
+    "*/site-packages/*",
+    # Exclude type-only protocol file
+    "python/quantforge/models_typed.py",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    # Have to re-enable the standard pragma
+    "pragma: no cover",
+    
+    # Don't complain about missing debug-only code:
+    "def __repr__",
+    "if self\\.debug",
+    
+    # Don't complain if tests don't hit defensive assertion code:
+    "raise AssertionError",
+    "raise NotImplementedError",
+    
+    # Don't complain if non-runnable code isn't run:
+    "if 0:",
+    "if __name__ == .__main__.:",
+    
+    # Don't complain about abstract methods
+    "@(abc\\.)?abstractmethod",
+    
+    # Type checking blocks
+    "if TYPE_CHECKING:",
+    
+    # Protocol methods
+    "\\.\\.\\.",
+]
+precision = 2
+
 [tool.mypy]
 python_version = "3.12"
 warn_return_any = true
@@ -137,4 +184,6 @@ exclude = [
     "tests/integration/test_put_options.py",  # 型スタブ未対応のため一時除外
     "tests/unit/test_implied_volatility.py",  # PyO3バインディングの型情報不完全
     "draft/",  # 参考実装・プロトタイプは除外
+    "docs/",  # ドキュメント設定ファイルは除外
+    "translations/",  # 翻訳関連ツールは除外
 ]
