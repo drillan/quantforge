@@ -75,9 +75,6 @@ user_guide/numpy_integration
 user_guide/examples
 ```
 
-<!---
-Future sections - currently under development
-
 ```{toctree}
 :caption: API Reference
 :maxdepth: 2
@@ -99,41 +96,16 @@ api/rust/index
 :maxdepth: 2
 
 models/index
-models/black_scholes
-models/black76
-models/merton
 models/american_options
-models/asian_options
-```
-
-```{toctree}
-:caption: Performance
-:maxdepth: 2
-
-performance/benchmarks
-performance/optimization
-performance/tuning
 ```
 
 ```{toctree}
 :caption: For Developers
 :maxdepth: 2
 
-development/setup
 development/architecture
 development/contributing
-development/testing
-development/hardcode-prevention
 ```
-
-```{toctree}
-:caption: Project Information
-:maxdepth: 2
-
-changelog
-faq
-```
--->
 
 ## index
 
