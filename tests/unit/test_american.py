@@ -1,7 +1,6 @@
 """Comprehensive unit tests for American option model module."""
 
 import math
-from typing import Any
 
 import numpy as np
 import pytest
@@ -57,10 +56,10 @@ class TestAmericanCallPrice:
         """Test American call with invalid inputs."""
         with pytest.raises(ValueError):
             american.call_price(s=-100.0, k=100.0, t=1.0, r=0.05, q=0.0, sigma=0.2)
-        
+
         with pytest.raises(ValueError):
             american.call_price(s=100.0, k=-100.0, t=1.0, r=0.05, q=0.0, sigma=0.2)
-        
+
         with pytest.raises(ValueError):
             american.call_price(s=100.0, k=100.0, t=-1.0, r=0.05, q=0.0, sigma=0.2)
 
@@ -81,11 +80,11 @@ class TestAmericanPutPrice:
         """Test American put early exercise premium."""
         amer_price = american.put_price(s=90.0, k=100.0, t=1.0, r=0.05, q=0.0, sigma=0.2)
         euro_price = merton.put_price(s=90.0, k=100.0, t=1.0, r=0.05, q=0.0, sigma=0.2)
-        
+
         # American put should have early exercise premium
         premium = amer_price - euro_price
         assert premium > 0
-        
+
         # Intrinsic value
         intrinsic = 100.0 - 90.0
         assert amer_price >= intrinsic
@@ -112,7 +111,7 @@ class TestAmericanPutPrice:
         price = american.put_price(s=100.0, k=100.0, t=1.0, r=0.05, q=0.02, sigma=0.2)
         assert price > 0
         # Dividend reduces early exercise incentive for puts
-        no_div_price = american.put_price(s=100.0, k=100.0, t=1.0, r=0.05, q=0.0, sigma=0.2)
+        # no_div_price = american.put_price(s=100.0, k=100.0, t=1.0, r=0.05, q=0.0, sigma=0.2)
         # But still should be more valuable than European
         euro_price = merton.put_price(s=100.0, k=100.0, t=1.0, r=0.05, q=0.02, sigma=0.2)
         assert price >= euro_price
@@ -188,10 +187,10 @@ class TestAmericanBatch:
         rates = np.full(n, 0.05)
         divs = np.full(n, 0.02)
         sigmas = np.full(n, 0.2)
-        
+
         call_batch = american.call_price_batch(spots, strikes, times, rates, divs, sigmas)
         put_batch = american.put_price_batch(spots, strikes, times, rates, divs, sigmas)
-        
+
         for i, spot in enumerate(spots):
             call_single = american.call_price(s=spot, k=100.0, t=1.0, r=0.05, q=0.02, sigma=0.2)
             put_single = american.put_price(s=spot, k=100.0, t=1.0, r=0.05, q=0.02, sigma=0.2)
@@ -216,35 +215,35 @@ class TestAmericanGreeks:
     def test_greeks_call(self) -> None:
         """Test Greeks for American call option."""
         greeks = american.greeks(s=100.0, k=100.0, t=1.0, r=0.05, q=0.0, sigma=0.2, is_call=True)
-        
+
         # Delta should be between 0 and 1 for calls
         assert 0 < greeks.delta < 1
-        
+
         # Gamma should be positive
         assert greeks.gamma > 0
-        
+
         # Vega should be positive
         assert greeks.vega > 0
-        
+
         # Theta is usually negative for calls
         assert greeks.theta < 0
-        
+
         # Rho should be positive for calls
         assert greeks.rho > 0
 
     def test_greeks_put(self) -> None:
         """Test Greeks for American put option."""
         greeks = american.greeks(s=100.0, k=100.0, t=1.0, r=0.05, q=0.0, sigma=0.2, is_call=False)
-        
+
         # Delta should be between -1 and 0 for puts
         assert -1 < greeks.delta < 0
-        
+
         # Gamma should be positive
         assert greeks.gamma > 0
-        
+
         # Vega should be positive
         assert greeks.vega > 0
-        
+
         # Rho should be negative for puts
         assert greeks.rho < 0
 
@@ -257,15 +256,13 @@ class TestAmericanGreeks:
         divs = np.array([0.0, 0.0, 0.0])
         sigmas = np.array([0.2, 0.2, 0.2])
         is_calls = np.array([True, True, True])
-        
-        greeks_dict = american.greeks_batch(
-            spots, strikes, times, rates, divs, sigmas, is_calls
-        )
-        
-        assert 'delta' in greeks_dict
-        assert len(greeks_dict['delta']) == 3
+
+        greeks_dict = american.greeks_batch(spots, strikes, times, rates, divs, sigmas, is_calls)
+
+        assert "delta" in greeks_dict
+        assert len(greeks_dict["delta"]) == 3
         # Delta should increase with spot for calls
-        assert greeks_dict['delta'][0] < greeks_dict['delta'][1] < greeks_dict['delta'][2]
+        assert greeks_dict["delta"][0] < greeks_dict["delta"][1] < greeks_dict["delta"][2]
 
     def test_greeks_invalid_inputs(self) -> None:
         """Test Greeks with invalid inputs."""
@@ -280,54 +277,43 @@ class TestAmericanImpliedVolatility:
         """Test implied volatility for American call option."""
         true_sigma = 0.25
         price = american.call_price(s=100.0, k=100.0, t=1.0, r=0.05, q=0.0, sigma=true_sigma)
-        
-        iv = american.implied_volatility(
-            price=price, s=100.0, k=100.0, t=1.0, r=0.05, q=0.0, is_call=True
-        )
-        
+
+        iv = american.implied_volatility(price=price, s=100.0, k=100.0, t=1.0, r=0.05, q=0.0, is_call=True)
+
         assert abs(iv - true_sigma) < PRACTICAL_TOLERANCE
 
     def test_implied_volatility_put(self) -> None:
         """Test implied volatility for American put option."""
         true_sigma = 0.3
         price = american.put_price(s=100.0, k=100.0, t=1.0, r=0.05, q=0.0, sigma=true_sigma)
-        
-        iv = american.implied_volatility(
-            price=price, s=100.0, k=100.0, t=1.0, r=0.05, q=0.0, is_call=False
-        )
-        
+
+        iv = american.implied_volatility(price=price, s=100.0, k=100.0, t=1.0, r=0.05, q=0.0, is_call=False)
+
         # American IV might not exactly match due to early exercise
         assert abs(iv - true_sigma) < 0.01
 
     def test_implied_volatility_batch(self) -> None:
         """Test batch implied volatility calculation."""
         sigmas = np.array([0.2, 0.25, 0.3])
-        prices = np.array([
-            american.call_price(s=100.0, k=100.0, t=1.0, r=0.05, q=0.0, sigma=sig)
-            for sig in sigmas
-        ])
-        
+        prices = np.array([american.call_price(s=100.0, k=100.0, t=1.0, r=0.05, q=0.0, sigma=sig) for sig in sigmas])
+
         spots = np.array([100.0, 100.0, 100.0])
         strikes = np.array([100.0, 100.0, 100.0])
         times = np.array([1.0, 1.0, 1.0])
         rates = np.array([0.05, 0.05, 0.05])
         divs = np.array([0.0, 0.0, 0.0])
         is_calls = np.array([True, True, True])
-        
-        ivs = american.implied_volatility_batch(
-            prices, spots, strikes, times, rates, divs, is_calls
-        )
-        
+
+        ivs = american.implied_volatility_batch(prices, spots, strikes, times, rates, divs, is_calls)
+
         assert len(ivs) == 3
-        for i, (iv, true_sigma) in enumerate(zip(ivs, sigmas)):
+        for _i, (iv, true_sigma) in enumerate(zip(ivs, sigmas, strict=False)):
             assert abs(iv - true_sigma) < PRACTICAL_TOLERANCE
 
     def test_implied_volatility_invalid_price(self) -> None:
         """Test implied volatility with invalid price."""
         with pytest.raises(ValueError):
-            american.implied_volatility(
-                price=-10.0, s=100.0, k=100.0, t=1.0, r=0.05, q=0.0, is_call=True
-            )
+            american.implied_volatility(price=-10.0, s=100.0, k=100.0, t=1.0, r=0.05, q=0.0, is_call=True)
 
 
 class TestAmericanProperties:
@@ -336,11 +322,11 @@ class TestAmericanProperties:
     def test_american_european_relationship(self) -> None:
         """Test American options are at least as valuable as European."""
         s, k, t, r, q, sigma = 100.0, 95.0, 1.0, 0.05, 0.02, 0.2
-        
+
         amer_call = american.call_price(s, k, t, r, q, sigma)
         euro_call = merton.call_price(s, k, t, r, q, sigma)
         assert amer_call >= euro_call - THEORETICAL_TOLERANCE
-        
+
         amer_put = american.put_price(s, k, t, r, q, sigma)
         euro_put = merton.put_price(s, k, t, r, q, sigma)
         assert amer_put >= euro_put - THEORETICAL_TOLERANCE
@@ -350,7 +336,7 @@ class TestAmericanProperties:
         # ITM call
         call = american.call_price(s=110.0, k=100.0, t=1.0, r=0.05, q=0.0, sigma=0.2)
         assert call >= 110.0 - 100.0
-        
+
         # ITM put
         put = american.put_price(s=90.0, k=100.0, t=1.0, r=0.05, q=0.0, sigma=0.2)
         assert put >= 100.0 - 90.0
@@ -358,18 +344,12 @@ class TestAmericanProperties:
     def test_monotonicity_spot(self) -> None:
         """Test price monotonicity with respect to spot."""
         spots = np.linspace(80, 120, 10)
-        
-        call_prices = [
-            american.call_price(s=s, k=100.0, t=1.0, r=0.05, q=0.0, sigma=0.2)
-            for s in spots
-        ]
+
+        call_prices = [american.call_price(s=s, k=100.0, t=1.0, r=0.05, q=0.0, sigma=0.2) for s in spots]
         for i in range(len(call_prices) - 1):
             assert call_prices[i] < call_prices[i + 1]
-        
-        put_prices = [
-            american.put_price(s=s, k=100.0, t=1.0, r=0.05, q=0.0, sigma=0.2)
-            for s in spots
-        ]
+
+        put_prices = [american.put_price(s=s, k=100.0, t=1.0, r=0.05, q=0.0, sigma=0.2) for s in spots]
         for i in range(len(put_prices) - 1):
             assert put_prices[i] > put_prices[i + 1]
 
@@ -380,7 +360,7 @@ class TestAmericanProperties:
         intrinsic = 100.0 - 20.0
         # Should be very close to intrinsic value
         assert abs(deep_itm_put - intrinsic) < 0.1
-        
+
         # For higher spot, time value should exist
         atm_put = american.put_price(s=100.0, k=100.0, t=1.0, r=0.05, q=0.0, sigma=0.2)
         assert atm_put > 0  # Has time value
@@ -395,7 +375,7 @@ class TestAmericanEdgeCases:
         call = american.call_price(s=110.0, k=100.0, t=0.001, r=0.05, q=0.0, sigma=0.2)
         intrinsic = max(110.0 - 100.0, 0)
         assert abs(call - intrinsic) < 0.1
-        
+
         put = american.put_price(s=90.0, k=100.0, t=0.001, r=0.05, q=0.0, sigma=0.2)
         intrinsic = max(100.0 - 90.0, 0)
         assert abs(put - intrinsic) < 0.1
@@ -404,7 +384,7 @@ class TestAmericanEdgeCases:
         """Test with very high volatility."""
         call = american.call_price(s=100.0, k=100.0, t=1.0, r=0.05, q=0.0, sigma=2.0)
         assert call > 30.0  # High volatility means high value
-        
+
         put = american.put_price(s=100.0, k=100.0, t=1.0, r=0.05, q=0.0, sigma=2.0)
         assert put > 30.0
 
@@ -412,7 +392,7 @@ class TestAmericanEdgeCases:
         """Test with zero interest rate."""
         call = american.call_price(s=100.0, k=100.0, t=1.0, r=0.0, q=0.0, sigma=0.2)
         put = american.put_price(s=100.0, k=100.0, t=1.0, r=0.0, q=0.0, sigma=0.2)
-        
+
         # With zero rate and no dividend, put-call parity simplified
         assert call > 0
         assert put > 0
@@ -448,6 +428,6 @@ class TestAmericanNumericalStability:
         """Test scaling property of American options."""
         price1 = american.call_price(s=100.0, k=100.0, t=1.0, r=0.05, q=0.0, sigma=0.2)
         price2 = american.call_price(s=1000.0, k=1000.0, t=1.0, r=0.05, q=0.0, sigma=0.2)
-        
+
         # Prices should scale proportionally
         assert abs(price1 / 100.0 - price2 / 1000.0) < 0.01  # Larger tolerance for American

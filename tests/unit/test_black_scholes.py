@@ -1,11 +1,10 @@
 """Comprehensive unit tests for Black-Scholes model module."""
 
 import math
-from typing import Any
 
 import numpy as np
 import pytest
-from conftest import PRACTICAL_TOLERANCE, THEORETICAL_TOLERANCE
+from conftest import THEORETICAL_TOLERANCE
 from quantforge.models import black_scholes
 
 
@@ -72,10 +71,10 @@ class TestBlackScholesCallPrice:
         """Test call price with invalid inputs."""
         with pytest.raises(ValueError):
             black_scholes.call_price(s=-100.0, k=100.0, t=1.0, r=0.05, sigma=0.2)
-        
+
         with pytest.raises(ValueError):
             black_scholes.call_price(s=100.0, k=-100.0, t=1.0, r=0.05, sigma=0.2)
-        
+
         with pytest.raises(ValueError):
             black_scholes.call_price(s=100.0, k=100.0, t=-1.0, r=0.05, sigma=0.2)
 
@@ -119,7 +118,7 @@ class TestBlackScholesPutPrice:
         s, k, t, r, sigma = 100.0, 95.0, 1.0, 0.05, 0.2
         call = black_scholes.call_price(s, k, t, r, sigma)
         put = black_scholes.put_price(s, k, t, r, sigma)
-        
+
         # Put-Call Parity: C - P = S - K * exp(-r*t)
         lhs = call - put
         rhs = s - k * math.exp(-r * t)
@@ -185,7 +184,7 @@ class TestBlackScholesBatch:
         sigmas = np.full(n, 0.2)
         call_batch = black_scholes.call_price_batch(spots, strikes, times, rates, sigmas)
         put_batch = black_scholes.put_price_batch(spots, strikes, times, rates, sigmas)
-        
+
         for i, spot in enumerate(spots):
             call_single = black_scholes.call_price(s=spot, k=100.0, t=1.0, r=0.05, sigma=0.2)
             put_single = black_scholes.put_price(s=spot, k=100.0, t=1.0, r=0.05, sigma=0.2)
@@ -221,62 +220,62 @@ class TestBlackScholesGreeks:
     def test_greeks_call(self) -> None:
         """Test Greeks for call option."""
         greeks = black_scholes.greeks(s=100.0, k=100.0, t=1.0, r=0.05, sigma=0.2, is_call=True)
-        
+
         # Delta should be between 0 and 1 for calls
         assert 0 < greeks.delta < 1
         # ATM delta should be around 0.6 for these parameters
         assert abs(greeks.delta - 0.64) < 0.05
-        
+
         # Gamma should be positive
         assert greeks.gamma > 0
-        
+
         # Vega should be positive
         assert greeks.vega > 0
-        
+
         # Theta should be negative for calls
         assert greeks.theta < 0
-        
+
         # Rho should be positive for calls
         assert greeks.rho > 0
 
     def test_greeks_put(self) -> None:
         """Test Greeks for put option."""
         greeks = black_scholes.greeks(s=100.0, k=100.0, t=1.0, r=0.05, sigma=0.2, is_call=False)
-        
+
         # Delta should be between -1 and 0 for puts
         assert -1 < greeks.delta < 0
         # ATM put delta should be around -0.36 for these parameters
         assert abs(greeks.delta + 0.36) < 0.05
-        
+
         # Gamma should be positive (same as call)
         assert greeks.gamma > 0
-        
+
         # Vega should be positive (same as call)
         assert greeks.vega > 0
-        
+
         # Theta could be positive or negative for puts
         # depending on moneyness and rates
-        
+
         # Rho should be negative for puts
         assert greeks.rho < 0
 
     def test_greeks_deep_itm_call(self) -> None:
         """Test Greeks for deep ITM call."""
         greeks = black_scholes.greeks(s=150.0, k=100.0, t=1.0, r=0.05, sigma=0.2, is_call=True)
-        
+
         # Deep ITM call delta should be close to 1
         assert greeks.delta > 0.95
-        
+
         # Gamma should be small for deep ITM
         assert greeks.gamma < 0.01
 
     def test_greeks_deep_otm_call(self) -> None:
         """Test Greeks for deep OTM call."""
         greeks = black_scholes.greeks(s=50.0, k=100.0, t=1.0, r=0.05, sigma=0.2, is_call=True)
-        
+
         # Deep OTM call delta should be close to 0
         assert greeks.delta < 0.05
-        
+
         # Gamma should be small for deep OTM
         assert greeks.gamma < 0.01
 
@@ -288,15 +287,13 @@ class TestBlackScholesGreeks:
         rates = np.array([0.05, 0.05, 0.05])
         sigmas = np.array([0.2, 0.2, 0.2])
         is_calls = np.array([True, True, True])
-        greeks_dict = black_scholes.greeks_batch(
-            spots, strikes, times, rates, sigmas, is_calls
-        )
-        
+        greeks_dict = black_scholes.greeks_batch(spots, strikes, times, rates, sigmas, is_calls)
+
         # greeks_batch returns a dictionary with arrays
-        assert 'delta' in greeks_dict
-        assert len(greeks_dict['delta']) == 3
+        assert "delta" in greeks_dict
+        assert len(greeks_dict["delta"]) == 3
         # Delta should increase with spot for calls
-        assert greeks_dict['delta'][0] < greeks_dict['delta'][1] < greeks_dict['delta'][2]
+        assert greeks_dict["delta"][0] < greeks_dict["delta"][1] < greeks_dict["delta"][2]
 
     def test_greeks_invalid_inputs(self) -> None:
         """Test Greeks with invalid inputs."""
@@ -312,88 +309,69 @@ class TestBlackScholesImpliedVolatility:
         # First calculate a price with known volatility
         true_sigma = 0.25
         price = black_scholes.call_price(s=100.0, k=100.0, t=1.0, r=0.05, sigma=true_sigma)
-        
+
         # Now recover the volatility
-        iv = black_scholes.implied_volatility(
-            price=price, s=100.0, k=100.0, t=1.0, r=0.05, is_call=True
-        )
-        
+        iv = black_scholes.implied_volatility(price=price, s=100.0, k=100.0, t=1.0, r=0.05, is_call=True)
+
         assert abs(iv - true_sigma) < THEORETICAL_TOLERANCE
 
     def test_implied_volatility_put(self) -> None:
         """Test implied volatility for put option."""
         true_sigma = 0.3
         price = black_scholes.put_price(s=100.0, k=100.0, t=1.0, r=0.05, sigma=true_sigma)
-        
-        iv = black_scholes.implied_volatility(
-            price=price, s=100.0, k=100.0, t=1.0, r=0.05, is_call=False
-        )
-        
+
+        iv = black_scholes.implied_volatility(price=price, s=100.0, k=100.0, t=1.0, r=0.05, is_call=False)
+
         assert abs(iv - true_sigma) < THEORETICAL_TOLERANCE
 
     def test_implied_volatility_with_guess(self) -> None:
         """Test implied volatility calculation."""
         true_sigma = 0.4
         price = black_scholes.call_price(s=100.0, k=100.0, t=1.0, r=0.05, sigma=true_sigma)
-        
+
         # API doesn't support initial_guess parameter
-        iv = black_scholes.implied_volatility(
-            price=price, s=100.0, k=100.0, t=1.0, r=0.05, is_call=True
-        )
-        
+        iv = black_scholes.implied_volatility(price=price, s=100.0, k=100.0, t=1.0, r=0.05, is_call=True)
+
         assert abs(iv - true_sigma) < THEORETICAL_TOLERANCE
 
     def test_implied_volatility_extreme_price(self) -> None:
         """Test implied volatility with extreme prices."""
         # Use reasonable extreme prices that respect arbitrage bounds
         # Low but valid price
-        iv_low = black_scholes.implied_volatility(
-            price=5.0, s=100.0, k=100.0, t=1.0, r=0.05, is_call=True
-        )
+        iv_low = black_scholes.implied_volatility(price=5.0, s=100.0, k=100.0, t=1.0, r=0.05, is_call=True)
         assert iv_low < 0.15
-        
+
         # High but valid price
-        iv_high = black_scholes.implied_volatility(
-            price=30.0, s=100.0, k=100.0, t=1.0, r=0.05, is_call=True
-        )
+        iv_high = black_scholes.implied_volatility(price=30.0, s=100.0, k=100.0, t=1.0, r=0.05, is_call=True)
         assert iv_high > 0.5
 
     def test_implied_volatility_batch(self) -> None:
         """Test batch implied volatility calculation."""
         # Create prices with known volatilities
         sigmas = np.array([0.2, 0.25, 0.3])
-        prices = np.array([
-            black_scholes.call_price(s=100.0, k=100.0, t=1.0, r=0.05, sigma=sig)
-            for sig in sigmas
-        ])
-        
+        prices = np.array([black_scholes.call_price(s=100.0, k=100.0, t=1.0, r=0.05, sigma=sig) for sig in sigmas])
+
         spots = np.array([100.0, 100.0, 100.0])
         strikes = np.array([100.0, 100.0, 100.0])
         times = np.array([1.0, 1.0, 1.0])
         rates = np.array([0.05, 0.05, 0.05])
         is_calls = np.array([True, True, True])
-        
-        ivs = black_scholes.implied_volatility_batch(
-            prices, spots, strikes, times, rates, is_calls
-        )
-        
+
+        ivs = black_scholes.implied_volatility_batch(prices, spots, strikes, times, rates, is_calls)
+
         assert len(ivs) == 3
-        for i, (iv, true_sigma) in enumerate(zip(ivs, sigmas)):
+        for _i, (iv, true_sigma) in enumerate(zip(ivs, sigmas, strict=False)):
             assert abs(iv - true_sigma) < THEORETICAL_TOLERANCE
 
     def test_implied_volatility_invalid_price(self) -> None:
         """Test implied volatility with invalid price."""
         # Negative price should raise error
         with pytest.raises(ValueError):
-            black_scholes.implied_volatility(
-                price=-10.0, s=100.0, k=100.0, t=1.0, r=0.05, is_call=True
-            )
-        
-        # Price above spot for call should raise error  
+            black_scholes.implied_volatility(price=-10.0, s=100.0, k=100.0, t=1.0, r=0.05, is_call=True)
+
+        # Price above spot for call should raise error
         with pytest.raises((ValueError, RuntimeError)):  # May be RuntimeError for arbitrage
-            black_scholes.implied_volatility(
-                price=110.0, s=100.0, k=100.0, t=1.0, r=0.05, is_call=True
-            )
+            black_scholes.implied_volatility(price=110.0, s=100.0, k=100.0, t=1.0, r=0.05, is_call=True)
 
 
 class TestBlackScholesProperties:
@@ -402,53 +380,41 @@ class TestBlackScholesProperties:
     def test_call_price_monotonicity_spot(self) -> None:
         """Test call price increases with spot."""
         spots = np.linspace(80, 120, 10)
-        prices = [
-            black_scholes.call_price(s=s, k=100.0, t=1.0, r=0.05, sigma=0.2)
-            for s in spots
-        ]
+        prices = [black_scholes.call_price(s=s, k=100.0, t=1.0, r=0.05, sigma=0.2) for s in spots]
         for i in range(len(prices) - 1):
             assert prices[i] < prices[i + 1]
 
     def test_put_price_monotonicity_spot(self) -> None:
         """Test put price decreases with spot."""
         spots = np.linspace(80, 120, 10)
-        prices = [
-            black_scholes.put_price(s=s, k=100.0, t=1.0, r=0.05, sigma=0.2)
-            for s in spots
-        ]
+        prices = [black_scholes.put_price(s=s, k=100.0, t=1.0, r=0.05, sigma=0.2) for s in spots]
         for i in range(len(prices) - 1):
             assert prices[i] > prices[i + 1]
 
     def test_call_price_monotonicity_volatility(self) -> None:
         """Test call price increases with volatility."""
         sigmas = np.linspace(0.1, 0.5, 10)
-        prices = [
-            black_scholes.call_price(s=100.0, k=100.0, t=1.0, r=0.05, sigma=sig)
-            for sig in sigmas
-        ]
+        prices = [black_scholes.call_price(s=100.0, k=100.0, t=1.0, r=0.05, sigma=sig) for sig in sigmas]
         for i in range(len(prices) - 1):
             assert prices[i] < prices[i + 1]
 
     def test_price_bounds(self) -> None:
         """Test option prices respect arbitrage bounds."""
         s, k, t, r, sigma = 100.0, 95.0, 1.0, 0.05, 0.2
-        
+
         call = black_scholes.call_price(s, k, t, r, sigma)
         put = black_scholes.put_price(s, k, t, r, sigma)
-        
+
         # Call bounds: max(S - K*exp(-rt), 0) <= C <= S
         assert max(s - k * math.exp(-r * t), 0) <= call <= s
-        
+
         # Put bounds: max(K*exp(-rt) - S, 0) <= P <= K*exp(-rt)
         assert max(k * math.exp(-r * t) - s, 0) <= put <= k * math.exp(-r * t)
 
     def test_time_decay(self) -> None:
         """Test options lose value as time decreases (theta effect)."""
         times = [2.0, 1.5, 1.0, 0.5, 0.1]
-        call_prices = [
-            black_scholes.call_price(s=100.0, k=100.0, t=t, r=0.05, sigma=0.2)
-            for t in times
-        ]
+        call_prices = [black_scholes.call_price(s=100.0, k=100.0, t=t, r=0.05, sigma=0.2) for t in times]
         # ATM options should decrease in value as expiration approaches
         for i in range(len(call_prices) - 1):
             assert call_prices[i] > call_prices[i + 1]
@@ -490,7 +456,7 @@ class TestBlackScholesEdgeCases:
         # Very deep ITM
         deep_itm = black_scholes.call_price(s=1000.0, k=100.0, t=1.0, r=0.05, sigma=0.2)
         assert abs(deep_itm - (1000.0 - 100.0 * math.exp(-0.05))) < 1.0
-        
+
         # Very deep OTM
         deep_otm = black_scholes.call_price(s=1.0, k=100.0, t=1.0, r=0.05, sigma=0.2)
         assert deep_otm < 0.0001
@@ -500,7 +466,7 @@ class TestBlackScholesEdgeCases:
         # Very deep ITM
         deep_itm = black_scholes.put_price(s=1.0, k=100.0, t=1.0, r=0.05, sigma=0.2)
         assert abs(deep_itm - (100.0 * math.exp(-0.05) - 1.0)) < 1.0
-        
+
         # Very deep OTM
         deep_otm = black_scholes.put_price(s=1000.0, k=100.0, t=1.0, r=0.05, sigma=0.2)
         assert deep_otm < 0.0001
@@ -534,5 +500,5 @@ class TestBlackScholesNumericalStability:
         # Scaling spot and strike by same factor shouldn't change relative price
         price1 = black_scholes.call_price(s=100.0, k=100.0, t=1.0, r=0.05, sigma=0.2)
         price2 = black_scholes.call_price(s=1000.0, k=1000.0, t=1.0, r=0.05, sigma=0.2)
-        
+
         assert abs(price1 / 100.0 - price2 / 1000.0) < THEORETICAL_TOLERANCE

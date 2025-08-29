@@ -1,11 +1,10 @@
 """Comprehensive unit tests for Black76 model module."""
 
 import math
-from typing import Any
 
 import numpy as np
 import pytest
-from conftest import PRACTICAL_TOLERANCE, THEORETICAL_TOLERANCE
+from conftest import THEORETICAL_TOLERANCE
 from quantforge.models import black76
 
 
@@ -66,10 +65,10 @@ class TestBlack76CallPrice:
         """Test call price with invalid inputs."""
         with pytest.raises(ValueError):
             black76.call_price(f=-100.0, k=100.0, t=1.0, r=0.05, sigma=0.2)
-        
+
         with pytest.raises(ValueError):
             black76.call_price(f=100.0, k=-100.0, t=1.0, r=0.05, sigma=0.2)
-        
+
         with pytest.raises(ValueError):
             black76.call_price(f=100.0, k=100.0, t=-1.0, r=0.05, sigma=0.2)
 
@@ -112,7 +111,7 @@ class TestBlack76PutPrice:
         f, k, t, r, sigma = 100.0, 95.0, 1.0, 0.05, 0.2
         call = black76.call_price(f, k, t, r, sigma)
         put = black76.put_price(f, k, t, r, sigma)
-        
+
         # Put-Call Parity for futures: C - P = exp(-r*t) * (F - K)
         lhs = call - put
         rhs = math.exp(-r * t) * (f - k)
@@ -178,7 +177,7 @@ class TestBlack76Batch:
         sigmas = np.full(n, 0.2)
         call_batch = black76.call_price_batch(forwards, strikes, times, rates, sigmas)
         put_batch = black76.put_price_batch(forwards, strikes, times, rates, sigmas)
-        
+
         for i, forward in enumerate(forwards):
             call_single = black76.call_price(f=forward, k=100.0, t=1.0, r=0.05, sigma=0.2)
             put_single = black76.put_price(f=forward, k=100.0, t=1.0, r=0.05, sigma=0.2)
@@ -214,62 +213,62 @@ class TestBlack76Greeks:
     def test_greeks_call(self) -> None:
         """Test Greeks for call futures option."""
         greeks = black76.greeks(f=100.0, k=100.0, t=1.0, r=0.05, sigma=0.2, is_call=True)
-        
+
         # Delta should be between 0 and 1 for calls
         assert 0 < greeks.delta < 1
         # ATM delta should be around 0.5 for futures
         assert abs(greeks.delta - 0.5) < 0.1
-        
+
         # Gamma should be positive
         assert greeks.gamma > 0
-        
+
         # Vega should be positive
         assert greeks.vega > 0
-        
+
         # Theta should be negative for calls
         assert greeks.theta < 0
-        
+
         # Rho for futures options
         assert greeks.rho != 0
 
     def test_greeks_put(self) -> None:
         """Test Greeks for put futures option."""
         greeks = black76.greeks(f=100.0, k=100.0, t=1.0, r=0.05, sigma=0.2, is_call=False)
-        
+
         # Delta should be between -1 and 0 for puts
         assert -1 < greeks.delta < 0
         # ATM put delta should be around -0.5 for futures
         assert abs(greeks.delta + 0.5) < 0.1
-        
+
         # Gamma should be positive (same as call)
         assert greeks.gamma > 0
-        
+
         # Vega should be positive (same as call)
         assert greeks.vega > 0
-        
+
         # Theta for puts
         assert greeks.theta < 0
-        
+
         # Rho for futures options
         assert greeks.rho != 0
 
     def test_greeks_deep_itm_call(self) -> None:
         """Test Greeks for deep ITM call futures option."""
         greeks = black76.greeks(f=150.0, k=100.0, t=1.0, r=0.05, sigma=0.2, is_call=True)
-        
+
         # Deep ITM call delta should be close to 1
         assert greeks.delta > 0.9
-        
+
         # Gamma should be small for deep ITM
         assert greeks.gamma < 0.01
 
     def test_greeks_deep_otm_call(self) -> None:
         """Test Greeks for deep OTM call futures option."""
         greeks = black76.greeks(f=50.0, k=100.0, t=1.0, r=0.05, sigma=0.2, is_call=True)
-        
+
         # Deep OTM call delta should be close to 0
         assert greeks.delta < 0.1
-        
+
         # Gamma should be small for deep OTM
         assert greeks.gamma < 0.01
 
@@ -281,15 +280,13 @@ class TestBlack76Greeks:
         rates = np.array([0.05, 0.05, 0.05])
         sigmas = np.array([0.2, 0.2, 0.2])
         is_calls = np.array([True, True, True])
-        greeks_dict = black76.greeks_batch(
-            forwards, strikes, times, rates, sigmas, is_calls
-        )
-        
+        greeks_dict = black76.greeks_batch(forwards, strikes, times, rates, sigmas, is_calls)
+
         # greeks_batch returns a dictionary with arrays
-        assert 'delta' in greeks_dict
-        assert len(greeks_dict['delta']) == 3
+        assert "delta" in greeks_dict
+        assert len(greeks_dict["delta"]) == 3
         # Delta should increase with forward for calls
-        assert greeks_dict['delta'][0] < greeks_dict['delta'][1] < greeks_dict['delta'][2]
+        assert greeks_dict["delta"][0] < greeks_dict["delta"][1] < greeks_dict["delta"][2]
 
     def test_greeks_invalid_inputs(self) -> None:
         """Test Greeks with invalid inputs."""
@@ -305,76 +302,59 @@ class TestBlack76ImpliedVolatility:
         # First calculate a price with known volatility
         true_sigma = 0.25
         price = black76.call_price(f=100.0, k=100.0, t=1.0, r=0.05, sigma=true_sigma)
-        
+
         # Now recover the volatility
-        iv = black76.implied_volatility(
-            price=price, f=100.0, k=100.0, t=1.0, r=0.05, is_call=True
-        )
-        
+        iv = black76.implied_volatility(price=price, f=100.0, k=100.0, t=1.0, r=0.05, is_call=True)
+
         assert abs(iv - true_sigma) < THEORETICAL_TOLERANCE
 
     def test_implied_volatility_put(self) -> None:
         """Test implied volatility for put futures option."""
         true_sigma = 0.3
         price = black76.put_price(f=100.0, k=100.0, t=1.0, r=0.05, sigma=true_sigma)
-        
-        iv = black76.implied_volatility(
-            price=price, f=100.0, k=100.0, t=1.0, r=0.05, is_call=False
-        )
-        
+
+        iv = black76.implied_volatility(price=price, f=100.0, k=100.0, t=1.0, r=0.05, is_call=False)
+
         assert abs(iv - true_sigma) < THEORETICAL_TOLERANCE
 
     def test_implied_volatility_extreme_price(self) -> None:
         """Test implied volatility with extreme prices."""
         # Use reasonable extreme prices that respect arbitrage bounds
         # Low but valid price
-        iv_low = black76.implied_volatility(
-            price=3.0, f=100.0, k=100.0, t=1.0, r=0.05, is_call=True
-        )
+        iv_low = black76.implied_volatility(price=3.0, f=100.0, k=100.0, t=1.0, r=0.05, is_call=True)
         assert iv_low < 0.15
-        
-        # High but valid price  
-        iv_high = black76.implied_volatility(
-            price=25.0, f=100.0, k=100.0, t=1.0, r=0.05, is_call=True
-        )
+
+        # High but valid price
+        iv_high = black76.implied_volatility(price=25.0, f=100.0, k=100.0, t=1.0, r=0.05, is_call=True)
         assert iv_high > 0.5
 
     def test_implied_volatility_batch(self) -> None:
         """Test batch implied volatility calculation."""
         # Create prices with known volatilities
         sigmas = np.array([0.2, 0.25, 0.3])
-        prices = np.array([
-            black76.call_price(f=100.0, k=100.0, t=1.0, r=0.05, sigma=sig)
-            for sig in sigmas
-        ])
-        
+        prices = np.array([black76.call_price(f=100.0, k=100.0, t=1.0, r=0.05, sigma=sig) for sig in sigmas])
+
         forwards = np.array([100.0, 100.0, 100.0])
         strikes = np.array([100.0, 100.0, 100.0])
         times = np.array([1.0, 1.0, 1.0])
         rates = np.array([0.05, 0.05, 0.05])
         is_calls = np.array([True, True, True])
-        
-        ivs = black76.implied_volatility_batch(
-            prices, forwards, strikes, times, rates, is_calls
-        )
-        
+
+        ivs = black76.implied_volatility_batch(prices, forwards, strikes, times, rates, is_calls)
+
         assert len(ivs) == 3
-        for i, (iv, true_sigma) in enumerate(zip(ivs, sigmas)):
+        for _i, (iv, true_sigma) in enumerate(zip(ivs, sigmas, strict=False)):
             assert abs(iv - true_sigma) < THEORETICAL_TOLERANCE
 
     def test_implied_volatility_invalid_price(self) -> None:
         """Test implied volatility with invalid price."""
         # Negative price should raise error
         with pytest.raises(ValueError):
-            black76.implied_volatility(
-                price=-10.0, f=100.0, k=100.0, t=1.0, r=0.05, is_call=True
-            )
-        
-        # Price above theoretical maximum should raise error  
+            black76.implied_volatility(price=-10.0, f=100.0, k=100.0, t=1.0, r=0.05, is_call=True)
+
+        # Price above theoretical maximum should raise error
         with pytest.raises((ValueError, RuntimeError)):  # May be RuntimeError for arbitrage
-            black76.implied_volatility(
-                price=200.0, f=100.0, k=100.0, t=1.0, r=0.05, is_call=True
-            )
+            black76.implied_volatility(price=200.0, f=100.0, k=100.0, t=1.0, r=0.05, is_call=True)
 
 
 class TestBlack76Properties:
@@ -383,54 +363,42 @@ class TestBlack76Properties:
     def test_call_price_monotonicity_forward(self) -> None:
         """Test call price increases with forward."""
         forwards = np.linspace(80, 120, 10)
-        prices = [
-            black76.call_price(f=f, k=100.0, t=1.0, r=0.05, sigma=0.2)
-            for f in forwards
-        ]
+        prices = [black76.call_price(f=f, k=100.0, t=1.0, r=0.05, sigma=0.2) for f in forwards]
         for i in range(len(prices) - 1):
             assert prices[i] < prices[i + 1]
 
     def test_put_price_monotonicity_forward(self) -> None:
         """Test put price decreases with forward."""
         forwards = np.linspace(80, 120, 10)
-        prices = [
-            black76.put_price(f=f, k=100.0, t=1.0, r=0.05, sigma=0.2)
-            for f in forwards
-        ]
+        prices = [black76.put_price(f=f, k=100.0, t=1.0, r=0.05, sigma=0.2) for f in forwards]
         for i in range(len(prices) - 1):
             assert prices[i] > prices[i + 1]
 
     def test_call_price_monotonicity_volatility(self) -> None:
         """Test call price increases with volatility."""
         sigmas = np.linspace(0.1, 0.5, 10)
-        prices = [
-            black76.call_price(f=100.0, k=100.0, t=1.0, r=0.05, sigma=sig)
-            for sig in sigmas
-        ]
+        prices = [black76.call_price(f=100.0, k=100.0, t=1.0, r=0.05, sigma=sig) for sig in sigmas]
         for i in range(len(prices) - 1):
             assert prices[i] < prices[i + 1]
 
     def test_price_bounds(self) -> None:
         """Test futures option prices respect arbitrage bounds."""
         f, k, t, r, sigma = 100.0, 95.0, 1.0, 0.05, 0.2
-        
+
         call = black76.call_price(f, k, t, r, sigma)
         put = black76.put_price(f, k, t, r, sigma)
-        
+
         # Call bounds: max(exp(-rt)*(F - K), 0) <= C <= exp(-rt)*F
         discount = math.exp(-r * t)
         assert max(discount * (f - k), 0) <= call <= discount * f
-        
+
         # Put bounds: max(exp(-rt)*(K - F), 0) <= P <= exp(-rt)*K
         assert max(discount * (k - f), 0) <= put <= discount * k
 
     def test_time_decay(self) -> None:
         """Test options lose value as time decreases (theta effect)."""
         times = [2.0, 1.5, 1.0, 0.5, 0.1]
-        call_prices = [
-            black76.call_price(f=100.0, k=100.0, t=t, r=0.05, sigma=0.2)
-            for t in times
-        ]
+        call_prices = [black76.call_price(f=100.0, k=100.0, t=t, r=0.05, sigma=0.2) for t in times]
         # ATM options should decrease in value as expiration approaches
         for i in range(len(call_prices) - 1):
             assert call_prices[i] > call_prices[i + 1]
@@ -457,7 +425,7 @@ class TestBlack76EdgeCases:
         # Use minimum allowed volatility (0.005 based on validation)
         call = black76.call_price(f=100.0, k=100.0, t=1.0, r=0.05, sigma=0.005)
         # Should be close to intrinsic value
-        intrinsic = max((100.0 - 100.0) * math.exp(-0.05), 0)
+        # intrinsic = max((100.0 - 100.0) * math.exp(-0.05), 0)
         assert call < 1.0  # Very low vol means low option value
 
     def test_very_high_volatility(self) -> None:
@@ -471,7 +439,7 @@ class TestBlack76EdgeCases:
         # Very deep ITM
         deep_itm = black76.call_price(f=1000.0, k=100.0, t=1.0, r=0.05, sigma=0.2)
         assert abs(deep_itm - (1000.0 - 100.0) * math.exp(-0.05)) < 1.0
-        
+
         # Very deep OTM
         deep_otm = black76.call_price(f=1.0, k=100.0, t=1.0, r=0.05, sigma=0.2)
         assert deep_otm < 0.0001
@@ -481,7 +449,7 @@ class TestBlack76EdgeCases:
         # Very deep ITM
         deep_itm = black76.put_price(f=1.0, k=100.0, t=1.0, r=0.05, sigma=0.2)
         assert abs(deep_itm - (100.0 - 1.0) * math.exp(-0.05)) < 1.0
-        
+
         # Very deep OTM
         deep_otm = black76.put_price(f=1000.0, k=100.0, t=1.0, r=0.05, sigma=0.2)
         assert deep_otm < 0.0001
@@ -516,6 +484,6 @@ class TestBlack76NumericalStability:
         # Scaling forward and strike by same factor shouldn't change relative price
         price1 = black76.call_price(f=100.0, k=100.0, t=1.0, r=0.05, sigma=0.2)
         price2 = black76.call_price(f=1000.0, k=1000.0, t=1.0, r=0.05, sigma=0.2)
-        
+
         # Prices should scale proportionally (accounting for discounting)
         assert abs(price1 / 100.0 - price2 / 1000.0) < THEORETICAL_TOLERANCE
