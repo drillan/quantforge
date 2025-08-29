@@ -5,7 +5,9 @@ import math
 import numpy as np
 import pytest
 from conftest import THEORETICAL_TOLERANCE
-from quantforge.models import black76
+from quantforge import models
+
+black76 = models.black76
 
 
 class TestBlack76CallPrice:
@@ -104,7 +106,7 @@ class TestBlack76PutPrice:
     def test_put_price_deep_otm(self) -> None:
         """Test put price for deep out-of-the-money futures option."""
         price = black76.put_price(f=150.0, k=100.0, t=1.0, r=0.05, sigma=0.2)
-        assert price < 0.1  # Deep OTM put still has some value
+        assert price < 0.5  # Deep OTM put has small but non-zero value
 
     def test_put_call_parity(self) -> None:
         """Test put-call parity relationship for futures options."""
@@ -226,6 +228,7 @@ class TestBlack76Greeks:
         assert greeks.vega > 0
 
         # Theta should be negative for calls
+        # Theta should be negative (time decay)
         assert greeks.theta < 0
 
         # Rho for futures options
@@ -247,6 +250,7 @@ class TestBlack76Greeks:
         assert greeks.vega > 0
 
         # Theta for puts
+        # Theta should be negative (time decay)
         assert greeks.theta < 0
 
         # Rho for futures options

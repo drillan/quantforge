@@ -5,7 +5,9 @@ import math
 import numpy as np
 import pytest
 from conftest import THEORETICAL_TOLERANCE
-from quantforge.models import black_scholes
+from quantforge import models
+
+black_scholes = models
 
 
 class TestBlackScholesCallPrice:

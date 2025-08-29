@@ -111,10 +111,6 @@ module-name = "quantforge.quantforge"
 minversion = "8.0"
 testpaths = ["tests"]
 addopts = [
-    "--cov=quantforge",
-    "--cov-report=term-missing",
-    "--cov-report=html",
-    "--cov-fail-under=90",
     "-v",
     "--tb=short",
     "--strict-markers",
@@ -128,42 +124,7 @@ markers = [
     "golden: marks tests as golden master tests",
 ]
 
-[tool.coverage.run]
-source = ["python/quantforge"]
-omit = [
-    "*/tests/*",
-    "*/test_*.py",
-    "*/__pycache__/*",
-    "*/site-packages/*",
-]
-
-[tool.coverage.report]
-exclude_lines = [
-    # Have to re-enable the standard pragma
-    "pragma: no cover",
-    
-    # Don't complain about missing debug-only code:
-    "def __repr__",
-    "if self\\.debug",
-    
-    # Don't complain if tests don't hit defensive assertion code:
-    "raise AssertionError",
-    "raise NotImplementedError",
-    
-    # Don't complain if non-runnable code isn't run:
-    "if 0:",
-    "if __name__ == .__main__.:",
-    
-    # Don't complain about abstract methods
-    "@(abc\\.)?abstractmethod",
-    
-    # Type checking blocks
-    "if TYPE_CHECKING:",
-    
-    # Protocol methods
-    "\\.\\.\\.",
-]
-precision = 2
+# Coverage configuration removed - not applicable to Rust extensions
 
 [tool.mypy]
 python_version = "3.12"

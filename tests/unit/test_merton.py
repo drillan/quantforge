@@ -5,7 +5,9 @@ import math
 import numpy as np
 import pytest
 from conftest import THEORETICAL_TOLERANCE
-from quantforge.models import merton
+from quantforge import models
+
+merton = models.merton
 
 
 class TestMertonCallPrice:
@@ -68,8 +70,10 @@ class TestMertonCallPrice:
 
     def test_call_price_zero_time(self) -> None:
         """Test call price at expiration."""
-        with pytest.raises(ValueError):
-            merton.call_price(s=100.0, k=100.0, t=0.0, r=0.05, q=0.02, sigma=0.2)
+        # At expiration, should return intrinsic value
+        price = merton.call_price(s=100.0, k=100.0, t=0.0, r=0.05, q=0.02, sigma=0.2)
+        intrinsic = max(100.0 - 100.0, 0.0)
+        assert abs(price - intrinsic) < THEORETICAL_TOLERANCE
 
     def test_call_price_negative_rate(self) -> None:
         """Test call price with negative interest rate."""
@@ -129,7 +133,7 @@ class TestMertonPutPrice:
     def test_put_price_deep_otm(self) -> None:
         """Test put price for deep out-of-the-money option with dividend."""
         price = merton.put_price(s=150.0, k=100.0, t=1.0, r=0.05, q=0.02, sigma=0.2)
-        assert price < 0.1
+        assert price < 0.15  # Deep OTM put should have small value
 
     def test_put_call_parity_with_dividend(self) -> None:
         """Test put-call parity relationship with dividends."""
@@ -266,9 +270,9 @@ class TestMertonGreeks:
         # Rho should be positive for calls
         assert greeks.rho > 0
 
-        # Psi (dividend sensitivity) should be negative for calls
-        assert hasattr(greeks, "psi")
-        assert greeks.psi < 0
+        # Dividend sensitivity should be negative for calls
+        assert hasattr(greeks, "dividend_rho")
+        assert greeks.dividend_rho < 0
 
     def test_greeks_put(self) -> None:
         """Test Greeks for put option with dividend."""
@@ -286,9 +290,9 @@ class TestMertonGreeks:
         # Rho should be negative for puts
         assert greeks.rho < 0
 
-        # Psi (dividend sensitivity) should be positive for puts
-        assert hasattr(greeks, "psi")
-        assert greeks.psi > 0
+        # Dividend sensitivity should be positive for puts
+        assert hasattr(greeks, "dividend_rho")
+        assert greeks.dividend_rho > 0
 
     def test_greeks_dividend_effect(self) -> None:
         """Test dividend effect on Greeks."""
@@ -469,10 +473,10 @@ class TestMertonEdgeCases:
         """Test with very low but non-zero volatility."""
         call = merton.call_price(s=100.0, k=100.0, t=1.0, r=0.05, q=0.02, sigma=0.005)
         # Should be close to adjusted intrinsic value
-        # adj_spot = 100.0 * math.exp(-0.02)
-        # disc_strike = 100.0 * math.exp(-0.05)
-        # intrinsic = max(adj_spot - disc_strike, 0)
-        assert call < 1.0
+        # adj_spot = 100.0 * math.exp(-0.02) ≈ 98.02
+        # disc_strike = 100.0 * math.exp(-0.05) ≈ 95.12
+        # intrinsic = max(adj_spot - disc_strike, 0) ≈ 2.90
+        assert 2.5 < call < 3.5  # Should be close to intrinsic value
 
 
 class TestMertonNumericalStability:

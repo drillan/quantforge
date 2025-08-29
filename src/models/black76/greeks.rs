@@ -38,13 +38,13 @@ pub fn calculate_greeks(params: &Black76Params, is_call: bool) -> Greeks {
 
     // Theta: -∂V/∂T (negative because we want time decay)
     let theta_val = if is_call {
-        -(-params.forward * discount * nd1 * params.sigma / (2.0 * sqrt_time)
-            + params.rate * params.forward * discount * norm_cdf(d1)
-            - params.rate * params.strike * discount * norm_cdf(d2))
+        -params.forward * discount * nd1 * params.sigma / (2.0 * sqrt_time)
+            - params.rate * params.forward * discount * norm_cdf(d1)
+            + params.rate * params.strike * discount * norm_cdf(d2)
     } else {
-        -(-params.forward * discount * nd1 * params.sigma / (2.0 * sqrt_time)
-            - params.rate * params.forward * discount * norm_cdf(-d1)
-            + params.rate * params.strike * discount * norm_cdf(-d2))
+        -params.forward * discount * nd1 * params.sigma / (2.0 * sqrt_time)
+            + params.rate * params.forward * discount * norm_cdf(-d1)
+            - params.rate * params.strike * discount * norm_cdf(-d2)
     };
 
     // Rho: ∂V/∂r
@@ -116,17 +116,16 @@ pub fn theta(params: &Black76Params, is_call: bool) -> f64 {
     let sqrt_time = params.time.sqrt();
     let discount = params.discount_factor();
 
+    // Black76 theta formula
+    let common_term = -params.forward * discount * norm_pdf(d1) * params.sigma / (2.0 * sqrt_time);
+    
     let theta_val = if is_call {
-        -params.forward * discount * norm_pdf(d1) * params.sigma / (2.0 * sqrt_time)
-            + params.rate * params.forward * discount * norm_cdf(d1)
-            - params.rate * params.strike * discount * norm_cdf(d2)
+        common_term - params.rate * discount * (params.forward * norm_cdf(d1) - params.strike * norm_cdf(d2))
     } else {
-        -params.forward * discount * norm_pdf(d1) * params.sigma / (2.0 * sqrt_time)
-            - params.rate * params.forward * discount * norm_cdf(-d1)
-            + params.rate * params.strike * discount * norm_cdf(-d2)
+        common_term - params.rate * discount * (-params.forward * norm_cdf(-d1) + params.strike * norm_cdf(-d2))
     };
 
-    -theta_val / 365.0 // Negative sign for time decay, convert to per day
+    -theta_val / 365.0 // Negative for time decay, convert to per day
 }
 
 /// Calculate Rho for Black76 model

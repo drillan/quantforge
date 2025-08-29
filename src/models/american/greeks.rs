@@ -165,8 +165,10 @@ fn calculate_theta(params: &AmericanParams, is_call: bool) -> f64 {
             pricing::american_put_price(&params_future)
         };
 
-        // Annualized theta
-        return -(price_future - price_now) / small_h;
+        // Theta = -dV/dT where T is time to maturity
+        // As time passes, T decreases, so we compute (V(T) - V(T-h))/h
+        // This gives us -dV/dT (negative because option loses value as time passes)
+        return -(price_now - price_future) / small_h / 365.0;
     }
 
     let params_future = AmericanParams {
@@ -186,8 +188,9 @@ fn calculate_theta(params: &AmericanParams, is_call: bool) -> f64 {
         pricing::american_put_price(&params_future)
     };
 
+    // Theta = -dV/dT where T is time to maturity
     // Return daily theta (negative for time decay)
-    -(price_future - price_now) / h / 365.0
+    -(price_now - price_future) / h / 365.0
 }
 
 /// Calculate Rho using central finite difference
