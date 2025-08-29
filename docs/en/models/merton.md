@@ -1,9 +1,12 @@
+(merton)=
 # Merton Model
 
 The standard model for option pricing theory considering dividends.
 
+(merton-theory)=
 ## Theoretical Background
 
+(merton-basic-concepts)=
 ### Basic Concepts
 
 The Merton model is an extension of the Black-Scholes model to assets with dividend payments.
@@ -11,10 +14,16 @@ By considering continuous dividend yield, it enables accurate calculation of opt
 
 When there is a dividend yield `q`, the stock price after dividend payment becomes lower than the original stock price, so this effect needs to be incorporated into price calculations.
 
+(merton-assumptions)=
 ### Basic Assumptions
 
 1. **Log-normal distribution**: Dividend-adjusted stock prices follow geometric Brownian motion
-   $$dS_t = (\mu - q) S_t dt + \sigma S_t dW_t$$
+   
+   ```{math}
+   :name: merton-eq-gbm
+   
+   dS_t = (\mu - q) S_t dt + \sigma S_t dW_t
+   ```
 
 2. **Continuous dividends**: Dividend yield `q` is constant and paid continuously
 
@@ -22,16 +31,23 @@ When there is a dividend yield `q`, the stock price after dividend payment becom
 
 4. **Constant parameters**: Volatility, interest rate, and dividend yield are constant
 
+(merton-derivation)=
 ## Derivation of Pricing Formula
 
+(merton-pde)=
 ### Merton Equation
 
 Partial differential equation considering dividends:
 
-$$\frac{\partial V}{\partial t} + \frac{1}{2}\sigma^2 S^2 \frac{\partial^2 V}{\partial S^2} + (r - q)S\frac{\partial V}{\partial S} - rV = 0$$
+```{math}
+:name: merton-eq-pde
+
+\frac{\partial V}{\partial t} + \frac{1}{2}\sigma^2 S^2 \frac{\partial^2 V}{\partial S^2} + (r - q)S\frac{\partial V}{\partial S} - rV = 0
+```
 
 Note that the dividend yield `q` affects the drift term.
 
+(merton-boundary-conditions)=
 ### Boundary Conditions
 
 Call option:
@@ -44,52 +60,108 @@ Put option:
 - $V(0, t) = Ke^{-r(T-t)}$
 - $V(S, t) \to 0$ as $S \to \infty$
 
+(merton-solutions)=
 ## Analytical Solutions
 
+(merton-call-formula)=
 ### European Call
 
-$$C = S_0 e^{-qT} N(d_1) - Ke^{-rT} N(d_2)$$
+```{math}
+:name: merton-eq-call-formula
+
+C = S_0 e^{-qT} N(d_1) - Ke^{-rT} N(d_2)
+```
 
 where:
-- $d_1 = \frac{\ln(S_0/K) + (r - q + \sigma^2/2)T}{\sigma\sqrt{T}}$
-- $d_2 = d_1 - \sigma\sqrt{T}$
+
+```{math}
+:name: merton-eq-d1-d2
+
+d_1 = \frac{\ln(S_0/K) + (r - q + \sigma^2/2)T}{\sigma\sqrt{T}}, \quad d_2 = d_1 - \sigma\sqrt{T}
+```
 - $N(x)$: Cumulative distribution function of standard normal distribution
 
+(merton-put-formula)=
 ### European Put
 
-$$P = Ke^{-rT} N(-d_2) - S_0 e^{-qT} N(-d_1)$$
+```{math}
+:name: merton-eq-put-formula
 
+P = Ke^{-rT} N(-d_2) - S_0 e^{-qT} N(-d_1)
+```
+
+(merton-greeks)=
 ## Greeks
 
 Option price sensitivity measures considering dividend yield:
 
-| Greek | Meaning | Call | Put |
-|-------|---------|------|-----|
-| Delta | Stock price sensitivity $\partial V/\partial S$ | $e^{-qT} N(d_1)$ | $-e^{-qT} N(-d_1)$ |
-| Gamma | Rate of change of delta $\partial^2 V/\partial S^2$ | $\frac{e^{-qT} \phi(d_1)}{S_0 \sigma \sqrt{T}}$ | Same |
-| Vega | Volatility sensitivity $\partial V/\partial \sigma$ | $S_0 e^{-qT} \phi(d_1) \sqrt{T}$ | Same |
-| Theta | Time decay $-\partial V/\partial T$ | See below | See below |
-| Rho | Interest rate sensitivity $\partial V/\partial r$ | $KTe^{-rT}N(d_2)$ | $-KTe^{-rT}N(-d_2)$ |
-| Dividend Rho | Dividend yield sensitivity $\partial V/\partial q$ | $-TS_0 e^{-qT}N(d_1)$ | $TS_0 e^{-qT}N(-d_1)$ |
+```{list-table} Greeks Definition with Dividends
+:name: merton-table-greeks
+:header-rows: 1
+:widths: 15 35 25 25
+
+* - Greek
+  - Meaning
+  - Call
+  - Put
+* - Delta
+  - Stock price sensitivity $\partial V/\partial S$
+  - $e^{-qT} N(d_1)$
+  - $-e^{-qT} N(-d_1)$
+* - Gamma
+  - Rate of change of delta $\partial^2 V/\partial S^2$
+  - $\frac{e^{-qT} \phi(d_1)}{S_0 \sigma \sqrt{T}}$
+  - Same
+* - Vega
+  - Volatility sensitivity $\partial V/\partial \sigma$
+  - $S_0 e^{-qT} \phi(d_1) \sqrt{T}$
+  - Same
+* - Theta
+  - Time decay $-\partial V/\partial T$
+  - See below
+  - See below
+* - Rho
+  - Interest rate sensitivity $\partial V/\partial r$
+  - $KTe^{-rT}N(d_2)$
+  - $-KTe^{-rT}N(-d_2)$
+* - Dividend Rho
+  - Dividend yield sensitivity $\partial V/\partial q$
+  - $-TS_0 e^{-qT}N(d_1)$
+  - $TS_0 e^{-qT}N(-d_1)$
+```
 
 where $\phi(x) = \frac{1}{\sqrt{2\pi}}e^{-x^2/2}$ is the standard normal probability density function
 
+(merton-greeks-notes)=
 ### Special Notes
 
 - **Delta**: Due to the dividend adjustment factor $e^{-qT}$, it becomes smaller than Black-Scholes without dividends
 - **Theta**: The dividend term $qS_0 e^{-qT}N(d_1)$ is added
 - **Dividend Rho**: A Greek specific to the Merton model
 
+(merton-theta-details)=
 ### Theta Details
 
 Call:
-$$\Theta_{\text{call}} = -\frac{S_0 e^{-qT} \phi(d_1) \sigma}{2\sqrt{T}} + qS_0 e^{-qT}N(d_1) - rKe^{-rT}N(d_2)$$
+
+```{math}
+:name: merton-eq-theta-call
+
+\Theta_{\text{call}} = -\frac{S_0 e^{-qT} \phi(d_1) \sigma}{2\sqrt{T}} + qS_0 e^{-qT}N(d_1) - rKe^{-rT}N(d_2)
+```
 
 Put:
-$$\Theta_{\text{put}} = -\frac{S_0 e^{-qT} \phi(d_1) \sigma}{2\sqrt{T}} - qS_0 e^{-qT}N(-d_1) + rKe^{-rT}N(-d_2)$$
 
+```{math}
+:name: merton-eq-theta-put
+
+\Theta_{\text{put}} = -\frac{S_0 e^{-qT} \phi(d_1) \sigma}{2\sqrt{T}} - qS_0 e^{-qT}N(-d_1) + rKe^{-rT}N(-d_2)
+```
+
+(merton-black-scholes-relationship)=
 ## Relationship with Black-Scholes
 
+(merton-mathematical-relationship)=
 ### Mathematical Relationship
 
 When dividend yield `q = 0`, the Merton model perfectly matches the Black-Scholes model:
@@ -97,41 +169,66 @@ When dividend yield `q = 0`, the Merton model perfectly matches the Black-Schole
 - $d_1 = \frac{\ln(S_0/K) + (r + \sigma^2/2)T}{\sigma\sqrt{T}}$ (identical to Black-Scholes)
 - $C = S_0 N(d_1) - Ke^{-rT} N(d_2)$ (Black-Scholes pricing formula)
 
+(merton-forward-interpretation)=
 ### Forward Price Interpretation
 
 With dividend-adjusted Forward price $F = S_0 e^{(r-q)T}$:
 
-$$d_1 = \frac{\ln(F/K) + \sigma^2T/2}{\sigma\sqrt{T}}$$
+```{math}
+:name: merton-eq-forward-d1
+
+d_1 = \frac{\ln(F/K) + \sigma^2T/2}{\sigma\sqrt{T}}
+```
 
 This structure is similar to the Black76 model.
 
+(merton-applications)=
 ## Applications
 
+(merton-index-options)=
 ### Stock Index Options
 
 Stock indices (S&P 500, Nikkei 225, etc.) reflect dividends from constituent stocks, so the Merton model is appropriate.
 Example: Option pricing calculation for a stock index with 2% dividend yield
 
+(merton-fx-options)=
 ### Foreign Exchange Options
 
 Can be applied to FX option pricing by treating foreign currency interest rates as dividend yields.
 - Domestic interest rate: `r`
 - Foreign interest rate: `q` (treated as dividend yield)
 
+(merton-commodity-options)=
 ### Commodity Futures Options
 
 Storage costs or convenience yields are incorporated into the dividend yield parameter for price calculation.
 
+(merton-numerical)=
 ## Numerical Computation Considerations
 
+(merton-precision)=
 ### Precision Requirements
 
-| Domain | Precision Target | Implementation Notes |
-|--------|------------------|---------------------|
-| Price precision | Relative error < 1e-6 | Standard implementation sufficient |
-| Greeks | Relative error < 1e-5 | Finite difference verification recommended |
-| Put-Call parity | Error < 1e-10 | For theoretical consistency verification |
+```{list-table} Precision Requirements
+:name: merton-table-precision
+:header-rows: 1
+:widths: 30 30 40
 
+* - Domain
+  - Precision Target
+  - Implementation Notes
+* - Price precision
+  - Relative error < 1e-6
+  - Standard implementation sufficient
+* - Greeks
+  - Relative error < 1e-5
+  - Finite difference verification recommended
+* - Put-Call parity
+  - Error < 1e-10
+  - For theoretical consistency verification
+```
+
+(merton-numerical-challenges)=
 ### Numerical Challenges and Countermeasures
 
 1. **Pre-calculation of dividend adjustment**
@@ -147,8 +244,10 @@ Storage costs or convenience yields are incorporated into the dividend yield par
    - Pre-calculate common terms: $e^{-rT}$, $e^{-qT}$
    - Speed up through batch calculation in parallel processing
 
+(merton-limitations)=
 ## Model Limitations and Extensions
 
+(merton-model-limitations)=
 ### Limitations
 
 1. **Continuous dividend assumption**: Actual dividends are discrete
@@ -156,6 +255,7 @@ Storage costs or convenience yields are incorporated into the dividend yield par
 3. **Constant volatility**: Fluctuates around ex-dividend dates
 4. **Early exercise**: Does not handle American options
 
+(merton-extended-models)=
 ### Extended Models
 
 1. **Discrete dividend models**: Explicitly model ex-dividend dates
@@ -163,9 +263,14 @@ Storage costs or convenience yields are incorporated into the dividend yield par
 3. **American option support**: Combination with numerical methods (binomial trees, finite differences)
 4. **Jump-Diffusion models**: Consider ex-dividend jumps
 
+(merton-implementation)=
 ## Implementation Example (Conceptual)
 
-```python
+```{code-block} python
+:name: merton-code-call-price
+:caption: Merton model call price calculation
+:linenos:
+
 # Conceptual implementation example (different from actual API)
 import numpy as np
 from scipy.stats import norm
@@ -196,6 +301,7 @@ def merton_call(s, k, t, r, q, sigma):
     return call_price
 ```
 
+(merton-references)=
 ## References
 
 1. Merton, R.C. (1973). "Theory of Rational Option Pricing." *Bell Journal of Economics and Management Science*, 4(1), 141-183.
@@ -206,6 +312,7 @@ def merton_call(s, k, t, r, q, sigma):
 
 4. Haug, E.G. (2007). *The Complete Guide to Option Pricing Formulas* (2nd ed.). McGraw-Hill.
 
+(merton-related)=
 ## Related Documents
 
 - [Merton API](../api/python/merton.md) - Python API usage

@@ -22,9 +22,9 @@
 ### 最近完了した計画
 | 計画名 | 完了日 | 成果 |
 |--------|--------|------|
-| [Python バッチ処理API拡充](archive/2025-01-27-python-batch-api-implementation.md) | 2025-01-27 | IV・Greeks・境界値のバッチ処理実装 |
-| [バッチAPI完全再設計](archive/2025-01-27-both-batch-api-complete-redesign.md) | 2025-01-27 | ArrayLike + Broadcasting実装 |
-| [American Greeks戻り値形式統一](archive/2025-01-27-rust-american-greeks-unification.md) | 2025-01-27 | Dict[str, np.ndarray]形式に統一 |
+| [README.md同期実装](archive/2025-08-28-readme-sync-implementation.md) | 2025-08-29 | プロジェクト現状の正確な反映（v0.0.2） |
+| [Pythonモジュール修正](archive/2025-08-28-python-fix-module-import-api.md) | 2025-08-29 | インポート問題の完全解決、mypy対応 |
+| [GitHub Pages英語ドキュメント](archive/2025-01-28-both-github-pages-english-first-docs.md) | 2025-08-29 | MkDocs + CI/CD自動デプロイ |
 
 ## 📁 ディレクトリ構造
 

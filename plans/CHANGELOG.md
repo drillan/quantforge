@@ -1,5 +1,31 @@
 # 計画変更履歴
 
+## 2025-08-29（Documentation and API Enhancement）
+- `2025-08-28-readme-sync-implementation.md` → archive/ ✅
+  - README.mdのプロジェクト現状同期（0.0.2）
+  - 実装済みモデルの正確な反映（Black-Scholes, Black76, Merton, American）
+  - インストール手順とQuick Startの更新
+  - バッチ処理APIのサンプルコード追加
+- `2025-08-28-python-fix-module-import-api.md` → archive/ ✅
+  - Pythonモジュールインポート問題の完全解決
+  - __all__エクスポートの厳密な定義
+  - 型スタブの完全性確保
+  - mypyエラーの完全解消
+- `2025-01-28-both-md-based-documentation-i18n.md` → archive/ ✅
+  - Markdownベース多言語ドキュメント構造実装
+  - 日本語/英語ドキュメントの分離管理
+  - 統一モデルドキュメント構造の確立
+- `2025-01-28-both-local-translation-system.md` → archive/ ✅
+  - ローカル環境での自動翻訳システム構築
+  - DeepL APIを使用した高品質翻訳
+  - 部分翻訳とキャッシュシステム実装
+  - 技術用語の正確な保持
+- `2025-01-28-both-github-pages-english-first-docs.md` → archive/ ✅
+  - GitHub Pages英語ファーストドキュメント構築
+  - MkDocsによる静的サイト生成
+  - 言語切り替え機能の実装
+  - CI/CDによる自動デプロイ
+
 ## 2025-08-27（Benchmark Enhancement）
 - `2025-01-27-python-benchmark-iv.md` → archive/ ✅
   - インプライドボラティリティベンチマークの完全実装

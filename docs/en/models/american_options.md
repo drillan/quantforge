@@ -1,9 +1,12 @@
+(american-options)=
 # American Option Models
 
 A pricing model for options with early exercise rights.
 
+(american-options-theory)=
 ## Theoretical Background
 
+(american-options-basic-concepts)=
 ### Basic Concepts
 
 American options can be exercised at any point before their expiration date.
@@ -12,10 +15,16 @@ Early exercise rights make it always more valuable (or equivalent) than European
 The Bjerksund-Stensland (2002) model provides a highly accurate analytical approximation solution for American options,
 It achieves speeds more than 100 times faster than numerical methods (binomial trees, finite difference methods) while maintaining errors below 0.1%.
 
+(american-options-assumptions)=
 ### Basic Assumption
 
 1. **Lognormal Distribution**: Stock prices follow geometric Brownian motion
-   $$dS_t = (\mu - q) S_t dt + \sigma S_t dW_t$$
+   
+   ```{math}
+   :name: american-options-eq-gbm
+   
+   dS_t = (\mu - q) S_t dt + \sigma S_t dW_t
+   ```
 
 2. **Efficient Market**: No trading costs, no taxes, and unlimited borrowing/lending
 
@@ -25,18 +34,35 @@ It achieves speeds more than 100 times faster than numerical methods (binomial t
 
 5. **Optimal Exercise Strategy**: Investors choose strategies that maximize value
 
+(american-options-derivation)=
 ## Derivation of Price Formula
 
+(american-options-pde)=
 ### Partial Differential Equations for American Option Valuation
 
 Formulated as a free boundary problem:
 
-$$\frac{\partial V}{\partial t} + \frac{1}{2}\sigma^2 S^2 \frac{\partial^2 V}{\partial S^2} + (r-q)S\frac{\partial V}{\partial S} - rV = 0$$
+```{math}
+:name: american-options-eq-pde
+
+\frac{\partial V}{\partial t} + \frac{1}{2}\sigma^2 S^2 \frac{\partial^2 V}{\partial S^2} + (r-q)S\frac{\partial V}{\partial S} - rV = 0
+```
 
 Early exercise conditions:
-$$V(S,t) \geq \max(S-K, 0) \text{ for call}$$
-$$V(S,t) \geq \max(K-S, 0) \text{ for put}$$
 
+```{math}
+:name: american-options-eq-exercise-conditions
+
+V(S,t) \geq \max(S-K, 0) \text{ for call}
+```
+
+```{math}
+:name: american-options-eq-exercise-conditions-put
+
+V(S,t) \geq \max(K-S, 0) \text{ for put}
+```
+
+(american-options-boundary-conditions)=
 ### boundary conditions
 
 Call option:
@@ -51,39 +77,75 @@ Put Option:
 - $V(S^*, t) = K - S^*$ (early exercise boundary)
 - $\frac{\partial V}{\partial S}(S^*, t) = -1$ (smooth pasting)
 
+(american-options-solutions)=
 ## analytical solution
 
+(american-options-call-formula)=
 ### European Coal (Bjerksund-Stensland 2002)
 
 Approximate solution for American call:
 
-$$C_{Am} = \alpha S_0^{\beta} - \alpha \phi(S_0, T, \beta, I, I) + \phi(S_0, T, 1, I, I) - \phi(S_0, T, 1, K, I) - K\phi(S_0, T, 0, I, I) + K\phi(S_0, T, 0, K, I)$$
+```{math}
+:name: american-options-eq-call-bs2002
+
+C_{Am} = \alpha S_0^{\beta} - \alpha \phi(S_0, T, \beta, I, I) + \phi(S_0, T, 1, I, I) - \phi(S_0, T, 1, K, I) - K\phi(S_0, T, 0, I, I) + K\phi(S_0, T, 0, K, I)
+```
 
 where:
 - $I = B_0 + (B_\infty - B_0)(1 - e^{h(T)})$ is the early exercise boundary
 - $\alpha, \beta$ are auxiliary parameters
 - $\phi$ is the auxiliary function
 
+(american-options-put-formula)=
 ### European Put
 
 The approximate solution for American puts has a more complex structure than call options:
 
-$$P_{Am} = K - S_0 + \text{European Put} + \text{Early Exercise Premium}$$
+```{math}
+:name: american-options-eq-put-formula
+
+P_{Am} = K - S_0 + \text{European Put} + \text{Early Exercise Premium}
+```
 
 Early exercise premiums are calculated using optimal stopping theory.
 
+(american-options-greeks)=
 ## Greeks
 
 Price sensitivity indicators for American options:
 
-| Greek | meaning | call | put |
-|---------|------|--------|--------|
-| Delta | Stock sensitivity $\partial V/\partial S$ | discontinuity at early exercise boundary | discontinuity at early exercise boundary |
-| Gamma | rate of change of Delta $\partial^2 V/\partial S^2$ | Rapid increase near boundary | Rapid increase near boundary |
-| Vega | Volatility Sensitivity $\partial V/\partial \sigma$ | smaller than European | smaller than European |
-| Theta | Time Value Decay $-\partial V/\partial T$ | Early exercise complexity | Early exercise complexity |
-| Rho | Interest Sensitivity $\partial V/\partial r$ | Normal | Negative (default) |
+```{list-table} American Option Greeks
+:name: american-options-table-greeks
+:header-rows: 1
+:widths: 15 35 25 25
 
+* - Greek
+  - meaning
+  - call
+  - put
+* - Delta
+  - Stock sensitivity $\partial V/\partial S$
+  - discontinuity at early exercise boundary
+  - discontinuity at early exercise boundary
+* - Gamma
+  - rate of change of Delta $\partial^2 V/\partial S^2$
+  - Rapid increase near boundary
+  - Rapid increase near boundary
+* - Vega
+  - Volatility Sensitivity $\partial V/\partial \sigma$
+  - smaller than European
+  - smaller than European
+* - Theta
+  - Time Value Decay $-\partial V/\partial T$
+  - Early exercise complexity
+  - Early exercise complexity
+* - Rho
+  - Interest Sensitivity $\partial V/\partial r$
+  - Normal
+  - Negative (default)
+```
+
+(american-options-unique-characteristics)=
 ### Characteristics Unique to American Options
 
 1. **Impact of Early Exercise Bounds**
@@ -98,49 +160,75 @@ Price sensitivity indicators for American options:
    - Since no analytical expression exists, approximate using finite difference methods or Monte Carlo methods
    - Fast calculations are also possible using the Bjerksund-Stensland approximation
 
+(american-options-black-scholes-relationship)=
 ## Relationship with Black-Scholes
 
+(american-options-value-relationships)=
 ### value relationships
 
 American option value ≥ European option value:
-$$C_{American} \geq C_{European}$$
-$$P_{American} \geq P_{European}$$
 
+```{math}
+:name: american-options-eq-value-inequality
+
+C_{American} \geq C_{European}
+```
+
+```{math}
+:name: american-options-eq-value-inequality-put
+
+P_{American} \geq P_{European}
+```
+
+(american-options-dividend-impact)=
 ### Dividend Impact
 
 - **Dividend-Arbitrage Call**: American = European (not exercised early)
 - **Dividend-paying calls**: American > European (can be exercised just before the dividend)
 - **Put**: American > European regardless of dividend
 
+(american-options-convergence)=
 ### Convergence Conditions
 
 In the limit of short maturity, both approaches converge:
-$$\lim_{T \to 0} (American - European) = 0$$
 
+```{math}
+:name: american-options-eq-convergence
+
+\lim_{T \to 0} (American - European) = 0
+```
+
+(american-options-applications)=
 ## Applications
 
+(american-options-stock-options)=
 ### Stock Options
 - Individual Stock Options (During Dividend Payment)
 - Employee Stock Options
 - Early Exercise Option Warrants
 
+(american-options-product-derivatives)=
 ### Product Derivatives
 - Commodity Futures Options
 - Energy Options (Crude Oil, Natural Gas)
 - Agricultural Options
 
+(american-options-interest-rate)=
 ### Interest Rate Derivatives
 - Bermuda swaptions
 - Mortgage-Backed Securities (MBS)
 - Prepayment Options
 
+(american-options-numerical)=
 ## Numerical Computation Considerations
 
+(american-options-precision)=
 ### Precision Requirements
 - Price Accuracy: Error < 0.1% from true value
 - Greeks Precision: Relative error < 1%
 - Early exercise boundary: error < 0.5%
 
+(american-options-numerical-challenges)=
 ### Numerical Challenges and Solutions
 
 1. **Free boundary problems**
@@ -155,23 +243,31 @@ $$\lim_{T \to 0} (American - European) = 0$$
    - Solution: Use Bjerksund-Stensland approximation
    - Calculation time: < 50ns/option
 
+(american-options-limitations)=
 ## Limitations and Extensions of Models
 
+(american-options-model-limitations)=
 ### limit
 - **Discrete Dividends**: Discontinuities on ex-dividend dates
 - **Stochastic Parameters**: Ignores fluctuations in volatility and interest rates
 - **Trading Constraints**: Does not account for real-world market limitations
 - **Taxation**: Taxes are ignored
 
+(american-options-extended-models)=
 ### Extended Model
 - **Least Squares Monte Carlo**: Longstaff-Schwartz Method
 - **Stochastic Volatility**: American Heston Model
 - **Jump Diffusion**: American Merton Jump Model
 - **Multi-Asset**: Basket American Option
 
+(american-options-implementation)=
 ## Implementation Example (Conceptual)
 
-```python
+```{code-block} python
+:name: american-options-code-call-price
+:caption: American call option pricing
+:linenos:
+
 # Conceptual implementation example (differs from actual API)
 def american_call_price(s, k, t, r, sigma, q=0.0):
     """
@@ -212,6 +308,7 @@ def american_call_price(s, k, t, r, sigma, q=0.0):
     return price
 ```
 
+(american-options-references)=
 ## References
 
 1. Bjerksund, P. and Stensland, G. (2002). "Closed Form Valuation of American Options." *Working Paper, NHH Bergen*.
@@ -222,6 +319,7 @@ def american_call_price(s, k, t, r, sigma, q=0.0):
 
 4. Barone-Adesi, G. and Whaley, R.E. (1987). "Efficient Analytic Approximation of American Option Values." *Journal of Finance*, 42(2), 301-320.
 
+(american-options-related)=
 ## Related Documents
 
 - [American Option API](../api/python/american.md)

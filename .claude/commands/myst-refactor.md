@@ -8,14 +8,14 @@ $ARGUMENTS
 日英ドキュメントの構造的な対応関係を管理するため、適切なname属性とcaption属性を付与してください。
 
 ## 必須参照ドキュメント
-**`docs/internal/myst_naming_guidelines.md`** の規則に厳密に従ってください。
+**`docs/ja/internal/myst_naming_guidelines.md`** の規則に厳密に従ってください。
 このガイドラインには命名規則、パターン、実例が詳細に記載されています。
 
 ## 実行手順
 
 ### 1. 事前確認
 - [ ] 対象ファイル（$ARGUMENTS）を読み込む、（ $ARGUMENTS がディレクトリの場合はサブディレクトリを含めた*.md ファイル）
-- [ ] `docs/internal/myst_naming_guidelines.md` を読み込む
+- [ ] `docs/ja/internal/myst_naming_guidelines.md` を読み込む
 - [ ] 対象ファイルのベース名を確認（例: black_scholes → black-scholes）
 - [ ] 既存のname属性がないか確認（重複防止）
 
@@ -238,4 +238,4 @@ python translations/structure_compare.py \
 
 **注意**: 
 - 対象ファイルパスは $ARGUMENTS で参照されます
-- 必ず `docs/internal/myst_naming_guidelines.md` を主要な参照元として使用してください
+- 必ず `docs/ja/internal/myst_naming_guidelines.md` を主要な参照元として使用してください

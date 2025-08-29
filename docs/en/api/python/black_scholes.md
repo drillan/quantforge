@@ -1,17 +1,24 @@
+(api-black-scholes)=
 # Black-Scholes Model API
 
 A standard model for calculating the price of European options.
 
+(api-black-scholes-overview)=
 ## Overview
 
 The Black-Scholes model serves as the fundamental model for calculating the theoretical price of stock options.
 Assuming a stock price process following a lognormal distribution, we provide an analytical pricing formula.
 
+(api-black-scholes-usage)=
 ## API Usage
 
+(api-black-scholes-basic-calculation)=
 ### Basic Price Calculation
 
-```python
+```{code-block} python
+:name: api-black-scholes-code-basic
+:caption: Basic price calculation
+:linenos:
 from quantforge.models import black_scholes
 
 # Call option price
@@ -23,11 +30,15 @@ call_price = black_scholes.call_price(100.0, 105.0, 1.0, 0.05, 0.2)
 put_price = black_scholes.put_price(100.0, 105.0, 1.0, 0.05, 0.2)
 ```
 
+(api-black-scholes-batch-processing)=
 ### Batch Processing
 
 Full array support and efficient calculations via broadcasting:
 
-```python
+```{code-block} python
+:name: api-black-scholes-code-batch
+:caption: Batch processing example
+:linenos:
 import numpy as np
 
 # All parameters accept arrays (Broadcasting supported)
@@ -49,11 +60,15 @@ portfolio_vega = greeks['vega'].sum()
 
 For details, refer to the [Batch Processing API](batch_processing.md).
 
+(api-black-scholes-greeks-calculation)=
 ### Greek Calculations
 
 Bulk calculate optional sensitivities (Greeks):
 
-```python
+```{code-block} python
+:name: api-black-scholes-code-greeks
+:caption: Greeks calculation
+:linenos:
 # Calculate all Greeks at once
 # Parameters: s(spot), k, t, r, sigma, is_call
 greeks = black_scholes.greeks(100.0, 100.0, 1.0, 0.05, 0.2, True)
@@ -66,53 +81,119 @@ print(f"Theta: {greeks.theta:.4f}")  # Time decay
 print(f"Rho: {greeks.rho:.4f}")      # Interest rate sensitivity
 ```
 
+(api-black-scholes-implied-volatility)=
 ### implied volatility
 
 Deriving volatility from market prices:
 
-```python
+```{code-block} python
+:name: api-black-scholes-code-iv
+:caption: Implied volatility calculation
+:linenos:
 # Parameters: price, s, k, t, r, is_call
 iv = black_scholes.implied_volatility(10.45, 100.0, 100.0, 1.0, 0.05, True)
 print(f"Implied Volatility: {iv:.4f}")
 ```
 
+(api-black-scholes-parameters)=
 ## Parameter Description
 
+(api-black-scholes-input-parameters)=
 ### Input Parameters
 
-| Parameters | type | Description | Valid Range |
-|-----------|-----|------|----------|
-| `s` | float | Spot Price (Current Stock Price) | > 0 |
-| `k` | float | Exercise Price (Strike) | > 0 |
-| `t` | float | Time to Maturity in Years | > 0 |
-| `r` | float | Risk-free interest rate (annual) | optional |
-| `sigma` | float | Volatility (annualized) | > 0 |
-| `is_call` | bool | Option Type | True: Call, False: Put |
+```{list-table} Input Parameters
+:name: api-black-scholes-table-parameters
+:header-rows: 1
+:widths: 20 20 40 20
 
+* - Parameters
+  - type
+  - Description
+  - Valid Range
+* - `s`
+  - float
+  - Spot Price (Current Stock Price)
+  - > 0
+* - `k`
+  - float
+  - Exercise Price (Strike)
+  - > 0
+* - `t`
+  - float
+  - Time to Maturity in Years
+  - > 0
+* - `r`
+  - float
+  - Risk-free interest rate (annual)
+  - optional
+* - `sigma`
+  - float
+  - Volatility (annualized)
+  - > 0
+* - `is_call`
+  - bool
+  - Option Type
+  - True: Call, False: Put
+```
+
+(api-black-scholes-batch-parameters)=
 ### Batch Processing Parameters
 
-| Parameters | type | Description |
-|-----------|-----|------|
-| `spots` | np.ndarray | Multiple Spot Prices |
-| `k` | float | Exercise Price (Common) |
-| `t` | float | Time to Maturity (Common) |
-| `r` | float | Risk-free rate (common) |
-| `sigma` | float | Volatility (Common) |
+```{list-table} Batch Processing Parameters
+:name: api-black-scholes-table-batch-params
+:header-rows: 1
+:widths: 25 25 50
 
+* - Parameters
+  - type
+  - Description
+* - `spots`
+  - np.ndarray
+  - Multiple Spot Prices
+* - `k`
+  - float
+  - Exercise Price (Common)
+* - `t`
+  - float
+  - Time to Maturity (Common)
+* - `r`
+  - float
+  - Risk-free rate (common)
+* - `sigma`
+  - float
+  - Volatility (Common)
+```
+
+(api-black-scholes-formulas)=
 ## Price Formula (Reference)
 
 Call option:
-$$C = S_0 \cdot N(d_1) - K \cdot e^{-rT} \cdot N(d_2)$$
+
+```{math}
+:name: api-black-scholes-eq-call
+
+C = S_0 \cdot N(d_1) - K \cdot e^{-rT} \cdot N(d_2)
+```
 
 Put Option:
-$$P = K \cdot e^{-rT} \cdot N(-d_2) - S_0 \cdot N(-d_1)$$
+
+```{math}
+:name: api-black-scholes-eq-put
+
+P = K \cdot e^{-rT} \cdot N(-d_2) - S_0 \cdot N(-d_1)
+```
 
 where:
-- $d_1 = \frac{\ln(S_0/K) + (r + \sigma^2/2)T}{\sigma\sqrt{T}}$
-- $d_2 = d_1 - \sigma\sqrt{T}$
+
+```{math}
+:name: api-black-scholes-eq-d1-d2
+
+d_1 = \frac{\ln(S_0/K) + (r + \sigma^2/2)T}{\sigma\sqrt{T}}, \quad d_2 = d_1 - \sigma\sqrt{T}
+```
 
 For detailed theoretical background, refer to the [Mathematical Model](../../models/black_scholes.md).
 
+(api-black-scholes-error-handling)=
 ## Error Handling
 
 All price calculation functions return an error under the following conditions:
@@ -123,7 +204,10 @@ All price calculation functions return an error under the following conditions:
 - sigma ≤ 0 (volatility is negative or zero)
 - number is NaN or infinity
 
-```python
+```{code-block} python
+:name: api-black-scholes-code-error
+:caption: Error handling example
+:linenos:
 try:
     # Parameters: s(spot), k, t, r, sigma
     price = black_scholes.call_price(-100, 100, 1.0, 0.05, 0.2)  # Invalid negative value
@@ -131,6 +215,7 @@ except ValueError as e:
     print(f"Input error: {e}")
 ```
 
+(api-black-scholes-performance)=
 ## Performance Metrics
 
 :::{note}
@@ -138,14 +223,29 @@ Measurement Environment: AMD Ryzen 5 5600G, CUI Mode
 Measurement Method: Actual values refer to [benchmarks](../../performance/benchmarks.md)
 :::
 
-| Operation | Single Calculation | 1 million batch |
-|------|----------|--------------:|
-| Call/Put Price | 1.4 μs | 55.6ms |
-| all Greeks | Scheduled Measurement | Scheduled Measurement |
-| implied volatility | 1.5 μs | Scheduled Measurement |
+```{list-table} Performance Metrics
+:name: api-black-scholes-table-performance
+:header-rows: 1
+:widths: 40 30 30
 
+* - Operation
+  - Single Calculation
+  - 1 million batch
+* - Call/Put Price
+  - 1.4 μs
+  - 55.6ms
+* - all Greeks
+  - Scheduled Measurement
+  - Scheduled Measurement
+* - implied volatility
+  - 1.5 μs
+  - Scheduled Measurement
+```
+
+(api-black-scholes-examples)=
 ## Examples
 
+(api-black-scholes-atm-example)=
 ### ATM Option Pricing and Greeks
 
 ```python
