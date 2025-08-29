@@ -79,25 +79,62 @@ print(f"Gamma: {greeks.gamma:.4f}")
 print(f"Vega: {greeks.vega:.4f}")
 ```
 
-## type system
+## Function Parameter Specifications
 
-### Input Type
+### Scalar Calculations (Single Values)
 
-| Parameters | type | Description |
-|-----------|-----|------|
-| s | float \| np.ndarray | Current Price (Spot) |
-| k | float \| np.ndarray | Exercise Price (Strike) |
-| r | float \| np.ndarray | risk-free rate |
-| sigma | float \| np.ndarray | Volatility |
-| t | float \| np.ndarray | Time to Maturity |
+Function signatures for calculating a single option price:
 
-### Return Type
+**Functions**: `call_price(s, k, t, r, sigma)` / `put_price(s, k, t, r, sigma)`
 
-| function | Return Value | Description |
-|------|--------|------|
-| price function | float \| np.ndarray | Option Price |
-| Greek Functions | float \| np.ndarray | sensitivity |
-| calculate(..., greeks=True) | dict | Dictionary of Prices and Greeks |
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| s | float | Spot price (current price) |
+| k | float | Strike price (exercise price) |
+| t | float | Time to maturity (in years) |
+| r | float | Risk-free rate |
+| sigma | float | Volatility |
+
+**Returns**: `float` - Option price
+
+### Batch Calculations (Array Processing)
+
+Function signatures for calculating multiple option prices at once:
+
+**Functions**: `call_price_batch(spots, strikes, times, rates, sigmas)` / `put_price_batch(...)`
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| spots | np.ndarray \| float | Array of spot prices |
+| strikes | np.ndarray \| float | Array of strike prices |
+| times | np.ndarray \| float | Array of times to maturity |
+| rates | np.ndarray \| float | Array of risk-free rates |
+| sigmas | np.ndarray \| float | Array of volatilities |
+
+**Returns**: `np.ndarray` - Array of option prices
+
+**Notes**:
+- Batch functions support NumPy broadcasting
+- Scalar values and arrays can be mixed (automatically broadcast)
+- All arrays must have compatible shapes for broadcasting
+
+### Greeks Return Values
+
+**Scalar version** (`greeks()`): `PyGreeks` object
+- Contains attributes: `delta`, `gamma`, `vega`, `theta`, `rho`
+
+**Batch version** (`greeks_batch()`): Dictionary format
+- Keys: `'delta'`, `'gamma'`, `'vega'`, `'theta'`, `'rho'`
+- Values: `np.ndarray` for each Greek
+
+### Usage Guidelines
+
+| Use Case | Recommended Function | Reason |
+|----------|---------------------|---------|
+| Single calculation | `call_price()` | Simple and fast |
+| Multiple calculations (100+) | `call_price_batch()` | Significantly faster via vectorization |
+| Parameter sweeps | `call_price_batch()` | Leverages broadcasting |
+| Interactive calculations | `call_price()` | Quick response time |
 
 ## Error Handling
 

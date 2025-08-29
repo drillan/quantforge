@@ -79,25 +79,62 @@ print(f"Gamma: {greeks.gamma:.4f}")
 print(f"Vega: {greeks.vega:.4f}")
 ```
 
-## 型システム
+## 関数パラメータ仕様
 
-### 入力型
+### スカラー計算（単一値）
+
+単一のオプション価格を計算する場合の関数シグネチャ：
+
+**関数**: `call_price(s, k, t, r, sigma)` / `put_price(s, k, t, r, sigma)`
 
 | パラメータ | 型 | 説明 |
 |-----------|-----|------|
-| s | float \| np.ndarray | 現在価格（スポット） |
-| k | float \| np.ndarray | 行使価格（ストライク） |
-| r | float \| np.ndarray | 無リスク金利 |
-| sigma | float \| np.ndarray | ボラティリティ |
-| t | float \| np.ndarray | 満期までの時間 |
+| s | float | スポット価格（現在価格） |
+| k | float | ストライク価格（行使価格） |
+| t | float | 満期までの時間（年） |
+| r | float | 無リスク金利 |
+| sigma | float | ボラティリティ |
 
-### 戻り値型
+**戻り値**: `float` - オプション価格
 
-| 関数 | 戻り値 | 説明 |
-|------|--------|------|
-| 価格関数 | float \| np.ndarray | オプション価格 |
-| グリークス関数 | float \| np.ndarray | 感応度 |
-| calculate(..., greeks=True) | dict | 価格とグリークスの辞書 |
+### バッチ計算（配列処理）
+
+複数のオプション価格を一括計算する場合の関数シグネチャ：
+
+**関数**: `call_price_batch(spots, strikes, times, rates, sigmas)` / `put_price_batch(...)`
+
+| パラメータ | 型 | 説明 |
+|-----------|-----|------|
+| spots | np.ndarray \| float | スポット価格の配列 |
+| strikes | np.ndarray \| float | ストライク価格の配列 |
+| times | np.ndarray \| float | 満期までの時間の配列 |
+| rates | np.ndarray \| float | 無リスク金利の配列 |
+| sigmas | np.ndarray \| float | ボラティリティの配列 |
+
+**戻り値**: `np.ndarray` - オプション価格の配列
+
+**注意事項**：
+- バッチ版は NumPy のブロードキャスティングに対応
+- スカラー値と配列を混在させることが可能（自動的にブロードキャスト）
+- 全ての配列は同じ形状か、ブロードキャスト可能な形状である必要がある
+
+### グリークス計算の戻り値
+
+**スカラー版** (`greeks()`): `PyGreeks` オブジェクト
+- `delta`, `gamma`, `vega`, `theta`, `rho` 属性を持つ
+
+**バッチ版** (`greeks_batch()`): 辞書形式
+- キー: `'delta'`, `'gamma'`, `'vega'`, `'theta'`, `'rho'`
+- 値: 各グリークスの `np.ndarray`
+
+### 使い分けガイド
+
+| ケース | 推奨関数 | 理由 |
+|--------|---------|------|
+| 単一計算 | `call_price()` | シンプルで高速 |
+| 複数計算（100件以上） | `call_price_batch()` | ベクトル化により大幅に高速 |
+| パラメータスイープ | `call_price_batch()` | ブロードキャスティング活用 |
+| インタラクティブ計算 | `call_price()` | レスポンスが速い |
 
 ## エラーハンドリング
 
