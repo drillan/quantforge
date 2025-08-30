@@ -126,16 +126,19 @@ def format_markdown(results: dict[str, Any]) -> str:
 
 if __name__ == "__main__":
     from pathlib import Path
+    
+    # プロジェクトルートからの相対パスでresultsディレクトリを定義
+    BASE_DIR = Path(__file__).resolve().parent.parent.parent
+    RESULTS_DIR = BASE_DIR / "benchmarks" / "results"
 
-    # 最新結果を優先的に読み込み
-    if Path("results/latest.json").exists():
-        with open("results/latest.json") as f:
-            results = json.load(f)
-    elif Path("benchmark_results.json").exists():
-        with open("benchmark_results.json") as f:
+    # 最新結果を読み込み
+    latest_file = RESULTS_DIR / "latest.json"
+    if latest_file.exists():
+        with open(latest_file) as f:
             results = json.load(f)
     else:
-        print("Error: No benchmark results found")
+        print("Error: No benchmark results found at", latest_file)
+        print("Run 'python -m benchmarks.runners.comparison' first")
         exit(1)
 
     # Markdown形式で出力

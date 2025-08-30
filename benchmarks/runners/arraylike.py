@@ -12,6 +12,10 @@ from typing import Any
 
 import numpy as np
 
+# プロジェクトルートからの相対パスでresultsディレクトリを定義
+BASE_DIR = Path(__file__).resolve().parent.parent.parent
+RESULTS_DIR = BASE_DIR / "benchmarks" / "results"
+
 
 class ArrayLikeBenchmark:
     """ArrayLike（list, tuple, ndarray）性能測定."""
@@ -366,19 +370,18 @@ class ArrayLikeBenchmark:
         Args:
             results: ベンチマーク結果
         """
-        results_dir = Path("results")
-        results_dir.mkdir(exist_ok=True, parents=True)
+        RESULTS_DIR.mkdir(exist_ok=True, parents=True)
 
         # 最新結果を保存
-        with open(results_dir / "arraylike_latest.json", "w") as f:
+        with open(RESULTS_DIR / "arraylike_latest.json", "w") as f:
             json.dump(results, f, indent=2)
 
         # 履歴に追加
-        with open(results_dir / "arraylike_history.jsonl", "a") as f:
+        with open(RESULTS_DIR / "arraylike_history.jsonl", "a") as f:
             json.dump(results, f)
             f.write("\n")
 
-        print(f"📝 結果を保存: {results_dir}/arraylike_latest.json")
+        print(f"📝 結果を保存: {RESULTS_DIR}/arraylike_latest.json")
 
 
 def main() -> None:

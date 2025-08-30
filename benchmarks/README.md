@@ -1,55 +1,50 @@
-# QuantForge ベンチマークツール
+# QuantForge ベンチマークパッケージ
 
-このディレクトリには、QuantForgeのパフォーマンスを測定・管理するツールが含まれています。
+高性能オプション価格計算ライブラリQuantForgeのパフォーマンスを測定・管理するPythonパッケージ。
 
-## 🏗️ アーキテクチャ
+## 📦 パッケージ構成
 
-### データフロー
 ```
-実行 → 構造化データ保存 → 分析 → レポート生成
-     ↓
-run_comparison.py → results/history.jsonl → analyze.py → format_results.py
-                  → results/latest.json
-                  → results/history.csv
-```
-
-### ファイル構成
-```
-benchmarks/
-├── python_baseline.py      # Python実装（Pure/SciPy/NumPy）
-├── run_comparison.py       # ベンチマーク実行エンジン
-├── save_results.py        # データ管理（JSONL/CSV）
-├── analyze.py             # 分析・トレンド検出
-├── format_results.py      # Markdown生成
-├── run_benchmarks.sh      # 統合実行スクリプト
-├── results/               # 構造化データストレージ
-│   ├── history.jsonl     # 履歴（追記型）
-│   ├── latest.json       # 最新結果
-│   └── history.csv       # 分析用エクスポート
-└── benchmark_results.json # 互換性用（廃止予定）
+benchmarks/                      # Pythonパッケージ
+├── __init__.py                  # パッケージ初期化
+├── __main__.py                  # エントリーポイント
+├── baseline/                    # ベースライン実装
+│   ├── __init__.py
+│   ├── python_baseline.py      # Pure Python実装
+│   ├── iv_baseline.py           # SciPy実装
+│   └── iv_vectorized.py         # ベクトル化実装
+├── runners/                     # 実行スクリプト
+│   ├── __init__.py
+│   ├── comparison.py            # ベンチマーク実行
+│   ├── practical.py             # 実践シナリオ
+│   └── arraylike.py             # ArrayLikeテスト
+├── analysis/                    # 分析ツール
+│   ├── __init__.py
+│   ├── save.py                  # データ保存・管理
+│   ├── analyze.py               # 分析・トレンド検出
+│   └── format.py                # Markdown生成
+└── results/                     # 構造化データ（真実の源）
+    ├── history.jsonl            # 履歴データ（追記型）
+    ├── latest.json              # 最新結果
+    └── history.csv              # 分析用エクスポート
 ```
 
 ## 🚀 クイックスタート
 
-### 基本的な実行
+### パッケージとして実行（推奨）
 ```bash
-# 完全なベンチマーク実行
-./run_benchmarks.sh
-
-# または個別実行
-uv run python run_comparison.py
+# どのディレクトリからでも実行可能
+python -m benchmarks                        # メインメニュー表示
+python -m benchmarks.runners.comparison     # 比較ベンチマーク実行
+python -m benchmarks.runners.practical      # 実践シナリオ実行
+python -m benchmarks.analysis.analyze       # 結果分析
+python -m benchmarks.analysis.format        # Markdownレポート生成
 ```
 
-### 結果の確認
+### 旧来のスクリプト実行（互換性維持）
 ```bash
-# 要約表示
-uv run python analyze.py
-
-# Markdownレポート生成
-uv run python format_results.py
-
-# CSV出力
-uv run python save_results.py
+cd benchmarks
+./run_benchmarks.sh  # 統合実行スクリプト（まだ利用可能）
 ```
 
 ## 📊 測定内容
@@ -69,46 +64,30 @@ uv run python save_results.py
 - FFIオーバーヘッドの測定
 - スループット飽和点の特定
 
-## 🔧 設定とカスタマイズ
-
-### BenchmarkRunnerクラス
-```python
-runner = BenchmarkRunner(
-    warmup_runs=100,    # ウォームアップ回数
-    measure_runs=1000   # 測定回数
-)
-```
-
-### 測定パラメータ
-```python
-# run_comparison.py内で調整可能
-s, k, t, r, sigma = 100.0, 100.0, 1.0, 0.05, 0.2
-```
-
 ## 📈 分析機能
 
-### パフォーマンストレンド
+### Pythonコードからの使用
 ```python
-from analyze import analyze_performance_trends
+# ベースライン実装のインポート
+from benchmarks.baseline.python_baseline import (
+    black_scholes_pure_python,
+    black_scholes_numpy_batch
+)
 
-trends = analyze_performance_trends()
-# 回帰検出、改善検出、前回との比較
-```
+# 分析ツールのインポート
+from benchmarks.analysis.analyze import (
+    detect_performance_trends,
+    generate_summary_table
+)
+from benchmarks.analysis.save import save_benchmark_result
 
-### 履歴統計
-```python
-from save_results import load_history
+# 実行例
+result = black_scholes_pure_python(s=100, k=105, t=1.0, r=0.05, sigma=0.2)
+print(f"Pure Python Result: {result:.4f}")
 
-history = load_history()
-# 全測定結果のリスト（時系列順）
-```
-
-### CSV出力
-```python
-from save_results import export_to_csv
-
-export_to_csv("custom_output.csv")
-# Excel、pandas等での分析用
+# 分析の実行
+trends = detect_performance_trends()
+summary = generate_summary_table()
 ```
 
 ## 📝 データフォーマット
@@ -138,17 +117,12 @@ export_to_csv("custom_output.csv")
 ### データ整合性
 - `history.jsonl`は追記専用（編集しない）
 - 手動でデータを変更しない
-- バックアップは定期的に実施
+- パスは実行ディレクトリに依存しない設計（`Path(__file__).resolve()`使用）
 
 ### 測定の再現性
 - 同一環境での測定を推奨
 - システム負荷が低い状態で実行
-- 電源管理設定を「パフォーマンス」に
-
-### Pure Python実装について
-- Abramowitz & Stegun近似を使用
-- 精度は約1%（実用上問題なし）
-- 教育・比較目的
+- ウォームアップ実行後に測定（自動実施）
 
 ## 🔍 トラブルシューティング
 
@@ -162,18 +136,17 @@ uv add psutil
 uv add --dev types-psutil
 ```
 
-### matplotlib未インストール（プロット生成）
-```bash
-uv add matplotlib  # オプション
-```
-
 ### 権限エラー（run_benchmarks.sh）
 ```bash
 chmod +x run_benchmarks.sh
 ```
 
-## 📚 関連ドキュメント
+## 📚 詳細ドキュメント
 
-- [ベンチマーク管理ガイド](../docs/internal/benchmark_management_guide.md)
+包括的な管理方法については以下を参照：
+
+→ **[ベンチマーク管理ガイド](../docs/ja/internal/benchmark_management_guide.md)**
+
+その他の関連ドキュメント：
 - [パフォーマンス結果](../docs/performance/benchmarks.md)
 - [最適化ガイド](../docs/performance/optimization.md)

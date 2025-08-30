@@ -22,7 +22,7 @@ put_price = american.put_price
 
 # Import reference implementation
 try:
-    from GBS_2025 import _american_option, _bjerksund_stensland_2002
+    from GBS_2025 import _american_option, _bjerksund_stensland_2002  # type: ignore[import-not-found]
 except ImportError:
     pytest.skip("GBS_2025.py not found in draft/", allow_module_level=True)
 

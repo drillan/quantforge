@@ -8,15 +8,28 @@
 ベンチマーク結果は**構造化データ**として管理され、Markdownドキュメントは自動生成されます。
 
 ```
-benchmarks/
-├── results/                      # 構造化データ（真実の源）
-│   ├── history.jsonl            # 履歴データ（追記型）
-│   ├── latest.json              # 最新結果
-│   └── history.csv              # 分析用エクスポート
-├── run_comparison.py            # ベンチマーク実行
-├── save_results.py              # データ保存・管理
-├── analyze.py                   # 分析・トレンド検出
-└── format_results.py            # Markdown生成
+benchmarks/                      # Pythonパッケージとして構成
+├── __init__.py                  # パッケージ初期化
+├── __main__.py                  # エントリーポイント
+├── baseline/                    # ベースライン実装
+│   ├── __init__.py
+│   ├── python_baseline.py      # Pure Python実装
+│   ├── iv_baseline.py           # SciPy実装
+│   └── iv_vectorized.py         # ベクトル化実装
+├── runners/                     # 実行スクリプト
+│   ├── __init__.py
+│   ├── comparison.py            # ベンチマーク実行
+│   ├── practical.py             # 実践シナリオ
+│   └── arraylike.py             # ArrayLikeテスト
+├── analysis/                    # 分析ツール
+│   ├── __init__.py
+│   ├── save.py                  # データ保存・管理
+│   ├── analyze.py               # 分析・トレンド検出
+│   └── format.py                # Markdown生成
+└── results/                     # 構造化データ（真実の源）
+    ├── history.jsonl            # 履歴データ（追記型）
+    ├── latest.json              # 最新結果
+    └── history.csv              # 分析用エクスポート
 
 docs/performance/
 └── benchmarks.md                # 自動生成される表示用ドキュメント
@@ -30,12 +43,13 @@ docs/performance/
 :name: benchmark-management-guide-code-section
 :caption: ベンチマーク実行（自動的に履歴に追加）
 
-# ベンチマーク実行（自動的に履歴に追加）
-cd benchmarks
-./run_benchmarks.sh
+# モジュールとして実行（どのディレクトリからでも可能）
+python -m benchmarks                        # メインメニュー表示
+python -m benchmarks.runners.comparison     # 比較ベンチマーク実行
+python -m benchmarks.runners.practical      # 実践シナリオ実行
 
-# または手動実行
-uv run python run_comparison.py
+# uvでの実行
+uv run python -m benchmarks.runners.comparison
 ```
 
 実行により以下が自動的に行われます：
@@ -48,10 +62,8 @@ uv run python run_comparison.py
 #### 方法A: 最新結果のみ反映（推奨）
 
 ```bash
-cd benchmarks
-
-# 1. 最新データの要約を確認
-uv run python analyze.py
+# 1. 最新データの要約を確認（どこからでも実行可能）
+python -m benchmarks.analysis.analyze
 
 # 2. benchmarks.mdの該当セクションを手動更新
 # 以下の値を更新：
@@ -64,11 +76,9 @@ uv run python analyze.py
 #### 方法B: 完全な自動生成
 
 ```bash
-cd benchmarks
-
-# Markdownセクションを生成
-uv run python -c "
-from analyze import generate_summary_table
+# Markdownセクションを生成（どこからでも実行可能）
+python -c "
+from benchmarks.analysis.analyze import generate_summary_table
 print(generate_summary_table())
 " > summary.md
 
@@ -85,16 +95,18 @@ print(generate_summary_table())
 from pathlib import Path
 import json
 from datetime import datetime
+from benchmarks.analysis import save
 
 def update_benchmarks_doc():
     """docs/performance/benchmarks.mdを最新データで更新."""
     
     # 最新データ読み込み
-    with open("results/latest.json") as f:
+    results_path = Path(__file__).parent / "results" / "latest.json"
+    with open(results_path) as f:
         data = json.load(f)
     
     # テンプレート読み込み
-    doc_path = Path("../docs/performance/benchmarks.md")
+    doc_path = Path(__file__).parent.parent / "docs" / "performance" / "benchmarks.md"
     content = doc_path.read_text()
     
     # 日付更新
@@ -148,6 +160,79 @@ else:
 - [ ] スケーリング特性のグラフ
 - [ ] 環境別の比較（異なるCPUでの測定時）
 
+## 📦 プログラムからの使用方法
+
+### パッケージとしてのインポート
+
+```{code-block} python
+:name: benchmark-management-guide-code-import
+:caption: ベンチマークパッケージの使用例
+
+# ベースライン実装のインポート
+from benchmarks.baseline.python_baseline import (
+    black_scholes_pure_python,
+    black_scholes_numpy_batch
+)
+from benchmarks.baseline.iv_baseline import (
+    black_scholes_price_scipy,
+    implied_volatility_scipy
+)
+
+# 分析ツールのインポート
+from benchmarks.analysis.analyze import (
+    detect_performance_trends,
+    generate_summary_table
+)
+from benchmarks.analysis.save import save_benchmark_result
+
+# 実行例
+result = black_scholes_pure_python(s=100, k=105, t=1.0, r=0.05, sigma=0.2)
+print(f"Pure Python Result: {result:.4f}")
+
+# 分析の実行
+trends = detect_performance_trends()
+summary = generate_summary_table()
+```
+
+### カスタムベンチマークの作成
+
+```{code-block} python
+:name: benchmark-management-guide-code-custom
+:caption: カスタムベンチマークの実装
+
+import time
+from benchmarks.analysis.save import save_benchmark_result
+
+def custom_benchmark():
+    """独自のベンチマークを実装."""
+    results = {}
+    
+    # 測定対象の実装をインポート
+    from benchmarks.baseline.python_baseline import black_scholes_pure_python
+    from quantforge import models
+    
+    # 測定
+    start = time.perf_counter()
+    for _ in range(10000):
+        black_scholes_pure_python(100, 105, 1.0, 0.05, 0.2)
+    pure_python_time = time.perf_counter() - start
+    
+    start = time.perf_counter()
+    for _ in range(10000):
+        models.call_price(100, 105, 1.0, 0.05, 0.2)
+    quantforge_time = time.perf_counter() - start
+    
+    # 結果を保存
+    results = {
+        "pure_python": pure_python_time,
+        "quantforge": quantforge_time,
+        "speedup": pure_python_time / quantforge_time
+    }
+    
+    save_benchmark_result(results)
+    return results
+```
+
 ## 🔍 データ分析コマンド
 
 ### 履歴の統計情報
@@ -156,26 +241,24 @@ else:
 :name: benchmark-management-guide-code-section
 :caption: 全履歴の要約統計
 
-# 全履歴の要約統計
-cd benchmarks
-uv run python -c "
+# 全履歴の要約統計（どこからでも実行可能）
+python -c "
+from benchmarks.analysis.analyze import load_history
 import json
-from pathlib import Path
 
-history = []
-with open('results/history.jsonl') as f:
-    for line in f:
-        history.append(json.loads(line))
+history = load_history()
 
 print(f'測定回数: {len(history)}')
-print(f'期間: {history[0]["timestamp"]} ~ {history[-1]["timestamp"]}')
-
-# QuantForge単一計算の統計
-qf_times = [h['single']['quantforge'] * 1e6 for h in history]
-print(f'QuantForge単一計算:')
-print(f'  最小: {min(qf_times):.2f} μs')
-print(f'  最大: {max(qf_times):.2f} μs')
-print(f'  平均: {sum(qf_times)/len(qf_times):.2f} μs')
+if history:
+    print(f'期間: {history[0]["timestamp"]} ~ {history[-1]["timestamp"]}')
+    
+    # QuantForge単一計算の統計
+    qf_times = [h['single']['quantforge'] * 1e6 for h in history if 'single' in h]
+    if qf_times:
+        print(f'QuantForge単一計算:')
+        print(f'  最小: {min(qf_times):.2f} μs')
+        print(f'  最大: {max(qf_times):.2f} μs')
+        print(f'  平均: {sum(qf_times)/len(qf_times):.2f} μs')
 "
 ```
 

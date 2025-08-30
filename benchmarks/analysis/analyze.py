@@ -5,10 +5,14 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
+# プロジェクトルートからの相対パスでresultsディレクトリを定義
+BASE_DIR = Path(__file__).resolve().parent.parent.parent
+RESULTS_DIR = BASE_DIR / "benchmarks" / "results"
+
 
 def analyze_performance_trends() -> dict[str, Any]:
     """パフォーマンストレンドを分析."""
-    from save_results import load_history
+    from benchmarks.analysis.save import load_history
 
     history = load_history()
     if len(history) < 2:
@@ -45,7 +49,7 @@ def analyze_performance_trends() -> dict[str, Any]:
 
 def generate_summary_table() -> str:
     """最新結果のサマリーテーブルを生成."""
-    latest_file = Path("results/latest.json")
+    latest_file = RESULTS_DIR / "latest.json"
     if not latest_file.exists():
         return "No benchmark results found"
 
@@ -90,16 +94,18 @@ def generate_summary_table() -> str:
     return "\n".join(lines)
 
 
-def plot_history(output_file: str = "results/performance_history.png") -> None:
+def plot_history(output_file: str | None = None) -> None:
     """パフォーマンス履歴をプロット."""
+    if output_file is None:
+        output_file = str(RESULTS_DIR / "performance_history.png")
     try:
-        import matplotlib.dates as mdates
-        import matplotlib.pyplot as plt
+        import matplotlib.dates as mdates  # type: ignore[import-not-found]
+        import matplotlib.pyplot as plt  # type: ignore[import-not-found]
     except ImportError:
         print("matplotlib not installed. Skipping plot generation.")
         return
 
-    from save_results import load_history
+    from benchmarks.analysis.save import load_history
 
     history = load_history()
     if len(history) < 2:
@@ -147,7 +153,8 @@ def plot_history(output_file: str = "results/performance_history.png") -> None:
     print(f"✅ Plot saved to {output_file}")
 
 
-if __name__ == "__main__":
+def main() -> None:
+    """Main entry point for analysis."""
     # 分析実行
     print(generate_summary_table())
 
@@ -165,3 +172,7 @@ if __name__ == "__main__":
 
     # プロット生成
     plot_history()
+
+
+if __name__ == "__main__":
+    main()

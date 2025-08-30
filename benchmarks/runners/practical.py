@@ -9,11 +9,15 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
+# プロジェクトルートからの相対パスでresultsディレクトリを定義
+BASE_DIR = Path(__file__).resolve().parent.parent.parent
+RESULTS_DIR = BASE_DIR / "benchmarks" / "results"
+
 import numpy as np
 
 # Baseline implementations
-from iv_baseline import black_scholes_price_scipy
-from python_baseline import black_scholes_pure_python, norm_cdf_pure
+from benchmarks.baseline.iv_baseline import black_scholes_price_scipy
+from benchmarks.baseline.python_baseline import black_scholes_pure_python, norm_cdf_pure
 
 
 def pure_python_implied_volatility(price: float, s: float, k: float, t: float, r: float, is_call: bool = True) -> float:
@@ -80,7 +84,7 @@ def benchmark_volatility_surface_small() -> dict[str, float]:
     results["pure_python_ms"] = pure_python_time * 1000
 
     # 2. NumPy+SciPy実装（ベクトル化）
-    from iv_vectorized import implied_volatility_newton_vectorized
+    from benchmarks.baseline.iv_vectorized import implied_volatility_newton_vectorized
 
     start = time.perf_counter()
     implied_volatility_newton_vectorized(
@@ -91,7 +95,7 @@ def benchmark_volatility_surface_small() -> dict[str, float]:
 
     # 3. QuantForge実装（並列バッチ）
     try:
-        from quantforge.models import black_scholes
+        from quantforge.models import black_scholes  # type: ignore[import-not-found]
 
         if hasattr(black_scholes, "implied_volatility_batch"):
             start = time.perf_counter()
@@ -131,7 +135,7 @@ def benchmark_volatility_surface_large() -> dict[str, float]:
     results = {}
 
     # 1. NumPy+SciPy実装（ベクトル化）
-    from iv_vectorized import implied_volatility_newton_vectorized
+    from benchmarks.baseline.iv_vectorized import implied_volatility_newton_vectorized
 
     start = time.perf_counter()
     implied_volatility_newton_vectorized(
@@ -188,7 +192,7 @@ def benchmark_portfolio_risk_small() -> dict[str, float]:
     results["pure_python_ms"] = pure_python_time * 1000
 
     # 2. NumPy+SciPy実装（ベクトル化）
-    from iv_vectorized import black_scholes_vectorized, vega_vectorized
+    from benchmarks.baseline.iv_vectorized import black_scholes_vectorized, vega_vectorized
 
     start = time.perf_counter()
     # ベクトル化された価格計算
@@ -234,7 +238,7 @@ def benchmark_portfolio_risk_large() -> dict[str, float]:
     results = {}
 
     # 1. NumPy+SciPy実装（ベクトル化）
-    from iv_vectorized import black_scholes_vectorized, vega_vectorized
+    from benchmarks.baseline.iv_vectorized import black_scholes_vectorized, vega_vectorized
 
     start = time.perf_counter()
     # ベクトル化された価格計算
@@ -293,10 +297,9 @@ def main() -> None:
     results["portfolio_risk"]["large"] = benchmark_portfolio_risk_large()
 
     # 結果保存
-    results_dir = Path("results")
-    results_dir.mkdir(exist_ok=True)
+    RESULTS_DIR.mkdir(parents=True, exist_ok=True)
 
-    with open(results_dir / "practical_scenarios.json", "w") as f:
+    with open(RESULTS_DIR / "practical_scenarios.json", "w") as f:
         json.dump(results, f, indent=2)
 
     # サマリー表示

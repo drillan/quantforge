@@ -5,24 +5,28 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
+# プロジェクトルートからの相対パスでresultsディレクトリを定義
+# このファイルは benchmarks/analysis/save.py にあるので、2階層上がプロジェクトルート
+BASE_DIR = Path(__file__).resolve().parent.parent.parent
+RESULTS_DIR = BASE_DIR / "benchmarks" / "results"
+
 
 def save_benchmark_result(results: dict[str, Any]) -> None:
     """ベンチマーク結果をJSON Lines形式で保存."""
     # resultsディレクトリを作成
-    results_dir = Path("results")
-    results_dir.mkdir(exist_ok=True)
+    RESULTS_DIR.mkdir(parents=True, exist_ok=True)
 
     # タイムスタンプを追加
     results["timestamp"] = datetime.now().isoformat()
 
     # JSON Linesファイルに追記
-    history_file = results_dir / "history.jsonl"
+    history_file = RESULTS_DIR / "history.jsonl"
     with open(history_file, "a") as f:
         json.dump(results, f, ensure_ascii=False)
         f.write("\n")
 
     # 最新結果を別ファイルに保存（クイックアクセス用）
-    latest_file = results_dir / "latest.json"
+    latest_file = RESULTS_DIR / "latest.json"
     with open(latest_file, "w") as f:
         json.dump(results, f, indent=2, ensure_ascii=False)
 
@@ -31,7 +35,7 @@ def save_benchmark_result(results: dict[str, Any]) -> None:
 
 def load_history() -> list[dict[str, Any]]:
     """履歴データを読み込み."""
-    history_file = Path("results/history.jsonl")
+    history_file = RESULTS_DIR / "history.jsonl"
     if not history_file.exists():
         return []
 
@@ -43,9 +47,12 @@ def load_history() -> list[dict[str, Any]]:
     return results
 
 
-def export_to_csv(output_file: str = "results/history.csv") -> None:
+def export_to_csv(output_file: str | None = None) -> None:
     """履歴をCSV形式でエクスポート."""
     import csv
+    
+    if output_file is None:
+        output_file = str(RESULTS_DIR / "history.csv")
 
     history = load_history()
     if not history:

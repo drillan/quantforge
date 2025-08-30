@@ -1,28 +1,14 @@
 """ベンチマーク実装の正確性テスト."""
 
-import os
-import sys
-
 import numpy as np
-
-# Add benchmarks directory to Python path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
-
 from conftest import PRACTICAL_TOLERANCE
 from quantforge import models
 
-try:
-    from benchmarks.python_baseline import (
-        black_scholes_numpy_batch,
-        black_scholes_pure_python,
-        black_scholes_scipy_single,
-    )
-except ImportError:
-    from python_baseline import (  # type: ignore[no-redef]
-        black_scholes_numpy_batch,
-        black_scholes_pure_python,
-        black_scholes_scipy_single,
-    )
+from benchmarks.baseline.python_baseline import (
+    black_scholes_numpy_batch,
+    black_scholes_pure_python,
+    black_scholes_scipy_single,
+)
 
 
 def test_implementations_consistency() -> None:

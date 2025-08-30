@@ -7,13 +7,14 @@ from typing import Any
 
 import numpy as np
 import psutil
-from python_baseline import (
+from quantforge import models
+
+from benchmarks.baseline.python_baseline import (
     black_scholes_numpy_batch,
     black_scholes_pure_python,
     black_scholes_pure_python_batch,
     black_scholes_scipy_single,
 )
-from quantforge import models
 
 
 class BenchmarkRunner:
@@ -90,29 +91,64 @@ class BenchmarkRunner:
         k, t, r, sigma = 100.0, 1.0, 0.05, 0.2
 
         results: dict[str, Any] = {"size": size}
+        
+        # 測定回数をサイズに応じて調整（適切な実行時間を確保）
+        if size <= 100:
+            n_runs = 500  # 小さいサイズは多めに測定
+        elif size <= 1000:
+            n_runs = 200
+        elif size <= 10000:
+            n_runs = 100
+        elif size <= 100000:
+            n_runs = 50
+        else:
+            n_runs = 30  # 100万件でも30回測定
 
         # QuantForge
         if hasattr(models, "call_price_batch"):
-            _ = models.call_price_batch(spots[: min(100, size)], k, t, r, sigma)
-            start = time.perf_counter()
-            _ = models.call_price_batch(spots, k, t, r, sigma)
+            # Warmup (十分なウォームアップで安定した測定)
+            for _ in range(20):
+                _ = models.call_price_batch(spots[: min(100, size)], k, t, r, sigma)
+            
+            # Measure
+            times = []
+            for _ in range(n_runs):
+                start = time.perf_counter()
+                _ = models.call_price_batch(spots, k, t, r, sigma)
+                times.append(time.perf_counter() - start)
+            qf_time = np.median(times)
         else:
-            start = time.perf_counter()
-        qf_time = time.perf_counter() - start
+            qf_time = float('inf')
         results["quantforge"] = qf_time
 
         # NumPy Batch
-        _ = black_scholes_numpy_batch(spots[: min(100, size)], k, t, r, sigma)
-        start = time.perf_counter()
-        _ = black_scholes_numpy_batch(spots, k, t, r, sigma)
-        np_time = time.perf_counter() - start
+        # Warmup (十分なウォームアップで安定した測定)
+        for _ in range(20):
+            _ = black_scholes_numpy_batch(spots[: min(100, size)], k, t, r, sigma)
+        
+        # Measure
+        times = []
+        for _ in range(n_runs):
+            start = time.perf_counter()
+            _ = black_scholes_numpy_batch(spots, k, t, r, sigma)
+            times.append(time.perf_counter() - start)
+        np_time = np.median(times)
         results["numpy_batch"] = np_time
 
         # Pure Python (小さいサイズのみ)
         if size <= 1000:
-            start = time.perf_counter()
-            _ = black_scholes_pure_python_batch(spots_list, k, t, r, sigma)
-            py_time = time.perf_counter() - start
+            # Warmup
+            for _ in range(3):  # Pure Pythonは遅いので少なめ
+                _ = black_scholes_pure_python_batch(spots_list[:min(10, size)], k, t, r, sigma)
+            
+            # Measure
+            times = []
+            py_runs = min(n_runs // 10, 20) if size <= 100 else min(n_runs // 20, 10)
+            for _ in range(py_runs):  # Pure Pythonは遅いので回数制限
+                start = time.perf_counter()
+                _ = black_scholes_pure_python_batch(spots_list, k, t, r, sigma)
+                times.append(time.perf_counter() - start)
+            py_time = np.median(times)
             results["pure_python"] = py_time
             results["speedup_vs_pure_python"] = py_time / qf_time
 
@@ -138,19 +174,16 @@ class BenchmarkRunner:
             results["batch"].append(self.benchmark_batch(size))
 
         # 結果を構造化データとして保存
-        from save_results import save_benchmark_result
+        from benchmarks.analysis.save import save_benchmark_result
 
         save_benchmark_result(results)
-
-        # 互換性のため従来のファイルも保存
-        with open("benchmark_results.json", "w") as f:
-            json.dump(results, f, indent=2)
 
         print("✅ ベンチマーク完了")
         return results
 
 
-if __name__ == "__main__":
+def main() -> None:
+    """Main entry point for comparison benchmarks."""
     runner = BenchmarkRunner()
     results = runner.run_all()
 
@@ -163,3 +196,7 @@ if __name__ == "__main__":
     if batch_1m:
         print(f"100万件バッチ: QuantForgeはNumPyより{batch_1m['speedup_vs_numpy']:.1f}倍高速")
         print(f"スループット: {batch_1m['throughput_qf'] / 1e6:.1f}M ops/sec")
+
+
+if __name__ == "__main__":
+    main()
