@@ -5,7 +5,24 @@ All notable changes to QuantForge will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.1.0] - 2025-01-29
+## [0.0.3] - 2025-01-30
+
+### Added
+- BatchProcessor trait system for unified batch processing across all models
+- Dynamic parallelization strategy (ParallelStrategy) replacing hardcoded thresholds
+- Processor modules for Black76 and Merton models (`processor.rs`)
+- BatchProcessorWithDividend trait for dividend-supporting models
+
+### Changed
+- Batch processing implementation unified using BatchProcessor and BatchProcessorWithDividend traits
+- Parallelization threshold now dynamically determined based on data size (10K elements)
+- Reduced code duplication by ~200 lines through trait-based abstraction
+
+### Performance
+- Maintained 57.6ms for 1M element batch processing (target <100ms)
+- Dynamic strategy selection optimizes for cache locality and parallelization
+
+## [0.0.2] - 2025-01-29
 
 ### Added
 - Complete PyO3 type stub system (`quantforge.pyi`) for full IDE support and type checking

@@ -134,22 +134,52 @@ fn calculate_zero_copy(
 
 ## 並列処理アーキテクチャ
 
-### 階層的並列化
+### BatchProcessorトレイトシステム
 
 ```rust
-pub enum ParallelStrategy {
+// バッチ処理の統一インターフェース
+pub trait BatchProcessor {
+    type Params;
+    type Output;
     
-    // レベル2: スレッド（タスクレベル並列）
-    ThreadPool {
-        num_threads: usize,
-        chunk_size: usize,
-    },
+    fn create_params(&self, s: f64, k: f64, t: f64, r: f64, sigma: f64) -> Self::Params;
+    fn process_single(&self, params: &Self::Params) -> Self::Output;
+}
+
+// 配当付きモデル用の拡張トレイト
+pub trait BatchProcessorWithDividend: BatchProcessor {
+    type ParamsWithDividend;
     
-    // レベル3: ハイブリッド（複数レベルの並列化）
-    Hybrid {
-        num_threads: usize,
-        chunk_strategy: String,
-    },
+    fn create_params_with_dividend(
+        &self, s: f64, k: f64, t: f64, r: f64, q: f64, sigma: f64
+    ) -> Self::ParamsWithDividend;
+}
+```
+
+### 動的並列化戦略
+
+```rust
+pub struct ParallelStrategy;
+
+impl ParallelStrategy {
+    // データサイズに基づく最適な戦略を自動選択
+    pub fn select(size: usize) -> ProcessingMode {
+        match size {
+            0..=1_000 => ProcessingMode::Sequential,
+            1_001..=10_000 => ProcessingMode::CacheOptimizedL1,
+            10_001..=100_000 => ProcessingMode::CacheOptimizedL2,
+            100_001..=1_000_000 => ProcessingMode::FullParallel,
+            _ => ProcessingMode::HybridParallel,
+        }
+    }
+}
+
+pub enum ProcessingMode {
+    Sequential,          // 逐次処理
+    CacheOptimizedL1,    // L1キャッシュ最適化
+    CacheOptimizedL2,    // L2キャッシュ最適化  
+    FullParallel,        // 完全並列
+    HybridParallel,      // ハイブリッド並列
 }
 ```
 

@@ -4,47 +4,88 @@ QuantForgeのパフォーマンスを最大化するための詳細な最適化�
 
 ## 並列処理最適化
 
-### Rayonによる並列化
+### 動的並列化戦略
 
-8要素並列処理：
+QuantForgeは、データサイズに基づいて最適な並列化戦略を自動的に選択します：
 
 ```{code-block} rust
-:name: optimization-code-[cfg(target_feature-=-"avx2")]
-:caption: [cfg(target_feature = "avx2")]
+:name: optimization-parallel-strategy
+:caption: 動的並列化戦略の自動選択
 
-#[cfg(target_feature = "avx2")]
-unsafe fn calculate_avx2(data: &[f64]) -> Vec<f64> {
-    use std::arch::x86_64::*;
+// ParallelStrategyによる自動最適化
+pub fn process_batch(data: &[f64]) -> Vec<f64> {
+    let strategy = ParallelStrategy::select(data.len());
     
-    let mut results = Vec::with_capacity(data.len());
-    
-    for chunk in data.chunks_exact(8) {
-        let vec = _mm512_loadu_pd(chunk.as_ptr());
-        // 並列演算
-        let result = process_avx2(vec);
-        _mm512_storeu_pd(results.as_mut_ptr(), result);
+    match strategy {
+        ProcessingMode::Sequential => {
+            // 小規模データ（<1,000要素）は逐次処理
+            process_sequential(data)
+        }
+        ProcessingMode::CacheOptimizedL1 => {
+            // 1,000-10,000要素はL1キャッシュ最適化
+            process_with_cache_optimization(data, L1_CACHE_SIZE)
+        }
+        ProcessingMode::FullParallel => {
+            // 大規模データは完全並列化
+            data.par_iter().map(process_single).collect()
+        }
+        _ => process_hybrid(data)
     }
-    
-    results
 }
 ```
 
-### CPU機能検出
+### 最適化の閾値
 
-```{warning}
-このセクションで説明されている高度な最適化機能（戦略選択）は将来実装予定です。
-現在は、内部的に並列化が自動的に適用されます。
+| データサイズ | 処理戦略 | 特徴 |
+|------------|---------|------|
+| 0-1,000 | Sequential | オーバーヘッド回避 |
+| 1,001-10,000 | CacheOptimizedL1 | L1キャッシュ効率最大化 |
+| 10,001-100,000 | CacheOptimizedL2 | L2キャッシュ活用 |
+| 100,001-1,000,000 | FullParallel | Rayonによる完全並列 |
+| 1,000,000+ | HybridParallel | 複数レベル最適化 |
+
+### Rayonによる並列化
+
+大規模データセットでは、Rayonのワークスティーリングアルゴリズムが自動的に適用されます：
+
+```{code-block} rust
+:name: optimization-rayon-parallel
+:caption: Rayonによる自動並列化
+
+use rayon::prelude::*;
+
+// 10,000要素以上で自動的に並列化
+pub fn parallel_process(values: &[[f64; 5]]) -> Vec<f64> {
+    if values.len() >= PARALLELIZATION_THRESHOLD {
+        values.par_iter()
+            .map(|vals| calculate_price(vals))
+            .collect()
+    } else {
+        values.iter()
+            .map(|vals| calculate_price(vals))
+            .collect()
+    }
+}
 ```
 
-```{code-block} python
-:name: optimization-code-api
-:caption: 将来的なAPI（現在は未実装）
+### Python APIでの利用
 
-# 将来的なAPI（現在は未実装）
-# from quantforge import system_info
-# 現在はQuantForgeが内部で自動的に並列化を適用
+```{code-block} python
+:name: optimization-python-api
+:caption: 自動最適化されるバッチ処理
+
 from quantforge.models import black_scholes
-prices = black_scholes.call_price_batch(spots, 100, 1.0, 0.05, 0.2)
+import numpy as np
+
+# データサイズに応じて自動的に最適な戦略が選択される
+small_batch = np.array([100, 101, 102])  # Sequential処理
+medium_batch = np.random.uniform(90, 110, 5000)  # Cache最適化
+large_batch = np.random.uniform(90, 110, 500000)  # 完全並列化
+
+# すべて同じAPIで、内部的に最適化される
+prices_small = black_scholes.call_price_batch(small_batch, 100, 1.0, 0.05, 0.2)
+prices_medium = black_scholes.call_price_batch(medium_batch, 100, 1.0, 0.05, 0.2)
+prices_large = black_scholes.call_price_batch(large_batch, 100, 1.0, 0.05, 0.2)
 ```
 
 ## メモリ最適化
