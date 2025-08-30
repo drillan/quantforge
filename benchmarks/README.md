@@ -8,6 +8,12 @@
 benchmarks/                      # Pythonパッケージ
 ├── __init__.py                  # パッケージ初期化
 ├── __main__.py                  # エントリーポイント
+├── common/                      # 共通ライブラリ（NEW）
+│   ├── __init__.py
+│   ├── base.py                  # BenchmarkBase基底クラス
+│   ├── formatters.py            # 結果フォーマッター
+│   ├── io.py                    # ファイルI/O管理
+│   └── metrics.py               # パフォーマンスメトリクス計算
 ├── baseline/                    # ベースライン実装
 │   ├── __init__.py
 │   ├── python_baseline.py      # Pure Python実装
@@ -15,7 +21,8 @@ benchmarks/                      # Pythonパッケージ
 │   └── iv_vectorized.py         # ベクトル化実装
 ├── runners/                     # 実行スクリプト
 │   ├── __init__.py
-│   ├── comparison.py            # ベンチマーク実行
+│   ├── comparison.py            # ベンチマーク実行（旧実装）
+│   ├── comparison_refactored.py # ベンチマーク実行（新実装）
 │   ├── practical.py             # 実践シナリオ
 │   └── arraylike.py             # ArrayLikeテスト
 ├── analysis/                    # 分析ツール
@@ -64,6 +71,67 @@ cd benchmarks
 - FFIオーバーヘッドの測定
 - スループット飽和点の特定
 
+## 🔧 共通ライブラリの使用
+
+### BenchmarkBase クラス
+ベンチマーク実装の基底クラスで、時間測定やシステム情報取得などの共通機能を提供：
+
+```python
+from benchmarks.common import BenchmarkBase
+from typing import Any
+
+class MyBenchmark(BenchmarkBase):
+    def __init__(self):
+        super().__init__(warmup_runs=100, measure_runs=1000)
+    
+    def run(self) -> dict[str, Any]:
+        """ベンチマークを実行."""
+        self.start_benchmark()
+        
+        # time_functionメソッドで自動測定
+        timing = self.time_function(lambda: some_function())
+        
+        return {
+            "system_info": self.get_system_info(),
+            "result": timing.median  # TimingResultから中央値を取得
+        }
+```
+
+### TimingResult データクラス
+測定結果を格納する構造化データ：
+
+```python
+from benchmarks.common.base import TimingResult
+
+# 自動的に統計情報を計算
+timing = TimingResult.from_times([0.001, 0.002, 0.0015])
+print(f"中央値: {timing.median}秒")
+print(f"平均: {timing.mean}秒, 標準偏差: {timing.std}秒")
+```
+
+### BenchmarkFormatter
+結果をMarkdown形式で整形：
+
+```python
+from benchmarks.common import BenchmarkFormatter
+
+formatter = BenchmarkFormatter("My Benchmark Results")
+markdown = formatter.format_markdown(results)
+print(markdown)  # 美しくフォーマットされたMarkdown出力
+```
+
+### BenchmarkIO
+結果の保存・読み込み・比較：
+
+```python
+from benchmarks.common import BenchmarkIO
+
+io = BenchmarkIO()
+io.save_result(results)  # 自動的にhistory.jsonlに追記
+latest = io.load_latest()  # 最新結果を読み込み
+comparison = io.compare_results()  # 前回との比較
+```
+
 ## 📈 分析機能
 
 ### Pythonコードからの使用
@@ -81,13 +149,27 @@ from benchmarks.analysis.analyze import (
 )
 from benchmarks.analysis.save import save_benchmark_result
 
-# 実行例
+# 実行例（旧スタイル）
 result = black_scholes_pure_python(s=100, k=105, t=1.0, r=0.05, sigma=0.2)
 print(f"Pure Python Result: {result:.4f}")
 
 # 分析の実行
 trends = detect_performance_trends()
 summary = generate_summary_table()
+
+# 新スタイル（共通ライブラリ使用）
+from benchmarks.common import BenchmarkBase, BenchmarkIO, BenchmarkFormatter
+
+class QuickTest(BenchmarkBase):
+    def run(self):
+        timing = self.time_function(
+            lambda: black_scholes_pure_python(100, 105, 1.0, 0.05, 0.2)
+        )
+        return {"pure_python": timing.median}
+
+test = QuickTest()
+results = test.run()
+print(f"実行時間: {results['pure_python']*1e6:.2f} μs")
 ```
 
 ## 📝 データフォーマット

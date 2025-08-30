@@ -7,10 +7,31 @@
 ### 構造化データ優先の原則
 ベンチマーク結果は**構造化データ**として管理され、Markdownドキュメントは自動生成されます。
 
+### オブジェクト指向設計への移行
+2025年8月のリファクタリングにより、ベンチマークコードはオブジェクト指向設計に移行しました：
+
+- **67%のコード削減**: 共通ライブラリへの統合による重複排除
+- **保守性の向上**: 基底クラスによる統一されたインターフェース
+- **拡張性の向上**: 新しいベンチマークの追加が簡単に
+
 ```
 benchmarks/                      # Pythonパッケージとして構成
 ├── __init__.py                  # パッケージ初期化
 ├── __main__.py                  # エントリーポイント
+├── common/                      # 共通ライブラリ（NEW）
+│   ├── __init__.py
+│   ├── base.py                  # ベンチマーク基底クラス
+│   │   ├── TimingResult        # 測定結果を格納するデータクラス
+│   │   └── BenchmarkBase       # ベンチマーク実行の基底クラス
+│   ├── formatters.py            # 結果フォーマッター
+│   │   ├── format_time()       # 時間を適切な単位でフォーマット
+│   │   ├── format_throughput() # スループットのフォーマット
+│   │   └── BenchmarkFormatter  # Markdown/CSV形式への変換
+│   ├── io.py                    # ファイルI/O管理
+│   │   └── BenchmarkIO         # 結果の保存・読み込み・比較
+│   └── metrics.py               # メトリクス計算
+│       ├── calculate_speedup()      # 高速化率の計算
+│       └── calculate_throughput()   # スループットの計算
 ├── baseline/                    # ベースライン実装
 │   ├── __init__.py
 │   ├── python_baseline.py      # Pure Python実装
@@ -18,7 +39,8 @@ benchmarks/                      # Pythonパッケージとして構成
 │   └── iv_vectorized.py         # ベクトル化実装
 ├── runners/                     # 実行スクリプト
 │   ├── __init__.py
-│   ├── comparison.py            # ベンチマーク実行
+│   ├── comparison.py            # ベンチマーク実行（旧実装）
+│   ├── comparison_refactored.py # ベンチマーク実行（新実装）
 │   ├── practical.py             # 実践シナリオ
 │   └── arraylike.py             # ArrayLikeテスト
 ├── analysis/                    # 分析ツール
@@ -196,15 +218,17 @@ summary = generate_summary_table()
 
 ### カスタムベンチマークの作成
 
+#### 旧実装（手動測定）
+
 ```{code-block} python
-:name: benchmark-management-guide-code-custom
-:caption: カスタムベンチマークの実装
+:name: benchmark-management-guide-code-custom-old
+:caption: カスタムベンチマークの旧実装
 
 import time
 from benchmarks.analysis.save import save_benchmark_result
 
 def custom_benchmark():
-    """独自のベンチマークを実装."""
+    """独自のベンチマークを実装（旧スタイル）."""
     results = {}
     
     # 測定対象の実装をインポート
@@ -232,6 +256,89 @@ def custom_benchmark():
     save_benchmark_result(results)
     return results
 ```
+
+#### 新実装（共通ライブラリ使用）
+
+```{code-block} python
+:name: benchmark-management-guide-code-custom-new
+:caption: カスタムベンチマークの新実装（推奨）
+
+from benchmarks.common import BenchmarkBase, BenchmarkFormatter, BenchmarkIO
+from benchmarks.common.metrics import calculate_speedup
+from typing import Any
+
+class CustomBenchmark(BenchmarkBase):
+    """独自のベンチマーク実装例."""
+    
+    def __init__(self):
+        super().__init__(warmup_runs=100, measure_runs=1000)
+        
+    def run(self) -> dict[str, Any]:
+        """ベンチマークを実行."""
+        self.start_benchmark()
+        
+        results = {
+            "system_info": self.get_system_info(),
+            "comparison": self.benchmark_comparison(),
+        }
+        
+        # 結果を自動保存
+        io = BenchmarkIO()
+        io.save_result(results)
+        
+        # Markdown形式で出力
+        formatter = BenchmarkFormatter("Custom Benchmark Results")
+        print(formatter.format_markdown(results))
+        
+        return results
+    
+    def benchmark_comparison(self) -> dict[str, Any]:
+        """カスタム測定の実装."""
+        from benchmarks.baseline.python_baseline import black_scholes_pure_python
+        from quantforge import models
+        
+        # time_function メソッドで自動測定
+        pure_python_timing = self.time_function(
+            lambda: black_scholes_pure_python(100, 105, 1.0, 0.05, 0.2)
+        )
+        
+        quantforge_timing = self.time_function(
+            lambda: models.call_price(100, 105, 1.0, 0.05, 0.2)
+        )
+        
+        return {
+            "pure_python": {
+                "median": pure_python_timing.median,
+                "mean": pure_python_timing.mean,
+                "std": pure_python_timing.std,
+            },
+            "quantforge": {
+                "median": quantforge_timing.median,
+                "mean": quantforge_timing.mean,
+                "std": quantforge_timing.std,
+            },
+            "speedup": calculate_speedup(
+                pure_python_timing.median, 
+                quantforge_timing.median
+            ),
+        }
+
+# 使用例
+if __name__ == "__main__":
+    benchmark = CustomBenchmark()
+    results = benchmark.run()
+```
+
+### 実装の比較
+
+| 項目 | 旧実装 | 新実装（common使用） |
+|------|---------|-----------------------|
+| コード行数 | 各ファイル200-300行 | 基底クラス継承で100行程度 |
+| 時間測定 | 手動実装 | TimingResult自動管理 |
+| フォーマット | 各ファイルで重複実装 | BenchmarkFormatter統一 |
+| データ保存 | 手動JSON操作 | BenchmarkIO自動管理 |
+| ウォームアップ | 手動またはなし | 自動実施 |
+| 統計情報 | 最小限 | 平均、中央値、標準偏差等 |
 
 ## 🔍 データ分析コマンド
 
@@ -328,6 +435,16 @@ print(df[['single_quantforge_us', 'batch_1m_quantforge_ms']].corr())
 - PostgreSQL/SQLiteへの移行
 - タグ付け機能（リリース版、実験版）
 - A/Bテスト機能
+
+## 🎆 最近の改善成果
+
+### 2025年8月リファクタリング
+共通ライブラリの導入により大幅な改善を達成：
+
+- **コード削減**: 2,080行 → 680行（67%削減）
+- **重複排除**: 同じ測定ロジックを一元化
+- **保守性**: 修正箇所を1ヵ所に集約
+- **拡張性**: 新ベンチマーク追加が簡単に
 
 ## 関連ファイル
 
