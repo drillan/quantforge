@@ -153,12 +153,46 @@ pub const PRACTICAL_TOLERANCE: f64 = 1e-3;
 pub const THEORETICAL_TOLERANCE: f64 = 1e-5;
 pub const NUMERICAL_TOLERANCE: f64 = 1e-7;
 
-// モジュール内定数
-const PARALLEL_THRESHOLD: usize = 10000;  // 並列化する最小要素数
-const SIMD_CHUNK_SIZE: usize = 8;         // SIMDチャンクサイズ
+// src/constants.rs - パフォーマンス定数（新規追加）
+pub const L1_CACHE_SIZE: usize = 32 * 1024;  // 32KB
+pub const L2_CACHE_SIZE: usize = 256 * 1024; // 256KB
+pub const L3_CACHE_SIZE: usize = 8 * 1024 * 1024; // 8MB
+
+pub const CHUNK_SIZE_L1: usize = L1_CACHE_SIZE / 8 / 4;  // 1024要素
+pub const CHUNK_SIZE_L2: usize = L2_CACHE_SIZE / 8 / 4;  // 8192要素
+pub const CHUNK_SIZE_L3: usize = L3_CACHE_SIZE / 8 / 4;  // 262144要素
+
+pub const PARALLEL_THRESHOLD_SMALL: usize = 1000;
+pub const PARALLEL_THRESHOLD_MEDIUM: usize = 10_000;
+pub const PARALLEL_THRESHOLD_LARGE: usize = 100_000;
 
 // アルゴリズム係数（使用箇所の近くで定義）
 const NORM_CDF_UPPER_BOUND: f64 = 8.0;  // Φ(8) ≈ 1.0
+```
+
+### 動的並列化戦略パターン
+
+```rust
+use crate::optimization::ParallelStrategy;
+
+// データサイズに基づく動的戦略選択
+let strategy = ParallelStrategy::select(data.len());
+
+// 汎用バッチ処理
+let results = strategy.process_batch(&data, |item| {
+    // 処理ロジック
+    process_item(item)
+});
+
+// ゼロコピー処理（出力配列への直接書き込み）
+strategy.process_into(&input, &mut output, |item| {
+    calculate_value(item)
+});
+
+// スレッドプール制御付き処理
+let results = strategy.process_with_pool_control(&data, |item| {
+    heavy_computation(item)
+});
 ```
 
 ### Pythonテストパターン
