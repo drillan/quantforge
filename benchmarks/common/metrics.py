@@ -1,5 +1,6 @@
 """ベンチマークメトリクス計算."""
 
+from typing import cast
 
 import numpy as np
 from numpy.typing import NDArray
@@ -96,7 +97,8 @@ def calculate_relative_error(
     # ゼロ除算を回避
     denominator = np.where(abs_expected > epsilon, abs_expected, epsilon)
 
-    return np.abs(actual_arr - expected_arr) / denominator
+    result = np.abs(actual_arr - expected_arr) / denominator
+    return cast("float | NDArray[np.float64]", result)
 
 
 def calculate_percentile_times(
@@ -181,12 +183,12 @@ def is_statistically_significant(
 
         # 簡易的な判定（平均値の差が標準偏差の2倍以上）
         diff = abs(mean1 - mean2)
-        threshold = 2 * max(std1, std2)
-        return diff > threshold, 0.0
+        threshold = 2 * max(float(std1), float(std2))
+        return bool(diff > threshold), 0.0
 
     # Mann-Whitney U検定
     statistic, p_value = stats.mannwhitneyu(sample1, sample2, alternative="two-sided")
-    return p_value < alpha, float(p_value)
+    return bool(p_value < alpha), float(p_value)
 
 
 def estimate_optimal_batch_size(

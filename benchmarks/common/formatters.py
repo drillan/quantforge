@@ -158,12 +158,12 @@ class BenchmarkFormatter:
                     continue
 
                 name = self._format_impl_name(key)
-                time_str = format_time(value) if isinstance(value, (int, float)) else str(value)
+                time_str = format_time(value) if isinstance(value, int | float) else str(value)
 
                 # スループット計算
                 throughput = ""
-                if isinstance(value, (int, float)) and value > 0:
-                    ops = size / value if isinstance(size, (int, float)) else 0
+                if isinstance(value, int | float) and value > 0:
+                    ops = size / value if isinstance(size, int | float) else 0
                     if ops > 0:
                         throughput = format_throughput(ops)
 

@@ -1,5 +1,6 @@
 """Black-Scholesの性能比較（リファクタリング版）."""
 
+from functools import partial
 from typing import Any
 
 import numpy as np
@@ -99,15 +100,32 @@ class BlackScholesBenchmark(BenchmarkBase):
             result: dict[str, Any] = {"size": size}
 
             # QuantForge (Rust)
+            # functools.partialを使用してバインディング問題を解決
+            qf_func = partial(
+                lambda _d, s, k, t, r, sigma: models.call_price_batch(s, k, t, r, sigma),
+                s=s,
+                k=k,
+                t=t,
+                r=r,
+                sigma=sigma,
+            )
             timing = self.time_batch_function(
-                lambda _: models.call_price_batch(s, k, t, r, sigma),
+                qf_func,
                 s,  # ダミーデータ（実際はクロージャ内で使用）
             )
             result["quantforge"] = timing.median
 
             # NumPy（ベクトル化実装）
+            np_func = partial(
+                lambda _d, s, k, t, r, sigma: black_scholes_numpy_batch(s, k, t, r, sigma),
+                s=s,
+                k=k,
+                t=t,
+                r=r,
+                sigma=sigma,
+            )
             timing = self.time_batch_function(
-                lambda _: black_scholes_numpy_batch(s, k, t, r, sigma),
+                np_func,
                 s,
             )
             result["numpy_batch"] = timing.median
@@ -115,12 +133,23 @@ class BlackScholesBenchmark(BenchmarkBase):
             # Pure Python（小規模のみ）
             if size <= 1000:
                 s_list, k_list, t_list, r_list, sigma_list = (
-                    s.tolist(), k.tolist(), t.tolist(), r.tolist(), sigma.tolist()
+                    s.tolist(),
+                    k.tolist(),
+                    t.tolist(),
+                    r.tolist(),
+                    sigma.tolist(),
+                )
+                # functools.partialを使用
+                batch_func = partial(
+                    lambda _d, s_l, k_l, t_l, r_l, sig_l: black_scholes_pure_python_batch(s_l, k_l, t_l, r_l, sig_l),
+                    s_l=s_list,
+                    k_l=k_list,
+                    t_l=t_list,
+                    r_l=r_list,
+                    sig_l=sigma_list,
                 )
                 timing = self.time_batch_function(
-                    lambda _: black_scholes_pure_python_batch(
-                        s_list, k_list, t_list, r_list, sigma_list
-                    ),
+                    batch_func,  # type: ignore[arg-type]
                     s,
                     warmup_runs=5,
                     measure_runs=10,
@@ -138,7 +167,7 @@ class BlackScholesBenchmark(BenchmarkBase):
         return batch_results
 
 
-def main():
+def main() -> dict[str, Any]:
     """メイン実行関数."""
     # ベンチマーク実行
     benchmark = BlackScholesBenchmark()

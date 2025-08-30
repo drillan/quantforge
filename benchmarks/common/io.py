@@ -4,7 +4,7 @@ import csv
 import json
 from datetime import datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 
 class BenchmarkIO:
@@ -42,10 +42,7 @@ class BenchmarkIO:
         results["timestamp"] = datetime.now().isoformat()
 
         # 最新結果を保存
-        if name is None:
-            latest_file = self.base_dir / "latest.json"
-        else:
-            latest_file = self.base_dir / f"{name}.json"
+        latest_file = self.base_dir / "latest.json" if name is None else self.base_dir / f"{name}.json"
 
         with open(latest_file, "w") as f:
             json.dump(results, f, indent=2, ensure_ascii=False)
@@ -71,16 +68,13 @@ class BenchmarkIO:
         Raises:
             FileNotFoundError: ファイルが存在しない場合
         """
-        if name is None:
-            latest_file = self.base_dir / "latest.json"
-        else:
-            latest_file = self.base_dir / f"{name}.json"
+        latest_file = self.base_dir / "latest.json" if name is None else self.base_dir / f"{name}.json"
 
         if not latest_file.exists():
             raise FileNotFoundError(f"Result file not found: {latest_file}")
 
         with open(latest_file) as f:
-            return json.load(f)
+            return cast("dict[str, Any]", json.load(f))
 
     def load_history(self) -> list[dict[str, Any]]:
         """履歴データを読み込み.
@@ -126,14 +120,14 @@ class BenchmarkIO:
             raise ValueError("No results to export")
 
         # CSVのヘッダーを決定
-        headers = set()
+        headers: set[str] = set()
         for result in results:
             headers.update(self._flatten_dict(result).keys())
-        headers = sorted(headers)
+        headers_list = sorted(headers)
 
         # CSV書き込み
         with open(output_file, "w", newline="") as f:
-            writer = csv.DictWriter(f, fieldnames=headers)
+            writer = csv.DictWriter(f, fieldnames=headers_list)
             writer.writeheader()
 
             for result in results:
@@ -165,7 +159,7 @@ class BenchmarkIO:
                 raise ValueError("Not enough history for comparison")
             baseline = history[-2]
 
-        comparison = {
+        comparison: dict[str, Any] = {
             "baseline_timestamp": baseline.get("timestamp"),
             "current_timestamp": current.get("timestamp"),
             "improvements": {},
@@ -208,7 +202,7 @@ class BenchmarkIO:
         Returns:
             フラット化された辞書
         """
-        items = []
+        items: list[tuple[str, Any]] = []
         for k, v in d.items():
             new_key = f"{parent_key}{sep}{k}" if parent_key else k
             if isinstance(v, dict):
