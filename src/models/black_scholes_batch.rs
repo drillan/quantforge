@@ -4,7 +4,7 @@ use crate::broadcast::{ArrayLike, BroadcastIterator};
 use crate::error::QuantForgeError;
 use crate::models::black_scholes_model::{BlackScholes, BlackScholesParams};
 use crate::models::{GreeksBatch, PricingModel};
-use rayon::prelude::*;
+use crate::optimization::ParallelStrategy;
 
 /// Calculate call prices with full array support and broadcasting
 pub fn call_price_batch(
@@ -18,58 +18,28 @@ pub fn call_price_batch(
     let iter = BroadcastIterator::new(inputs)?;
     let size = iter.size_hint().0;
 
-    // Use parallel processing for large arrays
-    if size > 10000 {
-        let values: Vec<_> = iter.collect();
-        let results: Vec<f64> = values
-            .par_iter()
-            .map(|vals| {
-                let params = BlackScholesParams {
-                    spot: vals[0],
-                    strike: vals[1],
-                    time: vals[2],
-                    rate: vals[3],
-                    sigma: vals[4],
-                };
+    // Use dynamic parallel strategy
+    let values: Vec<_> = iter.collect();
+    let strategy = ParallelStrategy::select(size);
 
-                // Validate inputs
-                if params.spot <= 0.0
-                    || params.strike <= 0.0
-                    || params.time <= 0.0
-                    || params.sigma <= 0.0
-                {
-                    f64::NAN
-                } else {
-                    BlackScholes::call_price(&params)
-                }
-            })
-            .collect();
-        Ok(results)
-    } else {
-        // Sequential processing for smaller arrays
-        let mut results = Vec::with_capacity(size);
-        for vals in iter {
-            let params = BlackScholesParams {
-                spot: vals[0],
-                strike: vals[1],
-                time: vals[2],
-                rate: vals[3],
-                sigma: vals[4],
-            };
+    let results = strategy.process_batch(&values, |vals| {
+        let params = BlackScholesParams {
+            spot: vals[0],
+            strike: vals[1],
+            time: vals[2],
+            rate: vals[3],
+            sigma: vals[4],
+        };
 
-            // Validate inputs
-            if params.spot <= 0.0
-                || params.strike <= 0.0
-                || params.time <= 0.0
-                || params.sigma <= 0.0
-            {
-                results.push(f64::NAN);
-            } else {
-                results.push(BlackScholes::call_price(&params));
-            }
+        // Validate inputs
+        if params.spot <= 0.0 || params.strike <= 0.0 || params.time <= 0.0 || params.sigma <= 0.0 {
+            f64::NAN
+        } else {
+            BlackScholes::call_price(&params)
         }
-        Ok(results)
-    }
+    });
+
+    Ok(results)
 }
 
 /// Calculate put prices with full array support and broadcasting
@@ -84,58 +54,28 @@ pub fn put_price_batch(
     let iter = BroadcastIterator::new(inputs)?;
     let size = iter.size_hint().0;
 
-    // Use parallel processing for large arrays
-    if size > 10000 {
-        let values: Vec<_> = iter.collect();
-        let results: Vec<f64> = values
-            .par_iter()
-            .map(|vals| {
-                let params = BlackScholesParams {
-                    spot: vals[0],
-                    strike: vals[1],
-                    time: vals[2],
-                    rate: vals[3],
-                    sigma: vals[4],
-                };
+    // Use dynamic parallel strategy
+    let values: Vec<_> = iter.collect();
+    let strategy = ParallelStrategy::select(size);
 
-                // Validate inputs
-                if params.spot <= 0.0
-                    || params.strike <= 0.0
-                    || params.time <= 0.0
-                    || params.sigma <= 0.0
-                {
-                    f64::NAN
-                } else {
-                    BlackScholes::put_price(&params)
-                }
-            })
-            .collect();
-        Ok(results)
-    } else {
-        // Sequential processing for smaller arrays
-        let mut results = Vec::with_capacity(size);
-        for vals in iter {
-            let params = BlackScholesParams {
-                spot: vals[0],
-                strike: vals[1],
-                time: vals[2],
-                rate: vals[3],
-                sigma: vals[4],
-            };
+    let results = strategy.process_batch(&values, |vals| {
+        let params = BlackScholesParams {
+            spot: vals[0],
+            strike: vals[1],
+            time: vals[2],
+            rate: vals[3],
+            sigma: vals[4],
+        };
 
-            // Validate inputs
-            if params.spot <= 0.0
-                || params.strike <= 0.0
-                || params.time <= 0.0
-                || params.sigma <= 0.0
-            {
-                results.push(f64::NAN);
-            } else {
-                results.push(BlackScholes::put_price(&params));
-            }
+        // Validate inputs
+        if params.spot <= 0.0 || params.strike <= 0.0 || params.time <= 0.0 || params.sigma <= 0.0 {
+            f64::NAN
+        } else {
+            BlackScholes::put_price(&params)
         }
-        Ok(results)
-    }
+    });
+
+    Ok(results)
 }
 
 /// Calculate implied volatilities with full array support and broadcasting
@@ -151,59 +91,30 @@ pub fn implied_volatility_batch(
     let iter = BroadcastIterator::new(inputs)?;
     let size = iter.size_hint().0;
 
-    // Use parallel processing for large arrays
-    if size > 10000 {
-        let values: Vec<_> = iter.collect();
-        let results: Vec<f64> = values
-            .par_iter()
-            .map(|vals| {
-                let price = vals[0];
-                let params = BlackScholesParams {
-                    spot: vals[1],
-                    strike: vals[2],
-                    time: vals[3],
-                    rate: vals[4],
-                    sigma: 0.2, // Initial guess
-                };
-                let is_call = vals[5] != 0.0; // Convert to bool
+    // Use dynamic parallel strategy
+    let values: Vec<_> = iter.collect();
+    let strategy = ParallelStrategy::select(size);
 
-                // Validate inputs
-                if price <= 0.0 || params.spot <= 0.0 || params.strike <= 0.0 || params.time <= 0.0
-                {
-                    f64::NAN
-                } else {
-                    BlackScholes::implied_volatility(price, &params, is_call, None)
-                        .unwrap_or(f64::NAN)
-                }
-            })
-            .collect();
-        Ok(results)
-    } else {
-        // Sequential processing for smaller arrays
-        let mut results = Vec::with_capacity(size);
-        for vals in iter {
-            let price = vals[0];
-            let params = BlackScholesParams {
-                spot: vals[1],
-                strike: vals[2],
-                time: vals[3],
-                rate: vals[4],
-                sigma: 0.2, // Initial guess
-            };
-            let is_call = vals[5] != 0.0; // Convert to bool
+    let results = strategy.process_batch(&values, |vals| {
+        let price = vals[0];
+        let params = BlackScholesParams {
+            spot: vals[1],
+            strike: vals[2],
+            time: vals[3],
+            rate: vals[4],
+            sigma: 0.2, // Initial guess
+        };
+        let is_call = vals[5] != 0.0; // Convert to bool
 
-            // Validate inputs
-            if price <= 0.0 || params.spot <= 0.0 || params.strike <= 0.0 || params.time <= 0.0 {
-                results.push(f64::NAN);
-            } else {
-                results.push(
-                    BlackScholes::implied_volatility(price, &params, is_call, None)
-                        .unwrap_or(f64::NAN),
-                );
-            }
+        // Validate inputs
+        if price <= 0.0 || params.spot <= 0.0 || params.strike <= 0.0 || params.time <= 0.0 {
+            f64::NAN
+        } else {
+            BlackScholes::implied_volatility(price, &params, is_call, None).unwrap_or(f64::NAN)
         }
-        Ok(results)
-    }
+    });
+
+    Ok(results)
 }
 
 /// Calculate Greeks with full array support and broadcasting

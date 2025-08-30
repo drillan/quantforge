@@ -8,6 +8,7 @@ pub mod error;
 pub mod flexible_array;
 pub mod math;
 pub mod models;
+pub mod optimization;
 pub mod python_modules;
 pub mod traits;
 pub mod validation;

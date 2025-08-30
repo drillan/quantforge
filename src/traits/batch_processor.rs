@@ -1,8 +1,9 @@
 use numpy::{PyArray1, PyArrayMethods, PyReadonlyArray1};
 use pyo3::prelude::*;
-use rayon::prelude::*;
 
+use crate::constants::{CHUNK_SIZE_L1, PARALLEL_THRESHOLD_MEDIUM, PARALLEL_THRESHOLD_SMALL};
 use crate::error::{QuantForgeResult, ValidationBuilder};
+use crate::optimization::ParallelStrategy;
 
 /// Generic batch processing trait for option pricing models
 /// This trait eliminates code duplication across Black-Scholes, Black76, and Merton models
@@ -30,7 +31,7 @@ pub trait BatchProcessor: Sync {
     ) -> PyResult<Bound<'py, PyArray1<f64>>>
     where
         Self::Output: Into<f64> + Send,
-        Self::Params: Send,
+        Self::Params: Send + Sync,
         Self: Sync,
     {
         // Unified validation
@@ -59,10 +60,8 @@ pub trait BatchProcessor: Sync {
         let output_slice = unsafe { output.as_slice_mut()? };
 
         // Dynamic strategy selection based on size
-        const PARALLEL_THRESHOLD: usize = 1000;
-
         match len {
-            0..=PARALLEL_THRESHOLD => {
+            0..=PARALLEL_THRESHOLD_SMALL => {
                 self.process_sequential(prices_slice, k, t, r, sigma, output_slice)
             }
             _ => {
@@ -146,7 +145,7 @@ pub trait BatchProcessor: Sync {
         }
     }
 
-    /// Parallel processing for large datasets
+    /// Parallel processing for large datasets with dynamic chunking
     fn process_parallel(
         &self,
         prices: &[f64],
@@ -157,19 +156,21 @@ pub trait BatchProcessor: Sync {
         output: &mut [f64],
     ) where
         Self::Output: Into<f64> + Send,
-        Self::Params: Send,
+        Self::Params: Send + Sync,
     {
-        const CHUNK_SIZE: usize = 1024;
+        // Use dynamic strategy to determine optimal chunk size
+        let strategy = ParallelStrategy::select(prices.len());
 
-        prices
-            .par_chunks(CHUNK_SIZE)
-            .zip(output.par_chunks_mut(CHUNK_SIZE))
-            .for_each(|(price_chunk, out_chunk)| {
-                for (i, &price) in price_chunk.iter().enumerate() {
-                    let params = self.create_params(price, k, t, r, sigma);
-                    out_chunk[i] = self.process_single(&params).into();
-                }
-            });
+        // Create parameter-output pairs for processing
+        let mut params_vec: Vec<Self::Params> = Vec::with_capacity(prices.len());
+        for &price in prices {
+            params_vec.push(self.create_params(price, k, t, r, sigma));
+        }
+
+        // Process using the optimized strategy
+        strategy.process_into(&params_vec, output, |params| {
+            self.process_single(params).into()
+        });
     }
 
     /// Parallel processing with GIL release for maximum performance
@@ -185,7 +186,7 @@ pub trait BatchProcessor: Sync {
         output: &mut [f64],
     ) where
         Self::Output: Into<f64> + Send,
-        Self::Params: Send,
+        Self::Params: Send + Sync,
         Self: Sync,
     {
         // SAFETY: We can safely release the GIL here because:
@@ -195,16 +196,13 @@ pub trait BatchProcessor: Sync {
         // 4. All parameters (k, t, r, sigma) are primitive types
         // 5. The self reference is Sync, ensuring thread safety
         py.allow_threads(|| {
-            // Check if parallelization is worth it based on CPU count
-            let num_threads = rayon::current_num_threads();
-            const CHUNK_SIZE: usize = 1024;
-
-            // Only use parallel processing if we have enough work per thread
-            if prices.len() / CHUNK_SIZE >= num_threads {
-                self.process_parallel(prices, k, t, r, sigma, output);
-            } else {
-                // Fall back to sequential for smaller workloads
+            // Process based on selected strategy
+            if prices.len() <= PARALLEL_THRESHOLD_MEDIUM {
+                // For small to medium datasets, use sequential processing
                 self.process_sequential(prices, k, t, r, sigma, output);
+            } else {
+                // For large datasets, use optimized parallel processing
+                self.process_parallel(prices, k, t, r, sigma, output);
             }
         });
     }
@@ -289,9 +287,10 @@ pub trait BatchProcessorWithDividend: BatchProcessor {
         // 4. The slice lifetime is bounded by the array's lifetime
         let output_slice = unsafe { output.as_slice_mut()? };
 
+        // Use consistent chunking strategy
         prices_slice
-            .chunks(1024)
-            .zip(output_slice.chunks_mut(1024))
+            .chunks(CHUNK_SIZE_L1)
+            .zip(output_slice.chunks_mut(CHUNK_SIZE_L1))
             .for_each(|(price_chunk, out_chunk)| {
                 for (i, &price) in price_chunk.iter().enumerate() {
                     let params = self.create_params_with_dividend(price, k, t, r, q, sigma);
