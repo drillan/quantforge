@@ -50,7 +50,7 @@ def load_history() -> list[dict[str, Any]]:
 def export_to_csv(output_file: str | None = None) -> None:
     """履歴をCSV形式でエクスポート."""
     import csv
-    
+
     if output_file is None:
         output_file = str(RESULTS_DIR / "history.csv")
 

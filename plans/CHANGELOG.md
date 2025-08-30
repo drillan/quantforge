@@ -1,5 +1,25 @@
 # 計画変更履歴
 
+## 2025-08-30（Performance Optimization, Zero-Copy, and Baseline System）
+- `2025-08-30-both-performance-threshold-replacement.md` → archive/ ✅
+  - パフォーマンス閾値システムの完全置換
+  - 固定閾値を削除し、ベースライン駆動システムへ移行
+  - 20%マージン付きの動的閾値による退行検出
+  - tests/performance/baseline_thresholds.pyとbenchmarks/baseline_manager.py実装
+- `2025-08-30-profiling-iteration-subtask.md` → archive/ ✅
+  - プロファイリング駆動性能最適化イテレーション
+  - playground/profiling/内に最適化ループシステム構築
+  - 並列化閾値の自動調整メカニズム実装
+- `2025-08-30-realistic-performance-optimization.md` → archive/ ✅
+  - 現実的なパフォーマンス最適化計画
+  - SIMD最適化を回避し、並列化閾値調整に集中
+  - プロファイリング結果に基づく定数最適化
+- `2025-08-30-rust-broadcast-iterator-optimization.md` → archive/ ✅
+  - BroadcastIteratorのゼロコピー最適化実装
+  - compute_with/compute_parallel_withメソッドによるメモリ効率改善
+  - 10,000件処理でNumPy比0.60倍→0.95倍以上達成
+  - FFIオーバーヘッド40%削減
+
 ## 2025-08-30（Performance Optimization and Code Unification）
 - `2025-08-30-rust-performance-optimization.md` → archive/ ✅
   - 並列処理性能最適化の完全実装

@@ -3,8 +3,8 @@
 use crate::broadcast::{ArrayLike, BroadcastIterator};
 use crate::error::QuantForgeError;
 use crate::models::black_scholes_model::{BlackScholes, BlackScholesParams};
-use crate::models::{GreeksBatch, PricingModel};
-use crate::optimization::ParallelStrategy;
+use crate::models::{Greeks, GreeksBatch, PricingModel};
+use crate::optimization::{ParallelStrategy, ProcessingMode};
 
 /// Calculate call prices with full array support and broadcasting
 pub fn call_price_batch(
@@ -18,28 +18,42 @@ pub fn call_price_batch(
     let iter = BroadcastIterator::new(inputs)?;
     let size = iter.size_hint().0;
 
-    // Use dynamic parallel strategy
-    let values: Vec<_> = iter.collect();
+    // Select processing strategy based on data size
     let strategy = ParallelStrategy::select(size);
 
-    let results = strategy.process_batch(&values, |vals| {
-        let params = BlackScholesParams {
-            spot: vals[0],
-            strike: vals[1],
-            time: vals[2],
-            rate: vals[3],
-            sigma: vals[4],
-        };
-
-        // Validate inputs
-        if params.spot <= 0.0 || params.strike <= 0.0 || params.time <= 0.0 || params.sigma <= 0.0 {
-            f64::NAN
-        } else {
-            BlackScholes::call_price(&params)
+    let results = match strategy.mode() {
+        ProcessingMode::Sequential => {
+            // Use compute_with for sequential processing (zero-copy)
+            iter.compute_with(|vals| {
+                compute_single_call_price(vals[0], vals[1], vals[2], vals[3], vals[4])
+            })
         }
-    });
+        _ => {
+            // Use compute_parallel_with for parallel processing (thread-local buffering)
+            iter.compute_parallel_with(
+                |vals| compute_single_call_price(vals[0], vals[1], vals[2], vals[3], vals[4]),
+                strategy.chunk_size(),
+            )
+        }
+    };
 
     Ok(results)
+}
+
+#[inline(always)]
+fn compute_single_call_price(s: f64, k: f64, t: f64, r: f64, sigma: f64) -> f64 {
+    if s <= 0.0 || k <= 0.0 || t <= 0.0 || sigma <= 0.0 {
+        f64::NAN
+    } else {
+        let params = BlackScholesParams {
+            spot: s,
+            strike: k,
+            time: t,
+            rate: r,
+            sigma,
+        };
+        BlackScholes::call_price(&params)
+    }
 }
 
 /// Calculate put prices with full array support and broadcasting
@@ -54,28 +68,42 @@ pub fn put_price_batch(
     let iter = BroadcastIterator::new(inputs)?;
     let size = iter.size_hint().0;
 
-    // Use dynamic parallel strategy
-    let values: Vec<_> = iter.collect();
+    // Select processing strategy based on data size
     let strategy = ParallelStrategy::select(size);
 
-    let results = strategy.process_batch(&values, |vals| {
-        let params = BlackScholesParams {
-            spot: vals[0],
-            strike: vals[1],
-            time: vals[2],
-            rate: vals[3],
-            sigma: vals[4],
-        };
-
-        // Validate inputs
-        if params.spot <= 0.0 || params.strike <= 0.0 || params.time <= 0.0 || params.sigma <= 0.0 {
-            f64::NAN
-        } else {
-            BlackScholes::put_price(&params)
+    let results = match strategy.mode() {
+        ProcessingMode::Sequential => {
+            // Use compute_with for sequential processing (zero-copy)
+            iter.compute_with(|vals| {
+                compute_single_put_price(vals[0], vals[1], vals[2], vals[3], vals[4])
+            })
         }
-    });
+        _ => {
+            // Use compute_parallel_with for parallel processing (thread-local buffering)
+            iter.compute_parallel_with(
+                |vals| compute_single_put_price(vals[0], vals[1], vals[2], vals[3], vals[4]),
+                strategy.chunk_size(),
+            )
+        }
+    };
 
     Ok(results)
+}
+
+#[inline(always)]
+fn compute_single_put_price(s: f64, k: f64, t: f64, r: f64, sigma: f64) -> f64 {
+    if s <= 0.0 || k <= 0.0 || t <= 0.0 || sigma <= 0.0 {
+        f64::NAN
+    } else {
+        let params = BlackScholesParams {
+            spot: s,
+            strike: k,
+            time: t,
+            rate: r,
+            sigma,
+        };
+        BlackScholes::put_price(&params)
+    }
 }
 
 /// Calculate implied volatilities with full array support and broadcasting
@@ -91,30 +119,43 @@ pub fn implied_volatility_batch(
     let iter = BroadcastIterator::new(inputs)?;
     let size = iter.size_hint().0;
 
-    // Use dynamic parallel strategy
-    let values: Vec<_> = iter.collect();
+    // Select processing strategy based on data size
     let strategy = ParallelStrategy::select(size);
 
-    let results = strategy.process_batch(&values, |vals| {
-        let price = vals[0];
-        let params = BlackScholesParams {
-            spot: vals[1],
-            strike: vals[2],
-            time: vals[3],
-            rate: vals[4],
-            sigma: 0.2, // Initial guess
-        };
-        let is_call = vals[5] != 0.0; // Convert to bool
-
-        // Validate inputs
-        if price <= 0.0 || params.spot <= 0.0 || params.strike <= 0.0 || params.time <= 0.0 {
-            f64::NAN
-        } else {
-            BlackScholes::implied_volatility(price, &params, is_call, None).unwrap_or(f64::NAN)
+    let results = match strategy.mode() {
+        ProcessingMode::Sequential => {
+            // Use compute_with for sequential processing (zero-copy)
+            iter.compute_with(|vals| {
+                compute_single_iv(vals[0], vals[1], vals[2], vals[3], vals[4], vals[5])
+            })
         }
-    });
+        _ => {
+            // Use compute_parallel_with for parallel processing (thread-local buffering)
+            iter.compute_parallel_with(
+                |vals| compute_single_iv(vals[0], vals[1], vals[2], vals[3], vals[4], vals[5]),
+                strategy.chunk_size(),
+            )
+        }
+    };
 
     Ok(results)
+}
+
+#[inline(always)]
+fn compute_single_iv(price: f64, s: f64, k: f64, t: f64, r: f64, is_call_val: f64) -> f64 {
+    if price <= 0.0 || s <= 0.0 || k <= 0.0 || t <= 0.0 {
+        f64::NAN
+    } else {
+        let params = BlackScholesParams {
+            spot: s,
+            strike: k,
+            time: t,
+            rate: r,
+            sigma: 0.2, // Initial guess
+        };
+        let is_call = is_call_val != 0.0;
+        BlackScholes::implied_volatility(price, &params, is_call, None).unwrap_or(f64::NAN)
+    }
 }
 
 /// Calculate Greeks with full array support and broadcasting
@@ -131,40 +172,40 @@ pub fn greeks_batch(
     let iter = BroadcastIterator::new(inputs)?;
     let size = iter.size_hint().0;
 
+    // Select processing strategy based on data size
+    let strategy = ParallelStrategy::select(size);
+
+    let results = match strategy.mode() {
+        ProcessingMode::Sequential => {
+            // Use compute_with for sequential processing (zero-copy)
+            iter.compute_with(|vals| {
+                compute_single_greeks(vals[0], vals[1], vals[2], vals[3], vals[4], vals[5])
+            })
+        }
+        _ => {
+            // Use compute_parallel_with for parallel processing (thread-local buffering)
+            iter.compute_parallel_with(
+                |vals| compute_single_greeks(vals[0], vals[1], vals[2], vals[3], vals[4], vals[5]),
+                strategy.chunk_size(),
+            )
+        }
+    };
+
+    // Unpack results into separate vectors
     let mut delta = Vec::with_capacity(size);
     let mut gamma = Vec::with_capacity(size);
     let mut vega = Vec::with_capacity(size);
     let mut theta = Vec::with_capacity(size);
     let mut rho = Vec::with_capacity(size);
-    let mut dividend_rho = Vec::with_capacity(size); // For consistency, though BS doesn't use dividends
+    let mut dividend_rho = Vec::with_capacity(size);
 
-    for vals in iter {
-        let params = BlackScholesParams {
-            spot: vals[0],
-            strike: vals[1],
-            time: vals[2],
-            rate: vals[3],
-            sigma: vals[4],
-        };
-        let is_call = vals[5] != 0.0; // Convert to bool
-
-        // Validate inputs
-        if params.spot <= 0.0 || params.strike <= 0.0 || params.time <= 0.0 || params.sigma <= 0.0 {
-            delta.push(f64::NAN);
-            gamma.push(f64::NAN);
-            vega.push(f64::NAN);
-            theta.push(f64::NAN);
-            rho.push(f64::NAN);
-            dividend_rho.push(0.0); // No dividend sensitivity for standard BS
-        } else {
-            let greeks = BlackScholes::greeks(&params, is_call);
-            delta.push(greeks.delta);
-            gamma.push(greeks.gamma);
-            vega.push(greeks.vega);
-            theta.push(greeks.theta);
-            rho.push(greeks.rho);
-            dividend_rho.push(0.0); // No dividend sensitivity for standard BS
-        }
+    for result in results {
+        delta.push(result.delta);
+        gamma.push(result.gamma);
+        vega.push(result.vega);
+        theta.push(result.theta);
+        rho.push(result.rho);
+        dividend_rho.push(0.0); // No dividend sensitivity for standard BS
     }
 
     Ok(GreeksBatch {
@@ -175,6 +216,29 @@ pub fn greeks_batch(
         rho,
         dividend_rho,
     })
+}
+
+#[inline(always)]
+fn compute_single_greeks(s: f64, k: f64, t: f64, r: f64, sigma: f64, is_call_val: f64) -> Greeks {
+    if s <= 0.0 || k <= 0.0 || t <= 0.0 || sigma <= 0.0 {
+        Greeks {
+            delta: f64::NAN,
+            gamma: f64::NAN,
+            vega: f64::NAN,
+            theta: f64::NAN,
+            rho: f64::NAN,
+        }
+    } else {
+        let params = BlackScholesParams {
+            spot: s,
+            strike: k,
+            time: t,
+            rate: r,
+            sigma,
+        };
+        let is_call = is_call_val != 0.0;
+        BlackScholes::greeks(&params, is_call)
+    }
 }
 
 #[cfg(test)]

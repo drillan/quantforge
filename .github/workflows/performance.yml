@@ -1,0 +1,68 @@
+name: Performance Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  performance:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+    
+    - name: Install uv
+      run: |
+        curl -LsSf https://astral.sh/uv/install.sh | sh
+        echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+    
+    - name: Install dependencies
+      run: |
+        uv sync --all-extras
+        uv run maturin develop --release
+    
+    - name: Download baseline (main branch)
+      if: github.ref == 'refs/heads/main'
+      uses: actions/download-artifact@v4
+      with:
+        name: performance-baseline
+        path: benchmarks/results/
+      continue-on-error: true
+    
+    - name: Check baseline exists
+      run: |
+        if [ ! -f benchmarks/results/baseline.json ]; then
+          echo "警告: ベースラインが存在しません。作成中..."
+          uv run python benchmarks/baseline_manager.py --update --runs 3 --buffer 1.2
+        fi
+    
+    - name: Run performance tests
+      run: |
+        uv run pytest tests/performance/test_benchmarks.py -v --benchmark-only
+    
+    - name: Check for regressions
+      run: |
+        uv run python benchmarks/performance_guard.py
+    
+    - name: Update baseline (main branch only)
+      if: github.ref == 'refs/heads/main' && success()
+      run: |
+        # 主ブランチでは定期的にベースラインを更新
+        # ただし、性能劣化がある場合は更新しない
+        uv run python benchmarks/baseline_manager.py --check || \
+        uv run python benchmarks/baseline_manager.py --update --runs 5 --buffer 1.2
+    
+    - name: Upload baseline
+      if: github.ref == 'refs/heads/main'
+      uses: actions/upload-artifact@v4
+      with:
+        name: performance-baseline
+        path: benchmarks/results/baseline.json
+        retention-days: 90

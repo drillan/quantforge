@@ -6,7 +6,7 @@ use crate::broadcast::{ArrayLike, BroadcastIterator};
 use crate::error::QuantForgeError;
 use crate::models::black76::implied_volatility::calculate_iv;
 use crate::models::{Greeks, GreeksBatch};
-use crate::optimization::ParallelStrategy;
+use crate::optimization::{ParallelStrategy, ProcessingMode};
 use crate::traits::BatchProcessor;
 
 /// Batch calculate call option prices with broadcasting support
@@ -19,16 +19,46 @@ pub fn call_price_batch(
 ) -> Result<Vec<f64>, QuantForgeError> {
     let inputs = vec![forwards, strikes, times, rates, sigmas];
     let iter = BroadcastIterator::new(inputs)?;
-    let values: Vec<_> = iter.collect();
+    let size = iter.size_hint().0;
 
-    // Use dynamic parallelization strategy
-    let strategy = ParallelStrategy::select(values.len());
+    // Select processing strategy based on data size
+    let strategy = ParallelStrategy::select(size);
     let processor = Black76CallProcessor;
 
-    Ok(strategy.process_batch(&values, |vals| {
-        let params = processor.create_params(vals[0], vals[1], vals[2], vals[3], vals[4]);
+    let results = match strategy.mode() {
+        ProcessingMode::Sequential => {
+            // Use compute_with for sequential processing (zero-copy)
+            iter.compute_with(|vals| {
+                compute_single_call(vals[0], vals[1], vals[2], vals[3], vals[4], &processor)
+            })
+        }
+        _ => {
+            // Use compute_parallel_with for parallel processing (thread-local buffering)
+            iter.compute_parallel_with(
+                |vals| compute_single_call(vals[0], vals[1], vals[2], vals[3], vals[4], &processor),
+                strategy.chunk_size(),
+            )
+        }
+    };
+
+    Ok(results)
+}
+
+#[inline(always)]
+fn compute_single_call(
+    f: f64,
+    k: f64,
+    t: f64,
+    r: f64,
+    sigma: f64,
+    processor: &Black76CallProcessor,
+) -> f64 {
+    if f <= 0.0 || k <= 0.0 || t <= 0.0 || sigma <= 0.0 {
+        f64::NAN
+    } else {
+        let params = processor.create_params(f, k, t, r, sigma);
         processor.process_single(&params)
-    }))
+    }
 }
 
 /// Batch calculate put option prices with broadcasting support
@@ -41,16 +71,46 @@ pub fn put_price_batch(
 ) -> Result<Vec<f64>, QuantForgeError> {
     let inputs = vec![forwards, strikes, times, rates, sigmas];
     let iter = BroadcastIterator::new(inputs)?;
-    let values: Vec<_> = iter.collect();
+    let size = iter.size_hint().0;
 
-    // Use dynamic parallelization strategy
-    let strategy = ParallelStrategy::select(values.len());
+    // Select processing strategy based on data size
+    let strategy = ParallelStrategy::select(size);
     let processor = Black76PutProcessor;
 
-    Ok(strategy.process_batch(&values, |vals| {
-        let params = processor.create_params(vals[0], vals[1], vals[2], vals[3], vals[4]);
+    let results = match strategy.mode() {
+        ProcessingMode::Sequential => {
+            // Use compute_with for sequential processing (zero-copy)
+            iter.compute_with(|vals| {
+                compute_single_put(vals[0], vals[1], vals[2], vals[3], vals[4], &processor)
+            })
+        }
+        _ => {
+            // Use compute_parallel_with for parallel processing (thread-local buffering)
+            iter.compute_parallel_with(
+                |vals| compute_single_put(vals[0], vals[1], vals[2], vals[3], vals[4], &processor),
+                strategy.chunk_size(),
+            )
+        }
+    };
+
+    Ok(results)
+}
+
+#[inline(always)]
+fn compute_single_put(
+    f: f64,
+    k: f64,
+    t: f64,
+    r: f64,
+    sigma: f64,
+    processor: &Black76PutProcessor,
+) -> f64 {
+    if f <= 0.0 || k <= 0.0 || t <= 0.0 || sigma <= 0.0 {
+        f64::NAN
+    } else {
+        let params = processor.create_params(f, k, t, r, sigma);
         processor.process_single(&params)
-    }))
+    }
 }
 
 /// Batch calculate implied volatilities with broadcasting support
@@ -64,18 +124,41 @@ pub fn implied_volatility_batch(
 ) -> Result<Vec<f64>, QuantForgeError> {
     let inputs = vec![prices, forwards, strikes, times, rates, is_calls];
     let iter = BroadcastIterator::new(inputs)?;
-    let values: Vec<_> = iter.collect();
+    let size = iter.size_hint().0;
 
-    // Use dynamic parallelization strategy
-    let strategy = ParallelStrategy::select(values.len());
+    // Select processing strategy based on data size
+    let strategy = ParallelStrategy::select(size);
 
-    Ok(strategy.process_batch(&values, |vals| {
-        let params = Black76Params::new(vals[1], vals[2], vals[3], vals[4], 0.2);
-        match calculate_iv(vals[0], &params, vals[5] > 0.5, None) {
+    let results = match strategy.mode() {
+        ProcessingMode::Sequential => {
+            // Use compute_with for sequential processing (zero-copy)
+            iter.compute_with(|vals| {
+                compute_single_iv(vals[0], vals[1], vals[2], vals[3], vals[4], vals[5])
+            })
+        }
+        _ => {
+            // Use compute_parallel_with for parallel processing (thread-local buffering)
+            iter.compute_parallel_with(
+                |vals| compute_single_iv(vals[0], vals[1], vals[2], vals[3], vals[4], vals[5]),
+                strategy.chunk_size(),
+            )
+        }
+    };
+
+    Ok(results)
+}
+
+#[inline(always)]
+fn compute_single_iv(price: f64, f: f64, k: f64, t: f64, r: f64, is_call_val: f64) -> f64 {
+    if price <= 0.0 || f <= 0.0 || k <= 0.0 || t <= 0.0 {
+        f64::NAN
+    } else {
+        let params = Black76Params::new(f, k, t, r, 0.2);
+        match calculate_iv(price, &params, is_call_val > 0.5, None) {
             Ok(sigma) => sigma,
             Err(_) => f64::NAN,
         }
-    }))
+    }
 }
 
 /// Batch calculate Greeks with broadcasting support
@@ -89,26 +172,52 @@ pub fn greeks_batch(
 ) -> Result<GreeksBatch, QuantForgeError> {
     let inputs = vec![forwards, strikes, times, rates, sigmas, is_calls];
     let iter = BroadcastIterator::new(inputs)?;
-    let values: Vec<_> = iter.collect();
+    let size = iter.size_hint().0;
 
-    // Use dynamic parallelization strategy
-    let strategy = ParallelStrategy::select(values.len());
+    // Select processing strategy based on data size
+    let strategy = ParallelStrategy::select(size);
 
-    let greeks_list: Vec<Greeks> = strategy.process_batch(&values, |vals| {
-        let params = Black76Params::new(vals[0], vals[1], vals[2], vals[3], vals[4]);
-        calculate_greeks(&params, vals[5] > 0.5)
-    });
+    let greeks_list: Vec<Greeks> = match strategy.mode() {
+        ProcessingMode::Sequential => {
+            // Use compute_with for sequential processing (zero-copy)
+            iter.compute_with(|vals| {
+                compute_single_greeks(vals[0], vals[1], vals[2], vals[3], vals[4], vals[5])
+            })
+        }
+        _ => {
+            // Use compute_parallel_with for parallel processing (thread-local buffering)
+            iter.compute_parallel_with(
+                |vals| compute_single_greeks(vals[0], vals[1], vals[2], vals[3], vals[4], vals[5]),
+                strategy.chunk_size(),
+            )
+        }
+    };
 
     // Convert list of Greeks to GreeksBatch
-    let len = greeks_list.len();
     Ok(GreeksBatch {
         delta: greeks_list.iter().map(|g| g.delta).collect(),
         gamma: greeks_list.iter().map(|g| g.gamma).collect(),
         vega: greeks_list.iter().map(|g| g.vega).collect(),
         theta: greeks_list.iter().map(|g| g.theta).collect(),
         rho: greeks_list.iter().map(|g| g.rho).collect(),
-        dividend_rho: vec![0.0; len], // Black76 doesn't use dividends
+        dividend_rho: vec![0.0; size], // Black76 doesn't use dividends
     })
+}
+
+#[inline(always)]
+fn compute_single_greeks(f: f64, k: f64, t: f64, r: f64, sigma: f64, is_call_val: f64) -> Greeks {
+    if f <= 0.0 || k <= 0.0 || t <= 0.0 || sigma <= 0.0 {
+        Greeks {
+            delta: f64::NAN,
+            gamma: f64::NAN,
+            vega: f64::NAN,
+            theta: f64::NAN,
+            rho: f64::NAN,
+        }
+    } else {
+        let params = Black76Params::new(f, k, t, r, sigma);
+        calculate_greeks(&params, is_call_val > 0.5)
+    }
 }
 
 // GreeksBatch is now imported from greeks_batch module

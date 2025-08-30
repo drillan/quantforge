@@ -126,7 +126,7 @@ def format_markdown(results: dict[str, Any]) -> str:
 
 if __name__ == "__main__":
     from pathlib import Path
-    
+
     # プロジェクトルートからの相対パスでresultsディレクトリを定義
     BASE_DIR = Path(__file__).resolve().parent.parent.parent
     RESULTS_DIR = BASE_DIR / "benchmarks" / "results"

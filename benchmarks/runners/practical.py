@@ -9,15 +9,15 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-# プロジェクトルートからの相対パスでresultsディレクトリを定義
-BASE_DIR = Path(__file__).resolve().parent.parent.parent
-RESULTS_DIR = BASE_DIR / "benchmarks" / "results"
-
 import numpy as np
 
 # Baseline implementations
 from benchmarks.baseline.iv_baseline import black_scholes_price_scipy
 from benchmarks.baseline.python_baseline import black_scholes_pure_python, norm_cdf_pure
+
+# プロジェクトルートからの相対パスでresultsディレクトリを定義
+BASE_DIR = Path(__file__).resolve().parent.parent.parent
+RESULTS_DIR = BASE_DIR / "benchmarks" / "results"
 
 
 def pure_python_implied_volatility(price: float, s: float, k: float, t: float, r: float, is_call: bool = True) -> float:
@@ -95,7 +95,7 @@ def benchmark_volatility_surface_small() -> dict[str, float]:
 
     # 3. QuantForge実装（並列バッチ）
     try:
-        from quantforge.models import black_scholes  # type: ignore[import-not-found]
+        from quantforge.models import black_scholes
 
         if hasattr(black_scholes, "implied_volatility_batch"):
             start = time.perf_counter()

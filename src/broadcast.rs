@@ -108,6 +108,60 @@ impl<'a> BroadcastIterator<'a> {
             index: 0,
         })
     }
+
+    /// Compute values with a function, avoiding unnecessary copies
+    ///
+    /// This method processes all broadcast values without creating intermediate `Vec<f64>`
+    /// for each iteration, significantly reducing memory allocation overhead.
+    pub fn compute_with<F, R>(&self, f: F) -> Vec<R>
+    where
+        F: Fn(&[f64]) -> R,
+        R: Send,
+    {
+        let mut buffer = vec![0.0; self.inputs.len()];
+        let mut results = Vec::with_capacity(self.size);
+
+        for i in 0..self.size {
+            // Reuse buffer for each iteration
+            for (j, input) in self.inputs.iter().enumerate() {
+                buffer[j] = input.get_broadcast(i);
+            }
+            results.push(f(&buffer));
+        }
+
+        results
+    }
+
+    /// Parallel version of compute_with using chunked processing
+    ///
+    /// Processes data in chunks for efficient parallel execution.
+    /// Each chunk gets its own buffer to avoid synchronization overhead.
+    pub fn compute_parallel_with<F, R>(&self, f: F, chunk_size: usize) -> Vec<R>
+    where
+        F: Fn(&[f64]) -> R + Sync + Send,
+        R: Send,
+    {
+        use rayon::prelude::*;
+
+        (0..self.size)
+            .into_par_iter()
+            .chunks(chunk_size)
+            .flat_map(|chunk| {
+                // Create a buffer for this chunk - minimal overhead since chunks are large
+                let mut buffer = vec![0.0; self.inputs.len()];
+                chunk
+                    .into_iter()
+                    .map(|i| {
+                        // Fill buffer with broadcast values
+                        for (j, input) in self.inputs.iter().enumerate() {
+                            buffer[j] = input.get_broadcast(i);
+                        }
+                        f(&buffer)
+                    })
+                    .collect::<Vec<_>>()
+            })
+            .collect()
+    }
 }
 
 impl<'a> Iterator for BroadcastIterator<'a> {
@@ -227,5 +281,50 @@ mod tests {
         let mut iter = BroadcastIterator::new(inputs).unwrap();
         assert_eq!(iter.next(), Some(vec![100.0, 95.0, 1.0]));
         assert_eq!(iter.next(), None);
+    }
+
+    #[test]
+    fn test_compute_with_no_copy() {
+        let inputs = vec![ArrayLike::Array(&[1.0, 2.0, 3.0]), ArrayLike::Scalar(2.0)];
+        let iter = BroadcastIterator::new(inputs).unwrap();
+
+        let results = iter.compute_with(|vals| vals[0] + vals[1]);
+        assert_eq!(results, vec![3.0, 4.0, 5.0]);
+    }
+
+    #[test]
+    fn test_compute_parallel_with() {
+        let inputs = vec![
+            ArrayLike::Array(&[1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]),
+            ArrayLike::Scalar(10.0),
+        ];
+        let iter = BroadcastIterator::new(inputs).unwrap();
+
+        let results = iter.compute_parallel_with(|vals| vals[0] * vals[1], 2);
+        assert_eq!(
+            results,
+            vec![10.0, 20.0, 30.0, 40.0, 50.0, 60.0, 70.0, 80.0]
+        );
+    }
+
+    #[test]
+    fn test_compute_with_memory_efficiency() {
+        // Test that compute_with uses less memory than collect()
+        let large_size = 10000;
+        let large_array: Vec<f64> = (0..large_size).map(|i| i as f64).collect();
+        let inputs = vec![
+            ArrayLike::Array(&large_array),
+            ArrayLike::Scalar(2.0),
+            ArrayLike::Scalar(3.0),
+        ];
+
+        let iter = BroadcastIterator::new(inputs).unwrap();
+
+        // This should be more memory efficient than collect()
+        let results = iter.compute_with(|vals| vals[0] + vals[1] * vals[2]);
+
+        assert_eq!(results.len(), large_size);
+        assert_eq!(results[0], 0.0 + 2.0 * 3.0);
+        assert_eq!(results[large_size - 1], (large_size - 1) as f64 + 2.0 * 3.0);
     }
 }

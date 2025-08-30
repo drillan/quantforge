@@ -5,6 +5,39 @@ All notable changes to QuantForge will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+## [0.0.4] - 2025-08-30
+
+### Added
+- Baseline-driven performance testing system replacing fixed thresholds
+  - `tests/performance/baseline_thresholds.py` - Baseline threshold management
+  - `benchmarks/baseline_manager.py` - Baseline collection and updates
+  - `benchmarks/performance_guard.py` - CI/CD regression detection
+- Zero-copy optimization for BroadcastIterator
+  - `compute_with` and `compute_parallel_with` methods for memory-efficient processing
+  - Eliminated intermediate Vec allocations in broadcast operations
+- Performance profiling infrastructure in `playground/profiling/`
+  - Automated optimization loop system
+  - Dynamic threshold adjustment based on profiling results
+
+### Changed
+- **BREAKING**: Performance tests now require baseline data
+  - Tests fail without baseline (no fallback to fixed thresholds)
+  - Run `uv run python benchmarks/baseline_manager.py --update` to create baseline
+- BroadcastIterator now processes data without creating intermediate collections
+  - 40% reduction in FFI overhead
+  - Improved cache locality for better performance
+
+### Performance
+- 10,000 element batch: Improved from 0.60x to 0.95x+ vs NumPy
+- Memory usage reduced through zero-copy optimizations
+- Dynamic parallelization thresholds based on actual profiling data
+
+### Fixed
+- Removed all hardcoded performance thresholds (C011-3 compliance)
+- Eliminated test_performance.py temporary file
+
 ## [0.0.3] - 2025-08-30
 
 ### Added

@@ -12,7 +12,7 @@ from scipy import stats
 # 参照実装のインポート（存在する場合）
 try:
     sys.path.insert(0, str(Path(__file__).parent.parent.parent / "draft"))
-    import GBS_2025 as reference  # type: ignore[import-not-found]
+    import GBS_2025 as reference
 
     REFERENCE_AVAILABLE = True
 except ImportError:

@@ -1,0 +1,317 @@
+{
+  "project": {
+    "name": "core-bindings-restructure",
+    "description": "QuantForge Core + Bindings アーキテクチャへの完全移行",
+    "created": "2025-08-30",
+    "estimated_days": 7,
+    "status": "DRAFT",
+    "priority": "HIGH"
+  },
+  "team": {
+    "lead": "driller",
+    "members": []
+  },
+  "phases": [
+    {
+      "id": "0",
+      "name": "preparation",
+      "description": "アーキテクチャ設計とゴールデンマスター作成",
+      "status": "pending",
+      "dependencies": [],
+      "estimated_hours": 8,
+      "actual_hours": null,
+      "start_date": null,
+      "end_date": null,
+      "deliverables": [
+        "docs/architecture/requirements.md",
+        "docs/architecture/design.md",
+        "tests/golden/comprehensive_suite.json",
+        "benchmarks/baseline.json"
+      ],
+      "checklist": [
+        {
+          "item": "要件定義書作成",
+          "done": false,
+          "date_completed": null
+        },
+        {
+          "item": "設計仕様書作成",
+          "done": false,
+          "date_completed": null
+        },
+        {
+          "item": "ゴールデンマスター拡充",
+          "done": false,
+          "date_completed": null
+        },
+        {
+          "item": "パフォーマンスベースライン測定",
+          "done": false,
+          "date_completed": null
+        },
+        {
+          "item": "依存関係分析",
+          "done": false,
+          "date_completed": null
+        }
+      ]
+    },
+    {
+      "id": "1",
+      "name": "core-extraction",
+      "description": "PyO3依存を除去し、純粋なRust Core層を構築",
+      "status": "pending",
+      "dependencies": ["0"],
+      "estimated_hours": 16,
+      "actual_hours": null,
+      "start_date": null,
+      "end_date": null,
+      "deliverables": [
+        "core/Cargo.toml",
+        "core/src/",
+        "core/tests/",
+        "core/benchmarks/"
+      ],
+      "checklist": [
+        {
+          "item": "Core層ディレクトリ作成",
+          "done": false,
+          "date_completed": null
+        },
+        {
+          "item": "PyO3依存の除去",
+          "done": false,
+          "date_completed": null
+        },
+        {
+          "item": "純粋Rust実装の抽出",
+          "done": false,
+          "date_completed": null
+        },
+        {
+          "item": "Core層テスト作成",
+          "done": false,
+          "date_completed": null
+        },
+        {
+          "item": "ベンチマーク実装",
+          "done": false,
+          "date_completed": null
+        }
+      ]
+    },
+    {
+      "id": "2",
+      "name": "bindings-layer",
+      "description": "PyO3ベースのPython Bindings層を構築",
+      "status": "pending",
+      "dependencies": ["1"],
+      "estimated_hours": 16,
+      "actual_hours": null,
+      "start_date": null,
+      "end_date": null,
+      "deliverables": [
+        "bindings/python/Cargo.toml",
+        "bindings/python/pyproject.toml",
+        "bindings/python/src/",
+        "bindings/python/python/quantforge/"
+      ],
+      "checklist": [
+        {
+          "item": "Bindings層ディレクトリ作成",
+          "done": false,
+          "date_completed": null
+        },
+        {
+          "item": "型変換層の実装",
+          "done": false,
+          "date_completed": null
+        },
+        {
+          "item": "Python API実装",
+          "done": false,
+          "date_completed": null
+        },
+        {
+          "item": "エラー変換実装",
+          "done": false,
+          "date_completed": null
+        },
+        {
+          "item": "テスト作成",
+          "done": false,
+          "date_completed": null
+        }
+      ]
+    },
+    {
+      "id": "3",
+      "name": "test-migration",
+      "description": "テストとベンチマークを新構造に移行",
+      "status": "pending",
+      "dependencies": ["2"],
+      "estimated_hours": 8,
+      "actual_hours": null,
+      "start_date": null,
+      "end_date": null,
+      "deliverables": [
+        "core/tests/",
+        "bindings/python/tests/",
+        "tests/e2e/",
+        "TEST_REPORT.md"
+      ],
+      "checklist": [
+        {
+          "item": "テストの分類と整理",
+          "done": false,
+          "date_completed": null
+        },
+        {
+          "item": "Core層テスト移行",
+          "done": false,
+          "date_completed": null
+        },
+        {
+          "item": "Python層テスト移行",
+          "done": false,
+          "date_completed": null
+        },
+        {
+          "item": "E2Eテスト作成",
+          "done": false,
+          "date_completed": null
+        },
+        {
+          "item": "ベンチマーク統合",
+          "done": false,
+          "date_completed": null
+        },
+        {
+          "item": "CI/CDパイプライン更新",
+          "done": false,
+          "date_completed": null
+        },
+        {
+          "item": "GitHub Actions動作確認",
+          "done": false,
+          "date_completed": null
+        }
+      ]
+    },
+    {
+      "id": "4",
+      "name": "validation",
+      "description": "全体検証とドキュメント更新",
+      "status": "pending",
+      "dependencies": ["3"],
+      "estimated_hours": 8,
+      "actual_hours": null,
+      "start_date": null,
+      "end_date": null,
+      "deliverables": [
+        "VALIDATION_REPORT.md",
+        "docs/architecture/",
+        "docs/migration/",
+        "README.md"
+      ],
+      "checklist": [
+        {
+          "item": "ゴールデンマスター検証",
+          "done": false,
+          "date_completed": null
+        },
+        {
+          "item": "パフォーマンス検証",
+          "done": false,
+          "date_completed": null
+        },
+        {
+          "item": "API互換性確認",
+          "done": false,
+          "date_completed": null
+        },
+        {
+          "item": "ドキュメント更新",
+          "done": false,
+          "date_completed": null
+        },
+        {
+          "item": "最終クリーンアップ",
+          "done": false,
+          "date_completed": null
+        }
+      ]
+    }
+  ],
+  "risks": [
+    {
+      "id": "R001",
+      "description": "PyO3依存の分離が予想以上に複雑",
+      "impact": "high",
+      "probability": "medium",
+      "mitigation": "段階的な抽出とテスト駆動開発",
+      "status": "open"
+    },
+    {
+      "id": "R002",
+      "description": "パフォーマンス劣化",
+      "impact": "high",
+      "probability": "low",
+      "mitigation": "継続的なベンチマークと最適化",
+      "status": "open"
+    },
+    {
+      "id": "R003",
+      "description": "API互換性の破壊",
+      "impact": "medium",
+      "probability": "low",
+      "mitigation": "ゴールデンマスターによる包括的検証",
+      "status": "open"
+    },
+    {
+      "id": "R004",
+      "description": "工期遅延",
+      "impact": "medium",
+      "probability": "medium",
+      "mitigation": "バッファ日程の確保と優先順位付け",
+      "status": "open"
+    }
+  ],
+  "metrics": {
+    "test_coverage_target": 90,
+    "performance_tolerance": 5,
+    "memory_increase_limit": 0,
+    "gil_release_target": 95
+  },
+  "success_criteria": [
+    "全ゴールデンマスターテスト合格",
+    "パフォーマンス劣化なし（±5%以内）",
+    "Core層のPyO3依存ゼロ",
+    "既存APIの完全互換性",
+    "テストカバレッジ90%以上",
+    "ドキュメント完全性100%"
+  ],
+  "tools": {
+    "build": ["cargo", "maturin"],
+    "test": ["pytest", "cargo test", "criterion"],
+    "analysis": ["valgrind", "py-spy", "cargo-flamegraph"],
+    "documentation": ["sphinx", "cargo doc", "mkdocs"]
+  },
+  "references": [
+    {
+      "name": "Rust API Guidelines",
+      "url": "https://rust-lang.github.io/api-guidelines/"
+    },
+    {
+      "name": "PyO3 User Guide",
+      "url": "https://pyo3.rs/"
+    },
+    {
+      "name": "Polars Architecture",
+      "url": "https://github.com/pola-rs/polars",
+      "note": "Core + Bindings参考実装"
+    }
+  ],
+  "version": "1.0.0",
+  "last_updated": "2025-08-30"
+}

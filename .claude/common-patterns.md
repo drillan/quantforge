@@ -328,3 +328,136 @@ python -m pstats profile.stats
   run: |
     ./scripts/detect_hardcode.sh
 ```
+
+## ゼロコピー最適化パターン（2025-08-30追加）
+
+### BroadcastIteratorの最適化パターン
+
+```rust
+// ❌ 旧実装：大量のメモリアロケーション
+let values: Vec<_> = iter.collect();  // 各要素でVec<f64>作成
+strategy.process_batch(&values, |vals| compute(vals));
+
+// ✅ 新実装：ゼロコピー処理
+let results = match strategy.mode() {
+    ProcessingMode::Sequential => {
+        // バッファ1つを再利用
+        iter.compute_with(|vals| compute(vals))
+    }
+    _ => {
+        // チャンクごとにバッファ（並列実行用）
+        iter.compute_parallel_with(
+            |vals| compute(vals),
+            strategy.chunk_size()
+        )
+    }
+};
+```
+
+### compute_withの実装パターン
+
+```rust
+impl<'a> BroadcastIterator<'a> {
+    pub fn compute_with<F, R>(&self, f: F) -> Vec<R>
+    where
+        F: Fn(&[f64]) -> R,
+        R: Send,
+    {
+        let mut buffer = vec![0.0; self.inputs.len()];
+        let mut results = Vec::with_capacity(self.size);
+        
+        for i in 0..self.size {
+            // バッファを再利用（アロケーションなし）
+            for (j, input) in self.inputs.iter().enumerate() {
+                buffer[j] = input.get_broadcast(i);
+            }
+            results.push(f(&buffer));
+        }
+        results
+    }
+}
+```
+
+### バッチ処理の統一実装パターン
+
+```rust
+// 各モデルのバッチ処理で共通パターン
+pub fn call_price_batch(/* params */) -> Result<Vec<f64>, QuantForgeError> {
+    let inputs = vec![spots, strikes, times, rates, sigmas];
+    let iter = BroadcastIterator::new(inputs)?;
+    let size = iter.size_hint().0;
+    
+    let strategy = ParallelStrategy::select(size);
+    
+    let results = match strategy.mode() {
+        ProcessingMode::Sequential => {
+            iter.compute_with(|vals| {
+                compute_single_price(vals[0], vals[1], vals[2], vals[3], vals[4])
+            })
+        }
+        _ => {
+            iter.compute_parallel_with(
+                |vals| compute_single_price(vals[0], vals[1], vals[2], vals[3], vals[4]),
+                strategy.chunk_size()
+            )
+        }
+    };
+    
+    Ok(results)
+}
+
+// 共通のヘルパー関数
+#[inline(always)]
+fn compute_single_price(s: f64, k: f64, t: f64, r: f64, sigma: f64) -> f64 {
+    if s <= 0.0 || k <= 0.0 || t <= 0.0 || sigma <= 0.0 {
+        f64::NAN
+    } else {
+        let params = BlackScholesParams { spot: s, strike: k, time: t, rate: r, sigma };
+        BlackScholes::call_price(&params)
+    }
+}
+```
+
+### パフォーマンステストパターン
+
+```python
+#!/usr/bin/env python3
+"""ゼロコピー最適化の性能測定"""
+
+import time
+import numpy as np
+from quantforge import models
+
+def benchmark_zero_copy(size):
+    # テストデータ準備
+    np.random.seed(42)
+    data = {
+        'spots': np.random.uniform(90, 110, size),
+        'strikes': np.random.uniform(95, 105, size),
+        'times': np.random.uniform(0.1, 2.0, size),
+        'rates': np.random.uniform(0.01, 0.05, size),
+        'sigmas': np.random.uniform(0.15, 0.35, size)
+    }
+    
+    # ウォームアップ（JIT最適化）
+    _ = models.call_price_batch(**{k: v[:100] for k, v in data.items()})
+    
+    # 実測
+    start = time.perf_counter()
+    results = models.call_price_batch(**data)
+    elapsed = time.perf_counter() - start
+    
+    return {
+        'size': size,
+        'time': elapsed,
+        'throughput': size / elapsed,
+        'us_per_op': elapsed * 1e6 / size
+    }
+
+# ベンチマーク実行
+for size in [100, 1_000, 10_000, 100_000, 1_000_000]:
+    metrics = benchmark_zero_copy(size)
+    print(f"Size: {metrics['size']:,}")
+    print(f"  Throughput: {metrics['throughput']:,.0f} ops/sec")
+    print(f"  Per operation: {metrics['us_per_op']:.2f} μs")
+```

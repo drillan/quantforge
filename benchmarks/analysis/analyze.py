@@ -99,8 +99,8 @@ def plot_history(output_file: str | None = None) -> None:
     if output_file is None:
         output_file = str(RESULTS_DIR / "performance_history.png")
     try:
-        import matplotlib.dates as mdates  # type: ignore[import-not-found]
-        import matplotlib.pyplot as plt  # type: ignore[import-not-found]
+        import matplotlib.dates as mdates
+        import matplotlib.pyplot as plt
     except ImportError:
         print("matplotlib not installed. Skipping plot generation.")
         return

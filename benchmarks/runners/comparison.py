@@ -1,6 +1,5 @@
 """Black-Scholesの性能比較."""
 
-import json
 import platform
 import time
 from typing import Any
@@ -91,7 +90,7 @@ class BenchmarkRunner:
         k, t, r, sigma = 100.0, 1.0, 0.05, 0.2
 
         results: dict[str, Any] = {"size": size}
-        
+
         # 測定回数をサイズに応じて調整（適切な実行時間を確保）
         if size <= 100:
             n_runs = 500  # 小さいサイズは多めに測定
@@ -109,23 +108,23 @@ class BenchmarkRunner:
             # Warmup (十分なウォームアップで安定した測定)
             for _ in range(20):
                 _ = models.call_price_batch(spots[: min(100, size)], k, t, r, sigma)
-            
+
             # Measure
             times = []
             for _ in range(n_runs):
                 start = time.perf_counter()
                 _ = models.call_price_batch(spots, k, t, r, sigma)
                 times.append(time.perf_counter() - start)
-            qf_time = np.median(times)
+            qf_time = float(np.median(times))
         else:
-            qf_time = float('inf')
+            qf_time = float("inf")
         results["quantforge"] = qf_time
 
         # NumPy Batch
         # Warmup (十分なウォームアップで安定した測定)
         for _ in range(20):
             _ = black_scholes_numpy_batch(spots[: min(100, size)], k, t, r, sigma)
-        
+
         # Measure
         times = []
         for _ in range(n_runs):
@@ -139,8 +138,8 @@ class BenchmarkRunner:
         if size <= 1000:
             # Warmup
             for _ in range(3):  # Pure Pythonは遅いので少なめ
-                _ = black_scholes_pure_python_batch(spots_list[:min(10, size)], k, t, r, sigma)
-            
+                _ = black_scholes_pure_python_batch(spots_list[: min(10, size)], k, t, r, sigma)
+
             # Measure
             times = []
             py_runs = min(n_runs // 10, 20) if size <= 100 else min(n_runs // 20, 10)
