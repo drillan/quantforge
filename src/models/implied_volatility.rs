@@ -306,7 +306,8 @@ mod tests {
         let price = bs_call_price(s, k, t, r, true_vol);
 
         // IVを逆算
-        let iv = implied_volatility_call(price, s, k, t, r).unwrap();
+        let iv = implied_volatility_call(price, s, k, t, r)
+            .expect("IV calculation should succeed for valid call option parameters");
 
         // 誤差チェック
         assert!((iv - true_vol).abs() < 1e-6);
@@ -325,7 +326,8 @@ mod tests {
         let price = bs_put_price(s, k, t, r, true_vol);
 
         // IVを逆算
-        let iv = implied_volatility_put(price, s, k, t, r).unwrap();
+        let iv = implied_volatility_put(price, s, k, t, r)
+            .expect("IV calculation should succeed for valid put option parameters");
 
         // 誤差チェック
         assert!((iv - true_vol).abs() < 1e-6);
@@ -344,7 +346,10 @@ mod tests {
 
         let result = implied_volatility_call(price, s, k, t, r);
         assert!(result.is_ok());
-        assert!(result.unwrap() < 0.1); // 低ボラティリティ
+        assert!(
+            result.expect("Deep OTM put IV should calculate successfully") < 0.1,
+            "Deep OTM put should have low volatility"
+        );
 
         // 満期直前 - より現実的な価格を使用
         let s = 100.0;
@@ -413,7 +418,8 @@ mod tests {
             };
 
             // Step 2: 価格からIVを逆算
-            let iv = implied_volatility(price, s, k, t, r, is_call).unwrap();
+            let iv = implied_volatility(price, s, k, t, r, is_call)
+                .expect("Round-trip IV calculation should succeed with known valid inputs");
 
             // Step 3: IVから価格を再計算
             let recalc_price = if is_call {

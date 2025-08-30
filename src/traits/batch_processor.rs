@@ -2,6 +2,8 @@ use numpy::{PyArray1, PyArrayMethods, PyReadonlyArray1};
 use pyo3::prelude::*;
 use rayon::prelude::*;
 
+use crate::error::{QuantForgeResult, ValidationBuilder};
+
 /// Generic batch processing trait for option pricing models
 /// This trait eliminates code duplication across Black-Scholes, Black76, and Merton models
 pub trait BatchProcessor: Sync {
@@ -14,7 +16,73 @@ pub trait BatchProcessor: Sync {
     /// Process single value
     fn process_single(&self, params: &Self::Params) -> Self::Output;
 
-    /// Process batch with validation and zero-copy optimization
+    /// Process batch with validation and zero-copy optimization (parallel version)
+    #[allow(clippy::too_many_arguments)]
+    fn process_batch_parallel<'py>(
+        &self,
+        py: Python<'py>,
+        prices: PyReadonlyArray1<f64>,
+        k: f64,
+        t: f64,
+        r: f64,
+        sigma: f64,
+        price_type: &str,
+    ) -> PyResult<Bound<'py, PyArray1<f64>>>
+    where
+        Self::Output: Into<f64> + Send,
+        Self::Params: Send,
+        Self: Sync,
+    {
+        // Unified validation
+        self.validate_common_params(k, t, sigma)
+            .map_err(PyErr::from)?;
+
+        let prices_slice = prices.as_slice()?;
+        self.validate_price_array(prices_slice, price_type)
+            .map_err(PyErr::from)?;
+
+        // Zero-copy output allocation
+        let len = prices_slice.len();
+        // SAFETY: PyArray1::new_bound is safe under the following conditions:
+        // 1. `py` is a valid GIL token obtained from the function parameter
+        // 2. `len` is the validated size from the input array
+        // 3. `false` flag ensures the array is properly initialized with zeros
+        // 4. No other references to this memory exist yet (newly allocated)
+        let output = unsafe { PyArray1::<f64>::new_bound(py, len, false) };
+
+        // Process with GIL release for parallel execution
+        // SAFETY: as_slice_mut() is safe under the following conditions:
+        // 1. `output` is a newly created array owned by this function
+        // 2. No other threads can access this array (GIL is held)
+        // 3. No aliasing exists (this is the only mutable reference)
+        // 4. The slice lifetime is bounded by the array's lifetime
+        let output_slice = unsafe { output.as_slice_mut()? };
+
+        // Dynamic strategy selection based on size
+        const PARALLEL_THRESHOLD: usize = 1000;
+
+        match len {
+            0..=PARALLEL_THRESHOLD => {
+                self.process_sequential(prices_slice, k, t, r, sigma, output_slice)
+            }
+            _ => {
+                // For large datasets, use parallel processing with GIL release
+                self.process_parallel_with_gil_release(
+                    py,
+                    prices_slice,
+                    k,
+                    t,
+                    r,
+                    sigma,
+                    output_slice,
+                )
+            }
+        }
+
+        Ok(output)
+    }
+
+    /// Process batch with validation and zero-copy optimization (sequential version)
     #[allow(clippy::too_many_arguments)]
     fn process_batch<'py>(
         &self,
@@ -30,23 +98,32 @@ pub trait BatchProcessor: Sync {
         Self::Output: Into<f64>,
     {
         // Unified validation
-        self.validate_common_params(k, t, sigma)?;
+        self.validate_common_params(k, t, sigma)
+            .map_err(PyErr::from)?;
 
         let prices_slice = prices.as_slice()?;
-        self.validate_price_array(prices_slice, price_type)?;
+        self.validate_price_array(prices_slice, price_type)
+            .map_err(PyErr::from)?;
 
         // Zero-copy output allocation
         let len = prices_slice.len();
+        // SAFETY: PyArray1::new_bound is safe under the following conditions:
+        // 1. `py` is a valid GIL token obtained from the function parameter
+        // 2. `len` is the validated size from the input array
+        // 3. `false` flag ensures the array is properly initialized with zeros
+        // 4. No other references to this memory exist yet (newly allocated)
         let output = unsafe { PyArray1::<f64>::new_bound(py, len, false) };
 
         // Process without GIL release for now (safety issue with mutable array)
+        // SAFETY: as_slice_mut() is safe under the following conditions:
+        // 1. `output` is a newly created array owned by this function
+        // 2. No other threads can access this array (GIL is held)
+        // 3. No aliasing exists (this is the only mutable reference)
+        // 4. The slice lifetime is bounded by the array's lifetime
         let output_slice = unsafe { output.as_slice_mut()? };
 
-        // Dynamic strategy selection based on size
-        match len {
-            0..=1000 => self.process_sequential(prices_slice, k, t, r, sigma, output_slice),
-            _ => self.process_sequential(prices_slice, k, t, r, sigma, output_slice),
-        }
+        // Process sequentially (use process_batch_parallel for parallel processing)
+        self.process_sequential(prices_slice, k, t, r, sigma, output_slice);
 
         Ok(output)
     }
@@ -95,31 +172,61 @@ pub trait BatchProcessor: Sync {
             });
     }
 
+    /// Parallel processing with GIL release for maximum performance
+    #[allow(clippy::too_many_arguments)]
+    fn process_parallel_with_gil_release(
+        &self,
+        py: Python<'_>,
+        prices: &[f64],
+        k: f64,
+        t: f64,
+        r: f64,
+        sigma: f64,
+        output: &mut [f64],
+    ) where
+        Self::Output: Into<f64> + Send,
+        Self::Params: Send,
+        Self: Sync,
+    {
+        // SAFETY: We can safely release the GIL here because:
+        // 1. prices is a borrowed slice from a NumPy array (read-only)
+        // 2. output is a mutable slice from a newly created array with no other references
+        // 3. We don't access any Python objects during parallel processing
+        // 4. All parameters (k, t, r, sigma) are primitive types
+        // 5. The self reference is Sync, ensuring thread safety
+        py.allow_threads(|| {
+            // Check if parallelization is worth it based on CPU count
+            let num_threads = rayon::current_num_threads();
+            const CHUNK_SIZE: usize = 1024;
+
+            // Only use parallel processing if we have enough work per thread
+            if prices.len() / CHUNK_SIZE >= num_threads {
+                self.process_parallel(prices, k, t, r, sigma, output);
+            } else {
+                // Fall back to sequential for smaller workloads
+                self.process_sequential(prices, k, t, r, sigma, output);
+            }
+        });
+    }
+
     /// Validate common parameters
-    fn validate_common_params(&self, k: f64, t: f64, sigma: f64) -> PyResult<()> {
-        if k <= 0.0 || t <= 0.0 || sigma <= 0.0 {
-            return Err(pyo3::exceptions::PyValueError::new_err(
-                "k, t, and sigma must be positive",
-            ));
-        }
-        if !k.is_finite() || !t.is_finite() || !sigma.is_finite() {
-            return Err(pyo3::exceptions::PyValueError::new_err(
-                "All parameters must be finite",
-            ));
-        }
-        Ok(())
+    fn validate_common_params(&self, k: f64, t: f64, sigma: f64) -> QuantForgeResult<()> {
+        ValidationBuilder::new()
+            .check_positive(k, "strike")
+            .check_finite(k, "strike")
+            .check_positive(t, "time")
+            .check_finite(t, "time")
+            .check_positive(sigma, "volatility")
+            .check_finite(sigma, "volatility")
+            .build()
     }
 
     /// Validate price array
-    fn validate_price_array(&self, prices: &[f64], price_type: &str) -> PyResult<()> {
-        for &price in prices {
-            if !price.is_finite() || price <= 0.0 {
-                return Err(pyo3::exceptions::PyValueError::new_err(format!(
-                    "All {price_type} prices must be positive and finite"
-                )));
-            }
-        }
-        Ok(())
+    fn validate_price_array(&self, prices: &[f64], price_type: &str) -> QuantForgeResult<()> {
+        let mut builder = ValidationBuilder::new();
+        builder.check_array_positive(prices, price_type);
+        builder.check_array_finite(prices, price_type);
+        builder.build()
     }
 }
 
@@ -158,16 +265,28 @@ pub trait BatchProcessorWithDividend: BatchProcessor {
         Self::Output: Into<f64> + Send,
         Self::ParamsWithDividend: Send,
     {
-        self.validate_common_params(k, t, sigma)?;
-        self.validate_dividend_params(q)?;
+        self.validate_common_params(k, t, sigma)
+            .map_err(PyErr::from)?;
+        self.validate_dividend_params(q).map_err(PyErr::from)?;
 
         let prices_slice = prices.as_slice()?;
-        self.validate_price_array(prices_slice, price_type)?;
+        self.validate_price_array(prices_slice, price_type)
+            .map_err(PyErr::from)?;
 
         let len = prices_slice.len();
+        // SAFETY: PyArray1::new_bound is safe under the following conditions:
+        // 1. `py` is a valid GIL token obtained from the function parameter
+        // 2. `len` is the validated size from the input array
+        // 3. `false` flag ensures the array is properly initialized with zeros
+        // 4. No other references to this memory exist yet (newly allocated)
         let output = unsafe { PyArray1::<f64>::new_bound(py, len, false) };
 
         // Process without GIL release for now (safety issue with mutable array)
+        // SAFETY: as_slice_mut() is safe under the following conditions:
+        // 1. `output` is a newly created array owned by this function
+        // 2. No other threads can access this array (GIL is held)
+        // 3. No aliasing exists (this is the only mutable reference)
+        // 4. The slice lifetime is bounded by the array's lifetime
         let output_slice = unsafe { output.as_slice_mut()? };
 
         prices_slice
@@ -184,12 +303,9 @@ pub trait BatchProcessorWithDividend: BatchProcessor {
     }
 
     /// Validate dividend parameters
-    fn validate_dividend_params(&self, q: f64) -> PyResult<()> {
-        if !q.is_finite() {
-            return Err(pyo3::exceptions::PyValueError::new_err(
-                "Dividend yield must be finite",
-            ));
-        }
-        Ok(())
+    fn validate_dividend_params(&self, q: f64) -> QuantForgeResult<()> {
+        ValidationBuilder::new()
+            .check_finite(q, "dividend_yield")
+            .build()
     }
 }

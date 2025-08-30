@@ -18,7 +18,7 @@ try:
         black_scholes_scipy_single,
     )
 except ImportError:
-    from python_baseline import (  # type: ignore[import-not-found,no-redef]
+    from python_baseline import (  # type: ignore[no-redef]
         black_scholes_numpy_batch,
         black_scholes_pure_python,
         black_scholes_scipy_single,

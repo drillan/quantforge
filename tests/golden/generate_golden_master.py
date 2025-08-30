@@ -11,7 +11,7 @@ from pathlib import Path
 from typing import Any
 
 import pytest
-from gbs_reference.reference_models import BlackScholesReference  # type: ignore[import-not-found]
+from gbs_reference.reference_models import BlackScholesReference
 
 
 class GoldenMasterGenerator:

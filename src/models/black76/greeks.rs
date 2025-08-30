@@ -118,11 +118,17 @@ pub fn theta(params: &Black76Params, is_call: bool) -> f64 {
 
     // Black76 theta formula
     let common_term = -params.forward * discount * norm_pdf(d1) * params.sigma / (2.0 * sqrt_time);
-    
+
     let theta_val = if is_call {
-        common_term - params.rate * discount * (params.forward * norm_cdf(d1) - params.strike * norm_cdf(d2))
+        common_term
+            - params.rate
+                * discount
+                * (params.forward * norm_cdf(d1) - params.strike * norm_cdf(d2))
     } else {
-        common_term - params.rate * discount * (-params.forward * norm_cdf(-d1) + params.strike * norm_cdf(-d2))
+        common_term
+            - params.rate
+                * discount
+                * (-params.forward * norm_cdf(-d1) + params.strike * norm_cdf(-d2))
     };
 
     -theta_val / 365.0 // Negative for time decay, convert to per day

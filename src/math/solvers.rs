@@ -226,7 +226,8 @@ mod tests {
         let f = |x: f64| x * x - 4.0;
         let df = |x: f64| 2.0 * x;
 
-        let result = newton_raphson(f, df, 3.0, 1e-9, 100).unwrap();
+        let result = newton_raphson(f, df, 3.0, 1e-9, 100)
+            .expect("Newton-Raphson should converge for x^2 - 4 = 0");
         assert!((result - 2.0).abs() < 1e-9);
     }
 
@@ -235,7 +236,8 @@ mod tests {
         // f(x) = x^2 - 4, 解は x = 2
         let f = |x: f64| x * x - 4.0;
 
-        let result = brent(f, 0.0, 3.0, 1e-9, 100).unwrap();
+        let result = brent(f, 0.0, 3.0, 1e-9, 100)
+            .expect("Brent method should converge for x^2 - 4 = 0 in [0, 3]");
         assert!((result - 2.0).abs() < 1e-9);
     }
 
@@ -245,7 +247,8 @@ mod tests {
         let f = |x: f64| x * x * x - x - 2.0;
         let df = |x: f64| 3.0 * x * x - 1.0;
 
-        let result = hybrid_solver(f, df, 1.5, 0.0, 3.0, 1e-9).unwrap();
+        let result = hybrid_solver(f, df, 1.5, 0.0, 3.0, 1e-9)
+            .expect("Hybrid solver should find root for cubic equation x^3 - x - 2 = 0");
         assert!((result - 1.5213797068045675).abs() < 1e-9);
     }
 

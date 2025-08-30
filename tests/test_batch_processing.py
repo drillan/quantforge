@@ -441,17 +441,21 @@ class TestAmericanBatch:
 class TestBatchPerformance:
     """Test performance characteristics of batch processing."""
 
-    @pytest.mark.skip(reason="Batch functions not yet reimplemented with new API")
     def test_large_batch_processing(self) -> None:
         """Test processing large batches efficiently."""
         # Create large batch
         n = 10000
         spots = np.linspace(80, 120, n)
-        k, t, r, sigma = 100.0, 1.0, 0.05, 0.2
+        strikes = np.full(n, 100.0)
+        times = np.full(n, 1.0)
+        rates = np.full(n, 0.05)
+        sigmas = np.full(n, 0.2)
+        is_calls = np.ones(n)
 
         # Test Black-Scholes batch
-        greeks = models.greeks_batch(spots, k, t, r, sigma, is_calls=1.0)
-        assert len(greeks) == n
+        greeks = models.greeks_batch(spots, strikes, times, rates, sigmas, is_calls)
+        assert isinstance(greeks, dict)
+        assert len(greeks["delta"]) == n
 
         # Test that all results are valid
         for i in range(n):
@@ -459,19 +463,29 @@ class TestBatchPerformance:
             assert greeks["gamma"][i] >= 0
             assert not np.isnan(greeks["vega"][i])
 
-    @pytest.mark.skip(reason="Batch functions not yet reimplemented with new API")
     def test_edge_cases(self) -> None:
         """Test batch processing with edge cases."""
         # Test with single element
         spots = np.array([100.0])
-        k, t, r, sigma = 100.0, 1.0, 0.05, 0.2
-        greeks = models.greeks_batch(spots, k, t, r, sigma, is_calls=1.0)
-        assert len(greeks) == 1
+        strikes = np.array([100.0])
+        times = np.array([1.0])
+        rates = np.array([0.05])
+        sigmas = np.array([0.2])
+        is_calls = np.array([1.0])
+        greeks = models.greeks_batch(spots, strikes, times, rates, sigmas, is_calls)
+        assert isinstance(greeks, dict)
+        assert len(greeks["delta"]) == 1
 
         # Test with empty array (should handle gracefully)
         spots = np.array([])
-        greeks = models.greeks_batch(spots, k, t, r, sigma, is_calls=1.0)
-        assert len(greeks) == 0
+        strikes = np.array([])
+        times = np.array([])
+        rates = np.array([])
+        sigmas = np.array([])
+        is_calls = np.array([])
+        greeks = models.greeks_batch(spots, strikes, times, rates, sigmas, is_calls)
+        assert isinstance(greeks, dict)
+        assert len(greeks["delta"]) == 0
 
 
 class TestScalarInputs:
