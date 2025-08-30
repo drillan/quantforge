@@ -181,19 +181,20 @@ pub const CHUNK_SIZE_L3: usize = L3_CACHE_SIZE / 8 / 4; // 262144要素
 ///
 /// この要素数以下ではシーケンシャル処理が高速。
 /// FFIオーバーヘッドと並列化コストを考慮。
-pub const PARALLEL_THRESHOLD_SMALL: usize = 1000;
+/// 実測値に基づき、10,000要素でNumPyと同等になるよう調整。
+pub const PARALLEL_THRESHOLD_SMALL: usize = 30_000;
 
 /// 並列化閾値: 中規模
 ///
 /// この要素数以上で並列化が有効になり始める。
 /// スレッドプール起動のオーバーヘッドを考慮。
-pub const PARALLEL_THRESHOLD_MEDIUM: usize = 10_000;
+pub const PARALLEL_THRESHOLD_MEDIUM: usize = 200_000;
 
 /// 並列化閾値: 大規模
 ///
 /// この要素数以上で積極的な並列化が有効。
 /// 全CPUコアを活用した処理を行う。
-pub const PARALLEL_THRESHOLD_LARGE: usize = 100_000;
+pub const PARALLEL_THRESHOLD_LARGE: usize = 1_000_000;
 
 /// スレッドあたり最小ワークロード
 ///

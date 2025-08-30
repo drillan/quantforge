@@ -1,20 +1,18 @@
 //! グリークス計算の並列処理版
 //!
 //! Rayonを使用した高速並列計算実装。
-//! 大規模データセット（30,000要素以上）で自動的に並列処理を適用。
+//! 大規模データセット（200,000要素以上）で自動的に並列処理を適用。
 
+use crate::constants::PARALLEL_THRESHOLD_MEDIUM;
 use crate::models::greeks::{
     calculate_all_greeks, delta_call, delta_put, gamma, rho_call, rho_put, theta_call, theta_put,
     vega, Greeks,
 };
 use rayon::prelude::*;
 
-/// 並列処理の閾値（この要素数以上で並列化）
-const PARALLEL_THRESHOLD: usize = 30_000;
-
 /// Delta Callバッチ並列計算
 pub fn delta_call_batch_parallel(spots: &[f64], k: f64, t: f64, r: f64, v: f64) -> Vec<f64> {
-    if spots.len() < PARALLEL_THRESHOLD {
+    if spots.len() < PARALLEL_THRESHOLD_MEDIUM {
         // 小規模データは通常のバッチ処理
         crate::models::greeks::delta_call_batch(spots, k, t, r, v)
     } else {
@@ -28,7 +26,7 @@ pub fn delta_call_batch_parallel(spots: &[f64], k: f64, t: f64, r: f64, v: f64) 
 
 /// Delta Putバッチ並列計算
 pub fn delta_put_batch_parallel(spots: &[f64], k: f64, t: f64, r: f64, v: f64) -> Vec<f64> {
-    if spots.len() < PARALLEL_THRESHOLD {
+    if spots.len() < PARALLEL_THRESHOLD_MEDIUM {
         crate::models::greeks::delta_put_batch(spots, k, t, r, v)
     } else {
         spots
@@ -40,7 +38,7 @@ pub fn delta_put_batch_parallel(spots: &[f64], k: f64, t: f64, r: f64, v: f64) -
 
 /// Gammaバッチ並列計算
 pub fn gamma_batch_parallel(spots: &[f64], k: f64, t: f64, r: f64, v: f64) -> Vec<f64> {
-    if spots.len() < PARALLEL_THRESHOLD {
+    if spots.len() < PARALLEL_THRESHOLD_MEDIUM {
         crate::models::greeks::gamma_batch(spots, k, t, r, v)
     } else {
         spots.par_iter().map(|&s| gamma(s, k, t, r, v)).collect()
@@ -49,7 +47,7 @@ pub fn gamma_batch_parallel(spots: &[f64], k: f64, t: f64, r: f64, v: f64) -> Ve
 
 /// Vegaバッチ並列計算
 pub fn vega_batch_parallel(spots: &[f64], k: f64, t: f64, r: f64, v: f64) -> Vec<f64> {
-    if spots.len() < PARALLEL_THRESHOLD {
+    if spots.len() < PARALLEL_THRESHOLD_MEDIUM {
         crate::models::greeks::vega_batch(spots, k, t, r, v)
     } else {
         spots.par_iter().map(|&s| vega(s, k, t, r, v)).collect()
@@ -58,7 +56,7 @@ pub fn vega_batch_parallel(spots: &[f64], k: f64, t: f64, r: f64, v: f64) -> Vec
 
 /// Theta Callバッチ並列計算
 pub fn theta_call_batch_parallel(spots: &[f64], k: f64, t: f64, r: f64, v: f64) -> Vec<f64> {
-    if spots.len() < PARALLEL_THRESHOLD {
+    if spots.len() < PARALLEL_THRESHOLD_MEDIUM {
         crate::models::greeks::theta_call_batch(spots, k, t, r, v)
     } else {
         spots
@@ -70,7 +68,7 @@ pub fn theta_call_batch_parallel(spots: &[f64], k: f64, t: f64, r: f64, v: f64) 
 
 /// Theta Putバッチ並列計算
 pub fn theta_put_batch_parallel(spots: &[f64], k: f64, t: f64, r: f64, v: f64) -> Vec<f64> {
-    if spots.len() < PARALLEL_THRESHOLD {
+    if spots.len() < PARALLEL_THRESHOLD_MEDIUM {
         crate::models::greeks::theta_put_batch(spots, k, t, r, v)
     } else {
         spots
@@ -82,7 +80,7 @@ pub fn theta_put_batch_parallel(spots: &[f64], k: f64, t: f64, r: f64, v: f64) -
 
 /// Rho Callバッチ並列計算
 pub fn rho_call_batch_parallel(spots: &[f64], k: f64, t: f64, r: f64, v: f64) -> Vec<f64> {
-    if spots.len() < PARALLEL_THRESHOLD {
+    if spots.len() < PARALLEL_THRESHOLD_MEDIUM {
         crate::models::greeks::rho_call_batch(spots, k, t, r, v)
     } else {
         spots.par_iter().map(|&s| rho_call(s, k, t, r, v)).collect()
@@ -91,7 +89,7 @@ pub fn rho_call_batch_parallel(spots: &[f64], k: f64, t: f64, r: f64, v: f64) ->
 
 /// Rho Putバッチ並列計算
 pub fn rho_put_batch_parallel(spots: &[f64], k: f64, t: f64, r: f64, v: f64) -> Vec<f64> {
-    if spots.len() < PARALLEL_THRESHOLD {
+    if spots.len() < PARALLEL_THRESHOLD_MEDIUM {
         crate::models::greeks::rho_put_batch(spots, k, t, r, v)
     } else {
         spots.par_iter().map(|&s| rho_put(s, k, t, r, v)).collect()
@@ -109,7 +107,7 @@ pub fn calculate_all_greeks_batch_parallel(
     v: f64,
     is_call: bool,
 ) -> Vec<Greeks> {
-    if spots.len() < PARALLEL_THRESHOLD {
+    if spots.len() < PARALLEL_THRESHOLD_MEDIUM {
         // 小規模データは通常処理
         spots
             .iter()

@@ -1,10 +1,7 @@
+use crate::constants::{CHUNK_SIZE_L1, PARALLEL_THRESHOLD_MEDIUM};
 use crate::math::distributions::norm_cdf;
 use crate::models::black_scholes::{bs_call_price_batch, bs_put_price_batch};
 use rayon::prelude::*;
-
-// 並列化の閾値（ZERO HARDCODE準拠）
-const PARALLEL_THRESHOLD: usize = 30000; // 並列化が効果的になる最小要素数（実測に基づく）
-const CHUNK_SIZE: usize = 8192; // L1キャッシュに収まる最適サイズ
 
 /// 並列化されたバッチ価格計算
 ///
@@ -19,7 +16,7 @@ const CHUNK_SIZE: usize = 8192; // L1キャッシュに収まる最適サイズ
 /// 各スポット価格に対応するコールオプション価格
 pub fn bs_call_price_batch_parallel(spots: &[f64], k: f64, t: f64, r: f64, v: f64) -> Vec<f64> {
     // 小規模データはシングルスレッドで処理
-    if spots.len() < PARALLEL_THRESHOLD {
+    if spots.len() < PARALLEL_THRESHOLD_MEDIUM {
         return bs_call_price_batch(spots, k, t, r, v);
     }
 
@@ -32,7 +29,7 @@ pub fn bs_call_price_batch_parallel(spots: &[f64], k: f64, t: f64, r: f64, v: f6
 
     // Rayonによる並列処理
     spots
-        .par_chunks(CHUNK_SIZE)
+        .par_chunks(CHUNK_SIZE_L1)
         .flat_map(|chunk| {
             chunk
                 .iter()
@@ -60,7 +57,7 @@ pub fn bs_call_price_batch_parallel(spots: &[f64], k: f64, t: f64, r: f64, v: f6
 /// 各スポット価格に対応するプットオプション価格
 pub fn bs_put_price_batch_parallel(spots: &[f64], k: f64, t: f64, r: f64, v: f64) -> Vec<f64> {
     // 小規模データはシングルスレッドで処理
-    if spots.len() < PARALLEL_THRESHOLD {
+    if spots.len() < PARALLEL_THRESHOLD_MEDIUM {
         return bs_put_price_batch(spots, k, t, r, v);
     }
 
@@ -73,7 +70,7 @@ pub fn bs_put_price_batch_parallel(spots: &[f64], k: f64, t: f64, r: f64, v: f64
 
     // Rayonによる並列処理
     spots
-        .par_chunks(CHUNK_SIZE)
+        .par_chunks(CHUNK_SIZE_L1)
         .flat_map(|chunk| {
             chunk
                 .iter()
@@ -154,7 +151,7 @@ mod tests {
     #[test]
     fn test_chunk_processing() {
         // チャンク境界での正しい処理を確認
-        let n = CHUNK_SIZE * 3 + 100; // 3チャンク + 端数
+        let n = CHUNK_SIZE_L1 * 3 + 100; // 3チャンク + 端数
         let spots: Vec<f64> = vec![100.0; n];
         let k = 100.0;
         let t = 1.0;

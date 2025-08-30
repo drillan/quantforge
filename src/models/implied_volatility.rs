@@ -266,10 +266,10 @@ pub fn implied_volatility_batch_parallel(
         return vec![f64::NAN; len];
     }
 
-    // 並列処理の閾値（1000件以上で並列化）
-    const PARALLEL_THRESHOLD: usize = 1000;
+    // 並列処理の閾値（小規模データ用）
+    use crate::constants::PARALLEL_THRESHOLD_SMALL;
 
-    if len < PARALLEL_THRESHOLD {
+    if len < PARALLEL_THRESHOLD_SMALL {
         // 少量の場合は逐次処理
         return implied_volatility_batch(prices, spots, strikes, times, rates, is_calls);
     }
