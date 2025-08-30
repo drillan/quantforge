@@ -13,7 +13,7 @@ from typing import Any
 import numpy as np
 
 try:
-    from benchmarks.iv_baseline import (
+    from iv_baseline import (
         american_iv_scipy,
         black76_iv_scipy,
         implied_volatility_batch_newton,
@@ -23,7 +23,7 @@ try:
         merton_iv_scipy,
     )
 except ImportError:
-    from benchmarks.iv_baseline import (
+    from iv_baseline import (
         american_iv_scipy,
         black76_iv_scipy,
         implied_volatility_batch_newton,

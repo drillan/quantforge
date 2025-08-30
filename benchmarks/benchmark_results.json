@@ -6,60 +6,60 @@
     "cpu_count_logical": 12,
     "memory_gb": 29.3,
     "python_version": "3.12.5",
-    "timestamp": "2025-08-28 12:27:58"
+    "timestamp": "2025-08-30 09:06:56"
   },
   "single": {
-    "quantforge": 1.3970002328278497e-06,
-    "pure_python": 2.3740012693451717e-06,
-    "numpy_scipy": 8.765399979893118e-05,
-    "speedup_vs_pure_python": 1.6993563877506643,
-    "speedup_vs_numpy_scipy": 62.744441796906024
+    "quantforge": 1.3970000054541742e-06,
+    "pure_python": 2.375000008214556e-06,
+    "numpy_scipy": 8.416200000738172e-05,
+    "speedup_vs_pure_python": 1.7000715812040583,
+    "speedup_vs_numpy_scipy": 60.244810077878334
   },
   "batch": [
     {
       "size": 100,
-      "quantforge": 1.320000046689529e-05,
-      "numpy_batch": 9.051799861481413e-05,
-      "pure_python": 0.0001209700003528269,
-      "speedup_vs_pure_python": 9.16439364197081,
-      "speedup_vs_numpy": 6.857423894932971,
-      "throughput_qf": 7575757.30779656,
-      "throughput_np": 1104752.6627884817
+      "quantforge": 1.2222999998812156e-05,
+      "numpy_batch": 8.569799999236238e-05,
+      "pure_python": 0.00012816299999940384,
+      "speedup_vs_pure_python": 10.485396384836688,
+      "speedup_vs_numpy": 7.011208377705195,
+      "throughput_qf": 8181297.554587099,
+      "throughput_np": 1166888.3755619996
     },
     {
       "size": 1000,
-      "quantforge": 0.0001033690004987875,
-      "numpy_batch": 0.00014736999946762808,
-      "pure_python": 0.0010994099993695272,
-      "speedup_vs_pure_python": 10.635780495743722,
-      "speedup_vs_numpy": 1.425669192470877,
-      "throughput_qf": 9674080.190141045,
-      "throughput_np": 6785641.606924646
+      "quantforge": 8.234499998138745e-05,
+      "numpy_batch": 0.00016154799999412717,
+      "pure_python": 0.0011830809999935354,
+      "speedup_vs_pure_python": 14.367368999465041,
+      "speedup_vs_numpy": 1.9618434638489537,
+      "throughput_qf": 12144028.176890295,
+      "throughput_np": 6190110.679403976
     },
     {
       "size": 10000,
-      "quantforge": 0.0008752820012887241,
-      "numpy_batch": 0.0008627099996374454,
-      "speedup_vs_numpy": 0.9856366272438274,
-      "throughput_qf": 11424889.333125176,
-      "throughput_np": 11591380.65422043
+      "quantforge": 0.0008323269999834793,
+      "numpy_batch": 0.0008242240000129186,
+      "speedup_vs_numpy": 0.9902646436187683,
+      "throughput_qf": 12014508.720969629,
+      "throughput_np": 12132624.140820049
     },
     {
       "size": 100000,
-      "quantforge": 0.007531944000220392,
-      "numpy_batch": 0.006834345000243047,
-      "speedup_vs_numpy": 0.9073812816509347,
-      "throughput_qf": 13276784.850906208,
-      "throughput_np": 14631980.094133928
+      "quantforge": 0.03104150000001482,
+      "numpy_batch": 0.008552627999989681,
+      "speedup_vs_numpy": 0.2755223813277579,
+      "throughput_qf": 3221493.8066766183,
+      "throughput_np": 11692312.58510491
     },
     {
       "size": 1000000,
-      "quantforge": 0.06373208799959684,
-      "numpy_batch": 0.07448857400049747,
-      "speedup_vs_numpy": 1.1687766137674427,
-      "throughput_qf": 15690683.161146797,
-      "throughput_np": 13424877.75364476
+      "quantforge": 0.05460533499999087,
+      "numpy_batch": 0.06502474299998084,
+      "speedup_vs_numpy": 1.1908130038940647,
+      "throughput_qf": 18313228.918019954,
+      "throughput_np": 15378761.281690795
     }
   ],
-  "timestamp": "2025-08-28T12:27:58.779243"
+  "timestamp": "2025-08-30T09:06:57.239812"
 }

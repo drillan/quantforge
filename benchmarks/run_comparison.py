@@ -7,14 +7,13 @@ from typing import Any
 
 import numpy as np
 import psutil
-from quantforge import models
-
-from benchmarks.python_baseline import (
+from python_baseline import (
     black_scholes_numpy_batch,
     black_scholes_pure_python,
     black_scholes_pure_python_batch,
     black_scholes_scipy_single,
 )
+from quantforge import models
 
 
 class BenchmarkRunner:
@@ -139,7 +138,7 @@ class BenchmarkRunner:
             results["batch"].append(self.benchmark_batch(size))
 
         # 結果を構造化データとして保存
-        from benchmarks.save_results import save_benchmark_result
+        from save_results import save_benchmark_result
 
         save_benchmark_result(results)
 
