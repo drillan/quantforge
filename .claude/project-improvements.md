@@ -259,3 +259,50 @@ impl ParallelStrategy {
 2. **キャッシュ意識の設計**: L1/L2/L3キャッシュを考慮したチャンクサイズ
 3. **定数の一元管理**: src/constants.rsにすべての定数を集約
 4. **測定の重要性**: ベンチマークによる問題発見と改善検証
+
+## 2025-08-30: BatchProcessor統一による保守性向上
+
+### 問題の発見
+- Black76とMertonモデルで重複したバッチ処理コード
+- ハードコードされた並列化閾値（10,000）
+- 動的並列化戦略の部分適用
+
+### 解決策: BatchProcessorトレイト活用
+```rust
+// 統一されたプロセッサ実装
+pub struct Black76CallProcessor;
+impl BatchProcessor for Black76CallProcessor {
+    type Params = Black76Params;
+    type Output = f64;
+    
+    fn create_params(&self, f: f64, k: f64, t: f64, r: f64, sigma: f64) -> Self::Params {
+        Black76Params::new(f, k, t, r, sigma)
+    }
+    
+    fn process_single(&self, params: &Self::Params) -> Self::Output {
+        Black76::call_price(params)
+    }
+}
+```
+
+### 実装上の課題と解決
+
+#### 課題1: BatchProcessorWithDividendのトレイト要求
+- **問題**: `BatchProcessorWithDividend: BatchProcessor`の要求
+- **解決**: 基底トレイトBatchProcessorも同時実装
+
+#### 課題2: 配当対応モデルの統一
+- **問題**: MertonはBatchProcessorWithDividend必須
+- **解決**: 両方のトレイトを実装、create_params_with_dividendで配当対応
+
+### 成果
+- **コード削減**: 各モデル約100行削減
+- **保守性向上**: 動的並列化戦略が全モデルで利用可能
+- **拡張性向上**: 新モデル追加時のパターン確立
+
+### 得られた教訓
+
+1. **トレイト階層の理解**: 基底トレイトも必ず実装必要
+2. **段階的統一**: まずBlack76、次にMertonという順序が有効
+3. **テスト駆動**: 各段階でテスト実行して確認
+4. **パフォーマンス維持**: 統一後も57.6ms（目標100ms以内）

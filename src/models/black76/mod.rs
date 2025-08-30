@@ -4,6 +4,7 @@ pub mod batch;
 pub mod greeks;
 pub mod implied_volatility;
 pub mod pricing;
+pub mod processor;
 
 use crate::error::QuantForgeError;
 use crate::models::{Greeks, PricingModel};

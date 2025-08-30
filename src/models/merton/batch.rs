@@ -1,13 +1,13 @@
 //! Batch processing functions for Merton model with broadcasting support
 
-use super::MertonParams;
+use super::{MertonParams, MertonModel};
+use super::processor::{MertonCallProcessor, MertonPutProcessor};
 use crate::broadcast::{ArrayLike, BroadcastIterator};
 use crate::error::QuantForgeError;
-use crate::models::merton::{greeks::calculate_merton_greeks, MertonGreeks, MertonModel};
+use crate::models::merton::{greeks::calculate_merton_greeks, MertonGreeks};
 use crate::models::{GreeksBatch, PricingModel};
-use rayon::prelude::*;
-
-const PARALLELIZATION_THRESHOLD: usize = 10_000;
+use crate::optimization::ParallelStrategy;
+use crate::traits::BatchProcessorWithDividend;
 
 /// Batch calculate call option prices with broadcasting support
 pub fn call_price_batch(
@@ -20,29 +20,18 @@ pub fn call_price_batch(
 ) -> Result<Vec<f64>, QuantForgeError> {
     let inputs = vec![spots, strikes, times, rates, qs, sigmas];
     let iter = BroadcastIterator::new(inputs)?;
-    let size = iter.size_hint().0;
-
-    if size > PARALLELIZATION_THRESHOLD {
-        let values: Vec<_> = iter.collect();
-        let results = values
-            .par_iter()
-            .map(|vals| {
-                let params = MertonParams::new_unchecked(
-                    vals[0], vals[1], vals[2], vals[3], vals[4], vals[5],
-                );
-                MertonModel::call_price(&params)
-            })
-            .collect();
-        Ok(results)
-    } else {
-        let mut results = Vec::with_capacity(size);
-        for vals in iter {
-            let params =
-                MertonParams::new_unchecked(vals[0], vals[1], vals[2], vals[3], vals[4], vals[5]);
-            results.push(MertonModel::call_price(&params));
-        }
-        Ok(results)
-    }
+    let values: Vec<_> = iter.collect();
+    
+    // Use dynamic parallelization strategy
+    let strategy = ParallelStrategy::select(values.len());
+    let processor = MertonCallProcessor;
+    
+    Ok(strategy.process_batch(&values, |vals| {
+        let params = processor.create_params_with_dividend(
+            vals[0], vals[1], vals[2], vals[3], vals[4], vals[5]
+        );
+        processor.process_single_with_dividend(&params)
+    }))
 }
 
 /// Batch calculate put option prices with broadcasting support
@@ -56,29 +45,18 @@ pub fn put_price_batch(
 ) -> Result<Vec<f64>, QuantForgeError> {
     let inputs = vec![spots, strikes, times, rates, qs, sigmas];
     let iter = BroadcastIterator::new(inputs)?;
-    let size = iter.size_hint().0;
-
-    if size > PARALLELIZATION_THRESHOLD {
-        let values: Vec<_> = iter.collect();
-        let results = values
-            .par_iter()
-            .map(|vals| {
-                let params = MertonParams::new_unchecked(
-                    vals[0], vals[1], vals[2], vals[3], vals[4], vals[5],
-                );
-                MertonModel::put_price(&params)
-            })
-            .collect();
-        Ok(results)
-    } else {
-        let mut results = Vec::with_capacity(size);
-        for vals in iter {
-            let params =
-                MertonParams::new_unchecked(vals[0], vals[1], vals[2], vals[3], vals[4], vals[5]);
-            results.push(MertonModel::put_price(&params));
-        }
-        Ok(results)
-    }
+    let values: Vec<_> = iter.collect();
+    
+    // Use dynamic parallelization strategy
+    let strategy = ParallelStrategy::select(values.len());
+    let processor = MertonPutProcessor;
+    
+    Ok(strategy.process_batch(&values, |vals| {
+        let params = processor.create_params_with_dividend(
+            vals[0], vals[1], vals[2], vals[3], vals[4], vals[5]
+        );
+        processor.process_single_with_dividend(&params)
+    }))
 }
 
 /// Batch calculate implied volatilities with broadcasting support
@@ -93,35 +71,18 @@ pub fn implied_volatility_batch(
 ) -> Result<Vec<f64>, QuantForgeError> {
     let inputs = vec![prices, spots, strikes, times, rates, qs, is_calls];
     let iter = BroadcastIterator::new(inputs)?;
-    let size = iter.size_hint().0;
-
-    if size > PARALLELIZATION_THRESHOLD {
-        let values: Vec<_> = iter.collect();
-        let results = values
-            .par_iter()
-            .map(|vals| {
-                let params =
-                    MertonParams::new_unchecked(vals[1], vals[2], vals[3], vals[4], vals[5], 0.2);
-                match MertonModel::implied_volatility(vals[0], &params, vals[6] > 0.5, None) {
-                    Ok(sigma) => sigma,
-                    Err(_) => f64::NAN,
-                }
-            })
-            .collect();
-        Ok(results)
-    } else {
-        let mut results = Vec::with_capacity(size);
-        for vals in iter {
-            let params =
-                MertonParams::new_unchecked(vals[1], vals[2], vals[3], vals[4], vals[5], 0.2);
-            let iv = match MertonModel::implied_volatility(vals[0], &params, vals[6] > 0.5, None) {
-                Ok(sigma) => sigma,
-                Err(_) => f64::NAN,
-            };
-            results.push(iv);
+    let values: Vec<_> = iter.collect();
+    
+    // Use dynamic parallelization strategy
+    let strategy = ParallelStrategy::select(values.len());
+    
+    Ok(strategy.process_batch(&values, |vals| {
+        let params = MertonParams::new_unchecked(vals[1], vals[2], vals[3], vals[4], vals[5], 0.2);
+        match MertonModel::implied_volatility(vals[0], &params, vals[6] > 0.5, None) {
+            Ok(sigma) => sigma,
+            Err(_) => f64::NAN,
         }
-        Ok(results)
-    }
+    }))
 }
 
 /// Batch calculate Greeks with broadcasting support
@@ -136,39 +97,22 @@ pub fn greeks_batch(
 ) -> Result<GreeksBatch, QuantForgeError> {
     let inputs = vec![spots, strikes, times, rates, qs, sigmas, is_calls];
     let iter = BroadcastIterator::new(inputs)?;
-    let size = iter.size_hint().0;
-
-    let greeks_list: Vec<MertonGreeks> = if size > PARALLELIZATION_THRESHOLD {
-        let values: Vec<_> = iter.collect();
-        values
-            .par_iter()
-            .map(|vals| {
-                calculate_merton_greeks(
-                    vals[0],
-                    vals[1],
-                    vals[2],
-                    vals[3],
-                    vals[4],
-                    vals[5],
-                    vals[6] > 0.5,
-                )
-            })
-            .collect()
-    } else {
-        let mut results = Vec::with_capacity(size);
-        for vals in iter {
-            results.push(calculate_merton_greeks(
-                vals[0],
-                vals[1],
-                vals[2],
-                vals[3],
-                vals[4],
-                vals[5],
-                vals[6] > 0.5,
-            ));
-        }
-        results
-    };
+    let values: Vec<_> = iter.collect();
+    
+    // Use dynamic parallelization strategy
+    let strategy = ParallelStrategy::select(values.len());
+    
+    let greeks_list: Vec<MertonGreeks> = strategy.process_batch(&values, |vals| {
+        calculate_merton_greeks(
+            vals[0],
+            vals[1],
+            vals[2],
+            vals[3],
+            vals[4],
+            vals[5],
+            vals[6] > 0.5,
+        )
+    });
 
     // Convert list of Greeks to GreeksBatch
     Ok(GreeksBatch {

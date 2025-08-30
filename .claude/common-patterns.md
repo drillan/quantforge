@@ -195,6 +195,41 @@ let results = strategy.process_with_pool_control(&data, |item| {
 });
 ```
 
+### BatchProcessorパターン
+
+```rust
+// 基本プロセッサ実装（配当なし）
+pub struct ModelCallProcessor;
+
+impl BatchProcessor for ModelCallProcessor {
+    type Params = ModelParams;
+    type Output = f64;
+    
+    fn create_params(&self, s: f64, k: f64, t: f64, r: f64, sigma: f64) -> Self::Params {
+        ModelParams::new(s, k, t, r, sigma)
+    }
+    
+    fn process_single(&self, params: &Self::Params) -> Self::Output {
+        Model::call_price(params)
+    }
+}
+
+// 配当対応プロセッサ（Merton等）
+impl BatchProcessorWithDividend for MertonCallProcessor {
+    type ParamsWithDividend = MertonParams;
+    
+    fn create_params_with_dividend(
+        &self, s: f64, k: f64, t: f64, r: f64, q: f64, sigma: f64
+    ) -> Self::ParamsWithDividend {
+        MertonParams::new_unchecked(s, k, t, r, q, sigma)
+    }
+    
+    fn process_single_with_dividend(&self, params: &Self::ParamsWithDividend) -> Self::Output {
+        MertonModel::call_price(params)
+    }
+}
+```
+
 ### Pythonテストパターン
 
 ```python
