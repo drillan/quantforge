@@ -1,7 +1,7 @@
 //! Batch processing functions for Merton model with broadcasting support
 
-use super::{MertonParams, MertonModel};
 use super::processor::{MertonCallProcessor, MertonPutProcessor};
+use super::{MertonModel, MertonParams};
 use crate::broadcast::{ArrayLike, BroadcastIterator};
 use crate::error::QuantForgeError;
 use crate::models::merton::{greeks::calculate_merton_greeks, MertonGreeks};
@@ -21,15 +21,14 @@ pub fn call_price_batch(
     let inputs = vec![spots, strikes, times, rates, qs, sigmas];
     let iter = BroadcastIterator::new(inputs)?;
     let values: Vec<_> = iter.collect();
-    
+
     // Use dynamic parallelization strategy
     let strategy = ParallelStrategy::select(values.len());
     let processor = MertonCallProcessor;
-    
+
     Ok(strategy.process_batch(&values, |vals| {
-        let params = processor.create_params_with_dividend(
-            vals[0], vals[1], vals[2], vals[3], vals[4], vals[5]
-        );
+        let params = processor
+            .create_params_with_dividend(vals[0], vals[1], vals[2], vals[3], vals[4], vals[5]);
         processor.process_single_with_dividend(&params)
     }))
 }
@@ -46,15 +45,14 @@ pub fn put_price_batch(
     let inputs = vec![spots, strikes, times, rates, qs, sigmas];
     let iter = BroadcastIterator::new(inputs)?;
     let values: Vec<_> = iter.collect();
-    
+
     // Use dynamic parallelization strategy
     let strategy = ParallelStrategy::select(values.len());
     let processor = MertonPutProcessor;
-    
+
     Ok(strategy.process_batch(&values, |vals| {
-        let params = processor.create_params_with_dividend(
-            vals[0], vals[1], vals[2], vals[3], vals[4], vals[5]
-        );
+        let params = processor
+            .create_params_with_dividend(vals[0], vals[1], vals[2], vals[3], vals[4], vals[5]);
         processor.process_single_with_dividend(&params)
     }))
 }
@@ -72,10 +70,10 @@ pub fn implied_volatility_batch(
     let inputs = vec![prices, spots, strikes, times, rates, qs, is_calls];
     let iter = BroadcastIterator::new(inputs)?;
     let values: Vec<_> = iter.collect();
-    
+
     // Use dynamic parallelization strategy
     let strategy = ParallelStrategy::select(values.len());
-    
+
     Ok(strategy.process_batch(&values, |vals| {
         let params = MertonParams::new_unchecked(vals[1], vals[2], vals[3], vals[4], vals[5], 0.2);
         match MertonModel::implied_volatility(vals[0], &params, vals[6] > 0.5, None) {
@@ -98,10 +96,10 @@ pub fn greeks_batch(
     let inputs = vec![spots, strikes, times, rates, qs, sigmas, is_calls];
     let iter = BroadcastIterator::new(inputs)?;
     let values: Vec<_> = iter.collect();
-    
+
     // Use dynamic parallelization strategy
     let strategy = ParallelStrategy::select(values.len());
-    
+
     let greeks_list: Vec<MertonGreeks> = strategy.process_batch(&values, |vals| {
         calculate_merton_greeks(
             vals[0],
