@@ -9,26 +9,24 @@ pub fn calculate_american_greeks(params: &AmericanParams, is_call: bool) -> Gree
     // Use finite difference method for American Greeks
     // This is more accurate than analytical approximations for American options
 
-    let _base_price = if is_call {
-        pricing::american_call_price(params)
-    } else {
-        pricing::american_put_price(params)
-    };
-
-    // Delta: ∂V/∂S
-    let delta = calculate_delta(params, is_call);
-
-    // Gamma: ∂²V/∂S²
-    let gamma = calculate_gamma(params, is_call);
-
-    // Vega: ∂V/∂σ
-    let vega = calculate_vega(params, is_call);
-
-    // Theta: -∂V/∂T (negative because we measure time decay)
-    let theta = calculate_theta(params, is_call);
-
-    // Rho: ∂V/∂r
-    let rho = calculate_rho(params, is_call);
+    // Calculate all Greeks in parallel for better performance
+    // Group calculations to minimize redundant price calculations
+    let ((delta, gamma), (vega, theta, rho)) = rayon::join(
+        || {
+            // Delta and Gamma share some price calculations
+            rayon::join(
+                || calculate_delta(params, is_call),
+                || calculate_gamma(params, is_call),
+            )
+        },
+        || {
+            // Vega, Theta, and Rho can be calculated independently
+            let vega = calculate_vega(params, is_call);
+            let theta = calculate_theta(params, is_call);
+            let rho = calculate_rho(params, is_call);
+            (vega, theta, rho)
+        },
+    );
 
     Greeks {
         delta,

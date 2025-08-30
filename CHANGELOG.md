@@ -5,24 +5,32 @@ All notable changes to QuantForge will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.0.3] - 2025-01-30
+## [0.0.3] - 2025-08-30
 
 ### Added
 - BatchProcessor trait system for unified batch processing across all models
-- Dynamic parallelization strategy (ParallelStrategy) replacing hardcoded thresholds
-- Processor modules for Black76 and Merton models (`processor.rs`)
+- Dynamic parallelization strategy (ParallelStrategy) with cache-aware optimization
+  - Sequential mode for small data (<1K elements)
+  - Cache-optimized L1/L2 modes for medium data (1K-100K)
+  - Full parallel and hybrid modes for large data (>100K)
+- Processor modules for Black76, Merton, and American models (`processor.rs`)
 - BatchProcessorWithDividend trait for dividend-supporting models
+- Parallel Greeks calculation for American options using rayon::join
 
 ### Changed
 - Batch processing implementation unified using BatchProcessor and BatchProcessorWithDividend traits
-- Parallelization threshold now dynamically determined based on data size (10K elements)
-- Reduced code duplication by ~200 lines through trait-based abstraction
+- Parallelization threshold now dynamically determined based on data size and cache levels
+- American option Greeks calculation parallelized (2-3x speedup)
+- Reduced code duplication by ~300 lines through trait-based abstraction
+- Replaced all hardcoded thresholds with constants (C011-3 compliance)
 
 ### Performance
-- Maintained 57.6ms for 1M element batch processing (target <100ms)
-- Dynamic strategy selection optimizes for cache locality and parallelization
+- 100,000 element batch: 4.3x speedup (from 31.04ms to ~7ms)
+- 1M element batch: Maintained 57.6ms (well under 100ms target)
+- American option Greeks: 2-3x faster with parallel computation
+- Dynamic strategy selection optimizes for L1/L2/L3 cache locality
 
-## [0.0.2] - 2025-01-29
+## [0.0.2] - 2025-08-29
 
 ### Added
 - Complete PyO3 type stub system (`quantforge.pyi`) for full IDE support and type checking
@@ -73,7 +81,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Direct Rust module access for better performance
 - Production-ready for PyPI publication
 
-## [0.0.2] - 2025-08-27
+## [0.0.2a] - 2025-08-27
 
 ### Added
 - Project metadata and URLs in pyproject.toml
@@ -128,6 +136,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Cross-platform compatibility testing
 - Documentation framework with Sphinx
 
-[Unreleased]: https://github.com/drillan/quantforge/compare/v0.0.2...HEAD
-[0.0.2]: https://github.com/drillan/quantforge/compare/v0.0.1...v0.0.2
+[Unreleased]: https://github.com/drillan/quantforge/compare/v0.0.3...HEAD
+[0.0.3]: https://github.com/drillan/quantforge/compare/v0.0.2...v0.0.3
+[0.0.2]: https://github.com/drillan/quantforge/compare/v0.0.2a...v0.0.2
+[0.0.2a]: https://github.com/drillan/quantforge/compare/v0.0.1...v0.0.2a
 [0.0.1]: https://github.com/drillan/quantforge/releases/tag/v0.0.1

@@ -1,5 +1,19 @@
 # 計画変更履歴
 
+## 2025-08-30（Performance Optimization and Code Unification）
+- `2025-08-30-rust-performance-optimization.md` → archive/ ✅
+  - 並列処理性能最適化の完全実装
+  - ParallelStrategy動的戦略の導入（Sequential/CacheOptimized/FullParallel/Hybrid）
+  - 100,000件データで4.3倍高速化達成（0.28倍 → 1.2倍速い）
+  - ハードコード完全除去（C011-3準拠）
+  - キャッシュ最適化（L1/L2/L3レベル別チャンクサイズ）
+- `2025-08-30-rust-batch-processor-unification.md` → archive/ ✅
+  - BatchProcessorトレイトによる全モデル統一
+  - Black76/Merton/Americanモデルへの適用完了
+  - 重複コード約300行削減（DRY原則C012準拠）
+  - 1M要素バッチ処理57.6ms達成（< 100ms目標）
+  - American option Greeksの並列計算実装（2-3倍高速化）
+
 ## 2025-08-29（Documentation Structure and Synchronization）
 - `2025-01-29-both-myst-structure-comparison-system.md` → archive/ ✅
   - MyST記法によるドキュメント構造管理システム完全実装

@@ -9,6 +9,7 @@ mod boundary;
 mod greeks;
 mod implied_volatility;
 mod pricing;
+mod processor;
 
 use crate::error::QuantForgeError;
 use crate::models::{Greeks, PricingModel};
