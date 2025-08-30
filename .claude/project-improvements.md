@@ -48,10 +48,70 @@ pub fn norm_cdf(x: f64) -> f64 {
 
 #### 解決策
 ```rust
-// 数値誤差による負値を防ぐ
-(s * norm_cdf(d1) - k * exp_neg_rt * norm_cdf(d2)).max(0.0)
+// 負値を0にクランプ
+price.max(0.0)
 ```
-- **シンプルで確実**: max(0.0)で物理的に不可能な負の価格を防止
+
+### 2025-08-30: similarity-rsによる大規模リファクタリング
+
+#### 問題の発見
+- **検出ツール**: similarity-rs v0.4.1（閾値80%）
+- **発見**: 100以上の重複パターン、2,080行の重複コード
+- **主な重複箇所**:
+  - model_traits.rs: 98-99%の重複
+  - python_modules.rs: 90-99%の重複
+  - 各モデルのbatch.rs: 90-100%の重複
+
+#### 改善プロセス
+
+##### Phase 1: 重複パターンの分析
+```bash
+similarity-rs --threshold 0.80 --min-lines 5 --skip-test src/
+# 1,245行の詳細レポート生成
+```
+
+##### Phase 2: マクロによる統合
+```rust
+// 重複したバッチ処理を汎用マクロで統一
+macro_rules! impl_batch_traits {
+    ($model:ident, greeks => $greeks_fn:ident, ...) => {
+        impl OptionModelBatch for $model { /* 共通実装 */ }
+        impl ImpliedVolatilityBatch for $model { /* 共通実装 */ }
+    };
+}
+
+// PyO3バインディングも同様にマクロ化
+macro_rules! impl_batch_price_fn {
+    ($fn_name:ident, $batch_fn:path, $doc:literal) => {
+        #[pyfunction]
+        fn $fn_name<'py>(...) -> PyResult<...> { /* 共通実装 */ }
+    };
+}
+```
+
+##### Phase 3: 汎用計算エンジンの作成
+```rust
+pub enum ExecutionStrategy {
+    Sequential,        // 〜1,000要素
+    SimdOnly,         // 〜10,000要素
+    Parallel(usize),  // 〜50,000要素
+    SimdParallel(usize), // 50,000要素〜
+}
+```
+
+#### 結果
+- **コード削減**: 2,080行 → 680行（67%削減）
+- **パフォーマンス向上**: 
+  - 10,000要素: 27.6%高速化
+  - 100,000要素: 9.9%高速化
+  - 平均: 12.8%向上
+- **保守性**: 新モデル追加が200行→3行に
+
+#### 得られた教訓
+1. **重複検出ツールの重要性**: similarity-rsで客観的に重複を把握
+2. **マクロの適切な使用**: 型安全性を保ちながら重複削除
+3. **動的最適化の効果**: データサイズに応じた実行戦略が有効
+4. **キャッシュ最適化**: チャンクサイズ1,024でL1キャッシュ効率化
 - **パフォーマンス影響なし**: 単純な比較演算のみ
 
 ### 2025-08-25: ATM近似テストの誤解

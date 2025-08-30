@@ -29,8 +29,72 @@ maturin develop --release
 cargo clippy -- -D warnings
 cargo fmt --check
 
+# コード重複検出（追加: 2025-08-30）
+similarity-rs --threshold 0.80 --min-lines 5 --skip-test src/
+similarity-rs --threshold 0.85 --print src/ > duplication-report.md
+
 # ベンチマーク
 cargo bench --bench batch_performance
+```
+
+## リファクタリングパターン（追加: 2025-08-30）
+
+### マクロによる重複削減
+
+```rust
+// バッチ処理の共通パターンをマクロ化
+macro_rules! impl_batch_traits {
+    ($model:ident, greeks => $greeks_fn:ident, iv => $iv_fn:ident, uses_q: $uses_q:expr) => {
+        impl OptionModelBatch for $model {
+            type Error = String;
+            fn calculate_greeks_batch(params: BatchParams) -> Result<GreeksBatch, Self::Error> {
+                batch_helpers::$greeks_fn(/* パラメータ */)
+                    .map_err(|e| e.to_string())
+            }
+        }
+        // 他のトレイトも同様
+    };
+}
+
+// 使用例: 3行で全実装
+impl_batch_traits!(
+    BlackScholesBatch,
+    greeks => greeks_batch_vec,
+    iv => implied_volatility_batch_vec,
+    uses_q: true
+);
+```
+
+### PyO3バインディングの統一
+
+```rust
+// 汎用マクロでPython関数を生成
+macro_rules! impl_batch_price_fn {
+    ($fn_name:ident, $batch_fn:path, $doc:literal) => {
+        #[doc = $doc]
+        #[pyfunction]
+        #[pyo3(name = stringify!($fn_name))]
+        fn $fn_name<'py>(/* パラメータ */) -> PyResult<Bound<'py, PyArray1<f64>>> {
+            // 共通の変換処理
+            let results = $batch_fn(/* 引数 */)?;
+            Ok(PyArray1::from_vec_bound(py, results))
+        }
+    };
+}
+```
+
+### 動的実行戦略
+
+```rust
+// データサイズに応じた最適化
+pub fn select_strategy(size: usize) -> ExecutionStrategy {
+    match size {
+        0..=1_000 => ExecutionStrategy::Sequential,
+        1_001..=10_000 => ExecutionStrategy::SimdOnly,
+        10_001..=50_000 => ExecutionStrategy::Parallel(4),
+        _ => ExecutionStrategy::SimdParallel(num_cpus::get()),
+    }
+}
 ```
 
 ### Python品質管理
