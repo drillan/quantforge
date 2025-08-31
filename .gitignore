@@ -256,6 +256,7 @@ progress_report_*.md
 tracker_temp.yaml
 
 # Performance and benchmarks
+benchmark_results/
 benchmark_results_*.json
 benchmarks/results/
 perf_*.log
