@@ -90,11 +90,11 @@ fn call_price_batch<'py>(
     // Create broadcast iterator (while holding GIL)
     let inputs = vec![&spots, &strikes, &times, &rates, &sigmas];
     let iter = BroadcastIterator::new(inputs).map_err(pyo3::exceptions::PyValueError::new_err)?;
-    
+
     // Release GIL and use zero-copy computation
     let results = py.allow_threads(move || {
         let model = BlackScholes;
-        
+
         if iter.len() < PARALLEL_THRESHOLD_SMALL {
             // Sequential processing for small data
             iter.compute_with(|values| {
@@ -132,11 +132,11 @@ fn put_price_batch<'py>(
     // Create broadcast iterator (while holding GIL)
     let inputs = vec![&spots, &strikes, &times, &rates, &sigmas];
     let iter = BroadcastIterator::new(inputs).map_err(pyo3::exceptions::PyValueError::new_err)?;
-    
+
     // Release GIL and use zero-copy computation
     let results = py.allow_threads(move || {
         let model = BlackScholes;
-        
+
         if iter.len() < PARALLEL_THRESHOLD_SMALL {
             // Sequential processing for small data
             iter.compute_with(|values| {
@@ -175,17 +175,17 @@ fn implied_volatility_batch<'py>(
     // Create broadcast iterator (while holding GIL)
     let inputs = vec![&prices, &spots, &strikes, &times, &rates, &is_calls];
     let iter = BroadcastIterator::new(inputs).map_err(pyo3::exceptions::PyValueError::new_err)?;
-    
+
     // Release GIL and use zero-copy computation
     let results = py.allow_threads(move || {
         let model = BlackScholes;
-        
+
         if iter.len() < PARALLEL_THRESHOLD_SMALL {
             // Sequential processing for small data
             iter.compute_with(|values| {
                 let price = values[0];
                 let is_call = values[5] != 0.0;
-                
+
                 model
                     .implied_volatility(price, values[1], values[2], values[3], values[4], is_call)
                     .unwrap_or(f64::NAN)
@@ -196,9 +196,11 @@ fn implied_volatility_batch<'py>(
                 |values| {
                     let price = values[0];
                     let is_call = values[5] != 0.0;
-                    
+
                     model
-                        .implied_volatility(price, values[1], values[2], values[3], values[4], is_call)
+                        .implied_volatility(
+                            price, values[1], values[2], values[3], values[4], is_call,
+                        )
                         .unwrap_or(f64::NAN)
                 },
                 CHUNK_SIZE_L1,
@@ -224,36 +226,37 @@ fn greeks_batch<'py>(
     // Create broadcast iterator (while holding GIL)
     let inputs = vec![&spots, &strikes, &times, &rates, &sigmas];
     let iter = BroadcastIterator::new(inputs).map_err(pyo3::exceptions::PyValueError::new_err)?;
-    
+
     // Handle is_calls parameter (default to True if not provided)
     let is_calls_iter = if let Some(is_calls_array) = is_calls {
         let is_calls_inputs = vec![&is_calls_array];
-        let is_calls_it = BroadcastIterator::new(is_calls_inputs).map_err(pyo3::exceptions::PyValueError::new_err)?;
-        
+        let is_calls_it = BroadcastIterator::new(is_calls_inputs)
+            .map_err(pyo3::exceptions::PyValueError::new_err)?;
+
         // Ensure both iterators have same length
         if iter.len() != is_calls_it.len() && is_calls_it.len() > 1 {
             return Err(pyo3::exceptions::PyValueError::new_err(
-                "Shape mismatch between parameter arrays and is_calls"
+                "Shape mismatch between parameter arrays and is_calls",
             ));
         }
         Some(is_calls_it)
     } else {
         None
     };
-    
+
     let len = iter.len();
-    
+
     // Release GIL for computation
     let (delta_vec, gamma_vec, vega_vec, theta_vec, rho_vec) = py.allow_threads(move || {
         let model = BlackScholes;
-        
+
         // Compute greeks with zero-copy
         let greeks_results = if iter.len() < PARALLEL_THRESHOLD_SMALL {
             // Sequential processing for small data
             let mut results = Vec::with_capacity(len);
-            let mut param_buffer = vec![0.0; 5];
-            let mut is_call_buffer = vec![0.0; 1];
-            
+            let mut param_buffer = [0.0; 5];
+            let mut is_call_buffer = [0.0; 1];
+
             for i in 0..len {
                 // Get parameters
                 for (j, arr) in iter.arrays.iter().enumerate() {
@@ -266,38 +269,42 @@ fn greeks_batch<'py>(
                     }
                     is_call_buffer[0] != 0.0
                 } else {
-                    true  // Default to Call option
+                    true // Default to Call option
                 };
-                
+
                 results.push(
                     model
                         .greeks(
-                            param_buffer[0], param_buffer[1], param_buffer[2],
-                            param_buffer[3], param_buffer[4], is_call,
+                            param_buffer[0],
+                            param_buffer[1],
+                            param_buffer[2],
+                            param_buffer[3],
+                            param_buffer[4],
+                            is_call,
                         )
-                        .unwrap_or(quantforge_core::traits::Greeks {
+                        .unwrap_or(Greeks {
                             delta: f64::NAN,
                             gamma: f64::NAN,
                             vega: f64::NAN,
                             theta: f64::NAN,
                             rho: f64::NAN,
                             dividend_rho: None,
-                        })
+                        }),
                 );
             }
             results
         } else {
             // Parallel processing for large data
             use rayon::prelude::*;
-            
+
             (0..len)
                 .into_par_iter()
                 .chunks(CHUNK_SIZE_L1)
                 .flat_map(|chunk| {
                     let mut chunk_results = Vec::with_capacity(chunk.len());
-                    let mut param_buffer = vec![0.0; 5];
-                    let mut is_call_buffer = vec![0.0; 1];
-                    
+                    let mut param_buffer = [0.0; 5];
+                    let mut is_call_buffer = [0.0; 1];
+
                     for i in chunk {
                         // Get parameters
                         for (j, arr) in iter.arrays.iter().enumerate() {
@@ -310,38 +317,42 @@ fn greeks_batch<'py>(
                             }
                             is_call_buffer[0] != 0.0
                         } else {
-                            true  // Default to Call option
+                            true // Default to Call option
                         };
-                        
+
                         chunk_results.push(
                             model
                                 .greeks(
-                                    param_buffer[0], param_buffer[1], param_buffer[2],
-                                    param_buffer[3], param_buffer[4], is_call,
+                                    param_buffer[0],
+                                    param_buffer[1],
+                                    param_buffer[2],
+                                    param_buffer[3],
+                                    param_buffer[4],
+                                    is_call,
                                 )
-                                .unwrap_or(quantforge_core::traits::Greeks {
+                                .unwrap_or(Greeks {
                                     delta: f64::NAN,
                                     gamma: f64::NAN,
                                     vega: f64::NAN,
                                     theta: f64::NAN,
                                     rho: f64::NAN,
                                     dividend_rho: None,
-                                })
+                                }),
                         );
                     }
-                    
+
                     chunk_results
                 })
                 .collect()
         };
-        
+
         // Separate into individual vectors
         let mut delta_vec = Vec::with_capacity(len);
         let mut gamma_vec = Vec::with_capacity(len);
         let mut vega_vec = Vec::with_capacity(len);
         let mut theta_vec = Vec::with_capacity(len);
         let mut rho_vec = Vec::with_capacity(len);
-        
+
         for greeks in greeks_results {
             delta_vec.push(greeks.delta);
             gamma_vec.push(greeks.gamma);
@@ -349,7 +360,7 @@ fn greeks_batch<'py>(
             theta_vec.push(greeks.theta);
             rho_vec.push(greeks.rho);
         }
-        
+
         (delta_vec, gamma_vec, vega_vec, theta_vec, rho_vec)
     });
 

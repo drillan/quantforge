@@ -15,12 +15,12 @@ impl<'py> FromPyObject<'py> for ArrayLike<'py> {
         if let Ok(scalar) = ob.extract::<f64>() {
             return Ok(ArrayLike::Scalar(scalar));
         }
-        
+
         // Try to extract as a numpy array
         if let Ok(array) = ob.extract::<PyReadonlyArray1<'py, f64>>() {
             return Ok(ArrayLike::Array(array));
         }
-        
+
         // Try to convert Python list to numpy array
         if let Ok(list) = ob.extract::<Vec<f64>>() {
             let py = ob.py();
@@ -28,20 +28,20 @@ impl<'py> FromPyObject<'py> for ArrayLike<'py> {
             let readonly = array.readonly();
             return Ok(ArrayLike::Array(readonly));
         }
-        
+
         // Try integer scalar (convert to float)
         if let Ok(int_val) = ob.extract::<i64>() {
             return Ok(ArrayLike::Scalar(int_val as f64));
         }
-        
+
         // Try boolean (convert to 0.0 or 1.0)
         if let Ok(bool_val) = ob.extract::<bool>() {
             return Ok(ArrayLike::Scalar(if bool_val { 1.0 } else { 0.0 }));
         }
-        
-        Err(PyErr::new::<pyo3::exceptions::PyTypeError, _>(
-            format!("Cannot convert {} to ArrayLike. Expected float, int, bool, list, or numpy array.", ob)
-        ))
+
+        Err(PyErr::new::<pyo3::exceptions::PyTypeError, _>(format!(
+            "Cannot convert {ob} to ArrayLike. Expected float, int, bool, list, or numpy array."
+        )))
     }
 }
 
@@ -71,7 +71,9 @@ impl<'py> ArrayLike<'py> {
                 } else {
                     // Non-contiguous array - use to_vec() method
                     arr.to_vec().map_err(|e| {
-                        pyo3::exceptions::PyValueError::new_err(format!("Failed to convert array: {}", e))
+                        pyo3::exceptions::PyValueError::new_err(format!(
+                            "Failed to convert array: {e}"
+                        ))
                     })
                 }
             }

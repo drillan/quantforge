@@ -96,14 +96,14 @@ impl BroadcastIterator {
     {
         let mut results = Vec::with_capacity(self.length);
         let mut buffer = vec![0.0; self.arrays.len()];
-        
+
         for i in 0..self.length {
             for (j, arr) in self.arrays.iter().enumerate() {
                 buffer[j] = arr[i];
             }
             results.push(f(&buffer));
         }
-        
+
         results
     }
 
@@ -114,23 +114,23 @@ impl BroadcastIterator {
         F: Fn(&[f64]) -> f64 + Send + Sync,
     {
         use rayon::prelude::*;
-        
+
         let num_inputs = self.arrays.len();
-        
+
         (0..self.length)
             .into_par_iter()
             .chunks(chunk_size)
             .flat_map(|chunk| {
                 let mut buffer = vec![0.0; num_inputs];
                 let mut chunk_results = Vec::with_capacity(chunk.len());
-                
+
                 for i in chunk {
                     for (j, arr) in self.arrays.iter().enumerate() {
                         buffer[j] = arr[i];
                     }
                     chunk_results.push(f(&buffer));
                 }
-                
+
                 chunk_results
             })
             .collect()

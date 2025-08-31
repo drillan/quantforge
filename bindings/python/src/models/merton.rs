@@ -100,7 +100,7 @@ fn call_price_batch<'py>(
     // Create broadcast iterator and collect input data (while holding GIL)
     let inputs = vec![&spots, &strikes, &times, &rates, &dividend_yields, &sigmas];
     let iter = BroadcastIterator::new(inputs).map_err(pyo3::exceptions::PyValueError::new_err)?;
-    
+
     // Collect all input combinations
     let input_data: Vec<Vec<f64>> = iter.collect();
     let len = input_data.len();
@@ -108,17 +108,15 @@ fn call_price_batch<'py>(
     // Release GIL for computation
     let results = py.allow_threads(move || {
         let mut results = Vec::with_capacity(len);
-        
+
         // Use rayon for parallel processing
         use rayon::prelude::*;
-        results.par_extend(
-            input_data.par_iter().map(|values| {
-                Merton::call_price_merton(
-                    values[0], values[1], values[2], values[3], values[4], values[5],
-                )
-                .unwrap_or(f64::NAN)
-            })
-        );
+        results.par_extend(input_data.par_iter().map(|values| {
+            Merton::call_price_merton(
+                values[0], values[1], values[2], values[3], values[4], values[5],
+            )
+            .unwrap_or(f64::NAN)
+        }));
         results
     });
 
@@ -140,7 +138,7 @@ fn put_price_batch<'py>(
     // Create broadcast iterator and collect input data (while holding GIL)
     let inputs = vec![&spots, &strikes, &times, &rates, &dividend_yields, &sigmas];
     let iter = BroadcastIterator::new(inputs).map_err(pyo3::exceptions::PyValueError::new_err)?;
-    
+
     // Collect all input combinations
     let input_data: Vec<Vec<f64>> = iter.collect();
     let len = input_data.len();
@@ -148,17 +146,15 @@ fn put_price_batch<'py>(
     // Release GIL for computation
     let results = py.allow_threads(move || {
         let mut results = Vec::with_capacity(len);
-        
+
         // Use rayon for parallel processing
         use rayon::prelude::*;
-        results.par_extend(
-            input_data.par_iter().map(|values| {
-                Merton::put_price_merton(
-                    values[0], values[1], values[2], values[3], values[4], values[5],
-                )
-                .unwrap_or(f64::NAN)
-            })
-        );
+        results.par_extend(input_data.par_iter().map(|values| {
+            Merton::put_price_merton(
+                values[0], values[1], values[2], values[3], values[4], values[5],
+            )
+            .unwrap_or(f64::NAN)
+        }));
         results
     });
 
@@ -189,7 +185,7 @@ fn implied_volatility_batch<'py>(
         &is_calls,
     ];
     let iter = BroadcastIterator::new(inputs).map_err(pyo3::exceptions::PyValueError::new_err)?;
-    
+
     // Collect all input combinations
     let input_data: Vec<Vec<f64>> = iter.collect();
     let len = input_data.len();
@@ -197,20 +193,18 @@ fn implied_volatility_batch<'py>(
     // Release GIL for computation
     let results = py.allow_threads(move || {
         let mut results = Vec::with_capacity(len);
-        
+
         // Use rayon for parallel processing
         use rayon::prelude::*;
-        results.par_extend(
-            input_data.par_iter().map(|values| {
-                let price = values[0];
-                let is_call = values[6] != 0.0;
-                
-                Merton::implied_volatility_merton(
-                    price, values[1], values[2], values[3], values[4], values[5], is_call,
-                )
-                .unwrap_or(f64::NAN)
-            })
-        );
+        results.par_extend(input_data.par_iter().map(|values| {
+            let price = values[0];
+            let is_call = values[6] != 0.0;
+
+            Merton::implied_volatility_merton(
+                price, values[1], values[2], values[3], values[4], values[5], is_call,
+            )
+            .unwrap_or(f64::NAN)
+        }));
         results
     });
 
@@ -232,62 +226,74 @@ fn greeks_batch<'py>(
 ) -> PyResult<Bound<'py, PyDict>> {
     // Convert is_calls to bool vec (while holding GIL), default to all Calls
     let is_calls_vec: Vec<bool> = if let Some(is_calls_array) = is_calls {
-        is_calls_array.to_vec()?.into_iter().map(|v| v != 0.0).collect()
+        is_calls_array
+            .to_vec()?
+            .into_iter()
+            .map(|v| v != 0.0)
+            .collect()
     } else {
-        vec![true; 1]  // Will be broadcast to match input size
+        vec![true; 1] // Will be broadcast to match input size
     };
 
     // Create broadcast iterator and collect input data
     let inputs = vec![&spots, &strikes, &times, &rates, &dividend_yields, &sigmas];
     let iter = BroadcastIterator::new(inputs).map_err(pyo3::exceptions::PyValueError::new_err)?;
-    
+
     // Collect all input combinations
     let input_data: Vec<Vec<f64>> = iter.collect();
     let len = input_data.len();
 
     // Release GIL for computation
-    let (delta_vec, gamma_vec, vega_vec, theta_vec, rho_vec, dividend_rho_vec) = py.allow_threads(move || {
-        // Use rayon for parallel processing
-        use rayon::prelude::*;
-        
-        let greeks_results: Vec<_> = input_data
-            .par_iter()
-            .enumerate()
-            .map(|(i, values)| {
-                let is_call = is_calls_vec.get(i).copied().unwrap_or(true);
-                Merton::greeks_merton(
-                    values[0], values[1], values[2], values[3], values[4], values[5], is_call,
-                )
-                .unwrap_or(quantforge_core::traits::Greeks {
-                    delta: f64::NAN,
-                    gamma: f64::NAN,
-                    vega: f64::NAN,
-                    theta: f64::NAN,
-                    rho: f64::NAN,
-                    dividend_rho: Some(f64::NAN),
+    let (delta_vec, gamma_vec, vega_vec, theta_vec, rho_vec, dividend_rho_vec) =
+        py.allow_threads(move || {
+            // Use rayon for parallel processing
+            use rayon::prelude::*;
+
+            let greeks_results: Vec<_> = input_data
+                .par_iter()
+                .enumerate()
+                .map(|(i, values)| {
+                    let is_call = is_calls_vec.get(i).copied().unwrap_or(true);
+                    Merton::greeks_merton(
+                        values[0], values[1], values[2], values[3], values[4], values[5], is_call,
+                    )
+                    .unwrap_or(Greeks {
+                        delta: f64::NAN,
+                        gamma: f64::NAN,
+                        vega: f64::NAN,
+                        theta: f64::NAN,
+                        rho: f64::NAN,
+                        dividend_rho: Some(f64::NAN),
+                    })
                 })
-            })
-            .collect();
-        
-        // Separate into individual vectors
-        let mut delta_vec = Vec::with_capacity(len);
-        let mut gamma_vec = Vec::with_capacity(len);
-        let mut vega_vec = Vec::with_capacity(len);
-        let mut theta_vec = Vec::with_capacity(len);
-        let mut rho_vec = Vec::with_capacity(len);
-        let mut dividend_rho_vec = Vec::with_capacity(len);
-        
-        for greeks in greeks_results {
-            delta_vec.push(greeks.delta);
-            gamma_vec.push(greeks.gamma);
-            vega_vec.push(greeks.vega);
-            theta_vec.push(greeks.theta);
-            rho_vec.push(greeks.rho);
-            dividend_rho_vec.push(greeks.dividend_rho.unwrap_or(0.0));
-        }
-        
-        (delta_vec, gamma_vec, vega_vec, theta_vec, rho_vec, dividend_rho_vec)
-    });
+                .collect();
+
+            // Separate into individual vectors
+            let mut delta_vec = Vec::with_capacity(len);
+            let mut gamma_vec = Vec::with_capacity(len);
+            let mut vega_vec = Vec::with_capacity(len);
+            let mut theta_vec = Vec::with_capacity(len);
+            let mut rho_vec = Vec::with_capacity(len);
+            let mut dividend_rho_vec = Vec::with_capacity(len);
+
+            for greeks in greeks_results {
+                delta_vec.push(greeks.delta);
+                gamma_vec.push(greeks.gamma);
+                vega_vec.push(greeks.vega);
+                theta_vec.push(greeks.theta);
+                rho_vec.push(greeks.rho);
+                dividend_rho_vec.push(greeks.dividend_rho.unwrap_or(0.0));
+            }
+
+            (
+                delta_vec,
+                gamma_vec,
+                vega_vec,
+                theta_vec,
+                rho_vec,
+                dividend_rho_vec,
+            )
+        });
 
     // Create output dictionary
     let dict = PyDict::new_bound(py);
