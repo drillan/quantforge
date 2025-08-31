@@ -1,9 +1,15 @@
 """QuantForge: 高性能オプション価格計算エンジン."""
 
-# Import the Rust extension module directly
+# Import the Rust extension module and expose submodules
 from quantforge.quantforge import models
 
-__all__ = ["models"]
+# Expose submodules directly for convenient imports
+black_scholes = models  # Default Black-Scholes functions at module level
+black76 = models.black76
+merton = models.merton
+# american = models.american  # TODO: Re-enable when American option is implemented
+
+__all__ = ["black_scholes", "black76", "merton", "models"]
 
 
 # バージョンを動的に取得（Single Source of Truth: Cargo.toml）

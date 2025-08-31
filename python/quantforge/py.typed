@@ -1,2 +1,2 @@
-# Marker file for PEP 561
-# This package provides type information
+# PEP 561 marker file for type checking support
+# This file indicates that this package provides type information

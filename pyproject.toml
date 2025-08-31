@@ -114,10 +114,12 @@ benchmarks = ["*.json", "*.md", "results/*.json", "results/*.jsonl", "results/*.
 features = ["pyo3/extension-module"]
 python-source = "python"
 module-name = "quantforge.quantforge"
+manifest-path = "bindings/python/Cargo.toml"
 
 [tool.pytest.ini_options]
 minversion = "8.0"
 testpaths = ["tests"]
+pythonpath = [".", "benchmarks"]
 addopts = [
     "-v",
     "--tb=short",
@@ -138,19 +140,25 @@ markers = [
 python_version = "3.12"
 warn_return_any = true
 warn_unused_configs = true
-disallow_untyped_defs = true
-disallow_any_unimported = true
+disallow_untyped_defs = false  # False for extension modules
+disallow_any_unimported = false  # False for numpy types
 no_implicit_optional = true
 warn_redundant_casts = true
 warn_unused_ignores = true
 warn_unreachable = true
 strict_equality = true
+check_untyped_defs = true
 exclude = [
     "playground/",  # 一時的な検証スクリプトは除外
     "scratch/",  # テンポラリファイルは除外
     "tests/integration/test_put_options.py",  # 型スタブ未対応のため一時除外
     "tests/unit/test_implied_volatility.py",  # PyO3バインディングの型情報不完全
-    "draft/",  # 参考実装・プロトタイプは除外
-    "docs/",  # ドキュメント設定ファイルは除外
-    "translations/",  # 翻訳関連ツールは除外
 ]
+
+[[tool.mypy.overrides]]
+module = "quantforge.*"
+ignore_missing_imports = false
+
+[[tool.mypy.overrides]]
+module = "quantforge.quantforge"
+ignore_errors = true  # Native extension module
