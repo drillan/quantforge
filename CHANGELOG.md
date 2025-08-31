@@ -7,6 +7,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.5] - 2025-08-31
+
+### Added
+- **Core + Bindings Architecture**: Complete separation of pure Rust core from PyO3 bindings
+  - `core/` - Pure Rust implementation without PyO3 dependencies
+  - `bindings/python/` - PyO3 wrapper layer for Python integration
+- Workspace-based project structure with Cargo.workspace.toml
+- Clean module-based Python API: `quantforge.black_scholes`, `quantforge.black76`, `quantforge.merton`
+
+### Changed
+- **BREAKING**: API restructure from `quantforge.models` to direct module imports
+  - Old: `from quantforge import models; models.call_price()`
+  - New: `from quantforge import black_scholes; black_scholes.call_price()`
+- Greeks now return dict instead of object attributes for single calculations
+- Moved all PyO3 dependencies to bindings layer (57 locations refactored)
+- Test suite migrated to new API structure (472 tests updated)
+
+### Improved
+- Better separation of concerns with pure Rust core
+- Easier testing of core logic without Python dependencies
+- Foundation for future language bindings (C, Java, etc.)
+- Cleaner Python module organization
+
+### Fixed
+- Removed unused SIMD implementation (210 lines of dead code)
+- Fixed format! string warnings in Rust code
+- Resolved all clippy warnings
+- Updated CI/CD for workspace builds
+
 ## [0.0.4] - 2025-08-30
 
 ### Added
