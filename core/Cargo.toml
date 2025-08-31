@@ -1,0 +1,29 @@
+[package]
+name = "quantforge-core"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+
+[dependencies]
+thiserror.workspace = true
+serde.workspace = true
+ndarray.workspace = true
+rayon.workspace = true
+
+# 数学関数
+libm = "0.2"
+statrs = "0.17"
+
+[dev-dependencies]
+approx.workspace = true
+criterion.workspace = true
+proptest.workspace = true
+
+[[bench]]
+name = "models_benchmark"
+harness = false
+
+[[bench]]
+name = "math_benchmark"
+harness = false
