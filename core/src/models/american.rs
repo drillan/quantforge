@@ -4,16 +4,16 @@
 //! with early exercise features. Similar to the Merton model, American options
 //! require dividend yield as an additional parameter.
 
-pub mod pricing;
-pub mod greeks;
 pub mod boundary;
+pub mod greeks;
+pub mod pricing;
 
+use self::greeks::calculate_american_greeks;
+use self::pricing::{american_call_price, american_put_price, AmericanParams};
 use crate::constants::*;
 use crate::error::{QuantForgeError, QuantForgeResult, ValidationBuilder};
 use crate::math::solvers::newton_raphson;
 use crate::traits::{Greeks, OptionModel};
-use self::greeks::calculate_american_greeks;
-use self::pricing::{american_call_price, american_put_price, AmericanParams};
 
 /// American option pricing model
 ///
@@ -55,7 +55,7 @@ impl American {
         sigma: f64,
     ) -> QuantForgeResult<f64> {
         Self::validate_params(s, k, t, r, q, sigma)?;
-        
+
         let params = AmericanParams {
             s,
             k,
@@ -64,7 +64,7 @@ impl American {
             q,
             sigma,
         };
-        
+
         american_call_price(&params)
     }
 
@@ -78,7 +78,7 @@ impl American {
         sigma: f64,
     ) -> QuantForgeResult<f64> {
         Self::validate_params(s, k, t, r, q, sigma)?;
-        
+
         let params = AmericanParams {
             s,
             k,
@@ -87,7 +87,7 @@ impl American {
             q,
             sigma,
         };
-        
+
         american_put_price(&params)
     }
 
@@ -102,7 +102,7 @@ impl American {
         is_call: bool,
     ) -> QuantForgeResult<Greeks> {
         Self::validate_params(s, k, t, r, q, sigma)?;
-        
+
         let params = AmericanParams {
             s,
             k,
@@ -111,7 +111,7 @@ impl American {
             q,
             sigma,
         };
-        
+
         calculate_american_greeks(&params, is_call)
     }
 
@@ -141,26 +141,27 @@ impl American {
         };
 
         if price < intrinsic {
-            return Err(QuantForgeError::CalculationError(
-                format!("Price {price:.4} is below intrinsic value {intrinsic:.4}")
-            ));
+            return Err(QuantForgeError::CalculationError(format!(
+                "Price {price:.4} is below intrinsic value {intrinsic:.4}"
+            )));
         }
 
         // Initial guess using at-the-money approximation
-        let initial_vol = ((2.0 * std::f64::consts::PI / t).sqrt() * (price / s)).min(MAX_VOLATILITY);
+        let initial_vol =
+            ((2.0 * std::f64::consts::PI / t).sqrt() * (price / s)).min(MAX_VOLATILITY);
 
         // Objective function: find sigma such that calculated_price - market_price = 0
         let f = |sigma_test: f64| -> f64 {
             if sigma_test <= 0.0 || sigma_test > MAX_VOLATILITY {
                 return f64::INFINITY;
             }
-            
+
             let calculated_price = if is_call {
                 Self::call_price_american(s, k, t, r, q, sigma_test)
             } else {
                 Self::put_price_american(s, k, t, r, q, sigma_test)
             };
-            
+
             calculated_price.unwrap_or(f64::INFINITY) - price
         };
 
@@ -169,7 +170,7 @@ impl American {
             if sigma_test <= 0.0 || sigma_test > MAX_VOLATILITY {
                 return 0.0;
             }
-            
+
             let params = AmericanParams {
                 s,
                 k,
@@ -178,19 +179,13 @@ impl American {
                 q,
                 sigma: sigma_test,
             };
-            
+
             let greeks = calculate_american_greeks(&params, is_call);
             greeks.map(|g| g.vega * 100.0).unwrap_or(0.0)
         };
 
         // Use Newton-Raphson solver
-        newton_raphson(
-            f,
-            df,
-            initial_vol,
-            IV_TOLERANCE_PRICE,
-            MAX_IV_ITERATIONS,
-        )
+        newton_raphson(f, df, initial_vol, IV_TOLERANCE_PRICE, MAX_IV_ITERATIONS)
     }
 }
 

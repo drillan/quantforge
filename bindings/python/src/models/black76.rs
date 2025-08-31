@@ -92,17 +92,36 @@ fn call_price_batch<'py>(
     let input_data: Vec<Vec<f64>> = iter.collect();
     let len = input_data.len();
 
-    // Release GIL for computation
-    let results = py.allow_threads(move || {
-        let mut results = Vec::with_capacity(len);
+    // Prepare data arrays
+    let mut forwards_vec = Vec::with_capacity(len);
+    let mut strikes_vec = Vec::with_capacity(len);
+    let mut times_vec = Vec::with_capacity(len);
+    let mut rates_vec = Vec::with_capacity(len);
+    let mut sigmas_vec = Vec::with_capacity(len);
+    
+    for values in input_data {
+        forwards_vec.push(values[0]);
+        strikes_vec.push(values[1]);
+        times_vec.push(values[2]);
+        rates_vec.push(values[3]);
+        sigmas_vec.push(values[4]);
+    }
 
-        // Use rayon for parallel processing
-        use rayon::prelude::*;
-        results.par_extend(input_data.par_iter().map(|values| {
-            Black76::call_price_black76(values[0], values[1], values[2], values[3], values[4])
-                .unwrap_or(f64::NAN)
-        }));
-        results
+    // Release GIL for computation and use optimized batch method
+    let results = py.allow_threads(move || {
+        let model = Black76;
+        let batch_results = model.call_price_batch(
+            &forwards_vec,
+            &strikes_vec,
+            &times_vec,
+            &rates_vec,
+            &sigmas_vec,
+        );
+        
+        // Convert Results to f64 values
+        batch_results.into_iter()
+            .map(|r| r.unwrap_or(f64::NAN))
+            .collect::<Vec<f64>>()
     });
 
     Ok(PyArray1::from_vec_bound(py, results))
@@ -127,17 +146,36 @@ fn put_price_batch<'py>(
     let input_data: Vec<Vec<f64>> = iter.collect();
     let len = input_data.len();
 
-    // Release GIL for computation
-    let results = py.allow_threads(move || {
-        let mut results = Vec::with_capacity(len);
+    // Prepare data arrays
+    let mut forwards_vec = Vec::with_capacity(len);
+    let mut strikes_vec = Vec::with_capacity(len);
+    let mut times_vec = Vec::with_capacity(len);
+    let mut rates_vec = Vec::with_capacity(len);
+    let mut sigmas_vec = Vec::with_capacity(len);
+    
+    for values in input_data {
+        forwards_vec.push(values[0]);
+        strikes_vec.push(values[1]);
+        times_vec.push(values[2]);
+        rates_vec.push(values[3]);
+        sigmas_vec.push(values[4]);
+    }
 
-        // Use rayon for parallel processing
-        use rayon::prelude::*;
-        results.par_extend(input_data.par_iter().map(|values| {
-            Black76::put_price_black76(values[0], values[1], values[2], values[3], values[4])
-                .unwrap_or(f64::NAN)
-        }));
-        results
+    // Release GIL for computation and use optimized batch method
+    let results = py.allow_threads(move || {
+        let model = Black76;
+        let batch_results = model.put_price_batch(
+            &forwards_vec,
+            &strikes_vec,
+            &times_vec,
+            &rates_vec,
+            &sigmas_vec,
+        );
+        
+        // Convert Results to f64 values
+        batch_results.into_iter()
+            .map(|r| r.unwrap_or(f64::NAN))
+            .collect::<Vec<f64>>()
     });
 
     Ok(PyArray1::from_vec_bound(py, results))

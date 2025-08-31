@@ -105,19 +105,39 @@ fn call_price_batch<'py>(
     let input_data: Vec<Vec<f64>> = iter.collect();
     let len = input_data.len();
 
-    // Release GIL for computation
-    let results = py.allow_threads(move || {
-        let mut results = Vec::with_capacity(len);
+    // Prepare data arrays
+    let mut spots_vec = Vec::with_capacity(len);
+    let mut strikes_vec = Vec::with_capacity(len);
+    let mut times_vec = Vec::with_capacity(len);
+    let mut rates_vec = Vec::with_capacity(len);
+    let mut dividend_yields_vec = Vec::with_capacity(len);
+    let mut sigmas_vec = Vec::with_capacity(len);
+    
+    for values in input_data {
+        spots_vec.push(values[0]);
+        strikes_vec.push(values[1]);
+        times_vec.push(values[2]);
+        rates_vec.push(values[3]);
+        dividend_yields_vec.push(values[4]);
+        sigmas_vec.push(values[5]);
+    }
 
-        // Use rayon for parallel processing
-        use rayon::prelude::*;
-        results.par_extend(input_data.par_iter().map(|values| {
-            Merton::call_price_merton(
-                values[0], values[1], values[2], values[3], values[4], values[5],
-            )
-            .unwrap_or(f64::NAN)
-        }));
-        results
+    // Release GIL for computation and use optimized batch method
+    let results = py.allow_threads(move || {
+        let model = Merton;
+        let batch_results = model.call_price_batch(
+            &spots_vec,
+            &strikes_vec,
+            &times_vec,
+            &rates_vec,
+            &dividend_yields_vec,
+            &sigmas_vec,
+        );
+        
+        // Convert Results to f64 values
+        batch_results.into_iter()
+            .map(|r| r.unwrap_or(f64::NAN))
+            .collect::<Vec<f64>>()
     });
 
     Ok(PyArray1::from_vec_bound(py, results))
@@ -143,19 +163,39 @@ fn put_price_batch<'py>(
     let input_data: Vec<Vec<f64>> = iter.collect();
     let len = input_data.len();
 
-    // Release GIL for computation
-    let results = py.allow_threads(move || {
-        let mut results = Vec::with_capacity(len);
+    // Prepare data arrays
+    let mut spots_vec = Vec::with_capacity(len);
+    let mut strikes_vec = Vec::with_capacity(len);
+    let mut times_vec = Vec::with_capacity(len);
+    let mut rates_vec = Vec::with_capacity(len);
+    let mut dividend_yields_vec = Vec::with_capacity(len);
+    let mut sigmas_vec = Vec::with_capacity(len);
+    
+    for values in input_data {
+        spots_vec.push(values[0]);
+        strikes_vec.push(values[1]);
+        times_vec.push(values[2]);
+        rates_vec.push(values[3]);
+        dividend_yields_vec.push(values[4]);
+        sigmas_vec.push(values[5]);
+    }
 
-        // Use rayon for parallel processing
-        use rayon::prelude::*;
-        results.par_extend(input_data.par_iter().map(|values| {
-            Merton::put_price_merton(
-                values[0], values[1], values[2], values[3], values[4], values[5],
-            )
-            .unwrap_or(f64::NAN)
-        }));
-        results
+    // Release GIL for computation and use optimized batch method
+    let results = py.allow_threads(move || {
+        let model = Merton;
+        let batch_results = model.put_price_batch(
+            &spots_vec,
+            &strikes_vec,
+            &times_vec,
+            &rates_vec,
+            &dividend_yields_vec,
+            &sigmas_vec,
+        );
+        
+        // Convert Results to f64 values
+        batch_results.into_iter()
+            .map(|r| r.unwrap_or(f64::NAN))
+            .collect::<Vec<f64>>()
     });
 
     Ok(PyArray1::from_vec_bound(py, results))
