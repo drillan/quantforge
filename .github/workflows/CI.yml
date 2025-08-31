@@ -31,7 +31,7 @@ jobs:
         uses: PyO3/maturin-action@v1
         with:
           target: ${{ matrix.target }}
-          args: --release --out dist
+          args: --release --out dist --manifest-path bindings/python/Cargo.toml
           sccache: 'true'
           manylinux: '2014'
       
@@ -40,7 +40,7 @@ jobs:
         run: |
           pip install dist/*.whl
           python -c "import quantforge; print(f'QuantForge {quantforge.__version__} imported successfully')"
-          python -c "from quantforge.models import black_scholes, black76; print('Models imported successfully')"
+          python -c "from quantforge import black_scholes, black76, merton; print('Models imported successfully')"
       
       - uses: actions/upload-artifact@v4
         with:
@@ -65,7 +65,7 @@ jobs:
         uses: PyO3/maturin-action@v1
         with:
           target: ${{ matrix.target }}
-          args: --release --out dist
+          args: --release --out dist --manifest-path bindings/python/Cargo.toml
           sccache: 'true'
       
       - name: Test wheel
@@ -73,7 +73,7 @@ jobs:
         run: |
           pip install (Get-ChildItem dist/*.whl)
           python -c "import quantforge; print(f'QuantForge {quantforge.__version__} imported successfully')"
-          python -c "from quantforge.models import black_scholes, black76; print('Models imported successfully')"
+          python -c "from quantforge import black_scholes, black76, merton; print('Models imported successfully')"
       
       - uses: actions/upload-artifact@v4
         with:
@@ -103,14 +103,14 @@ jobs:
         uses: PyO3/maturin-action@v1
         with:
           target: ${{ matrix.target }}
-          args: --release --out dist
+          args: --release --out dist --manifest-path bindings/python/Cargo.toml
           sccache: 'true'
       
       - name: Test wheel
         run: |
           pip install dist/*.whl
           python -c "import quantforge; print(f'QuantForge {quantforge.__version__} imported successfully')"
-          python -c "from quantforge.models import black_scholes, black76; print('Models imported successfully')"
+          python -c "from quantforge import black_scholes, black76, merton; print('Models imported successfully')"
       
       - uses: actions/upload-artifact@v4
         with:
