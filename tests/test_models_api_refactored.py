@@ -9,7 +9,7 @@ import numpy as np
 import pytest
 from conftest import NUMERICAL_TOLERANCE, PRACTICAL_TOLERANCE
 from numpy.typing import NDArray
-from quantforge import models
+from quantforge import black_scholes
 
 
 class TestBlackScholesAPI:
@@ -35,8 +35,8 @@ class TestBlackScholesAPI:
     @pytest.mark.parametrize(
         "price_func,expected",
         [
-            (models.call_price, 8.021352224079687),
-            (models.put_price, 7.90044179918926),
+            (black_scholes.call_price, 8.021352224079687),
+            (black_scholes.put_price, 7.90044179918926),
         ],
     )
     def test_single_price_calculation(self, price_func: Callable[..., float], expected: float) -> None:
@@ -48,11 +48,11 @@ class TestBlackScholesAPI:
         "batch_func,expected_values",
         [
             (
-                models.call_price_batch,
+                black_scholes.call_price_batch,
                 [7.510872, 10.450584, 13.857906, 17.662954],
             ),
             (
-                models.put_price_batch,
+                black_scholes.put_price_batch,
                 [7.633815, 5.573526, 3.980849, 2.785896],
             ),
         ],
@@ -67,14 +67,14 @@ class TestBlackScholesAPI:
 
     def test_greeks_structure_and_values(self) -> None:
         """Greeks構造体のテスト（構造と値の検証）"""
-        greeks = models.greeks(**self.ATM_PARAMS, is_call=True)
+        greeks = black_scholes.greeks(**self.ATM_PARAMS, is_call=True)
 
-        # 構造の検証（全属性の存在確認）
-        required_attrs = ["delta", "gamma", "vega", "theta", "rho"]
-        for attr in required_attrs:
-            assert hasattr(greeks, attr), f"Missing attribute: {attr}"
-            assert getattr(greeks, attr) is not None, f"None value for: {attr}"
-            assert np.isfinite(getattr(greeks, attr)), f"Non-finite value for: {attr}"
+        # 構造の検証（全キーの存在確認）
+        required_keys = ["delta", "gamma", "vega", "theta", "rho"]
+        for key in required_keys:
+            assert key in greeks, f"Missing key: {key}"
+            assert greeks[key] is not None, f"None value for: {key}"
+            assert np.isfinite(greeks[key]), f"Non-finite value for: {key}"
 
         # 具体的な値の検証
         expected_values = {
@@ -82,7 +82,7 @@ class TestBlackScholesAPI:
             "gamma": 0.01874042826,
         }
         for name, expected in expected_values.items():
-            actual = getattr(greeks, name)
+            actual = greeks[name]
             assert abs(actual - expected) < PRACTICAL_TOLERANCE, f"{name}: expected {expected}, got {actual}"
 
     @pytest.mark.parametrize("target_vol", [0.15, 0.25, 0.35, 0.45])
@@ -91,10 +91,10 @@ class TestBlackScholesAPI:
         # 既知のボラティリティで価格を計算
         params = self.ATM_PARAMS.copy()
         params["sigma"] = target_vol
-        price = models.call_price(**params)
+        price = black_scholes.call_price(**params)
 
         # ボラティリティを逆算
-        iv = models.implied_volatility(
+        iv = black_scholes.implied_volatility(
             price,
             params["s"],
             params["k"],
@@ -116,8 +116,8 @@ class TestBlackScholesAPI:
     )
     def test_put_call_parity(self, spot: float, strike: float, time: float, rate: float, sigma: float) -> None:
         """プット・コールパリティのパラメータ化テスト"""
-        call = models.call_price(spot, strike, time, rate, sigma)
-        put = models.put_price(spot, strike, time, rate, sigma)
+        call = black_scholes.call_price(spot, strike, time, rate, sigma)
+        put = black_scholes.put_price(spot, strike, time, rate, sigma)
 
         # Put-Call Parity: C - P = S - K * exp(-r*T)
         lhs = call - put
@@ -135,8 +135,8 @@ class TestBlackScholesConsistency:
         strike = 100.0
         params = {"k": strike, "t": 1.0, "r": 0.05, "sigma": 0.2}
 
-        call_prices = [models.call_price(s, **params) for s in spots]
-        put_prices = [models.put_price(s, **params) for s in spots]
+        call_prices = [black_scholes.call_price(s, **params) for s in spots]
+        put_prices = [black_scholes.put_price(s, **params) for s in spots]
 
         # Call prices should increase with spot
         assert call_prices == sorted(call_prices), "Call prices not monotonic in spot"
@@ -149,8 +149,8 @@ class TestBlackScholesConsistency:
         times = np.linspace(0.01, 2.0, 10)
         base_params = {"s": 100.0, "k": 100.0, "r": 0.05, "sigma": 0.2}
 
-        call_prices = [models.call_price(**base_params, t=t) for t in times]
-        put_prices = [models.put_price(**base_params, t=t) for t in times]
+        call_prices = [black_scholes.call_price(**base_params, t=t) for t in times]
+        put_prices = [black_scholes.put_price(**base_params, t=t) for t in times]
 
         # Prices should increase with time (for standard options)
         assert call_prices == sorted(call_prices), "Call prices should increase with time"
@@ -166,12 +166,12 @@ class TestBlackScholesConsistency:
         sigma = 0.2
 
         # Calculate base prices
-        base_call = models.call_price(base_spot, base_strike, time, rate, sigma)
-        base_put = models.put_price(base_spot, base_strike, time, rate, sigma)
+        base_call = black_scholes.call_price(base_spot, base_strike, time, rate, sigma)
+        base_put = black_scholes.put_price(base_spot, base_strike, time, rate, sigma)
 
         # Calculate scaled prices
-        scaled_call = models.call_price(base_spot * multiplier, base_strike * multiplier, time, rate, sigma)
-        scaled_put = models.put_price(base_spot * multiplier, base_strike * multiplier, time, rate, sigma)
+        scaled_call = black_scholes.call_price(base_spot * multiplier, base_strike * multiplier, time, rate, sigma)
+        scaled_put = black_scholes.put_price(base_spot * multiplier, base_strike * multiplier, time, rate, sigma)
 
         # Prices should scale proportionally (accounting for discounting)
         assert abs(scaled_call - base_call * multiplier) < PRACTICAL_TOLERANCE
@@ -189,7 +189,7 @@ class TestBoundaryConditions:
         rate = 0.05
         sigma = 0.2
 
-        price = models.call_price(spot, strike, time, rate, sigma)
+        price = black_scholes.call_price(spot, strike, time, rate, sigma)
         intrinsic = spot - strike * np.exp(-rate * time)
 
         # Deep ITM call should be close to intrinsic value
@@ -203,7 +203,7 @@ class TestBoundaryConditions:
         rate = 0.05
         sigma = 0.2
 
-        price = models.call_price(spot, strike, time, rate, sigma)
+        price = black_scholes.call_price(spot, strike, time, rate, sigma)
 
         # Deep OTM call should be close to zero
         assert price < 0.01
@@ -216,7 +216,7 @@ class TestBoundaryConditions:
         rate = 0.05
         sigma = 0.005  # Minimum allowed volatility
 
-        price = models.call_price(spot, strike, time, rate, sigma)
+        price = black_scholes.call_price(spot, strike, time, rate, sigma)
         intrinsic = max(spot - strike * np.exp(-rate * time), 0)
 
         # With zero vol, price should equal intrinsic value
@@ -230,8 +230,8 @@ class TestBoundaryConditions:
         rate = 0.05
         sigma = 0.2
 
-        call_price = models.call_price(spot, strike, time, rate, sigma)
-        put_price = models.put_price(spot, strike, time, rate, sigma)
+        call_price = black_scholes.call_price(spot, strike, time, rate, sigma)
+        put_price = black_scholes.put_price(spot, strike, time, rate, sigma)
 
         # At expiry, prices should equal intrinsic values
         call_intrinsic = max(spot - strike, 0)

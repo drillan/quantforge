@@ -1,4 +1,4 @@
-"""Base test classes for option pricing models."""
+"""Base test classes for option pricing black_scholes."""
 
 from abc import ABC, abstractmethod
 from typing import Any

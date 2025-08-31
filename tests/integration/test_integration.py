@@ -2,7 +2,7 @@
 
 import numpy as np
 import pytest
-from quantforge import models
+from quantforge import black_scholes
 
 
 def test_calculate_call_price() -> None:
@@ -14,7 +14,7 @@ def test_calculate_call_price() -> None:
     r = 0.05
     sigma = 0.2
 
-    price = models.call_price(s, k, t, r, sigma)
+    price = black_scholes.call_price(s, k, t, r, sigma)
 
     # 参照値との比較
     expected = 10.450583572185565
@@ -30,7 +30,7 @@ def test_call_price_batch() -> None:
     r = 0.05
     sigma = 0.2
 
-    prices = models.call_price_batch(spots, k, t, r, sigma)
+    prices = black_scholes.call_price_batch(spots, k, t, r, sigma)
 
     assert len(prices) == 3
     assert isinstance(prices, np.ndarray)
@@ -43,31 +43,31 @@ def test_invalid_inputs() -> None:
     """無効な入力のテスト."""
 
     # 負の価格
-    with pytest.raises(ValueError, match="Invalid spot price"):
-        models.call_price(-100.0, 100.0, 1.0, 0.05, 0.2)
+    with pytest.raises(ValueError, match="spot must be positive"):
+        black_scholes.call_price(-100.0, 100.0, 1.0, 0.05, 0.2)
 
     # 負の時間
-    with pytest.raises(ValueError, match="Invalid time"):
-        models.call_price(100.0, 100.0, -1.0, 0.05, 0.2)
+    with pytest.raises(ValueError, match="time must be positive"):
+        black_scholes.call_price(100.0, 100.0, -1.0, 0.05, 0.2)
 
     # 負のボラティリティ
-    with pytest.raises(ValueError, match="Invalid volatility"):
-        models.call_price(100.0, 100.0, 1.0, 0.05, -0.2)
+    with pytest.raises(ValueError, match="sigma must be positive"):
+        black_scholes.call_price(100.0, 100.0, 1.0, 0.05, -0.2)
 
 
 def test_edge_cases() -> None:
     """エッジケースのテスト."""
 
     # 満期直前
-    price = models.call_price(100.0, 90.0, 0.001, 0.05, 0.2)
+    price = black_scholes.call_price(100.0, 90.0, 0.001, 0.05, 0.2)
     assert price > 10.0  # Deep ITM
 
     # 高ボラティリティ
-    price = models.call_price(100.0, 100.0, 1.0, 0.05, 2.0)
+    price = black_scholes.call_price(100.0, 100.0, 1.0, 0.05, 2.0)
     assert price > 0.0
 
     # ゼロ金利
-    price = models.call_price(100.0, 100.0, 1.0, 0.0, 0.2)
+    price = black_scholes.call_price(100.0, 100.0, 1.0, 0.0, 0.2)
     assert price > 0.0
 
 

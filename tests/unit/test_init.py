@@ -13,7 +13,7 @@ class TestVersionHandling:
         assert hasattr(quantforge, "__version__")
         assert quantforge.__version__ is not None
         # Should be either the actual version or the fallback
-        assert quantforge.__version__ in ["0.0.3", "0.0.0+unknown"]
+        assert quantforge.__version__ in ["0.0.5", "0.0.0+unknown"]
 
     def test_version_package_not_found(self) -> None:
         """Test version fallback when package is not found."""
@@ -53,7 +53,7 @@ class TestVersionHandling:
         """Test that models module has expected functions."""
         from quantforge import models
 
-        # Check for expected functions in models
+        # Check for expected functions in models (Black-Scholes as default)
         expected_functions = [
             "call_price",
             "put_price",

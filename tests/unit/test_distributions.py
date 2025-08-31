@@ -5,7 +5,7 @@ import math
 import numpy as np
 import pytest
 from conftest import PRACTICAL_TOLERANCE, THEORETICAL_TOLERANCE
-from quantforge import models
+from quantforge import black_scholes
 from scipy import stats
 
 
@@ -55,7 +55,7 @@ class TestNormCDF:
 
         # この設定では d1 ≈ x, d2 ≈ x - 1
         # 価格から逆算してnorm_cdfの精度を検証
-        price = models.call_price(s, k, t, r, sigma)
+        price = black_scholes.call_price(s, k, t, r, sigma)
 
         # 理論価格との比較
         d1 = (np.log(s / k) + (r + 0.5 * sigma**2) * t) / (sigma * np.sqrt(t))
@@ -83,8 +83,8 @@ class TestNormCDF:
             k_low = s * np.exp(-x_val * sigma * np.sqrt(t))
             k_high = s * np.exp(x_val * sigma * np.sqrt(t))
 
-            price_low = models.call_price(s, k_low, t, r, sigma)
-            price_high = models.call_price(s, k_high, t, r, sigma)
+            price_low = black_scholes.call_price(s, k_low, t, r, sigma)
+            price_high = black_scholes.call_price(s, k_high, t, r, sigma)
 
             # r=0の場合、価格の対称的な関係を検証
             # C(S,K1) + C(S,K2) ≈ S（K1*K2 = S^2の場合）
@@ -105,7 +105,7 @@ class TestNormCDF:
         sigma = 0.2
 
         for k in strikes:
-            price = models.call_price(s, k, t, r, sigma)
+            price = black_scholes.call_price(s, k, t, r, sigma)
             prices.append(price)
 
         # 行使価格が上昇すると価格は減少（単調減少）
@@ -121,13 +121,13 @@ class TestNormCDF:
 
         # Deep ITM (In The Money)
         k_itm = 1.0
-        price_itm = models.call_price(s, k_itm, t, r, sigma)
+        price_itm = black_scholes.call_price(s, k_itm, t, r, sigma)
         intrinsic_itm = s - k_itm * np.exp(-r * t)
         assert abs(price_itm - intrinsic_itm) < 0.01, "Deep ITMで本質的価値に収束していない"
 
         # Deep OTM (Out of The Money)
         k_otm = 10000.0
-        price_otm = models.call_price(s, k_otm, t, r, sigma)
+        price_otm = black_scholes.call_price(s, k_otm, t, r, sigma)
         assert price_otm < 0.001, "Deep OTMでゼロに収束していない"
 
     def test_accuracy_against_scipy(self) -> None:
@@ -144,7 +144,7 @@ class TestNormCDF:
             sigma = np.random.uniform(0.05, 0.5)
 
             # QuantForgeの計算
-            qf_price = models.call_price(s, k, t, r, sigma)
+            qf_price = black_scholes.call_price(s, k, t, r, sigma)
 
             # SciPyを使った理論価格
             d1 = (np.log(s / k) + (r + 0.5 * sigma**2) * t) / (sigma * np.sqrt(t))
@@ -170,17 +170,17 @@ class TestNormCDFEdgeCases:
         v_too_small = 0.001
         k = 100.0
         with pytest.raises(ValueError):
-            models.call_price(s, k, t, r, v_too_small)
+            black_scholes.call_price(s, k, t, r, v_too_small)
 
         # バリデーション範囲内の最小ボラティリティ
         v_small = 0.005  # 最小許容値
-        price_small_vol = models.call_price(s, k, t, r, v_small)
+        price_small_vol = black_scholes.call_price(s, k, t, r, v_small)
         # ボラティリティが小さいとき、ATMオプションの価格は小さい
         assert price_small_vol < 1.0, "小ボラティリティで価格が大きすぎる"
 
         # 最大許容ボラティリティ
         v_large = 10.0
-        price_large_vol = models.call_price(s, k, t, r, v_large)
+        price_large_vol = black_scholes.call_price(s, k, t, r, v_large)
         # ボラティリティが大きいとき、価格は本質的価値に近づく
         intrinsic = max(s - k, 0)
         assert price_large_vol > intrinsic, "大ボラティリティで本質的価値を下回る"
@@ -197,7 +197,7 @@ class TestNormCDFEdgeCases:
         prices = []
 
         for k in k_values:
-            price = models.call_price(s, k, t, r, sigma)
+            price = black_scholes.call_price(s, k, t, r, sigma)
             prices.append(price)
             assert not math.isnan(price), f"NaNが発生: k={k}"
             assert not math.isinf(price), f"Infが発生: k={k}"
@@ -218,7 +218,7 @@ class TestNormCDFEdgeCases:
         t_values = [0.001, 0.01, 0.1]
 
         for t in t_values:
-            price = models.call_price(s, k, t, r, sigma)
+            price = black_scholes.call_price(s, k, t, r, sigma)
             # ATMオプションの近似式との比較
             approx_price = s * sigma * np.sqrt(t / (2 * np.pi))
             rel_error = abs(price - approx_price) / approx_price
@@ -238,7 +238,7 @@ class TestDistributionProperties:
         r = 0.05
         sigma = 0.2
 
-        call_price = models.call_price(s, k, t, r, sigma)
+        call_price = black_scholes.call_price(s, k, t, r, sigma)
 
         # Put-Call パリティ: C - P = S - K*exp(-rT)
         # P = C - S + K*exp(-rT)
@@ -260,8 +260,8 @@ class TestDistributionProperties:
         ds = 0.01  # 小さな価格変化
 
         s_base = 100.0
-        price_base = models.call_price(s_base, k, t, r, sigma)
-        price_up = models.call_price(s_base + ds, k, t, r, sigma)
+        price_base = black_scholes.call_price(s_base, k, t, r, sigma)
+        price_up = black_scholes.call_price(s_base + ds, k, t, r, sigma)
 
         # 数値微分によるデルタ
         delta_numerical = (price_up - price_base) / ds
@@ -282,7 +282,7 @@ class TestDistributionProperties:
         sigma = 0.2
 
         # 価格計算
-        price = models.call_price(s, k, t, r, sigma)
+        price = black_scholes.call_price(s, k, t, r, sigma)
 
         # 価格の範囲チェック
         lower_bound = max(s - k * np.exp(-r * t), 0)  # 本質的価値

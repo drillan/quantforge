@@ -5,9 +5,7 @@ import math
 import numpy as np
 import pytest
 from conftest import THEORETICAL_TOLERANCE
-from quantforge import models
-
-black_scholes = models
+from quantforge import black_scholes
 
 
 class TestBlackScholesCallPrice:
@@ -200,10 +198,9 @@ class TestBlackScholesBatch:
         times = np.array([1.0, 1.0, 1.0])
         rates = np.array([0.05, 0.05, 0.05])
         sigmas = np.array([0.2, 0.2, 0.2])
-        prices = black_scholes.call_price_batch(spots, strikes, times, rates, sigmas)
-        assert not np.isnan(prices[0])
-        assert np.isnan(prices[1])  # Invalid spot returns NaN
-        assert not np.isnan(prices[2])
+        # Invalid spot should raise an error now (validation enhanced)
+        with pytest.raises(ValueError, match="spot must be positive"):
+            black_scholes.call_price_batch(spots, strikes, times, rates, sigmas)
 
     def test_empty_batch(self) -> None:
         """Test batch processing with empty array."""
@@ -224,62 +221,62 @@ class TestBlackScholesGreeks:
         greeks = black_scholes.greeks(s=100.0, k=100.0, t=1.0, r=0.05, sigma=0.2, is_call=True)
 
         # Delta should be between 0 and 1 for calls
-        assert 0 < greeks.delta < 1
+        assert 0 < greeks["delta"] < 1
         # ATM delta should be around 0.6 for these parameters
-        assert abs(greeks.delta - 0.64) < 0.05
+        assert abs(greeks["delta"] - 0.64) < 0.05
 
         # Gamma should be positive
-        assert greeks.gamma > 0
+        assert greeks["gamma"] > 0
 
         # Vega should be positive
-        assert greeks.vega > 0
+        assert greeks["vega"] > 0
 
         # Theta should be negative for calls
-        assert greeks.theta < 0
+        assert greeks["theta"] < 0
 
         # Rho should be positive for calls
-        assert greeks.rho > 0
+        assert greeks["rho"] > 0
 
     def test_greeks_put(self) -> None:
         """Test Greeks for put option."""
         greeks = black_scholes.greeks(s=100.0, k=100.0, t=1.0, r=0.05, sigma=0.2, is_call=False)
 
         # Delta should be between -1 and 0 for puts
-        assert -1 < greeks.delta < 0
+        assert -1 < greeks["delta"] < 0
         # ATM put delta should be around -0.36 for these parameters
-        assert abs(greeks.delta + 0.36) < 0.05
+        assert abs(greeks["delta"] + 0.36) < 0.05
 
         # Gamma should be positive (same as call)
-        assert greeks.gamma > 0
+        assert greeks["gamma"] > 0
 
         # Vega should be positive (same as call)
-        assert greeks.vega > 0
+        assert greeks["vega"] > 0
 
         # Theta could be positive or negative for puts
         # depending on moneyness and rates
 
         # Rho should be negative for puts
-        assert greeks.rho < 0
+        assert greeks["rho"] < 0
 
     def test_greeks_deep_itm_call(self) -> None:
         """Test Greeks for deep ITM call."""
         greeks = black_scholes.greeks(s=150.0, k=100.0, t=1.0, r=0.05, sigma=0.2, is_call=True)
 
         # Deep ITM call delta should be close to 1
-        assert greeks.delta > 0.95
+        assert greeks["delta"] > 0.95
 
         # Gamma should be small for deep ITM
-        assert greeks.gamma < 0.01
+        assert greeks["gamma"] < 0.01
 
     def test_greeks_deep_otm_call(self) -> None:
         """Test Greeks for deep OTM call."""
         greeks = black_scholes.greeks(s=50.0, k=100.0, t=1.0, r=0.05, sigma=0.2, is_call=True)
 
         # Deep OTM call delta should be close to 0
-        assert greeks.delta < 0.05
+        assert greeks["delta"] < 0.05
 
         # Gamma should be small for deep OTM
-        assert greeks.gamma < 0.01
+        assert greeks["gamma"] < 0.01
 
     def test_greeks_batch(self) -> None:
         """Test batch Greeks calculation."""
@@ -288,7 +285,7 @@ class TestBlackScholesGreeks:
         times = np.array([1.0, 1.0, 1.0])
         rates = np.array([0.05, 0.05, 0.05])
         sigmas = np.array([0.2, 0.2, 0.2])
-        is_calls = np.array([True, True, True])
+        is_calls = np.array([1.0, 1.0, 1.0])  # 1.0 for calls, 0.0 for puts
         greeks_dict = black_scholes.greeks_batch(spots, strikes, times, rates, sigmas, is_calls)
 
         # greeks_batch returns a dictionary with arrays
@@ -300,7 +297,7 @@ class TestBlackScholesGreeks:
     def test_greeks_invalid_inputs(self) -> None:
         """Test Greeks with invalid inputs."""
         with pytest.raises(ValueError):
-            black_scholes.greeks(s=-100.0, k=100.0, t=1.0, r=0.05, sigma=0.2)
+            black_scholes.greeks(s=-100.0, k=100.0, t=1.0, r=0.05, sigma=0.2, is_call=True)
 
 
 class TestBlackScholesImpliedVolatility:
@@ -357,9 +354,8 @@ class TestBlackScholesImpliedVolatility:
         strikes = np.array([100.0, 100.0, 100.0])
         times = np.array([1.0, 1.0, 1.0])
         rates = np.array([0.05, 0.05, 0.05])
-        is_calls = np.array([True, True, True])
-
-        ivs = black_scholes.implied_volatility_batch(prices, spots, strikes, times, rates, is_calls)
+        # Use scalar boolean for batch processing (will broadcast)
+        ivs = black_scholes.implied_volatility_batch(prices, spots, strikes, times, rates, True)
 
         assert len(ivs) == 3
         for _i, (iv, true_sigma) in enumerate(zip(ivs, sigmas, strict=False)):

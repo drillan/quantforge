@@ -5,7 +5,7 @@ import math
 import numpy as np
 import pytest
 from conftest import PRACTICAL_TOLERANCE
-from quantforge import models
+from quantforge import black_scholes
 
 
 @pytest.mark.unit
@@ -15,59 +15,59 @@ class TestInputValidation:
     def test_negative_spot_price(self) -> None:
         """負のスポット価格でエラー."""
         with pytest.raises(ValueError, match="[Ss]pot"):
-            models.call_price(-100.0, 100.0, 1.0, 0.05, 0.2)
+            black_scholes.call_price(-100.0, 100.0, 1.0, 0.05, 0.2)
 
     def test_zero_spot_price(self) -> None:
         """ゼロのスポット価格でエラー."""
         with pytest.raises(ValueError, match="[Ss]pot"):
-            models.call_price(0.0, 100.0, 1.0, 0.05, 0.2)
+            black_scholes.call_price(0.0, 100.0, 1.0, 0.05, 0.2)
 
     def test_negative_strike_price(self) -> None:
         """負の行使価格でエラー."""
         with pytest.raises(ValueError, match="[Ss]trike"):
-            models.call_price(100.0, -100.0, 1.0, 0.05, 0.2)
+            black_scholes.call_price(100.0, -100.0, 1.0, 0.05, 0.2)
 
     def test_zero_strike_price(self) -> None:
         """ゼロの行使価格でエラー."""
         with pytest.raises(ValueError, match="[Ss]trike"):
-            models.call_price(100.0, 0.0, 1.0, 0.05, 0.2)
+            black_scholes.call_price(100.0, 0.0, 1.0, 0.05, 0.2)
 
     def test_negative_time_to_maturity(self) -> None:
         """負の満期までの時間でエラー."""
         with pytest.raises(ValueError, match="[Tt]ime"):
-            models.call_price(100.0, 100.0, -1.0, 0.05, 0.2)
+            black_scholes.call_price(100.0, 100.0, -1.0, 0.05, 0.2)
 
     def test_zero_time_to_maturity(self) -> None:
         """ゼロの満期までの時間でエラー."""
         with pytest.raises(ValueError, match="[Tt]ime"):
-            models.call_price(100.0, 100.0, 0.0, 0.05, 0.2)
+            black_scholes.call_price(100.0, 100.0, 0.0, 0.05, 0.2)
 
     def test_negative_volatility(self) -> None:
         """負のボラティリティでエラー."""
         with pytest.raises(ValueError, match="[Vv]olatility"):
-            models.call_price(100.0, 100.0, 1.0, 0.05, -0.2)
+            black_scholes.call_price(100.0, 100.0, 1.0, 0.05, -0.2)
 
     def test_zero_volatility(self) -> None:
         """ゼロのボラティリティでエラー."""
         with pytest.raises(ValueError, match="[Vv]olatility"):
-            models.call_price(100.0, 100.0, 1.0, 0.05, 0.0)
+            black_scholes.call_price(100.0, 100.0, 1.0, 0.05, 0.0)
 
     def test_extreme_interest_rates(self) -> None:
         """極端な金利の処理."""
         # 負の金利（許容範囲内）
-        price_neg = models.call_price(100.0, 100.0, 1.0, -0.05, 0.2)
+        price_neg = black_scholes.call_price(100.0, 100.0, 1.0, -0.05, 0.2)
         assert price_neg > 0, "負の金利で価格が負"
 
         # 高い金利（許容範囲内）
-        price_high = models.call_price(100.0, 100.0, 1.0, 0.5, 0.2)
+        price_high = black_scholes.call_price(100.0, 100.0, 1.0, 0.5, 0.2)
         assert price_high > 0, "高金利で価格が負"
 
         # 許容範囲外の金利
         with pytest.raises(ValueError):
-            models.call_price(100.0, 100.0, 1.0, 1.5, 0.2)
+            black_scholes.call_price(100.0, 100.0, 1.0, 1.5, 0.2)
 
         with pytest.raises(ValueError):
-            models.call_price(100.0, 100.0, 1.0, -1.5, 0.2)
+            black_scholes.call_price(100.0, 100.0, 1.0, -1.5, 0.2)
 
 
 @pytest.mark.unit
@@ -79,38 +79,38 @@ class TestNumericValues:
         nan = float("nan")
 
         with pytest.raises(ValueError):
-            models.call_price(nan, 100.0, 1.0, 0.05, 0.2)
+            black_scholes.call_price(nan, 100.0, 1.0, 0.05, 0.2)
 
         with pytest.raises(ValueError):
-            models.call_price(100.0, nan, 1.0, 0.05, 0.2)
+            black_scholes.call_price(100.0, nan, 1.0, 0.05, 0.2)
 
         with pytest.raises(ValueError):
-            models.call_price(100.0, 100.0, nan, 0.05, 0.2)
+            black_scholes.call_price(100.0, 100.0, nan, 0.05, 0.2)
 
         with pytest.raises(ValueError):
-            models.call_price(100.0, 100.0, 1.0, nan, 0.2)
+            black_scholes.call_price(100.0, 100.0, 1.0, nan, 0.2)
 
         with pytest.raises(ValueError):
-            models.call_price(100.0, 100.0, 1.0, 0.05, nan)
+            black_scholes.call_price(100.0, 100.0, 1.0, 0.05, nan)
 
     def test_inf_inputs(self) -> None:
         """無限大入力の処理."""
         inf = float("inf")
 
         with pytest.raises(ValueError):
-            models.call_price(inf, 100.0, 1.0, 0.05, 0.2)
+            black_scholes.call_price(inf, 100.0, 1.0, 0.05, 0.2)
 
         with pytest.raises(ValueError):
-            models.call_price(100.0, inf, 1.0, 0.05, 0.2)
+            black_scholes.call_price(100.0, inf, 1.0, 0.05, 0.2)
 
         with pytest.raises(ValueError):
-            models.call_price(100.0, 100.0, inf, 0.05, 0.2)
+            black_scholes.call_price(100.0, 100.0, inf, 0.05, 0.2)
 
         with pytest.raises(ValueError):
-            models.call_price(100.0, 100.0, 1.0, inf, 0.2)
+            black_scholes.call_price(100.0, 100.0, 1.0, inf, 0.2)
 
         with pytest.raises(ValueError):
-            models.call_price(100.0, 100.0, 1.0, 0.05, inf)
+            black_scholes.call_price(100.0, 100.0, 1.0, 0.05, inf)
 
     def test_very_small_positive_values(self) -> None:
         """非常に小さい正の値の処理."""
@@ -119,60 +119,60 @@ class TestNumericValues:
         min_time = 0.001
         min_vol = 0.005
 
-        price1 = models.call_price(min_price, 100.0, 1.0, 0.05, 0.2)
+        price1 = black_scholes.call_price(min_price, 100.0, 1.0, 0.05, 0.2)
         assert price1 >= 0, "最小価格で負の結果"
 
-        price2 = models.call_price(100.0, min_price, 1.0, 0.05, 0.2)
+        price2 = black_scholes.call_price(100.0, min_price, 1.0, 0.05, 0.2)
         assert price2 >= 0, "最小行使価格で負の結果"
 
-        price3 = models.call_price(100.0, 100.0, min_time, 0.05, 0.2)
+        price3 = black_scholes.call_price(100.0, 100.0, min_time, 0.05, 0.2)
         assert price3 >= 0, "最小時間で負の結果"
 
-        price4 = models.call_price(100.0, 100.0, 1.0, 0.05, min_vol)
+        price4 = black_scholes.call_price(100.0, 100.0, 1.0, 0.05, min_vol)
         assert price4 >= 0, "最小ボラティリティで負の結果"
 
         # 許容範囲外の小さい値
         with pytest.raises(ValueError):
-            models.call_price(0.001, 100.0, 1.0, 0.05, 0.2)
+            black_scholes.call_price(0.001, 100.0, 1.0, 0.05, 0.2)
 
         with pytest.raises(ValueError):
-            models.call_price(100.0, 100.0, 0.0001, 0.05, 0.2)
+            black_scholes.call_price(100.0, 100.0, 0.0001, 0.05, 0.2)
 
         with pytest.raises(ValueError):
-            models.call_price(100.0, 100.0, 1.0, 0.05, 0.001)
+            black_scholes.call_price(100.0, 100.0, 1.0, 0.05, 0.001)
 
     def test_very_large_values(self) -> None:
         """非常に大きい値の処理."""
         max_price = 2147483648.0  # 2^31
         max_time = 100.0
-        max_vol = 10.0
+        max_vol = 5.0  # MAX_VOLATILITY constant
 
         # 許容される最大値
-        price1 = models.call_price(max_price - 1, 100.0, 1.0, 0.05, 0.2)
+        price1 = black_scholes.call_price(max_price - 1, 100.0, 1.0, 0.05, 0.2)
         assert price1 >= 0, "最大価格で負の結果"
         assert math.isfinite(price1), "最大価格で無限大"
 
-        price2 = models.call_price(100.0, max_price - 1, 1.0, 0.05, 0.2)
+        price2 = black_scholes.call_price(100.0, max_price - 1, 1.0, 0.05, 0.2)
         assert price2 >= 0, "最大行使価格で負の結果"
         assert math.isfinite(price2), "最大行使価格で無限大"
 
-        price3 = models.call_price(100.0, 100.0, max_time, 0.05, 0.2)
+        price3 = black_scholes.call_price(100.0, 100.0, max_time, 0.05, 0.2)
         assert price3 >= 0, "最大時間で負の結果"
         assert math.isfinite(price3), "最大時間で無限大"
 
-        price4 = models.call_price(100.0, 100.0, 1.0, 0.05, max_vol)
+        price4 = black_scholes.call_price(100.0, 100.0, 1.0, 0.05, max_vol)
         assert price4 >= 0, "最大ボラティリティで負の結果"
         assert math.isfinite(price4), "最大ボラティリティで無限大"
 
         # 許容範囲外の大きい値
         with pytest.raises(ValueError):
-            models.call_price(max_price * 2, 100.0, 1.0, 0.05, 0.2)
+            black_scholes.call_price(max_price * 2, 100.0, 1.0, 0.05, 0.2)
 
         with pytest.raises(ValueError):
-            models.call_price(100.0, 100.0, max_time * 2, 0.05, 0.2)
+            black_scholes.call_price(100.0, 100.0, max_time * 2, 0.05, 0.2)
 
         with pytest.raises(ValueError):
-            models.call_price(100.0, 100.0, 1.0, 0.05, max_vol * 2)
+            black_scholes.call_price(100.0, 100.0, 1.0, 0.05, max_vol * 2)
 
 
 @pytest.mark.unit
@@ -182,39 +182,35 @@ class TestBatchValidation:
     def test_empty_batch(self) -> None:
         """空のバッチ処理."""
         spots = np.array([])
-        result = models.call_price_batch(spots, 100.0, 1.0, 0.05, 0.2)
+        result = black_scholes.call_price_batch(spots, 100.0, 1.0, 0.05, 0.2)
         assert len(result) == 0, "空バッチの結果が空でない"
 
     def test_single_element_batch(self) -> None:
         """単一要素のバッチ処理."""
         spots = np.array([100.0])
-        result = models.call_price_batch(spots, 100.0, 1.0, 0.05, 0.2)
+        result = black_scholes.call_price_batch(spots, 100.0, 1.0, 0.05, 0.2)
         assert len(result) == 1, "単一要素バッチのサイズが不正"
 
         # 単一計算と同じ結果
-        single_price = models.call_price(100.0, 100.0, 1.0, 0.05, 0.2)
+        single_price = black_scholes.call_price(100.0, 100.0, 1.0, 0.05, 0.2)
         assert abs(result[0] - single_price) < PRACTICAL_TOLERANCE, "バッチと単一計算の不一致"
 
     def test_batch_with_invalid_values(self) -> None:
         """無効な値を含むバッチ処理."""
         # NaNを含むバッチ - エラーが発生することを確認
         spots_nan = np.array([100.0, float("nan"), 110.0])
-        with pytest.raises(ValueError, match="Invalid input"):
-            models.call_price_batch(spots_nan, 100.0, 1.0, 0.05, 0.2)
+        with pytest.raises(ValueError, match="spot must be finite"):
+            black_scholes.call_price_batch(spots_nan, 100.0, 1.0, 0.05, 0.2)
 
-        # 負の値を含むバッチ - NaNが結果に含まれることを確認
+        # 負の値を含むバッチ - エラーが発生することを確認
         spots_neg = np.array([100.0, -50.0, 110.0])
-        result = models.call_price_batch(spots_neg, 100.0, 1.0, 0.05, 0.2)
-        assert np.isnan(result[1])
-        assert not np.isnan(result[0])
-        assert not np.isnan(result[2])
+        with pytest.raises(ValueError, match="spot must be positive"):
+            black_scholes.call_price_batch(spots_neg, 100.0, 1.0, 0.05, 0.2)
 
-        # ゼロを含むバッチ - NaNが結果に含まれることを確認
+        # ゼロを含むバッチ - エラーが発生することを確認
         spots_zero = np.array([100.0, 0.0, 110.0])
-        result = models.call_price_batch(spots_zero, 100.0, 1.0, 0.05, 0.2)
-        assert np.isnan(result[1])
-        assert not np.isnan(result[0])
-        assert not np.isnan(result[2])
+        with pytest.raises(ValueError, match="spot must be positive"):
+            black_scholes.call_price_batch(spots_zero, 100.0, 1.0, 0.05, 0.2)
 
     def test_batch_consistency(self) -> None:
         """バッチ処理の一貫性テスト."""
@@ -225,11 +221,11 @@ class TestBatchValidation:
         sigma = 0.2
 
         # バッチ処理
-        batch_results = models.call_price_batch(spots, k, t, r, sigma)
+        batch_results = black_scholes.call_price_batch(spots, k, t, r, sigma)
 
         # 個別処理との比較
         for i, spot in enumerate(spots):
-            single_result = models.call_price(spot, k, t, r, sigma)
+            single_result = black_scholes.call_price(spot, k, t, r, sigma)
             assert abs(batch_results[i] - single_result) < PRACTICAL_TOLERANCE, f"バッチと個別の不一致: {i}"
 
     def test_large_batch(self) -> None:
@@ -241,7 +237,7 @@ class TestBatchValidation:
         r = 0.05
         sigma = 0.2
 
-        results = models.call_price_batch(spots, k, t, r, sigma)
+        results = black_scholes.call_price_batch(spots, k, t, r, sigma)
 
         assert len(results) == n, "バッチサイズが不正"
         assert np.all(results >= 0), "負の価格が存在"
@@ -261,28 +257,28 @@ class TestErrorMessages:
         """エラーメッセージの内容確認."""
         # スポット価格エラー
         with pytest.raises(ValueError) as exc_info:
-            models.call_price(-100.0, 100.0, 1.0, 0.05, 0.2)
+            black_scholes.call_price(-100.0, 100.0, 1.0, 0.05, 0.2)
         assert "spot" in str(exc_info.value).lower() or "price" in str(exc_info.value).lower()
 
         # 行使価格エラー
         with pytest.raises(ValueError) as exc_info:
-            models.call_price(100.0, -100.0, 1.0, 0.05, 0.2)
+            black_scholes.call_price(100.0, -100.0, 1.0, 0.05, 0.2)
         assert "strike" in str(exc_info.value).lower() or "price" in str(exc_info.value).lower()
 
         # 時間エラー
         with pytest.raises(ValueError) as exc_info:
-            models.call_price(100.0, 100.0, -1.0, 0.05, 0.2)
+            black_scholes.call_price(100.0, 100.0, -1.0, 0.05, 0.2)
         assert "time" in str(exc_info.value).lower() or "maturity" in str(exc_info.value).lower()
 
         # ボラティリティエラー
         with pytest.raises(ValueError) as exc_info:
-            models.call_price(100.0, 100.0, 1.0, 0.05, -0.2)
+            black_scholes.call_price(100.0, 100.0, 1.0, 0.05, -0.2)
         assert "volatility" in str(exc_info.value).lower()
 
     def test_error_includes_value(self) -> None:
         """エラーメッセージに問題の値が含まれることを確認."""
         with pytest.raises(ValueError) as exc_info:
-            models.call_price(-123.45, 100.0, 1.0, 0.05, 0.2)
+            black_scholes.call_price(-123.45, 100.0, 1.0, 0.05, 0.2)
         # エラーメッセージに実際の値が含まれるか
         error_msg = str(exc_info.value)
         assert "-123.45" in error_msg or "123.45" in error_msg
@@ -292,7 +288,7 @@ class TestErrorMessages:
         # 最初のエラーで停止することを確認
         with pytest.raises(ValueError):
             # 複数の無効な値
-            models.call_price(-100.0, -100.0, -1.0, 0.05, -0.2)
+            black_scholes.call_price(-100.0, -100.0, -1.0, 0.05, -0.2)
         # エラーは一つずつ報告される（最初のエラーで停止）
 
 
@@ -309,7 +305,7 @@ class TestBoundaryConditions:
         min_rate = -1.0
 
         # すべて最小値
-        price = models.call_price(min_price, min_price, min_time, min_rate, min_vol)
+        price = black_scholes.call_price(min_price, min_price, min_time, min_rate, min_vol)
         assert price >= 0, "最小値で負の価格"
         assert math.isfinite(price), "最小値で無限大"
 
@@ -318,25 +314,25 @@ class TestBoundaryConditions:
         # 仕様で定義された最大値
         max_price = 2147483648.0 - 1  # 境界値の直前
         max_time = 100.0
-        max_vol = 10.0
+        max_vol = 5.0
         max_rate = 1.0
 
         # すべて最大値
-        price = models.call_price(max_price, max_price, max_time, max_rate, max_vol)
+        price = black_scholes.call_price(max_price, max_price, max_time, max_rate, max_vol)
         assert price >= 0, "最大値で負の価格"
         assert math.isfinite(price), "最大値で無限大"
 
     def test_mixed_boundary_values(self) -> None:
         """境界値の組み合わせテスト."""
         # 最小スポット、最大行使価格
-        price1 = models.call_price(0.01, 2147483648.0 - 1, 1.0, 0.05, 0.2)
+        price1 = black_scholes.call_price(0.01, 2147483648.0 - 1, 1.0, 0.05, 0.2)
         assert price1 == 0.0, "Deep OTMでゼロでない"
 
         # 最大スポット、最小行使価格
-        price2 = models.call_price(2147483648.0 - 1, 0.01, 1.0, 0.05, 0.2)
+        price2 = black_scholes.call_price(2147483648.0 - 1, 0.01, 1.0, 0.05, 0.2)
         assert price2 > 0, "Deep ITMで正でない"
 
         # 最小時間、最大ボラティリティ
-        price3 = models.call_price(100.0, 100.0, 0.001, 0.05, 10.0)
+        price3 = black_scholes.call_price(100.0, 100.0, 0.001, 0.05, 5.0)
         assert price3 >= 0, "境界値の組み合わせで負"
         assert math.isfinite(price3), "境界値の組み合わせで無限大"

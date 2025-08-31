@@ -4,7 +4,7 @@ import numpy as np
 import pytest
 from hypothesis import assume, given, settings
 from hypothesis import strategies as st
-from quantforge import models
+from quantforge import black_scholes
 
 
 @pytest.mark.property
@@ -21,7 +21,7 @@ class TestPriceProperties:
     @settings(max_examples=500, deadline=None)
     def test_price_bounds(self, s: float, k: float, t: float, r: float, sigma: float) -> None:
         """価格境界の検証: max(S-K*e^(-rt), 0) <= C <= S."""
-        price = models.call_price(s, k, t, r, sigma)
+        price = black_scholes.call_price(s, k, t, r, sigma)
 
         # 価格は非負
         assert price >= 0, f"負の価格: {price}"
@@ -51,8 +51,8 @@ class TestPriceProperties:
         """ボラティリティに対する単調性: σ1 < σ2 => C(σ1) < C(σ2)."""
         assume(sigma1 != sigma2)
 
-        price1 = models.call_price(s, k, t, r, sigma1)
-        price2 = models.call_price(s, k, t, r, sigma2)
+        price1 = black_scholes.call_price(s, k, t, r, sigma1)
+        price2 = black_scholes.call_price(s, k, t, r, sigma2)
 
         if sigma1 < sigma2:
             assert price1 <= price2 + 1e-3, f"ボラティリティ単調性違反: sigma1={sigma1}, sigma2={sigma2}"
@@ -72,8 +72,8 @@ class TestPriceProperties:
         """時間に対する単調性: T1 < T2 => C(T1) <= C(T2) (正の金利の場合)."""
         assume(t1 != t2)
 
-        price1 = models.call_price(s, k, t1, r, sigma)
-        price2 = models.call_price(s, k, t2, r, sigma)
+        price1 = black_scholes.call_price(s, k, t1, r, sigma)
+        price2 = black_scholes.call_price(s, k, t2, r, sigma)
 
         if t1 < t2:
             # 負の金利では時間価値が逆転する可能性がある
@@ -98,8 +98,8 @@ class TestPriceProperties:
         """行使価格に対する単調性: K1 < K2 => C(K1) >= C(K2)."""
         assume(k1 != k2)
 
-        price1 = models.call_price(s, k1, t, r, sigma)
-        price2 = models.call_price(s, k2, t, r, sigma)
+        price1 = black_scholes.call_price(s, k1, t, r, sigma)
+        price2 = black_scholes.call_price(s, k2, t, r, sigma)
 
         if k1 < k2:
             assert price1 >= price2 - 1e-3, f"行使価格単調性違反: k1={k1}, k2={k2}"
@@ -119,8 +119,8 @@ class TestPriceProperties:
         """デルタの範囲: 0 <= ΔC/ΔS <= 1."""
         assume(abs(s1 - s2) > 0.01)  # 有意な差
 
-        price1 = models.call_price(s1, k, t, r, sigma)
-        price2 = models.call_price(s2, k, t, r, sigma)
+        price1 = black_scholes.call_price(s1, k, t, r, sigma)
+        price2 = black_scholes.call_price(s2, k, t, r, sigma)
 
         delta_approx = (price2 - price1) / (s2 - s1)
 
@@ -142,9 +142,9 @@ class TestPriceProperties:
         s_mid = s
         s_high = s * 1.1
 
-        price_low = models.call_price(s_low, k, t, r, sigma)
-        price_mid = models.call_price(s_mid, k, t, r, sigma)
-        price_high = models.call_price(s_high, k, t, r, sigma)
+        price_low = black_scholes.call_price(s_low, k, t, r, sigma)
+        price_mid = black_scholes.call_price(s_mid, k, t, r, sigma)
+        price_high = black_scholes.call_price(s_high, k, t, r, sigma)
 
         # 凸性条件
         interpolated = (price_low + price_high) / 2
@@ -163,8 +163,8 @@ class TestPriceProperties:
         """金利に対する単調性: r1 < r2 => C(r1) <= C(r2)."""
         assume(r1 != r2)
 
-        price1 = models.call_price(s, k, t, r1, sigma)
-        price2 = models.call_price(s, k, t, r2, sigma)
+        price1 = black_scholes.call_price(s, k, t, r1, sigma)
+        price2 = black_scholes.call_price(s, k, t, r2, sigma)
 
         if r1 < r2:
             # コールオプションは金利に対して増加
@@ -190,11 +190,11 @@ class TestBatchProperties:
         spots_array = np.array(spots)
 
         # バッチ処理
-        batch_prices = models.call_price_batch(spots_array, k, t, r, sigma)
+        batch_prices = black_scholes.call_price_batch(spots_array, k, t, r, sigma)
 
         # 個別処理との比較
         for i, spot in enumerate(spots):
-            single_price = models.call_price(spot, k, t, r, sigma)
+            single_price = black_scholes.call_price(spot, k, t, r, sigma)
             assert abs(batch_prices[i] - single_price) < 1e-3, f"バッチと個別の不一致: {i}"
 
     @given(
@@ -222,7 +222,7 @@ class TestBatchProperties:
 
         # 昇順のスポット価格
         spots = np.linspace(s_min, s_max, n)
-        prices = models.call_price_batch(spots, k, t, r, sigmas=0.2)
+        prices = black_scholes.call_price_batch(spots, k, t, r, sigmas=0.2)
 
         # 価格は行使価格に対して単調
         for i in range(1, len(prices)):
@@ -245,7 +245,7 @@ class TestSpecialCases:
         """ATMオプションの近似式との比較."""
         s = k * np.exp(r * t)  # Forward ATM
 
-        price = models.call_price(s, k, t, r, sigma)
+        price = black_scholes.call_price(s, k, t, r, sigma)
 
         # ATM近似: 約 S * sigma * sqrt(T/(2π))
         atm_approx = s * sigma * np.sqrt(t / (2 * np.pi))
@@ -266,7 +266,7 @@ class TestSpecialCases:
         """Deep OTMでゼロへの収束."""
         s = k * s_ratio  # Deep OTM
 
-        price = models.call_price(s, k, t, r, sigma)
+        price = black_scholes.call_price(s, k, t, r, sigma)
 
         # Deep OTMは実質的にゼロ
         assert price < 0.01, f"Deep OTM価格が高すぎる: {price}"
@@ -283,7 +283,7 @@ class TestSpecialCases:
         """Deep ITMで本質的価値への収束."""
         s = k * s_ratio  # Deep ITM
 
-        price = models.call_price(s, k, t, r, sigma)
+        price = black_scholes.call_price(s, k, t, r, sigma)
 
         # Deep ITMは本質的価値に収束
         intrinsic = s - k * np.exp(-r * t)
@@ -308,26 +308,26 @@ class TestNumericalStability:
         # 入力値の妥当性チェック
         if s < 0.01 or s > 2147483648:
             with pytest.raises(ValueError):
-                models.call_price(s, k, t, r, sigma)
+                black_scholes.call_price(s, k, t, r, sigma)
             return
 
         if k < 0.01 or k > 2147483648:
             with pytest.raises(ValueError):
-                models.call_price(s, k, t, r, sigma)
+                black_scholes.call_price(s, k, t, r, sigma)
             return
 
         if t < 0.001 or t > 100:
             with pytest.raises(ValueError):
-                models.call_price(s, k, t, r, sigma)
+                black_scholes.call_price(s, k, t, r, sigma)
             return
 
         if sigma < 0.005 or sigma > 10:
             with pytest.raises(ValueError):
-                models.call_price(s, k, t, r, sigma)
+                black_scholes.call_price(s, k, t, r, sigma)
             return
 
         # 有効な範囲内なら計算可能
-        price = models.call_price(s, k, t, r, sigma)
+        price = black_scholes.call_price(s, k, t, r, sigma)
         assert np.isfinite(price), f"無限大またはNaN: S={s}, K={k}"
         assert price >= 0, f"負の価格: {price}"
 
@@ -342,14 +342,14 @@ class TestNumericalStability:
     def test_scale_invariance(self, scale: float, k: float, t: float, r: float, sigma: float) -> None:
         """スケール不変性のテスト."""
         # 基準価格
-        base_price = models.call_price(100.0, k, t, r, sigma)
+        base_price = black_scholes.call_price(100.0, k, t, r, sigma)
 
         # スケール後
         scaled_s = 100.0 * scale
         scaled_k = k * scale
 
         # スケール後の価格
-        scaled_price = models.call_price(scaled_s, scaled_k, t, r, sigma)
+        scaled_price = black_scholes.call_price(scaled_s, scaled_k, t, r, sigma)
 
         # 価格もスケール
         expected_price = base_price * scale
