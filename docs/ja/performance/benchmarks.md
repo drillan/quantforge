@@ -23,7 +23,7 @@ QuantForgeの詳細なパフォーマンス測定結果です。
 #### 単一IV計算
 | 実装方式 | 実測時間 | vs 最速(QF) | vs 最遅(Brentq) |
 |---------|----------|------------|---------------|
-| **QuantForge** (Rust + PyO3) | 1.5 μs | - | 472倍速い |
+| **QuantForge** (Rust) | 1.5 μs | - | 472倍速い |
 | **Pure Python** (Newton-Raphson + math) | 32.9 μs | 22倍遅い | 22倍速い |
 | **NumPy+SciPy** (optimize.brentq) | 707.3 μs | 472倍遅い | - |
 
@@ -79,7 +79,7 @@ QuantForgeの詳細なパフォーマンス測定結果です。
 #### 単一計算
 | 実装方式 | 実測時間 | vs 最速(QF) | vs 最遅(NumPy+SciPy) |
 |---------|----------|------------|-------------------|
-| **QuantForge** (Rust + PyO3) | 1.40 μs | - | 55.6倍速い |
+| **QuantForge** (Rust) | 1.40 μs | - | 55.6倍速い |
 | **Pure Python** (math.erf) | 2.37 μs | 1.7倍遅い | 32.8倍速い |
 | **NumPy+SciPy** (stats.norm.cdf) | 77.74 μs | 55.6倍遅い | - |
 
@@ -127,7 +127,7 @@ QuantForgeの詳細なパフォーマンス測定結果です。
 
 ### FFI（Foreign Function Interface）オーバーヘッド
 
-FFIは、PythonからRust関数を呼び出す際のデータ変換・転送コストです。PyO3を使用してPythonとRust間でデータをやり取りする際に発生します。
+FFIは、PythonからRust関数を呼び出す際のデータ変換・転送コストです。QuantForgeではCore層とBindings層を分離し、Bindings層でPyO3を使用してPythonとRust間のデータを効率的にやり取りしています。
 
 #### オーバーヘッドの内訳
 - **データ変換**: Python オブジェクト ↔ Rust 型の相互変換

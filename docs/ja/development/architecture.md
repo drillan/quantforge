@@ -11,15 +11,18 @@ graph TB
         NP[NumPy Interface]
     end
     
-    subgraph "Binding Layer"
+    subgraph "Bindings Layer (bindings/python)"
         PYO3[PyO3 Bindings]
         MAT[Maturin Build]
+        CONV[Array Converters]
     end
     
-    subgraph "Rust Core"
+    subgraph "Core Layer (core/)"
         MODELS[Price Models]
+        TRAITS[OptionModel Trait]
         PARALLEL[Parallel Executor]
         MATH[Math Functions]
+        ERROR[Error Handling]
     end
     
     subgraph "Hardware"
@@ -28,8 +31,10 @@ graph TB
     end
     
     PY --> PYO3
-    NP --> PYO3
-    PYO3 --> MODELS
+    NP --> CONV
+    CONV --> PYO3
+    PYO3 --> TRAITS
+    TRAITS --> MODELS
     MODELS --> PARALLEL
     MODELS --> MATH
     PARALLEL --> CPU
@@ -42,47 +47,69 @@ graph TB
 
 ```{code-block} python
 :name: architecture-code-quantforge/__init__.py
-:caption: quantforge/__init__.py
+:caption: python/quantforge/__init__.py
 
-# quantforge/__init__.py
-class QuantForgeAPI:
-    """Pythonユーザー向けインターフェース"""
-    
-    def __init__(self):
-        self._rust_core = _quantforge_rust
-        self._config = Config()
-    
-    def calculate(self, spots, strikes, rate, vol, time, **kwargs):
-        # 入力検証
-        validated = self._validate_inputs(spots, strikes, rate, vol, time)
-        
-        # Rust関数呼び出し
-        return self._rust_core.calculate_batch(validated)
+# python/quantforge/__init__.py
+from . import quantforge  # Rust bindings via Maturin
+from . import black_scholes
+from . import black76
+from . import merton
+
+# Pythonユーザー向けのシンプルなAPI
+__all__ = [
+    'black_scholes',
+    'black76', 
+    'merton',
+]
 ```
 
-### Rust コア層
+### Core層（言語非依存）
 
 ```{code-block} rust
-:name: architecture-code-src/lib.rs
-:caption: src/lib.rs
+:name: architecture-code-core/src/lib.rs
+:caption: core/src/lib.rs
 
-// src/lib.rs
-pub struct QuantForgeCore {
-    parallel_executor: ParallelExecutor,
-    memory_pool: MemoryPool,
+// core/src/lib.rs - PyO3依存なし
+pub mod models;
+pub mod traits;
+pub mod math;
+pub mod error;
+
+// 言語非依存のトレイト定義
+pub trait OptionModel {
+    fn call_price(&self, s: f64, k: f64, t: f64, r: f64, sigma: f64) 
+        -> QuantForgeResult<f64>;
+    fn put_price(&self, s: f64, k: f64, t: f64, r: f64, sigma: f64) 
+        -> QuantForgeResult<f64>;
+    fn greeks(&self, s: f64, k: f64, t: f64, r: f64, sigma: f64, is_call: bool) 
+        -> QuantForgeResult<Greeks>;
+    fn implied_volatility(&self, price: f64, s: f64, k: f64, t: f64, r: f64, is_call: bool)
+        -> QuantForgeResult<f64>;
+}
+```
+
+### Bindings層（PyO3）
+
+```{code-block} rust
+:name: architecture-code-bindings/python/src/lib.rs
+:caption: bindings/python/src/lib.rs
+
+// bindings/python/src/lib.rs - PyO3依存あり
+use pyo3::prelude::*;
+use quantforge_core::models::black_scholes::BlackScholes;
+use quantforge_core::traits::OptionModel;
+
+#[pyfunction]
+fn call_price(s: f64, k: f64, t: f64, r: f64, sigma: f64) -> PyResult<f64> {
+    let model = BlackScholes;
+    model.call_price(s, k, t, r, sigma)
+        .map_err(to_py_err)
 }
 
-impl QuantForgeCore {
-    pub fn calculate(&self, params: &CalculationParams) -> Result<Vec<f64>> {
-        // 戦略選択
-        let strategy = self.select_strategy(params.size());
-        
-        match strategy {
-            Strategy::Sequential => self.calculate_sequential(params),
-            Strategy::Parallel => self.parallel_executor.calculate(params),
-            Strategy::Hybrid => self.calculate_hybrid(params),
-        }
-    }
+#[pymodule]
+fn quantforge(m: &Bound<'_, PyModule>) -> PyResult<()> {
+    m.add_function(wrap_pyfunction!(call_price, m)?)?;
+    Ok(())
 }
 ```
 

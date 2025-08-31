@@ -7,6 +7,8 @@
 [![Python Version](https://img.shields.io/badge/python-3.12%2B-blue)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Rust](https://img.shields.io/badge/rust-1.88%2B-orange)](https://www.rust-lang.org/)
+[![codecov](https://codecov.io/gh/yourusername/quantforge/branch/main/graph/badge.svg)](https://codecov.io/gh/yourusername/quantforge)
+[![Test Coverage](https://img.shields.io/badge/coverage-82.45%25-green)](./target/llvm-cov-html/html)
 
 **Option Pricing Library with Rust Performance — Up to 472x Faster than NumPy+SciPy**
 

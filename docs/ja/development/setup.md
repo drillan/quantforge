@@ -55,18 +55,23 @@ uv pip install -r requirements-dev.txt
 
 ```
 quantforge/
-├── Cargo.toml          # Rust依存関係
+├── Cargo.toml          # ワークスペース設定
 ├── pyproject.toml      # Pythonパッケージ設定
-├── src/
-│   ├── lib.rs         # Rustライブラリエントリ
-│   ├── models/        # 価格モデル実装
-│   ├── parallel/      # 並列処理
-│   └── python.rs      # PyO3バインディング
+├── core/               # 言語非依存のCore層
+│   ├── Cargo.toml     # Coreクレート設定
+│   ├── src/
+│   │   ├── lib.rs     # Coreライブラリエントリ
+│   │   ├── models/    # 価格モデル実装
+│   │   ├── math/      # 数学関数
+│   │   └── traits/    # 共通トレイト
+│   └── tests/         # Coreユニットテスト
+├── bindings/
+│   └── python/        # Python用バインディング層
+│       ├── Cargo.toml # Bindingsクレート設定
+│       └── src/       # PyO3バインディング実装
 ├── python/
 │   └── quantforge/    # Pythonパッケージ
-└── tests/
-    ├── rust/          # Rustテスト
-    └── python/        # Pythonテスト
+└── tests/             # 統合テスト
 ```
 
 ## ビルド手順

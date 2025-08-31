@@ -317,34 +317,36 @@ criterion_group!(benches, benchmark_black_scholes);
 criterion_main!(benches);
 ```
 
-## PyO3バインディング
+## Bindings層（PyO3）
 
-### Python関数エクスポート
+### Core層とBindings層の分離
 
 ```rust
+// core/src/models/black_scholes.rs - PyO3依存なし
+pub struct BlackScholes;
+
+impl OptionModel for BlackScholes {
+    fn call_price(&self, s: f64, k: f64, t: f64, r: f64, sigma: f64) 
+        -> QuantForgeResult<f64> {
+        // 純粋なRust実装
+    }
+}
+
+// bindings/python/src/models/black_scholes.rs - PyO3依存あり
 use pyo3::prelude::*;
-use numpy::{PyArray1, PyReadonlyArray1};
+use quantforge_core::models::black_scholes::BlackScholes;
+use quantforge_core::traits::OptionModel;
 
 #[pyfunction]
-fn py_black_scholes_call(
-    spots: PyReadonlyArray1<f64>,
-    strikes: PyReadonlyArray1<f64>,
-    rate: f64,
-    vol: f64,
-    time: f64,
-) -> PyResult<Py<PyArray1<f64>>> {
-    let spots = spots.as_array();
-    let strikes = strikes.as_array();
-    
-    Python::with_gil(|py| {
-        let results = calculate(spots, strikes, rate, vol, time);
-        Ok(PyArray1::from_vec(py, results).to_owned())
-    })
+fn call_price(s: f64, k: f64, t: f64, r: f64, sigma: f64) -> PyResult<f64> {
+    let model = BlackScholes;
+    model.call_price(s, k, t, r, sigma)
+        .map_err(to_py_err)
 }
 
 #[pymodule]
-fn quantforge(_py: Python, m: &PyModule) -> PyResult<()> {
-    m.add_function(wrap_pyfunction!(py_black_scholes_call, m)?)?;
+fn quantforge(m: &Bound<'_, PyModule>) -> PyResult<()> {
+    m.add_function(wrap_pyfunction!(call_price, m)?)?;
     Ok(())
 }
 ```
