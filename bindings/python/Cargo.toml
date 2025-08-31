@@ -1,0 +1,21 @@
+[package]
+name = "quantforge-python"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+
+[lib]
+name = "quantforge"
+crate-type = ["cdylib"]
+
+[dependencies]
+quantforge-core = { path = "../../core" }
+pyo3.workspace = true
+numpy.workspace = true
+ndarray.workspace = true
+thiserror.workspace = true
+rayon.workspace = true
+
+[build-dependencies]
+pyo3-build-config = "0.22"
