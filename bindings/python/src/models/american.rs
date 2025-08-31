@@ -1,9 +1,8 @@
-//! American model Python bindings
+//! American option model Python bindings
 
 use numpy::PyArray1;
 use pyo3::prelude::*;
 use pyo3::types::PyDict;
-use quantforge_core::constants::{CHUNK_SIZE_L1, PARALLEL_THRESHOLD_SMALL};
 use quantforge_core::models::american::American;
 use quantforge_core::traits::Greeks;
 
@@ -60,8 +59,7 @@ fn implied_volatility(
 
 /// Calculate Greeks for American model
 #[pyfunction]
-#[pyo3(signature = (s, k, t, r, q, sigma, is_call))]
-#[allow(clippy::too_many_arguments)]
+#[pyo3(signature = (s, k, t, r, q, sigma, is_call=true))]
 fn greeks<'py>(
     py: Python<'py>,
     s: f64,
@@ -99,33 +97,51 @@ fn call_price_batch<'py>(
     dividend_yields: ArrayLike<'py>,
     sigmas: ArrayLike<'py>,
 ) -> PyResult<Bound<'py, PyArray1<f64>>> {
-    // Create broadcast iterator (while holding GIL)
+    // Create broadcast iterator and collect input data (while holding GIL)
     let inputs = vec![&spots, &strikes, &times, &rates, &dividend_yields, &sigmas];
-    let iter =
-        BroadcastIterator::new(inputs).map_err(pyo3::exceptions::PyValueError::new_err)?;
+    let iter = BroadcastIterator::new(inputs).map_err(pyo3::exceptions::PyValueError::new_err)?;
 
-    // Release GIL and use zero-copy computation
+    // Collect all input combinations
+    let input_data: Vec<Vec<f64>> = iter.collect();
+    let len = input_data.len();
+
+    // Prepare data arrays
+    let mut spots_vec = Vec::with_capacity(len);
+    let mut strikes_vec = Vec::with_capacity(len);
+    let mut times_vec = Vec::with_capacity(len);
+    let mut rates_vec = Vec::with_capacity(len);
+    let mut dividend_yields_vec = Vec::with_capacity(len);
+    let mut sigmas_vec = Vec::with_capacity(len);
+
+    for values in input_data {
+        spots_vec.push(values[0]);
+        strikes_vec.push(values[1]);
+        times_vec.push(values[2]);
+        rates_vec.push(values[3]);
+        dividend_yields_vec.push(values[4]);
+        sigmas_vec.push(values[5]);
+    }
+
+    // Release GIL for computation
     let results = py.allow_threads(move || {
-        if iter.len() < PARALLEL_THRESHOLD_SMALL {
-            // Sequential processing for small data
-            iter.compute_with(|values| {
-                American::call_price_american(
-                    values[0], values[1], values[2], values[3], values[4], values[5],
-                )
-                .unwrap_or(f64::NAN)
-            })
-        } else {
-            // Parallel processing for large data
-            iter.compute_parallel_with(
-                |values| {
-                    American::call_price_american(
-                        values[0], values[1], values[2], values[3], values[4], values[5],
-                    )
-                    .unwrap_or(f64::NAN)
-                },
-                CHUNK_SIZE_L1,
+        // For now, use sequential processing for American options
+        // TODO: Implement optimized batch processing
+        let mut results = Vec::with_capacity(len);
+
+        for i in 0..len {
+            let price = American::call_price_american(
+                spots_vec[i],
+                strikes_vec[i],
+                times_vec[i],
+                rates_vec[i],
+                dividend_yields_vec[i],
+                sigmas_vec[i],
             )
+            .unwrap_or(f64::NAN);
+            results.push(price);
         }
+
+        results
     });
 
     Ok(PyArray1::from_vec_bound(py, results))
@@ -143,41 +159,59 @@ fn put_price_batch<'py>(
     dividend_yields: ArrayLike<'py>,
     sigmas: ArrayLike<'py>,
 ) -> PyResult<Bound<'py, PyArray1<f64>>> {
-    // Create broadcast iterator (while holding GIL)
+    // Create broadcast iterator and collect input data (while holding GIL)
     let inputs = vec![&spots, &strikes, &times, &rates, &dividend_yields, &sigmas];
-    let iter =
-        BroadcastIterator::new(inputs).map_err(pyo3::exceptions::PyValueError::new_err)?;
+    let iter = BroadcastIterator::new(inputs).map_err(pyo3::exceptions::PyValueError::new_err)?;
 
-    // Release GIL and use zero-copy computation
+    // Collect all input combinations
+    let input_data: Vec<Vec<f64>> = iter.collect();
+    let len = input_data.len();
+
+    // Prepare data arrays
+    let mut spots_vec = Vec::with_capacity(len);
+    let mut strikes_vec = Vec::with_capacity(len);
+    let mut times_vec = Vec::with_capacity(len);
+    let mut rates_vec = Vec::with_capacity(len);
+    let mut dividend_yields_vec = Vec::with_capacity(len);
+    let mut sigmas_vec = Vec::with_capacity(len);
+
+    for values in input_data {
+        spots_vec.push(values[0]);
+        strikes_vec.push(values[1]);
+        times_vec.push(values[2]);
+        rates_vec.push(values[3]);
+        dividend_yields_vec.push(values[4]);
+        sigmas_vec.push(values[5]);
+    }
+
+    // Release GIL for computation
     let results = py.allow_threads(move || {
-        if iter.len() < PARALLEL_THRESHOLD_SMALL {
-            // Sequential processing for small data
-            iter.compute_with(|values| {
-                American::put_price_american(
-                    values[0], values[1], values[2], values[3], values[4], values[5],
-                )
-                .unwrap_or(f64::NAN)
-            })
-        } else {
-            // Parallel processing for large data
-            iter.compute_parallel_with(
-                |values| {
-                    American::put_price_american(
-                        values[0], values[1], values[2], values[3], values[4], values[5],
-                    )
-                    .unwrap_or(f64::NAN)
-                },
-                CHUNK_SIZE_L1,
+        // For now, use sequential processing for American options
+        // TODO: Implement optimized batch processing
+        let mut results = Vec::with_capacity(len);
+
+        for i in 0..len {
+            let price = American::put_price_american(
+                spots_vec[i],
+                strikes_vec[i],
+                times_vec[i],
+                rates_vec[i],
+                dividend_yields_vec[i],
+                sigmas_vec[i],
             )
+            .unwrap_or(f64::NAN);
+            results.push(price);
         }
+
+        results
     });
 
     Ok(PyArray1::from_vec_bound(py, results))
 }
 
-/// Batch calculation of implied volatilities
+/// Batch calculation of implied volatility
 #[pyfunction]
-#[pyo3(signature = (prices, spots, strikes, times, rates, dividend_yields, is_call))]
+#[pyo3(signature = (prices, spots, strikes, times, rates, dividend_yields, is_calls))]
 fn implied_volatility_batch<'py>(
     py: Python<'py>,
     prices: ArrayLike<'py>,
@@ -186,35 +220,62 @@ fn implied_volatility_batch<'py>(
     times: ArrayLike<'py>,
     rates: ArrayLike<'py>,
     dividend_yields: ArrayLike<'py>,
-    is_call: bool,
+    is_calls: ArrayLike<'py>,
 ) -> PyResult<Bound<'py, PyArray1<f64>>> {
-    // Create broadcast iterator (while holding GIL)
-    let inputs = vec![&prices, &spots, &strikes, &times, &rates, &dividend_yields];
-    let iter =
-        BroadcastIterator::new(inputs).map_err(pyo3::exceptions::PyValueError::new_err)?;
+    // Create broadcast iterator and collect input data (while holding GIL)
+    let inputs = vec![
+        &prices,
+        &spots,
+        &strikes,
+        &times,
+        &rates,
+        &dividend_yields,
+        &is_calls,
+    ];
+    let iter = BroadcastIterator::new(inputs).map_err(pyo3::exceptions::PyValueError::new_err)?;
 
-    // Release GIL and use zero-copy computation
+    // Collect all input combinations
+    let input_data: Vec<Vec<f64>> = iter.collect();
+    let len = input_data.len();
+
+    // Prepare data arrays
+    let mut prices_vec = Vec::with_capacity(len);
+    let mut spots_vec = Vec::with_capacity(len);
+    let mut strikes_vec = Vec::with_capacity(len);
+    let mut times_vec = Vec::with_capacity(len);
+    let mut rates_vec = Vec::with_capacity(len);
+    let mut dividend_yields_vec = Vec::with_capacity(len);
+    let mut is_calls_vec = Vec::with_capacity(len);
+
+    for values in input_data {
+        prices_vec.push(values[0]);
+        spots_vec.push(values[1]);
+        strikes_vec.push(values[2]);
+        times_vec.push(values[3]);
+        rates_vec.push(values[4]);
+        dividend_yields_vec.push(values[5]);
+        is_calls_vec.push(values[6] != 0.0);
+    }
+
+    // Release GIL for computation
     let results = py.allow_threads(move || {
-        if iter.len() < PARALLEL_THRESHOLD_SMALL {
-            // Sequential processing for small data
-            iter.compute_with(|values| {
-                American::implied_volatility_american(
-                    values[0], values[1], values[2], values[3], values[4], values[5], is_call,
-                )
-                .unwrap_or(f64::NAN)
-            })
-        } else {
-            // Parallel processing for large data
-            iter.compute_parallel_with(
-                |values| {
-                    American::implied_volatility_american(
-                        values[0], values[1], values[2], values[3], values[4], values[5], is_call,
-                    )
-                    .unwrap_or(f64::NAN)
-                },
-                CHUNK_SIZE_L1,
+        let mut results = Vec::with_capacity(len);
+
+        for i in 0..len {
+            let iv = American::implied_volatility_american(
+                prices_vec[i],
+                spots_vec[i],
+                strikes_vec[i],
+                times_vec[i],
+                rates_vec[i],
+                dividend_yields_vec[i],
+                is_calls_vec[i],
             )
+            .unwrap_or(f64::NAN);
+            results.push(iv);
         }
+
+        results
     });
 
     Ok(PyArray1::from_vec_bound(py, results))
@@ -222,8 +283,7 @@ fn implied_volatility_batch<'py>(
 
 /// Batch calculation of Greeks
 #[pyfunction]
-#[pyo3(signature = (spots, strikes, times, rates, dividend_yields, sigmas, is_call))]
-#[allow(clippy::too_many_arguments)]
+#[pyo3(signature = (spots, strikes, times, rates, dividend_yields, sigmas, is_calls=None))]
 fn greeks_batch<'py>(
     py: Python<'py>,
     spots: ArrayLike<'py>,
@@ -232,119 +292,103 @@ fn greeks_batch<'py>(
     rates: ArrayLike<'py>,
     dividend_yields: ArrayLike<'py>,
     sigmas: ArrayLike<'py>,
-    is_call: bool,
+    is_calls: Option<ArrayLike<'py>>,
 ) -> PyResult<Bound<'py, PyDict>> {
-    // Create broadcast iterator (while holding GIL)
-    let inputs = vec![&spots, &strikes, &times, &rates, &dividend_yields, &sigmas];
-    let iter =
-        BroadcastIterator::new(inputs).map_err(pyo3::exceptions::PyValueError::new_err)?;
-    let len = iter.len();
+    // Convert is_calls to bool vec (while holding GIL), default to all Calls
+    let is_calls_vec: Vec<bool> = if let Some(is_calls_array) = is_calls {
+        is_calls_array
+            .to_vec()?
+            .into_iter()
+            .map(|v| v != 0.0)
+            .collect()
+    } else {
+        vec![true; 1] // Will be broadcast to match input size
+    };
 
-    // Release GIL and compute Greeks
-    let (deltas, gammas, vegas, thetas, rhos, dividend_rhos) = py.allow_threads(move || {
-        let greeks_results = if len < PARALLEL_THRESHOLD_SMALL {
-            // Sequential processing for small data
-            let mut results = Vec::with_capacity(len);
-            let mut param_buffer = [0.0; 6];
+    // Create broadcast iterator and collect input data
+    let inputs = vec![&spots, &strikes, &times, &rates, &dividend_yields, &sigmas];
+    let iter = BroadcastIterator::new(inputs).map_err(pyo3::exceptions::PyValueError::new_err)?;
+
+    // Collect all input combinations
+    let input_data: Vec<Vec<f64>> = iter.collect();
+    let len = input_data.len();
+
+    // Prepare data arrays
+    let mut spots_vec = Vec::with_capacity(len);
+    let mut strikes_vec = Vec::with_capacity(len);
+    let mut times_vec = Vec::with_capacity(len);
+    let mut rates_vec = Vec::with_capacity(len);
+    let mut dividend_yields_vec = Vec::with_capacity(len);
+    let mut sigmas_vec = Vec::with_capacity(len);
+
+    for values in input_data {
+        spots_vec.push(values[0]);
+        strikes_vec.push(values[1]);
+        times_vec.push(values[2]);
+        rates_vec.push(values[3]);
+        dividend_yields_vec.push(values[4]);
+        sigmas_vec.push(values[5]);
+    }
+
+    // Release GIL for computation
+    let (delta_vec, gamma_vec, vega_vec, theta_vec, rho_vec, dividend_rho_vec) =
+        py.allow_threads(move || {
+            let mut delta_vec = Vec::with_capacity(len);
+            let mut gamma_vec = Vec::with_capacity(len);
+            let mut vega_vec = Vec::with_capacity(len);
+            let mut theta_vec = Vec::with_capacity(len);
+            let mut rho_vec = Vec::with_capacity(len);
+            let mut dividend_rho_vec = Vec::with_capacity(len);
 
             for i in 0..len {
-                // Get parameters
-                for (j, arr) in iter.arrays.iter().enumerate() {
-                    param_buffer[j] = arr[i];
-                }
+                let is_call = is_calls_vec.get(i).copied().unwrap_or(true);
+                let greeks = American::greeks_american(
+                    spots_vec[i],
+                    strikes_vec[i],
+                    times_vec[i],
+                    rates_vec[i],
+                    dividend_yields_vec[i],
+                    sigmas_vec[i],
+                    is_call,
+                )
+                .unwrap_or(Greeks {
+                    delta: f64::NAN,
+                    gamma: f64::NAN,
+                    vega: f64::NAN,
+                    theta: f64::NAN,
+                    rho: f64::NAN,
+                    dividend_rho: Some(f64::NAN),
+                });
 
-                results.push(
-                    American::greeks_american(
-                        param_buffer[0],
-                        param_buffer[1],
-                        param_buffer[2],
-                        param_buffer[3],
-                        param_buffer[4],
-                        param_buffer[5],
-                        is_call,
-                    )
-                    .unwrap_or(Greeks {
-                        delta: f64::NAN,
-                        gamma: f64::NAN,
-                        vega: f64::NAN,
-                        theta: f64::NAN,
-                        rho: f64::NAN,
-                        dividend_rho: Some(f64::NAN),
-                    }),
-                );
+                delta_vec.push(greeks.delta);
+                gamma_vec.push(greeks.gamma);
+                vega_vec.push(greeks.vega);
+                theta_vec.push(greeks.theta);
+                rho_vec.push(greeks.rho);
+                dividend_rho_vec.push(greeks.dividend_rho.unwrap_or(f64::NAN));
             }
-            results
-        } else {
-            // Parallel processing for large data
-            use rayon::prelude::*;
 
-            (0..len)
-                .into_par_iter()
-                .chunks(CHUNK_SIZE_L1)
-                .flat_map(|chunk| {
-                    let mut chunk_results = Vec::with_capacity(chunk.len());
-                    let mut param_buffer = [0.0; 6];
-
-                    for i in chunk {
-                        // Get parameters
-                        for (j, arr) in iter.arrays.iter().enumerate() {
-                            param_buffer[j] = arr[i];
-                        }
-
-                        chunk_results.push(
-                            American::greeks_american(
-                                param_buffer[0],
-                                param_buffer[1],
-                                param_buffer[2],
-                                param_buffer[3],
-                                param_buffer[4],
-                                param_buffer[5],
-                                is_call,
-                            )
-                            .unwrap_or(Greeks {
-                                delta: f64::NAN,
-                                gamma: f64::NAN,
-                                vega: f64::NAN,
-                                theta: f64::NAN,
-                                rho: f64::NAN,
-                                dividend_rho: Some(f64::NAN),
-                            }),
-                        );
-                    }
-
-                    chunk_results
-                })
-                .collect()
-        };
-
-        // Extract individual Greeks vectors
-        let mut deltas = Vec::with_capacity(greeks_results.len());
-        let mut gammas = Vec::with_capacity(greeks_results.len());
-        let mut vegas = Vec::with_capacity(greeks_results.len());
-        let mut thetas = Vec::with_capacity(greeks_results.len());
-        let mut rhos = Vec::with_capacity(greeks_results.len());
-        let mut dividend_rhos = Vec::with_capacity(greeks_results.len());
-
-        for greeks in greeks_results {
-            deltas.push(greeks.delta);
-            gammas.push(greeks.gamma);
-            vegas.push(greeks.vega);
-            thetas.push(greeks.theta);
-            rhos.push(greeks.rho);
-            dividend_rhos.push(greeks.dividend_rho.unwrap_or(0.0));
-        }
-
-        (deltas, gammas, vegas, thetas, rhos, dividend_rhos)
-    });
+            (
+                delta_vec,
+                gamma_vec,
+                vega_vec,
+                theta_vec,
+                rho_vec,
+                dividend_rho_vec,
+            )
+        });
 
     // Create output dictionary
     let dict = PyDict::new_bound(py);
-    dict.set_item("delta", PyArray1::from_vec_bound(py, deltas))?;
-    dict.set_item("gamma", PyArray1::from_vec_bound(py, gammas))?;
-    dict.set_item("vega", PyArray1::from_vec_bound(py, vegas))?;
-    dict.set_item("theta", PyArray1::from_vec_bound(py, thetas))?;
-    dict.set_item("rho", PyArray1::from_vec_bound(py, rhos))?;
-    dict.set_item("dividend_rho", PyArray1::from_vec_bound(py, dividend_rhos))?;
+    dict.set_item("delta", PyArray1::from_vec_bound(py, delta_vec))?;
+    dict.set_item("gamma", PyArray1::from_vec_bound(py, gamma_vec))?;
+    dict.set_item("vega", PyArray1::from_vec_bound(py, vega_vec))?;
+    dict.set_item("theta", PyArray1::from_vec_bound(py, theta_vec))?;
+    dict.set_item("rho", PyArray1::from_vec_bound(py, rho_vec))?;
+    dict.set_item(
+        "dividend_rho",
+        PyArray1::from_vec_bound(py, dividend_rho_vec),
+    )?;
 
     Ok(dict)
 }

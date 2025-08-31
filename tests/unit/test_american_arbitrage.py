@@ -1,7 +1,11 @@
 """Test no-arbitrage conditions for American options."""
 
 import pytest
-from quantforge.models import american, merton
+import quantforge as qf
+
+# Direct access to modules
+american = qf.american
+merton = qf.merton
 
 
 class TestAmericanNoArbitrage:

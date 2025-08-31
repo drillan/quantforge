@@ -51,7 +51,7 @@ pub fn american_call_price(params: &AmericanParams) -> QuantForgeResult<f64> {
     }
 
     let result = bjerksund_stensland_2002(params, true);
-    
+
     // Ensure result is at least intrinsic value
     let intrinsic = (params.s - params.k).max(0.0);
     if result.is_nan() || result.is_infinite() {
@@ -59,7 +59,7 @@ pub fn american_call_price(params: &AmericanParams) -> QuantForgeResult<f64> {
         let euro_price = european_call_price(params);
         return Ok(euro_price.max(intrinsic));
     }
-    
+
     // Apply no-arbitrage bound: American >= max(intrinsic, European)
     let euro_price = european_call_price(params);
     Ok(result.max(intrinsic).max(euro_price))
@@ -95,17 +95,17 @@ pub fn american_put_price(params: &AmericanParams) -> QuantForgeResult<f64> {
     };
 
     let result = bjerksund_stensland_2002(&transformed, false);
-    
+
     // Calculate intrinsic value first (needed in multiple places)
     let intrinsic = (params.k - params.s).max(0.0);
-    
+
     // Ensure non-negative result and at least intrinsic value
     if result.is_nan() || result.is_infinite() {
-        // Fall back to European value for numerical stability  
+        // Fall back to European value for numerical stability
         let euro_price = european_put_price(params);
         return Ok(euro_price.max(intrinsic));
     }
-    
+
     // Apply no-arbitrage bound: American >= max(intrinsic, European)
     let euro_price = european_put_price(params);
     Ok(result.max(intrinsic).max(euro_price))
@@ -143,12 +143,12 @@ fn bjerksund_stensland_2002(params: &AmericanParams, _is_original_call: bool) ->
         - phi(params.s, params.t, 1.0, params.k, i, params)
         - params.k * phi(params.s, params.t, 0.0, i, i, params)
         + params.k * phi(params.s, params.t, 0.0, params.k, i, params);
-    
+
     // Ensure result is not NaN and at least intrinsic value
     if result.is_nan() || result.is_infinite() {
         return 0.0;
     }
-    
+
     result.max(0.0)
 }
 

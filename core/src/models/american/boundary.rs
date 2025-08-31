@@ -1,13 +1,16 @@
 //! Early exercise boundary calculation for American options
 
+use super::pricing::AmericanParams;
 use crate::constants::BS2002_H_FACTOR;
 use crate::error::QuantForgeResult;
-use super::pricing::AmericanParams;
 
 /// Calculate the early exercise boundary for American options
 ///
 /// Returns the critical stock price at which early exercise becomes optimal
-pub fn calculate_exercise_boundary(params: &AmericanParams, is_call: bool) -> QuantForgeResult<f64> {
+pub fn calculate_exercise_boundary(
+    params: &AmericanParams,
+    is_call: bool,
+) -> QuantForgeResult<f64> {
     if is_call {
         calculate_call_boundary(params)
     } else {
@@ -53,7 +56,7 @@ fn calculate_call_boundary(params: &AmericanParams) -> QuantForgeResult<f64> {
 fn calculate_put_boundary(params: &AmericanParams) -> QuantForgeResult<f64> {
     // For puts, we use the put-call transformation
     // The boundary for a put is found by transforming the call boundary
-    
+
     // If time is very small, boundary approaches strike
     if params.t < 1e-10 {
         return Ok(params.k);
@@ -61,10 +64,10 @@ fn calculate_put_boundary(params: &AmericanParams) -> QuantForgeResult<f64> {
 
     // Transform parameters for put boundary calculation
     let transformed = AmericanParams {
-        s: params.k,    // Swap S and K
+        s: params.k, // Swap S and K
         k: params.s,
         t: params.t,
-        r: params.q,    // Swap r and q
+        r: params.q, // Swap r and q
         q: params.r,
         sigma: params.sigma,
     };
@@ -93,15 +96,18 @@ fn calculate_put_boundary(params: &AmericanParams) -> QuantForgeResult<f64> {
     // For a put, the boundary is typically expressed as the critical stock price
     // below which early exercise is optimal
     // Check for numerical stability
-    if transformed_boundary <= 0.0 || transformed_boundary.is_nan() || transformed_boundary.is_infinite() {
+    if transformed_boundary <= 0.0
+        || transformed_boundary.is_nan()
+        || transformed_boundary.is_infinite()
+    {
         return Ok(params.k); // Return strike as safe default
     }
-    
+
     let ratio = params.k * params.k / transformed_boundary;
     if ratio.is_nan() || ratio.is_infinite() || ratio < 0.0 {
         return Ok(params.k); // Return strike as safe default
     }
-    
+
     Ok(ratio)
 }
 
@@ -142,7 +148,7 @@ pub fn calculate_boundary_curve(
     is_call: bool,
 ) -> QuantForgeResult<Vec<(f64, f64)>> {
     let mut curve = Vec::with_capacity(num_points);
-    
+
     for i in 0..num_points {
         let t = params.t * (i as f64 + 1.0) / num_points as f64;
         let boundary = calculate_boundary_at_time(params, t, is_call)?;

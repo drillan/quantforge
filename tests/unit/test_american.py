@@ -2,7 +2,11 @@
 
 import math
 import pytest
-from quantforge.models import american, merton
+import quantforge as qf
+
+# Direct access to modules
+american = qf.american
+merton = qf.merton
 
 # Test tolerances
 THEORETICAL_TOLERANCE = 1e-3
@@ -186,7 +190,7 @@ class TestAmericanBatchOperations:
         dividend_yields = 0.02
         sigmas = 0.2
         
-        greeks = american.greeks_batch(spots, strikes, times, rates, dividend_yields, sigmas, is_call=True)
+        greeks = american.greeks_batch(spots, strikes, times, rates, dividend_yields, sigmas, is_calls=True)
         
         assert "delta" in greeks
         assert "gamma" in greeks
@@ -235,7 +239,7 @@ class TestAmericanImpliedVolatility:
         prices = american.call_price_batch(spots, 100.0, 1.0, 0.05, 0.02, target_vol)
         
         # Solve for implied volatilities
-        ivs = american.implied_volatility_batch(prices, spots, 100.0, 1.0, 0.05, 0.02, is_call=True)
+        ivs = american.implied_volatility_batch(prices, spots, 100.0, 1.0, 0.05, 0.02, is_calls=True)
         
         assert len(ivs) == 3
         assert all(abs(iv - target_vol) < 1e-3 for iv in ivs)

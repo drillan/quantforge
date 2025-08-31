@@ -1,11 +1,14 @@
 //! Greeks calculation for American options using numerical differentiation
 
+use super::pricing::{american_call_price, american_put_price, AmericanParams};
 use crate::error::QuantForgeResult;
 use crate::traits::Greeks;
-use super::pricing::{american_call_price, american_put_price, AmericanParams};
 
 /// Calculate Greeks for American options using finite difference methods
-pub fn calculate_american_greeks(params: &AmericanParams, is_call: bool) -> QuantForgeResult<Greeks> {
+pub fn calculate_american_greeks(
+    params: &AmericanParams,
+    is_call: bool,
+) -> QuantForgeResult<Greeks> {
     // Choose price function based on option type
     let price_fn = if is_call {
         american_call_price
@@ -50,7 +53,7 @@ fn calculate_delta(
     price_fn: fn(&AmericanParams) -> QuantForgeResult<f64>,
 ) -> QuantForgeResult<f64> {
     let h = params.s * 0.001; // 0.1% of spot price
-    
+
     let mut params_up = *params;
     params_up.s = params.s + h;
     let price_up = price_fn(&params_up)?;
@@ -68,7 +71,7 @@ fn calculate_gamma(
     price_fn: fn(&AmericanParams) -> QuantForgeResult<f64>,
 ) -> QuantForgeResult<f64> {
     let h = params.s * 0.001; // 0.1% of spot price
-    
+
     let base_price = price_fn(params)?;
 
     let mut params_up = *params;
@@ -88,7 +91,7 @@ fn calculate_vega(
     price_fn: fn(&AmericanParams) -> QuantForgeResult<f64>,
 ) -> QuantForgeResult<f64> {
     let h = 0.001; // 0.1% volatility change
-    
+
     let mut params_up = *params;
     params_up.sigma = params.sigma + h;
     let price_up = price_fn(&params_up)?;
@@ -108,10 +111,10 @@ fn calculate_theta(
     base_price: f64,
 ) -> QuantForgeResult<f64> {
     let h: f64 = 1.0 / 365.0; // One day
-    
+
     // For very short time to maturity, use smaller step
     let h_actual = h.min(params.t * 0.01);
-    
+
     let mut params_forward = *params;
     params_forward.t = (params.t - h_actual).max(0.0);
     let price_forward = price_fn(&params_forward)?;
@@ -126,7 +129,7 @@ fn calculate_rho(
     price_fn: fn(&AmericanParams) -> QuantForgeResult<f64>,
 ) -> QuantForgeResult<f64> {
     let h = 0.0001; // 1 basis point
-    
+
     let mut params_up = *params;
     params_up.r = params.r + h;
     let price_up = price_fn(&params_up)?;
@@ -145,7 +148,7 @@ fn calculate_dividend_rho(
     price_fn: fn(&AmericanParams) -> QuantForgeResult<f64>,
 ) -> QuantForgeResult<f64> {
     let h = 0.0001; // 1 basis point
-    
+
     let mut params_up = *params;
     params_up.q = params.q + h;
     let price_up = price_fn(&params_up)?;
