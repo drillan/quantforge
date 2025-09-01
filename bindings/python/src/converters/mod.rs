@@ -5,9 +5,11 @@ use pyo3::prelude::*;
 
 pub mod array;
 pub mod broadcast;
+pub mod broadcast_optimized;
 
 pub use array::ArrayLike;
-pub use broadcast::BroadcastIterator;
+// pub use broadcast::BroadcastIterator;  // Deprecated, use BroadcastIteratorOptimized
+pub use broadcast_optimized::BroadcastIteratorOptimized;
 
 /// Helper to validate and extract array data with zero-copy when possible
 #[allow(dead_code)]

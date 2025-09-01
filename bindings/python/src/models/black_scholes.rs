@@ -3,11 +3,11 @@
 use numpy::PyArray1;
 use pyo3::prelude::*;
 use pyo3::types::PyDict;
-use quantforge_core::constants::{CHUNK_SIZE_L1, PARALLEL_THRESHOLD_SMALL};
+use quantforge_core::constants::{CHUNK_SIZE_L1, MICRO_BATCH_THRESHOLD, PARALLEL_THRESHOLD_SMALL};
 use quantforge_core::models::black_scholes::BlackScholes;
 use quantforge_core::traits::{Greeks, OptionModel};
 
-use crate::converters::{ArrayLike, BroadcastIterator};
+use crate::converters::{ArrayLike, BroadcastIteratorOptimized};
 use crate::error::to_py_err;
 
 /// Register all Black-Scholes functions to a module
@@ -87,9 +87,64 @@ fn call_price_batch<'py>(
     rates: ArrayLike<'py>,
     sigmas: ArrayLike<'py>,
 ) -> PyResult<Bound<'py, PyArray1<f64>>> {
-    // Create broadcast iterator (while holding GIL)
+    // Determine the output size (max length of all inputs)
+    let mut max_len = 1;
+    for arr in [&spots, &strikes, &times, &rates, &sigmas] {
+        let len = arr.len();
+        if len > 1 && max_len > 1 && len != max_len {
+            return Err(pyo3::exceptions::PyValueError::new_err(format!(
+                "Shape mismatch: cannot broadcast arrays of different lengths"
+            )));
+        }
+        max_len = max_len.max(len);
+    }
+
+    if max_len == 0 {
+        return Ok(PyArray1::from_vec_bound(py, Vec::new()));
+    }
+
+    // Micro-batch optimization for small arrays (< 200 elements)
+    if max_len < MICRO_BATCH_THRESHOLD {
+        // Direct processing without BroadcastIteratorOptimized overhead
+        // First collect all values while holding GIL
+        let mut values_buffer = Vec::with_capacity(max_len * 5);
+        
+        for i in 0..max_len {
+            values_buffer.push(spots.get_broadcast(i).unwrap_or(f64::NAN));
+            values_buffer.push(strikes.get_broadcast(i).unwrap_or(f64::NAN));
+            values_buffer.push(times.get_broadcast(i).unwrap_or(f64::NAN));
+            values_buffer.push(rates.get_broadcast(i).unwrap_or(f64::NAN));
+            values_buffer.push(sigmas.get_broadcast(i).unwrap_or(f64::NAN));
+        }
+        
+        // Now process without GIL
+        let results = py.allow_threads(move || {
+            let model = BlackScholes;
+            let mut results = Vec::with_capacity(max_len);
+            
+            for i in 0..max_len {
+                let idx = i * 5;
+                let price = model
+                    .call_price(
+                        values_buffer[idx],
+                        values_buffer[idx + 1],
+                        values_buffer[idx + 2],
+                        values_buffer[idx + 3],
+                        values_buffer[idx + 4],
+                    )
+                    .unwrap_or(f64::NAN);
+                results.push(price);
+            }
+            
+            results
+        });
+        
+        return Ok(PyArray1::from_vec_bound(py, results));
+    }
+
+    // For larger arrays, use BroadcastIteratorOptimized
     let inputs = vec![&spots, &strikes, &times, &rates, &sigmas];
-    let iter = BroadcastIterator::new(inputs).map_err(pyo3::exceptions::PyValueError::new_err)?;
+    let iter = BroadcastIteratorOptimized::new(inputs).map_err(pyo3::exceptions::PyValueError::new_err)?;
 
     // Release GIL and use zero-copy computation
     let results = py.allow_threads(move || {
@@ -129,9 +184,64 @@ fn put_price_batch<'py>(
     rates: ArrayLike<'py>,
     sigmas: ArrayLike<'py>,
 ) -> PyResult<Bound<'py, PyArray1<f64>>> {
-    // Create broadcast iterator (while holding GIL)
+    // Determine the output size (max length of all inputs)
+    let mut max_len = 1;
+    for arr in [&spots, &strikes, &times, &rates, &sigmas] {
+        let len = arr.len();
+        if len > 1 && max_len > 1 && len != max_len {
+            return Err(pyo3::exceptions::PyValueError::new_err(format!(
+                "Shape mismatch: cannot broadcast arrays of different lengths"
+            )));
+        }
+        max_len = max_len.max(len);
+    }
+
+    if max_len == 0 {
+        return Ok(PyArray1::from_vec_bound(py, Vec::new()));
+    }
+
+    // Micro-batch optimization for small arrays (< 200 elements)
+    if max_len < MICRO_BATCH_THRESHOLD {
+        // Direct processing without BroadcastIteratorOptimized overhead
+        // First collect all values while holding GIL
+        let mut values_buffer = Vec::with_capacity(max_len * 5);
+        
+        for i in 0..max_len {
+            values_buffer.push(spots.get_broadcast(i).unwrap_or(f64::NAN));
+            values_buffer.push(strikes.get_broadcast(i).unwrap_or(f64::NAN));
+            values_buffer.push(times.get_broadcast(i).unwrap_or(f64::NAN));
+            values_buffer.push(rates.get_broadcast(i).unwrap_or(f64::NAN));
+            values_buffer.push(sigmas.get_broadcast(i).unwrap_or(f64::NAN));
+        }
+        
+        // Now process without GIL
+        let results = py.allow_threads(move || {
+            let model = BlackScholes;
+            let mut results = Vec::with_capacity(max_len);
+            
+            for i in 0..max_len {
+                let idx = i * 5;
+                let price = model
+                    .put_price(
+                        values_buffer[idx],
+                        values_buffer[idx + 1],
+                        values_buffer[idx + 2],
+                        values_buffer[idx + 3],
+                        values_buffer[idx + 4],
+                    )
+                    .unwrap_or(f64::NAN);
+                results.push(price);
+            }
+            
+            results
+        });
+        
+        return Ok(PyArray1::from_vec_bound(py, results));
+    }
+
+    // For larger arrays, use BroadcastIteratorOptimized
     let inputs = vec![&spots, &strikes, &times, &rates, &sigmas];
-    let iter = BroadcastIterator::new(inputs).map_err(pyo3::exceptions::PyValueError::new_err)?;
+    let iter = BroadcastIteratorOptimized::new(inputs).map_err(pyo3::exceptions::PyValueError::new_err)?;
 
     // Release GIL and use zero-copy computation
     let results = py.allow_threads(move || {
@@ -174,7 +284,7 @@ fn implied_volatility_batch<'py>(
 ) -> PyResult<Bound<'py, PyArray1<f64>>> {
     // Create broadcast iterator (while holding GIL)
     let inputs = vec![&prices, &spots, &strikes, &times, &rates, &is_calls];
-    let iter = BroadcastIterator::new(inputs).map_err(pyo3::exceptions::PyValueError::new_err)?;
+    let iter = BroadcastIteratorOptimized::new(inputs).map_err(pyo3::exceptions::PyValueError::new_err)?;
 
     // Release GIL and use zero-copy computation
     let results = py.allow_threads(move || {
@@ -225,12 +335,12 @@ fn greeks_batch<'py>(
 ) -> PyResult<Bound<'py, PyDict>> {
     // Create broadcast iterator (while holding GIL)
     let inputs = vec![&spots, &strikes, &times, &rates, &sigmas];
-    let iter = BroadcastIterator::new(inputs).map_err(pyo3::exceptions::PyValueError::new_err)?;
+    let iter = BroadcastIteratorOptimized::new(inputs).map_err(pyo3::exceptions::PyValueError::new_err)?;
 
     // Handle is_calls parameter (default to True if not provided)
     let is_calls_iter = if let Some(is_calls_array) = is_calls {
         let is_calls_inputs = vec![&is_calls_array];
-        let is_calls_it = BroadcastIterator::new(is_calls_inputs)
+        let is_calls_it = BroadcastIteratorOptimized::new(is_calls_inputs)
             .map_err(pyo3::exceptions::PyValueError::new_err)?;
 
         // Ensure both iterators have same length
@@ -255,19 +365,18 @@ fn greeks_batch<'py>(
             // Sequential processing for small data
             let mut results = Vec::with_capacity(len);
             let mut param_buffer = [0.0; 5];
-            let mut is_call_buffer = [0.0; 1];
 
             for i in 0..len {
-                // Get parameters
-                for (j, arr) in iter.arrays.iter().enumerate() {
-                    param_buffer[j] = arr[i];
-                }
+                // Get parameters using get_value_at
+                param_buffer[0] = iter.get_value_at(0, i);
+                param_buffer[1] = iter.get_value_at(1, i);
+                param_buffer[2] = iter.get_value_at(2, i);
+                param_buffer[3] = iter.get_value_at(3, i);
+                param_buffer[4] = iter.get_value_at(4, i);
+                
                 // Get is_call (default to True if not provided)
                 let is_call = if let Some(ref is_calls_it) = is_calls_iter {
-                    for (j, arr) in is_calls_it.arrays.iter().enumerate() {
-                        is_call_buffer[j] = if arr.len() == 1 { arr[0] } else { arr[i] };
-                    }
-                    is_call_buffer[0] != 0.0
+                    is_calls_it.get_value_at(0, i) != 0.0
                 } else {
                     true // Default to Call option
                 };
@@ -302,34 +411,25 @@ fn greeks_batch<'py>(
                 .chunks(CHUNK_SIZE_L1)
                 .flat_map(|chunk| {
                     let mut chunk_results = Vec::with_capacity(chunk.len());
-                    let mut param_buffer = [0.0; 5];
-                    let mut is_call_buffer = [0.0; 1];
 
                     for i in chunk {
-                        // Get parameters
-                        for (j, arr) in iter.arrays.iter().enumerate() {
-                            param_buffer[j] = arr[i];
-                        }
+                        // Get parameters using get_value_at
+                        let s = iter.get_value_at(0, i);
+                        let k = iter.get_value_at(1, i);
+                        let t = iter.get_value_at(2, i);
+                        let r = iter.get_value_at(3, i);
+                        let sigma = iter.get_value_at(4, i);
+                        
                         // Get is_call (default to True if not provided)
                         let is_call = if let Some(ref is_calls_it) = is_calls_iter {
-                            for (j, arr) in is_calls_it.arrays.iter().enumerate() {
-                                is_call_buffer[j] = if arr.len() == 1 { arr[0] } else { arr[i] };
-                            }
-                            is_call_buffer[0] != 0.0
+                            is_calls_it.get_value_at(0, i) != 0.0
                         } else {
                             true // Default to Call option
                         };
 
                         chunk_results.push(
                             model
-                                .greeks(
-                                    param_buffer[0],
-                                    param_buffer[1],
-                                    param_buffer[2],
-                                    param_buffer[3],
-                                    param_buffer[4],
-                                    is_call,
-                                )
+                                .greeks(s, k, t, r, sigma, is_call)
                                 .unwrap_or(Greeks {
                                     delta: f64::NAN,
                                     gamma: f64::NAN,

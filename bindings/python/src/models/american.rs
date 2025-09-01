@@ -6,7 +6,7 @@ use pyo3::types::PyDict;
 use quantforge_core::models::american::American;
 use quantforge_core::traits::Greeks;
 
-use crate::converters::{ArrayLike, BroadcastIterator};
+use crate::converters::{ArrayLike, BroadcastIteratorOptimized};
 use crate::error::to_py_err;
 
 /// Create the american Python module
@@ -97,51 +97,30 @@ fn call_price_batch<'py>(
     dividend_yields: ArrayLike<'py>,
     sigmas: ArrayLike<'py>,
 ) -> PyResult<Bound<'py, PyArray1<f64>>> {
-    // Create broadcast iterator and collect input data (while holding GIL)
+    // Create broadcast iterator (while holding GIL)
     let inputs = vec![&spots, &strikes, &times, &rates, &dividend_yields, &sigmas];
-    let iter = BroadcastIterator::new(inputs).map_err(pyo3::exceptions::PyValueError::new_err)?;
+    let iter = BroadcastIteratorOptimized::new(inputs).map_err(pyo3::exceptions::PyValueError::new_err)?;
 
-    // Collect all input combinations
-    let input_data: Vec<Vec<f64>> = iter.collect();
-    let len = input_data.len();
-
-    // Prepare data arrays
-    let mut spots_vec = Vec::with_capacity(len);
-    let mut strikes_vec = Vec::with_capacity(len);
-    let mut times_vec = Vec::with_capacity(len);
-    let mut rates_vec = Vec::with_capacity(len);
-    let mut dividend_yields_vec = Vec::with_capacity(len);
-    let mut sigmas_vec = Vec::with_capacity(len);
-
-    for values in input_data {
-        spots_vec.push(values[0]);
-        strikes_vec.push(values[1]);
-        times_vec.push(values[2]);
-        rates_vec.push(values[3]);
-        dividend_yields_vec.push(values[4]);
-        sigmas_vec.push(values[5]);
-    }
-
-    // Release GIL for computation
+    // Release GIL and use zero-copy computation
     let results = py.allow_threads(move || {
-        // For now, use sequential processing for American options
-        // TODO: Implement optimized batch processing
-        let mut results = Vec::with_capacity(len);
+        use quantforge_core::constants::{CHUNK_SIZE_L1, PARALLEL_THRESHOLD_SMALL};
 
-        for i in 0..len {
-            let price = American::call_price_american(
-                spots_vec[i],
-                strikes_vec[i],
-                times_vec[i],
-                rates_vec[i],
-                dividend_yields_vec[i],
-                sigmas_vec[i],
+        if iter.len() < PARALLEL_THRESHOLD_SMALL {
+            // Sequential processing for small data
+            iter.compute_with(|values| {
+                American::call_price_american(values[0], values[1], values[2], values[3], values[4], values[5])
+                    .unwrap_or(f64::NAN)
+            })
+        } else {
+            // Parallel processing for large data
+            iter.compute_parallel_with(
+                |values| {
+                    American::call_price_american(values[0], values[1], values[2], values[3], values[4], values[5])
+                        .unwrap_or(f64::NAN)
+                },
+                CHUNK_SIZE_L1,
             )
-            .unwrap_or(f64::NAN);
-            results.push(price);
         }
-
-        results
     });
 
     Ok(PyArray1::from_vec_bound(py, results))
@@ -159,51 +138,30 @@ fn put_price_batch<'py>(
     dividend_yields: ArrayLike<'py>,
     sigmas: ArrayLike<'py>,
 ) -> PyResult<Bound<'py, PyArray1<f64>>> {
-    // Create broadcast iterator and collect input data (while holding GIL)
+    // Create broadcast iterator (while holding GIL)
     let inputs = vec![&spots, &strikes, &times, &rates, &dividend_yields, &sigmas];
-    let iter = BroadcastIterator::new(inputs).map_err(pyo3::exceptions::PyValueError::new_err)?;
+    let iter = BroadcastIteratorOptimized::new(inputs).map_err(pyo3::exceptions::PyValueError::new_err)?;
 
-    // Collect all input combinations
-    let input_data: Vec<Vec<f64>> = iter.collect();
-    let len = input_data.len();
-
-    // Prepare data arrays
-    let mut spots_vec = Vec::with_capacity(len);
-    let mut strikes_vec = Vec::with_capacity(len);
-    let mut times_vec = Vec::with_capacity(len);
-    let mut rates_vec = Vec::with_capacity(len);
-    let mut dividend_yields_vec = Vec::with_capacity(len);
-    let mut sigmas_vec = Vec::with_capacity(len);
-
-    for values in input_data {
-        spots_vec.push(values[0]);
-        strikes_vec.push(values[1]);
-        times_vec.push(values[2]);
-        rates_vec.push(values[3]);
-        dividend_yields_vec.push(values[4]);
-        sigmas_vec.push(values[5]);
-    }
-
-    // Release GIL for computation
+    // Release GIL and use zero-copy computation
     let results = py.allow_threads(move || {
-        // For now, use sequential processing for American options
-        // TODO: Implement optimized batch processing
-        let mut results = Vec::with_capacity(len);
+        use quantforge_core::constants::{CHUNK_SIZE_L1, PARALLEL_THRESHOLD_SMALL};
 
-        for i in 0..len {
-            let price = American::put_price_american(
-                spots_vec[i],
-                strikes_vec[i],
-                times_vec[i],
-                rates_vec[i],
-                dividend_yields_vec[i],
-                sigmas_vec[i],
+        if iter.len() < PARALLEL_THRESHOLD_SMALL {
+            // Sequential processing for small data
+            iter.compute_with(|values| {
+                American::put_price_american(values[0], values[1], values[2], values[3], values[4], values[5])
+                    .unwrap_or(f64::NAN)
+            })
+        } else {
+            // Parallel processing for large data
+            iter.compute_parallel_with(
+                |values| {
+                    American::put_price_american(values[0], values[1], values[2], values[3], values[4], values[5])
+                        .unwrap_or(f64::NAN)
+                },
+                CHUNK_SIZE_L1,
             )
-            .unwrap_or(f64::NAN);
-            results.push(price);
         }
-
-        results
     });
 
     Ok(PyArray1::from_vec_bound(py, results))
@@ -222,7 +180,7 @@ fn implied_volatility_batch<'py>(
     dividend_yields: ArrayLike<'py>,
     is_calls: ArrayLike<'py>,
 ) -> PyResult<Bound<'py, PyArray1<f64>>> {
-    // Create broadcast iterator and collect input data (while holding GIL)
+    // Create broadcast iterator (while holding GIL)
     let inputs = vec![
         &prices,
         &spots,
@@ -232,50 +190,38 @@ fn implied_volatility_batch<'py>(
         &dividend_yields,
         &is_calls,
     ];
-    let iter = BroadcastIterator::new(inputs).map_err(pyo3::exceptions::PyValueError::new_err)?;
+    let iter = BroadcastIteratorOptimized::new(inputs).map_err(pyo3::exceptions::PyValueError::new_err)?;
 
-    // Collect all input combinations
-    let input_data: Vec<Vec<f64>> = iter.collect();
-    let len = input_data.len();
-
-    // Prepare data arrays
-    let mut prices_vec = Vec::with_capacity(len);
-    let mut spots_vec = Vec::with_capacity(len);
-    let mut strikes_vec = Vec::with_capacity(len);
-    let mut times_vec = Vec::with_capacity(len);
-    let mut rates_vec = Vec::with_capacity(len);
-    let mut dividend_yields_vec = Vec::with_capacity(len);
-    let mut is_calls_vec = Vec::with_capacity(len);
-
-    for values in input_data {
-        prices_vec.push(values[0]);
-        spots_vec.push(values[1]);
-        strikes_vec.push(values[2]);
-        times_vec.push(values[3]);
-        rates_vec.push(values[4]);
-        dividend_yields_vec.push(values[5]);
-        is_calls_vec.push(values[6] != 0.0);
-    }
-
-    // Release GIL for computation
+    // Release GIL and use zero-copy computation
     let results = py.allow_threads(move || {
-        let mut results = Vec::with_capacity(len);
+        use quantforge_core::constants::{CHUNK_SIZE_L1, PARALLEL_THRESHOLD_SMALL};
 
-        for i in 0..len {
-            let iv = American::implied_volatility_american(
-                prices_vec[i],
-                spots_vec[i],
-                strikes_vec[i],
-                times_vec[i],
-                rates_vec[i],
-                dividend_yields_vec[i],
-                is_calls_vec[i],
+        if iter.len() < PARALLEL_THRESHOLD_SMALL {
+            // Sequential processing for small data
+            iter.compute_with(|values| {
+                let price = values[0];
+                let is_call = values[6] != 0.0;
+
+                American::implied_volatility_american(
+                    price, values[1], values[2], values[3], values[4], values[5], is_call
+                )
+                .unwrap_or(f64::NAN)
+            })
+        } else {
+            // Parallel processing for large data
+            iter.compute_parallel_with(
+                |values| {
+                    let price = values[0];
+                    let is_call = values[6] != 0.0;
+
+                    American::implied_volatility_american(
+                        price, values[1], values[2], values[3], values[4], values[5], is_call
+                    )
+                    .unwrap_or(f64::NAN)
+                },
+                CHUNK_SIZE_L1,
             )
-            .unwrap_or(f64::NAN);
-            results.push(iv);
         }
-
-        results
     });
 
     Ok(PyArray1::from_vec_bound(py, results))
@@ -294,88 +240,118 @@ fn greeks_batch<'py>(
     sigmas: ArrayLike<'py>,
     is_calls: Option<ArrayLike<'py>>,
 ) -> PyResult<Bound<'py, PyDict>> {
-    // Convert is_calls to bool vec (while holding GIL), default to all Calls
-    let is_calls_vec: Vec<bool> = if let Some(is_calls_array) = is_calls {
-        is_calls_array
-            .to_vec()?
-            .into_iter()
-            .map(|v| v != 0.0)
-            .collect()
+    // Create broadcast iterator for main inputs
+    let inputs = vec![&spots, &strikes, &times, &rates, &dividend_yields, &sigmas];
+    let iter = BroadcastIteratorOptimized::new(inputs).map_err(pyo3::exceptions::PyValueError::new_err)?;
+
+    // Handle is_calls parameter
+    let is_calls_iter = if let Some(is_calls_array) = is_calls {
+        let is_calls_inputs = vec![&is_calls_array];
+        Some(BroadcastIteratorOptimized::new(is_calls_inputs).map_err(pyo3::exceptions::PyValueError::new_err)?)
     } else {
-        vec![true; 1] // Will be broadcast to match input size
+        None
     };
 
-    // Create broadcast iterator and collect input data
-    let inputs = vec![&spots, &strikes, &times, &rates, &dividend_yields, &sigmas];
-    let iter = BroadcastIterator::new(inputs).map_err(pyo3::exceptions::PyValueError::new_err)?;
-
-    // Collect all input combinations
-    let input_data: Vec<Vec<f64>> = iter.collect();
-    let len = input_data.len();
-
-    // Prepare data arrays
-    let mut spots_vec = Vec::with_capacity(len);
-    let mut strikes_vec = Vec::with_capacity(len);
-    let mut times_vec = Vec::with_capacity(len);
-    let mut rates_vec = Vec::with_capacity(len);
-    let mut dividend_yields_vec = Vec::with_capacity(len);
-    let mut sigmas_vec = Vec::with_capacity(len);
-
-    for values in input_data {
-        spots_vec.push(values[0]);
-        strikes_vec.push(values[1]);
-        times_vec.push(values[2]);
-        rates_vec.push(values[3]);
-        dividend_yields_vec.push(values[4]);
-        sigmas_vec.push(values[5]);
-    }
+    let len = iter.len();
 
     // Release GIL for computation
     let (delta_vec, gamma_vec, vega_vec, theta_vec, rho_vec, dividend_rho_vec) =
         py.allow_threads(move || {
-            let mut delta_vec = Vec::with_capacity(len);
-            let mut gamma_vec = Vec::with_capacity(len);
-            let mut vega_vec = Vec::with_capacity(len);
-            let mut theta_vec = Vec::with_capacity(len);
-            let mut rho_vec = Vec::with_capacity(len);
-            let mut dividend_rho_vec = Vec::with_capacity(len);
+            use quantforge_core::constants::PARALLEL_THRESHOLD_SMALL;
 
-            for i in 0..len {
-                let is_call = is_calls_vec.get(i).copied().unwrap_or(true);
-                let greeks = American::greeks_american(
-                    spots_vec[i],
-                    strikes_vec[i],
-                    times_vec[i],
-                    rates_vec[i],
-                    dividend_yields_vec[i],
-                    sigmas_vec[i],
-                    is_call,
-                )
-                .unwrap_or(Greeks {
-                    delta: f64::NAN,
-                    gamma: f64::NAN,
-                    vega: f64::NAN,
-                    theta: f64::NAN,
-                    rho: f64::NAN,
-                    dividend_rho: Some(f64::NAN),
-                });
+            if len < PARALLEL_THRESHOLD_SMALL {
+                // Sequential processing for small data
+                let mut delta_vec = Vec::with_capacity(len);
+                let mut gamma_vec = Vec::with_capacity(len);
+                let mut vega_vec = Vec::with_capacity(len);
+                let mut theta_vec = Vec::with_capacity(len);
+                let mut rho_vec = Vec::with_capacity(len);
+                let mut dividend_rho_vec = Vec::with_capacity(len);
 
-                delta_vec.push(greeks.delta);
-                gamma_vec.push(greeks.gamma);
-                vega_vec.push(greeks.vega);
-                theta_vec.push(greeks.theta);
-                rho_vec.push(greeks.rho);
-                dividend_rho_vec.push(greeks.dividend_rho.unwrap_or(f64::NAN));
+                for i in 0..len {
+                    let s = iter.get_value_at(0, i);
+                    let k = iter.get_value_at(1, i);
+                    let t = iter.get_value_at(2, i);
+                    let r = iter.get_value_at(3, i);
+                    let q = iter.get_value_at(4, i);
+                    let sigma = iter.get_value_at(5, i);
+                    
+                    let is_call = if let Some(ref is_calls_it) = is_calls_iter {
+                        is_calls_it.get_value_at(0, i) != 0.0
+                    } else {
+                        true
+                    };
+
+                    let greeks = American::greeks_american(s, k, t, r, q, sigma, is_call)
+                        .unwrap_or(Greeks {
+                            delta: f64::NAN,
+                            gamma: f64::NAN,
+                            vega: f64::NAN,
+                            theta: f64::NAN,
+                            rho: f64::NAN,
+                            dividend_rho: Some(f64::NAN),
+                        });
+
+                    delta_vec.push(greeks.delta);
+                    gamma_vec.push(greeks.gamma);
+                    vega_vec.push(greeks.vega);
+                    theta_vec.push(greeks.theta);
+                    rho_vec.push(greeks.rho);
+                    dividend_rho_vec.push(greeks.dividend_rho.unwrap_or(f64::NAN));
+                }
+
+                (delta_vec, gamma_vec, vega_vec, theta_vec, rho_vec, dividend_rho_vec)
+            } else {
+                // Parallel processing for large data
+                use rayon::prelude::*;
+                
+                let greeks_results: Vec<_> = (0..len)
+                    .into_par_iter()
+                    .map(|i| {
+                        let s = iter.get_value_at(0, i);
+                        let k = iter.get_value_at(1, i);
+                        let t = iter.get_value_at(2, i);
+                        let r = iter.get_value_at(3, i);
+                        let q = iter.get_value_at(4, i);
+                        let sigma = iter.get_value_at(5, i);
+                        
+                        let is_call = if let Some(ref is_calls_it) = is_calls_iter {
+                            is_calls_it.get_value_at(0, i) != 0.0
+                        } else {
+                            true
+                        };
+
+                        American::greeks_american(s, k, t, r, q, sigma, is_call)
+                            .unwrap_or(Greeks {
+                                delta: f64::NAN,
+                                gamma: f64::NAN,
+                                vega: f64::NAN,
+                                theta: f64::NAN,
+                                rho: f64::NAN,
+                                dividend_rho: Some(f64::NAN),
+                            })
+                    })
+                    .collect();
+
+                // Separate into individual vectors
+                let mut delta_vec = Vec::with_capacity(len);
+                let mut gamma_vec = Vec::with_capacity(len);
+                let mut vega_vec = Vec::with_capacity(len);
+                let mut theta_vec = Vec::with_capacity(len);
+                let mut rho_vec = Vec::with_capacity(len);
+                let mut dividend_rho_vec = Vec::with_capacity(len);
+
+                for greeks in greeks_results {
+                    delta_vec.push(greeks.delta);
+                    gamma_vec.push(greeks.gamma);
+                    vega_vec.push(greeks.vega);
+                    theta_vec.push(greeks.theta);
+                    rho_vec.push(greeks.rho);
+                    dividend_rho_vec.push(greeks.dividend_rho.unwrap_or(f64::NAN));
+                }
+
+                (delta_vec, gamma_vec, vega_vec, theta_vec, rho_vec, dividend_rho_vec)
             }
-
-            (
-                delta_vec,
-                gamma_vec,
-                vega_vec,
-                theta_vec,
-                rho_vec,
-                dividend_rho_vec,
-            )
         });
 
     // Create output dictionary

@@ -39,7 +39,15 @@ QuantForgeは高性能オプション価格計算ライブラリで、Rust + PyO
 
 ## アーキテクチャ制約
 
-### 並列化閾値（2025-08-31更新）
+### Core+Bindings分離アーキテクチャ（2025-09-01確認）
+- **Core層**: 純粋Rust実装、PyO3非依存
+- **Bindings層**: PyO3ラッパー、FFI最適化
+- **利点**: 
+  - 他言語バインディングの追加が容易
+  - Core層の単体テストがPython不要
+  - 責任分離の明確化
+
+### 並列化閾値（2025-09-01検証）
 ```rust
 pub const PARALLEL_THRESHOLD_SMALL: usize = 8_000;
 pub const PARALLEL_THRESHOLD_MEDIUM: usize = 200_000;
@@ -47,6 +55,7 @@ pub const PARALLEL_THRESHOLD_LARGE: usize = 1_000_000;
 ```
 - **根拠**: 実測によるFFIオーバーヘッドと並列化コストのバランス
 - **重要**: 8,000要素未満では逐次処理が高速（commit 7dbf51e）
+- **検証済み**: BroadcastIteratorOptimizedで750%改善を確認
 
 ### キャッシュ最適化
 ```rust

@@ -61,6 +61,7 @@ impl<'py> ArrayLike<'py> {
     }
 
     /// Convert to Vec
+    #[allow(dead_code)]
     pub fn to_vec(&self) -> PyResult<Vec<f64>> {
         match self {
             ArrayLike::Scalar(val) => Ok(vec![*val]),
@@ -99,6 +100,49 @@ impl<'py> ArrayLike<'py> {
                     arr.as_slice().ok().and_then(|s| s.first().copied())
                 } else {
                     None
+                }
+            }
+        }
+    }
+
+    /// Get value at index with broadcasting
+    /// For scalars, returns the scalar value regardless of index
+    /// For arrays of length 1, returns the single value (broadcast)
+    /// For arrays, returns the value at the given index
+    pub fn get_broadcast(&self, index: usize) -> PyResult<f64> {
+        match self {
+            ArrayLike::Scalar(val) => Ok(*val),
+            ArrayLike::Array(arr) => {
+                if let Ok(slice) = arr.as_slice() {
+                    if slice.len() == 1 {
+                        Ok(slice[0])
+                    } else if index < slice.len() {
+                        Ok(slice[index])
+                    } else {
+                        Err(pyo3::exceptions::PyIndexError::new_err(format!(
+                            "Index {index} out of bounds for array of length {}",
+                            slice.len()
+                        )))
+                    }
+                } else {
+                    // Non-contiguous array - need to access via indexing
+                    let len = arr.len().unwrap_or(0);
+                    if len == 1 {
+                        // Single element - broadcast it
+                        arr.get(0)
+                            .ok_or_else(|| pyo3::exceptions::PyIndexError::new_err("Array is empty"))
+                            .copied()
+                    } else if index < len {
+                        arr.get(index)
+                            .ok_or_else(|| pyo3::exceptions::PyIndexError::new_err(format!(
+                                "Failed to get element at index {index}"
+                            )))
+                            .copied()
+                    } else {
+                        Err(pyo3::exceptions::PyIndexError::new_err(format!(
+                            "Index {index} out of bounds for array of length {len}"
+                        )))
+                    }
                 }
             }
         }

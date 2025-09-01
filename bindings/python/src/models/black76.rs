@@ -6,7 +6,7 @@ use pyo3::types::PyDict;
 use quantforge_core::models::black76::Black76;
 use quantforge_core::traits::Greeks;
 
-use crate::converters::{ArrayLike, BroadcastIterator};
+use crate::converters::{ArrayLike, BroadcastIteratorOptimized};
 use crate::error::to_py_err;
 
 /// Create the black76 Python module
@@ -84,45 +84,30 @@ fn call_price_batch<'py>(
     rates: ArrayLike<'py>,
     sigmas: ArrayLike<'py>,
 ) -> PyResult<Bound<'py, PyArray1<f64>>> {
-    // Create broadcast iterator and collect input data (while holding GIL)
+    // Create broadcast iterator (while holding GIL)
     let inputs = vec![&forwards, &strikes, &times, &rates, &sigmas];
-    let iter = BroadcastIterator::new(inputs).map_err(pyo3::exceptions::PyValueError::new_err)?;
+    let iter = BroadcastIteratorOptimized::new(inputs).map_err(pyo3::exceptions::PyValueError::new_err)?;
 
-    // Collect all input combinations
-    let input_data: Vec<Vec<f64>> = iter.collect();
-    let len = input_data.len();
-
-    // Prepare data arrays
-    let mut forwards_vec = Vec::with_capacity(len);
-    let mut strikes_vec = Vec::with_capacity(len);
-    let mut times_vec = Vec::with_capacity(len);
-    let mut rates_vec = Vec::with_capacity(len);
-    let mut sigmas_vec = Vec::with_capacity(len);
-
-    for values in input_data {
-        forwards_vec.push(values[0]);
-        strikes_vec.push(values[1]);
-        times_vec.push(values[2]);
-        rates_vec.push(values[3]);
-        sigmas_vec.push(values[4]);
-    }
-
-    // Release GIL for computation and use optimized batch method
+    // Release GIL and use zero-copy computation
     let results = py.allow_threads(move || {
-        let model = Black76;
-        let batch_results = model.call_price_batch(
-            &forwards_vec,
-            &strikes_vec,
-            &times_vec,
-            &rates_vec,
-            &sigmas_vec,
-        );
+        use quantforge_core::constants::{CHUNK_SIZE_L1, PARALLEL_THRESHOLD_SMALL};
 
-        // Convert Results to f64 values
-        batch_results
-            .into_iter()
-            .map(|r| r.unwrap_or(f64::NAN))
-            .collect::<Vec<f64>>()
+        if iter.len() < PARALLEL_THRESHOLD_SMALL {
+            // Sequential processing for small data
+            iter.compute_with(|values| {
+                Black76::call_price_black76(values[0], values[1], values[2], values[3], values[4])
+                    .unwrap_or(f64::NAN)
+            })
+        } else {
+            // Parallel processing for large data
+            iter.compute_parallel_with(
+                |values| {
+                    Black76::call_price_black76(values[0], values[1], values[2], values[3], values[4])
+                        .unwrap_or(f64::NAN)
+                },
+                CHUNK_SIZE_L1,
+            )
+        }
     });
 
     Ok(PyArray1::from_vec_bound(py, results))
@@ -139,45 +124,30 @@ fn put_price_batch<'py>(
     rates: ArrayLike<'py>,
     sigmas: ArrayLike<'py>,
 ) -> PyResult<Bound<'py, PyArray1<f64>>> {
-    // Create broadcast iterator and collect input data (while holding GIL)
+    // Create broadcast iterator (while holding GIL)
     let inputs = vec![&forwards, &strikes, &times, &rates, &sigmas];
-    let iter = BroadcastIterator::new(inputs).map_err(pyo3::exceptions::PyValueError::new_err)?;
+    let iter = BroadcastIteratorOptimized::new(inputs).map_err(pyo3::exceptions::PyValueError::new_err)?;
 
-    // Collect all input combinations
-    let input_data: Vec<Vec<f64>> = iter.collect();
-    let len = input_data.len();
-
-    // Prepare data arrays
-    let mut forwards_vec = Vec::with_capacity(len);
-    let mut strikes_vec = Vec::with_capacity(len);
-    let mut times_vec = Vec::with_capacity(len);
-    let mut rates_vec = Vec::with_capacity(len);
-    let mut sigmas_vec = Vec::with_capacity(len);
-
-    for values in input_data {
-        forwards_vec.push(values[0]);
-        strikes_vec.push(values[1]);
-        times_vec.push(values[2]);
-        rates_vec.push(values[3]);
-        sigmas_vec.push(values[4]);
-    }
-
-    // Release GIL for computation and use optimized batch method
+    // Release GIL and use zero-copy computation
     let results = py.allow_threads(move || {
-        let model = Black76;
-        let batch_results = model.put_price_batch(
-            &forwards_vec,
-            &strikes_vec,
-            &times_vec,
-            &rates_vec,
-            &sigmas_vec,
-        );
+        use quantforge_core::constants::{CHUNK_SIZE_L1, PARALLEL_THRESHOLD_SMALL};
 
-        // Convert Results to f64 values
-        batch_results
-            .into_iter()
-            .map(|r| r.unwrap_or(f64::NAN))
-            .collect::<Vec<f64>>()
+        if iter.len() < PARALLEL_THRESHOLD_SMALL {
+            // Sequential processing for small data
+            iter.compute_with(|values| {
+                Black76::put_price_black76(values[0], values[1], values[2], values[3], values[4])
+                    .unwrap_or(f64::NAN)
+            })
+        } else {
+            // Parallel processing for large data
+            iter.compute_parallel_with(
+                |values| {
+                    Black76::put_price_black76(values[0], values[1], values[2], values[3], values[4])
+                        .unwrap_or(f64::NAN)
+                },
+                CHUNK_SIZE_L1,
+            )
+        }
     });
 
     Ok(PyArray1::from_vec_bound(py, results))
@@ -197,28 +167,38 @@ fn implied_volatility_batch<'py>(
 ) -> PyResult<Bound<'py, PyArray1<f64>>> {
     // Create broadcast iterator and collect input data (while holding GIL)
     let inputs = vec![&prices, &forwards, &strikes, &times, &rates, &is_calls];
-    let iter = BroadcastIterator::new(inputs).map_err(pyo3::exceptions::PyValueError::new_err)?;
+    let iter = BroadcastIteratorOptimized::new(inputs).map_err(pyo3::exceptions::PyValueError::new_err)?;
 
-    // Collect all input combinations
-    let input_data: Vec<Vec<f64>> = iter.collect();
-    let len = input_data.len();
-
-    // Release GIL for computation
+    // Release GIL and use zero-copy computation
     let results = py.allow_threads(move || {
-        let mut results = Vec::with_capacity(len);
+        use quantforge_core::constants::{CHUNK_SIZE_L1, PARALLEL_THRESHOLD_SMALL};
 
-        // Use rayon for parallel processing
-        use rayon::prelude::*;
-        results.par_extend(input_data.par_iter().map(|values| {
-            let price = values[0];
-            let is_call = values[5] != 0.0;
+        if iter.len() < PARALLEL_THRESHOLD_SMALL {
+            // Sequential processing for small data
+            iter.compute_with(|values| {
+                let price = values[0];
+                let is_call = values[5] != 0.0;
 
-            Black76::implied_volatility_black76(
-                price, values[1], values[2], values[3], values[4], is_call,
+                Black76::implied_volatility_black76(
+                    price, values[1], values[2], values[3], values[4], is_call,
+                )
+                .unwrap_or(f64::NAN)
+            })
+        } else {
+            // Parallel processing for large data
+            iter.compute_parallel_with(
+                |values| {
+                    let price = values[0];
+                    let is_call = values[5] != 0.0;
+
+                    Black76::implied_volatility_black76(
+                        price, values[1], values[2], values[3], values[4], is_call,
+                    )
+                    .unwrap_or(f64::NAN)
+                },
+                CHUNK_SIZE_L1,
             )
-            .unwrap_or(f64::NAN)
-        }));
-        results
+        }
     });
 
     Ok(PyArray1::from_vec_bound(py, results))
@@ -236,48 +216,108 @@ fn greeks_batch<'py>(
     sigmas: ArrayLike<'py>,
     is_calls: Option<ArrayLike<'py>>,
 ) -> PyResult<Bound<'py, PyDict>> {
-    // Convert is_calls to bool vec (while holding GIL), default to all Calls
-    let is_calls_vec: Vec<bool> = if let Some(is_calls_array) = is_calls {
-        is_calls_array
-            .to_vec()?
-            .into_iter()
-            .map(|v| v != 0.0)
-            .collect()
+    // Create broadcast iterator for main parameters
+    let inputs = vec![&forwards, &strikes, &times, &rates, &sigmas];
+    let iter = BroadcastIteratorOptimized::new(inputs).map_err(pyo3::exceptions::PyValueError::new_err)?;
+
+    // Handle is_calls parameter (default to True if not provided)
+    let is_calls_iter = if let Some(is_calls_array) = is_calls {
+        let is_calls_inputs = vec![&is_calls_array];
+        let is_calls_it = BroadcastIteratorOptimized::new(is_calls_inputs)
+            .map_err(pyo3::exceptions::PyValueError::new_err)?;
+
+        // Ensure both iterators have same length
+        if iter.len() != is_calls_it.len() && is_calls_it.len() > 1 {
+            return Err(pyo3::exceptions::PyValueError::new_err(
+                "Shape mismatch between parameter arrays and is_calls",
+            ));
+        }
+        Some(is_calls_it)
     } else {
-        vec![true; 1] // Will be broadcast to match input size
+        None
     };
 
-    // Create broadcast iterator and collect input data
-    let inputs = vec![&forwards, &strikes, &times, &rates, &sigmas];
-    let iter = BroadcastIterator::new(inputs).map_err(pyo3::exceptions::PyValueError::new_err)?;
-
-    // Collect all input combinations
-    let input_data: Vec<Vec<f64>> = iter.collect();
-    let len = input_data.len();
+    let len = iter.len();
 
     // Release GIL for computation
     let (delta_vec, gamma_vec, vega_vec, theta_vec, rho_vec) = py.allow_threads(move || {
-        // Use rayon for parallel processing
-        use rayon::prelude::*;
+        use quantforge_core::constants::{CHUNK_SIZE_L1, PARALLEL_THRESHOLD_SMALL};
 
-        let greeks_results: Vec<_> = input_data
-            .par_iter()
-            .enumerate()
-            .map(|(i, values)| {
-                let is_call = is_calls_vec.get(i).copied().unwrap_or(true);
-                Black76::greeks_black76(
-                    values[0], values[1], values[2], values[3], values[4], is_call,
-                )
-                .unwrap_or(Greeks {
-                    delta: f64::NAN,
-                    gamma: f64::NAN,
-                    vega: f64::NAN,
-                    theta: f64::NAN,
-                    rho: f64::NAN,
-                    dividend_rho: None,
+        // Compute greeks with zero-copy
+        let greeks_results = if iter.len() < PARALLEL_THRESHOLD_SMALL {
+            // Sequential processing for small data
+            let mut results = Vec::with_capacity(len);
+
+            for i in 0..len {
+                // Get parameters using get_value_at
+                let f = iter.get_value_at(0, i);
+                let k = iter.get_value_at(1, i);
+                let t = iter.get_value_at(2, i);
+                let r = iter.get_value_at(3, i);
+                let sigma = iter.get_value_at(4, i);
+                
+                // Get is_call (default to True if not provided)
+                let is_call = if let Some(ref is_calls_it) = is_calls_iter {
+                    is_calls_it.get_value_at(0, i) != 0.0
+                } else {
+                    true // Default to Call option
+                };
+
+                results.push(
+                    Black76::greeks_black76(f, k, t, r, sigma, is_call)
+                        .unwrap_or(Greeks {
+                            delta: f64::NAN,
+                            gamma: f64::NAN,
+                            vega: f64::NAN,
+                            theta: f64::NAN,
+                            rho: f64::NAN,
+                            dividend_rho: None,
+                        }),
+                );
+            }
+            results
+        } else {
+            // Parallel processing for large data
+            use rayon::prelude::*;
+
+            (0..len)
+                .into_par_iter()
+                .chunks(CHUNK_SIZE_L1)
+                .flat_map(|chunk| {
+                    let mut chunk_results = Vec::with_capacity(chunk.len());
+
+                    for i in chunk {
+                        // Get parameters using get_value_at
+                        let f = iter.get_value_at(0, i);
+                        let k = iter.get_value_at(1, i);
+                        let t = iter.get_value_at(2, i);
+                        let r = iter.get_value_at(3, i);
+                        let sigma = iter.get_value_at(4, i);
+                        
+                        // Get is_call (default to True if not provided)
+                        let is_call = if let Some(ref is_calls_it) = is_calls_iter {
+                            is_calls_it.get_value_at(0, i) != 0.0
+                        } else {
+                            true // Default to Call option
+                        };
+
+                        chunk_results.push(
+                            Black76::greeks_black76(f, k, t, r, sigma, is_call)
+                                .unwrap_or(Greeks {
+                                    delta: f64::NAN,
+                                    gamma: f64::NAN,
+                                    vega: f64::NAN,
+                                    theta: f64::NAN,
+                                    rho: f64::NAN,
+                                    dividend_rho: None,
+                                }),
+                        );
+                    }
+
+                    chunk_results
                 })
-            })
-            .collect();
+                .collect()
+        };
 
         // Separate into individual vectors
         let mut delta_vec = Vec::with_capacity(len);

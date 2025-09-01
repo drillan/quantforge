@@ -8,7 +8,7 @@ mod converters;
 mod error;
 mod models;
 
-use models::{american, black76, black_scholes, merton};
+use models::{american, black76, black_scholes, instrumented, merton};
 
 /// Main Python module definition
 #[pymodule]
@@ -29,6 +29,15 @@ fn quantforge(m: &Bound<'_, PyModule>) -> PyResult<()> {
 
     let american_module = american::create_module(m.py())?;
     m.add_submodule(&american_module)?;
+
+    // Add instrumented module for profiling
+    let instrumented_module = PyModule::new_bound(m.py(), "instrumented")?;
+    instrumented::register_instrumented(&instrumented_module)?;
+    m.add_submodule(&instrumented_module)?;
+    
+    // Ensure the module is available at the package level
+    let sys_modules = m.py().import_bound("sys")?.getattr("modules")?;
+    sys_modules.set_item("quantforge.instrumented", &instrumented_module)?;
 
     Ok(())
 }

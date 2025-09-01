@@ -553,3 +553,93 @@ for size in [100, 1_000, 10_000, 100_000, 1_000_000]:
     print(f"  Throughput: {metrics['throughput']:,.0f} ops/sec")
     print(f"  Per operation: {metrics['us_per_op']:.2f} μs")
 ```
+
+## Core+Bindings再構築後の修正パターン（2025-09-01）
+
+### pytest-benchmarkエラー修正
+
+```python
+# Stats objectアクセス修正
+# ❌ 旧: Statsオブジェクトにget()メソッドを使用
+'min': benchmark.stats.get('min')
+
+# ✅ 新: 直接属性アクセス
+'min': benchmark.stats.min
+'max': benchmark.stats.max
+'mean': benchmark.stats.mean
+'stddev': benchmark.stats.stddev
+```
+
+### BroadcastIteratorOptimized実装
+
+```rust
+// ライフタイム制約を回避する新実装
+pub struct BroadcastIteratorOptimized {
+    inputs: Vec<BroadcastInput>,
+    length: usize,
+}
+
+pub enum BroadcastInput {
+    Scalar(f64),
+    Array(Vec<f64>),  // 所有権を持つ
+}
+
+impl BroadcastIteratorOptimized {
+    pub fn get_value_at(&self, input_idx: usize, element_idx: usize) -> f64 {
+        match &self.inputs[input_idx] {
+            BroadcastInput::Scalar(v) => *v,
+            BroadcastInput::Array(arr) => arr[element_idx],
+        }
+    }
+}
+```
+
+### greeks_batch再実装パターン
+
+```rust
+// American/Mertonモデル共通パターン
+fn greeks_batch<'py>(
+    py: Python<'py>,
+    spots: ArrayLike<'py>,
+    // ... other params
+    is_calls: Option<ArrayLike<'py>>,
+) -> PyResult<Bound<'py, PyDict>> {
+    // メイン入力のイテレータ
+    let inputs = vec![&spots, &strikes, &times, &rates, &dividend_yields, &sigmas];
+    let iter = BroadcastIteratorOptimized::new(inputs)?;
+    
+    // is_callsの別処理
+    let is_calls_iter = if let Some(is_calls_array) = is_calls {
+        let is_calls_inputs = vec![&is_calls_array];
+        Some(BroadcastIteratorOptimized::new(is_calls_inputs)?)
+    } else {
+        None
+    };
+    
+    let len = iter.len();
+    
+    // GIL解放して計算
+    let (delta_vec, gamma_vec, ...) = py.allow_threads(move || {
+        if len < PARALLEL_THRESHOLD_SMALL {
+            // 逐次処理
+            for i in 0..len {
+                let s = iter.get_value_at(0, i);
+                // ... 他のパラメータ取得
+                let is_call = is_calls_iter.as_ref()
+                    .map_or(true, |it| it.get_value_at(0, i) != 0.0);
+                // Greeks計算
+            }
+        } else {
+            // 並列処理
+            use rayon::prelude::*;
+            // ...
+        }
+    });
+    
+    // 辞書作成して返却
+    let dict = PyDict::new_bound(py);
+    dict.set_item("delta", PyArray1::from_vec_bound(py, delta_vec))?;
+    // ...
+    Ok(dict)
+}
+```

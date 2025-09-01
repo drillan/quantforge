@@ -4,15 +4,16 @@ use super::ArrayLike;
 use numpy::PyUntypedArrayMethods;
 
 /// Iterator that broadcasts arrays to the same length
-pub struct BroadcastIterator {
-    pub(crate) arrays: Vec<Vec<f64>>,
+pub struct BroadcastIterator<'a> {
+    pub(crate) inputs: Vec<&'a ArrayLike<'a>>,
     length: usize,
     position: usize,
 }
 
-impl BroadcastIterator {
+impl<'a> BroadcastIterator<'a> {
     /// Create a new broadcast iterator from ArrayLike inputs
-    pub fn new(inputs: Vec<&ArrayLike>) -> Result<Self, String> {
+    #[allow(dead_code)]
+    pub fn new(inputs: Vec<&'a ArrayLike<'a>>) -> Result<Self, String> {
         // Check if any input is empty array (not scalar)
         // If any array is empty, the result should be empty
         for input in &inputs {
@@ -20,7 +21,7 @@ impl BroadcastIterator {
                 if arr.len() == 0 {
                     // Return empty iterator if any array is empty
                     return Ok(Self {
-                        arrays: vec![],
+                        inputs: vec![],
                         length: 0,
                         position: 0,
                     });
@@ -43,41 +44,21 @@ impl BroadcastIterator {
         // This should not happen after the empty check above
         if max_len == 0 {
             return Ok(Self {
-                arrays: vec![],
+                inputs: vec![],
                 length: 0,
                 position: 0,
             });
         }
 
-        // Convert all inputs to Vec with broadcasting
-        let arrays: Vec<Vec<f64>> = inputs
-            .into_iter()
-            .map(|input| match input {
-                ArrayLike::Scalar(val) => vec![*val; max_len],
-                ArrayLike::Array(arr) => {
-                    let vec = arr
-                        .as_slice()
-                        .map(|s| s.to_vec())
-                        .unwrap_or_else(|_| vec![0.0; max_len]);
-                    if vec.is_empty() {
-                        vec![]
-                    } else if vec.len() == 1 {
-                        vec![vec[0]; max_len]
-                    } else {
-                        vec
-                    }
-                }
-            })
-            .collect();
-
         Ok(Self {
-            arrays,
+            inputs,
             length: max_len,
             position: 0,
         })
     }
 
     /// Get the broadcast length
+    #[allow(dead_code)]
     pub fn len(&self) -> usize {
         self.length
     }
@@ -90,16 +71,18 @@ impl BroadcastIterator {
 
     /// Compute results using a function without copying data (zero-copy)
     /// Sequential processing for small data
+    #[allow(dead_code)]
     pub fn compute_with<F>(&self, f: F) -> Vec<f64>
     where
         F: Fn(&[f64]) -> f64,
     {
         let mut results = Vec::with_capacity(self.length);
-        let mut buffer = vec![0.0; self.arrays.len()];
+        let mut buffer = vec![0.0; self.inputs.len()];
 
         for i in 0..self.length {
-            for (j, arr) in self.arrays.iter().enumerate() {
-                buffer[j] = arr[i];
+            for (j, input) in self.inputs.iter().enumerate() {
+                // Use get_broadcast for zero-copy access
+                buffer[j] = input.get_broadcast(i).unwrap_or(f64::NAN);
             }
             results.push(f(&buffer));
         }
@@ -109,35 +92,19 @@ impl BroadcastIterator {
 
     /// Compute results in parallel using a function without copying data (zero-copy)
     /// Parallel processing for large data
-    pub fn compute_parallel_with<F>(&self, f: F, chunk_size: usize) -> Vec<f64>
+    /// NOTE: This module is deprecated, use BroadcastIteratorOptimized instead
+    #[allow(dead_code)]
+    pub fn compute_parallel_with<F>(&self, _f: F, _chunk_size: usize) -> Vec<f64>
     where
         F: Fn(&[f64]) -> f64 + Send + Sync,
     {
-        use rayon::prelude::*;
-
-        let num_inputs = self.arrays.len();
-
-        (0..self.length)
-            .into_par_iter()
-            .chunks(chunk_size)
-            .flat_map(|chunk| {
-                let mut buffer = vec![0.0; num_inputs];
-                let mut chunk_results = Vec::with_capacity(chunk.len());
-
-                for i in chunk {
-                    for (j, arr) in self.arrays.iter().enumerate() {
-                        buffer[j] = arr[i];
-                    }
-                    chunk_results.push(f(&buffer));
-                }
-
-                chunk_results
-            })
-            .collect()
+        // Deprecated: Use BroadcastIteratorOptimized instead
+        // This implementation has thread safety issues with PyO3
+        vec![]
     }
 }
 
-impl Iterator for BroadcastIterator {
+impl<'a> Iterator for BroadcastIterator<'a> {
     type Item = Vec<f64>;
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -145,7 +112,10 @@ impl Iterator for BroadcastIterator {
             return None;
         }
 
-        let values: Vec<f64> = self.arrays.iter().map(|arr| arr[self.position]).collect();
+        let values: Vec<f64> = self.inputs
+            .iter()
+            .map(|input| input.get_broadcast(self.position).unwrap_or(f64::NAN))
+            .collect();
 
         self.position += 1;
         Some(values)

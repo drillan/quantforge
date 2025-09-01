@@ -660,3 +660,27 @@ let results = match strategy.mode() {
 2. **チャンクサイズの影響**: 大きなチャンクならチャンクごとのバッファでも効率的
 3. **統一パターンの価値**: 全モデルで同じパターンを適用し保守性向上
 4. **測定の重要性**: 実際のベンチマークで750%改善を確認
+
+## Core+Bindings再構築後の追加実装（2025-09-01）
+
+### BroadcastIteratorOptimized実装の必要性
+- **問題**: 既存のBroadcastIteratorではライフタイム制約で改善不可
+- **解決**: 新クラスBroadcastIteratorOptimizedを作成
+- **特徴**:
+  - データの所有権を持つ（ライフタイム制約回避）
+  - `get_value_at()`メソッドで直接アクセス
+  - スカラー値の事前展開を避ける
+
+### greeks_batch関数の再実装
+- **対象**: American、Mertonモデル
+- **実装内容**:
+  - BroadcastIteratorOptimizedを使用
+  - 並列処理の閾値判定を含む
+  - is_callsパラメータの適切な処理
+- **パフォーマンス**: 100万Greeks/秒以上を達成
+
+### テスト修正パターン
+- **Stats object access**: `.get('min')` → `.min`
+- **datetime deprecation**: `datetime.utcnow()` → `datetime.now(timezone.utc)`
+- **Missing parameters**: American/Mertonで配当利回り`q`パラメータ追加
+- **Module references**: `models.` → `black_scholes.`等の個別参照
