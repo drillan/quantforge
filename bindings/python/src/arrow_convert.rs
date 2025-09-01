@@ -2,9 +2,8 @@
 
 use arrow::array::{ArrayRef, Float64Array};
 use arrow::error::ArrowError;
-use numpy::{PyArray1, PyArrayMethods, PyReadonlyArray1};
+use numpy::{PyArray1, PyReadonlyArray1};
 use pyo3::prelude::*;
-use std::sync::Arc;
 
 /// Convert NumPy array to Arrow Float64Array
 ///
@@ -14,7 +13,7 @@ pub fn numpy_to_arrow(arr: PyReadonlyArray1<f64>) -> Result<Float64Array, ArrowE
     // Get the slice from NumPy array (zero-copy view)
     let slice = arr
         .as_slice()
-        .map_err(|e| ArrowError::InvalidArgumentError(format!("Failed to get slice: {}", e)))?;
+        .map_err(|e| ArrowError::InvalidArgumentError(format!("Failed to get slice: {e}")))?;
 
     // Create Arrow array from slice (requires copy for ownership)
     Ok(Float64Array::from(slice.to_vec()))
@@ -28,7 +27,7 @@ pub fn arrow_to_numpy<'py>(py: Python<'py>, arr: &Float64Array) -> Bound<'py, Py
     let vec: Vec<f64> = (0..arr.len()).map(|i| arr.value(i)).collect();
 
     // Create NumPy array
-    PyArray1::from_vec_bound(py, vec)
+    PyArray1::from_vec(py, vec)
 }
 
 /// Convert ArrayRef to NumPy array
@@ -54,14 +53,14 @@ pub fn broadcast_to_length(
     target_len: usize,
 ) -> Result<Float64Array, ArrowError> {
     let arr_len = arr.len().map_err(|e| {
-        ArrowError::InvalidArgumentError(format!("Failed to get array length: {}", e))
+        ArrowError::InvalidArgumentError(format!("Failed to get array length: {e}"))
     })?;
 
     if arr_len == 1 {
         // Scalar broadcast: repeat the single value
         let slice = arr
             .as_slice()
-            .map_err(|e| ArrowError::InvalidArgumentError(format!("Failed to get slice: {}", e)))?;
+            .map_err(|e| ArrowError::InvalidArgumentError(format!("Failed to get slice: {e}")))?;
         let value = slice[0];
         Ok(Float64Array::from(vec![value; target_len]))
     } else if arr_len == target_len {
@@ -70,8 +69,7 @@ pub fn broadcast_to_length(
     } else {
         // Shape mismatch
         Err(ArrowError::InvalidArgumentError(format!(
-            "Cannot broadcast array of length {} to length {}",
-            arr_len, target_len
+            "Cannot broadcast array of length {arr_len} to length {target_len}"
         )))
     }
 }
@@ -82,7 +80,7 @@ pub fn find_broadcast_length(arrays: &[&PyReadonlyArray1<f64>]) -> Result<usize,
 
     for arr in arrays {
         let len = arr.len().map_err(|e| {
-            ArrowError::InvalidArgumentError(format!("Failed to get array length: {}", e))
+            ArrowError::InvalidArgumentError(format!("Failed to get array length: {e}"))
         })?;
         if len > 1 {
             if max_len > 1 && len != max_len {
@@ -117,7 +115,7 @@ pub fn numpy_to_arrow_direct(arr: PyReadonlyArray1<f64>) -> Result<Float64Array,
     // Get the slice from NumPy array (zero-copy view)
     let slice = arr
         .as_slice()
-        .map_err(|e| ArrowError::InvalidArgumentError(format!("Failed to get slice: {}", e)))?;
+        .map_err(|e| ArrowError::InvalidArgumentError(format!("Failed to get slice: {e}")))?;
 
     // Create Arrow array from slice (requires copy for ownership)
     Ok(Float64Array::from(slice.to_vec()))

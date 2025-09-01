@@ -21,8 +21,7 @@ pub fn calculate_greeks(
             calculate_black_scholes_greeks(spots, strikes, times, rates, sigmas, is_call)
         }
         _ => Err(ArrowError::NotYetImplemented(format!(
-            "Greeks calculation for model '{}' not yet implemented",
-            model
+            "Greeks calculation for model '{model}' not yet implemented"
         ))),
     }
 }

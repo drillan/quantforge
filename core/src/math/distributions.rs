@@ -135,10 +135,7 @@ mod tests {
 
             assert!(
                 (array_value - scalar_value).abs() < 1e-15,
-                "Mismatch for x={}: array={}, scalar={}",
-                x,
-                array_value,
-                scalar_value
+                "Mismatch for x={x}: array={array_value}, scalar={scalar_value}"
             );
         }
     }

@@ -24,7 +24,7 @@ impl ArrowNativeCompute {
         sigmas: &Float64Array,
     ) -> Result<ArrayRef, QuantForgeError> {
         BlackScholes::call_price(spots, strikes, times, rates, sigmas)
-            .map_err(|e| QuantForgeError::Arrow(e))
+            .map_err(QuantForgeError::Arrow)
     }
 
     /// Black-Scholesプット価格計算（真のゼロコピー）
@@ -36,7 +36,7 @@ impl ArrowNativeCompute {
         sigmas: &Float64Array,
     ) -> Result<ArrayRef, QuantForgeError> {
         BlackScholes::put_price(spots, strikes, times, rates, sigmas)
-            .map_err(|e| QuantForgeError::Arrow(e))
+            .map_err(QuantForgeError::Arrow)
     }
 
     /// Black76コール価格計算（真のゼロコピー）
@@ -47,8 +47,7 @@ impl ArrowNativeCompute {
         rates: &Float64Array,
         sigmas: &Float64Array,
     ) -> Result<ArrayRef, QuantForgeError> {
-        Black76::call_price(forwards, strikes, times, rates, sigmas)
-            .map_err(|e| QuantForgeError::Arrow(e))
+        Black76::call_price(forwards, strikes, times, rates, sigmas).map_err(QuantForgeError::Arrow)
     }
 
     /// Black76プット価格計算（真のゼロコピー）
@@ -59,8 +58,7 @@ impl ArrowNativeCompute {
         rates: &Float64Array,
         sigmas: &Float64Array,
     ) -> Result<ArrayRef, QuantForgeError> {
-        Black76::put_price(forwards, strikes, times, rates, sigmas)
-            .map_err(|e| QuantForgeError::Arrow(e))
+        Black76::put_price(forwards, strikes, times, rates, sigmas).map_err(QuantForgeError::Arrow)
     }
 
     /// Mertonコール価格計算（配当付き、真のゼロコピー）
@@ -73,7 +71,7 @@ impl ArrowNativeCompute {
         sigmas: &Float64Array,
     ) -> Result<ArrayRef, QuantForgeError> {
         Merton::call_price(spots, strikes, times, rates, dividend_yields, sigmas)
-            .map_err(|e| QuantForgeError::Arrow(e))
+            .map_err(QuantForgeError::Arrow)
     }
 
     /// Mertonプット価格計算（配当付き、真のゼロコピー）
@@ -86,7 +84,7 @@ impl ArrowNativeCompute {
         sigmas: &Float64Array,
     ) -> Result<ArrayRef, QuantForgeError> {
         Merton::put_price(spots, strikes, times, rates, dividend_yields, sigmas)
-            .map_err(|e| QuantForgeError::Arrow(e))
+            .map_err(QuantForgeError::Arrow)
     }
 }
 

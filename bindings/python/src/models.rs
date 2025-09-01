@@ -1,15 +1,14 @@
 //! Arrow-native model implementations with Python bindings
 
-use arrow::array::Float64Array;
 use numpy::{PyArray1, PyReadonlyArray1};
 use pyo3::prelude::*;
 use pyo3::types::PyDict;
 
 use crate::arrow_convert::{
-    all_same_length, arrayref_to_numpy, arrow_to_numpy, broadcast_arrays, broadcast_to_length,
-    find_broadcast_length, numpy_to_arrow, numpy_to_arrow_direct,
+    all_same_length, arrayref_to_numpy, broadcast_to_length, find_broadcast_length,
+    numpy_to_arrow_direct,
 };
-use crate::error::{arrow_to_py_err, ToPyErr};
+use crate::error::arrow_to_py_err;
 
 // Import Arrow-native compute kernels from core
 use quantforge_core::compute::black_scholes::BlackScholes;
@@ -392,7 +391,7 @@ pub fn greeks<'py>(
     };
 
     // Create Python dict with scalar values
-    let dict = PyDict::new_bound(py);
+    let dict = PyDict::new(py);
     dict.set_item("delta", delta)?;
     dict.set_item("gamma", gamma)?;
     dict.set_item("vega", vega)?;
@@ -441,7 +440,7 @@ pub fn greeks_batch<'py>(
         .map_err(arrow_to_py_err)?;
 
     // Create Python dict with NumPy arrays
-    let dict = PyDict::new_bound(py);
+    let dict = PyDict::new(py);
 
     // Extract each Greek and convert to NumPy
     for (i, field) in greeks_struct.fields().iter().enumerate() {

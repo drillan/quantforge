@@ -5,7 +5,7 @@
 use pyo3::prelude::*;
 
 mod arrow_convert;
-// mod arrow_native;  // TODO: Complex FFI implementation needs more work
+mod arrow_native; // Simplified implementation
 mod error;
 mod models;
 
@@ -20,7 +20,7 @@ fn quantforge(m: &Bound<'_, PyModule>) -> PyResult<()> {
     // ========================================================================
     // Black-Scholes Module
     // ========================================================================
-    let black_scholes_module = PyModule::new_bound(m.py(), "black_scholes")?;
+    let black_scholes_module = PyModule::new(m.py(), "black_scholes")?;
 
     // Scalar functions
     black_scholes_module.add_function(wrap_pyfunction!(call_price, &black_scholes_module)?)?;
@@ -52,13 +52,13 @@ fn quantforge(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_submodule(&black_scholes_module)?;
 
     // Ensure the module is available at the package level
-    let sys_modules = m.py().import_bound("sys")?.getattr("modules")?;
+    let sys_modules = m.py().import("sys")?.getattr("modules")?;
     sys_modules.set_item("quantforge.black_scholes", &black_scholes_module)?;
 
     // ========================================================================
     // Black76 Module (Futures)
     // ========================================================================
-    let black76_module = PyModule::new_bound(m.py(), "black76")?;
+    let black76_module = PyModule::new(m.py(), "black76")?;
 
     // Scalar functions
     black76_module.add_function(wrap_pyfunction!(black76_call_price, &black76_module)?)?;
@@ -70,7 +70,7 @@ fn quantforge(m: &Bound<'_, PyModule>) -> PyResult<()> {
     // ========================================================================
     // Merton Module (Dividends)
     // ========================================================================
-    let merton_module = PyModule::new_bound(m.py(), "merton")?;
+    let merton_module = PyModule::new(m.py(), "merton")?;
 
     // Scalar functions
     merton_module.add_function(wrap_pyfunction!(merton_call_price, &merton_module)?)?;
@@ -82,7 +82,7 @@ fn quantforge(m: &Bound<'_, PyModule>) -> PyResult<()> {
     // ========================================================================
     // American Options Module
     // ========================================================================
-    let american_module = PyModule::new_bound(m.py(), "american")?;
+    let american_module = PyModule::new(m.py(), "american")?;
 
     // Scalar functions
     american_module.add_function(wrap_pyfunction!(american_call_price, &american_module)?)?;
@@ -92,13 +92,13 @@ fn quantforge(m: &Bound<'_, PyModule>) -> PyResult<()> {
     sys_modules.set_item("quantforge.american", &american_module)?;
 
     // ========================================================================
-    // Arrow Native Module (TODO: Implement after FFI issues resolved)
+    // Arrow Native Module (Simplified implementation)
     // ========================================================================
-    // let arrow_module = PyModule::new_bound(m.py(), "arrow")?;
-    // arrow_native::register_arrow_functions(&arrow_module)?;
-    //
-    // m.add_submodule(&arrow_module)?;
-    // sys_modules.set_item("quantforge.arrow", &arrow_module)?;
+    let arrow_module = PyModule::new(m.py(), "arrow_native")?;
+    arrow_native::register_arrow_functions(&arrow_module)?;
+
+    m.add_submodule(&arrow_module)?;
+    sys_modules.set_item("quantforge.arrow_native", &arrow_module)?;
 
     Ok(())
 }

@@ -21,20 +21,22 @@ black_scholes.greeks_batch = greeks_batch
 # Import Arrow API modules
 from . import arrow_api, numpy_compat
 
-# Import instrumented module if available (for profiling)
+# Import optional modules
+try:
+    from .quantforge import arrow_native
+    has_arrow_native = True
+except ImportError:
+    has_arrow_native = False
+
 try:
     from .quantforge import instrumented
-
-    __all__ = [
-        "__version__",
-        "black_scholes",
-        "black76",
-        "merton",
-        "american",
-        "arrow_api",
-        "numpy_compat",
-        "instrumented",
-    ]
+    has_instrumented = True
 except ImportError:
-    # instrumented module not available in regular builds
-    __all__ = ["__version__", "black_scholes", "black76", "merton", "american", "arrow_api", "numpy_compat"]
+    has_instrumented = False
+
+# Build __all__ list based on available modules
+__all__ = ["__version__", "black_scholes", "black76", "merton", "american", "arrow_api", "numpy_compat"]
+if has_arrow_native:
+    __all__.append("arrow_native")
+if has_instrumented:
+    __all__.append("instrumented")
