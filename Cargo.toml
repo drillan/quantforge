@@ -19,6 +19,11 @@ serde = { version = "1.0", features = ["derive"] }
 ndarray = "0.16"
 rayon = "1.10"
 
+# Arrow関連
+arrow = "56.0"
+arrow-array = "56.0"
+arrow-buffer = "56.0"
+
 # PyO3はbindings層のみで使用
 pyo3 = { version = "0.22", features = ["extension-module", "abi3-py312"] }
 numpy = "0.22"

@@ -11,6 +11,11 @@ serde.workspace = true
 ndarray.workspace = true
 rayon.workspace = true
 
+# Arrow関連
+arrow.workspace = true
+arrow-array.workspace = true
+arrow-buffer.workspace = true
+
 # 数学関数
 libm = "0.2"
 statrs = "0.17"

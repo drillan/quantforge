@@ -17,5 +17,9 @@ ndarray.workspace = true
 thiserror.workspace = true
 rayon.workspace = true
 
+# Arrow関連
+arrow.workspace = true
+arrow-array.workspace = true
+
 [build-dependencies]
 pyo3-build-config = "0.22"
