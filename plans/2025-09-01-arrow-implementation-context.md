@@ -117,8 +117,8 @@ fn call_price_numpy(
 ## 💡 実装開始コマンド
 ```bash
 # 新しいセッションで：
-git checkout feature/core-bindings-restructure
-cat IMPLEMENTATION_CONTEXT.md  # この文書を確認
+git checkout feature/arrow-native-migration
+cat plans/2025-09-01-arrow-implementation-context.md  # この文書を確認
 cat plans/2025-09-01-arrow-native-migration.md  # 詳細計画確認
 
 # プロトタイプ確認
