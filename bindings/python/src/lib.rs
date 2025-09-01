@@ -1,43 +1,79 @@
-//! Python bindings for QuantForge
+//! Python bindings for QuantForge - Arrow-native implementation
 //!
-//! This module provides Python bindings for the QuantForge core library.
+//! This module provides Python bindings for the QuantForge Arrow-native core library.
 
 use pyo3::prelude::*;
 
-mod converters;
+mod arrow_convert;
 mod error;
 mod models;
 
-use models::{american, black76, black_scholes, instrumented, merton};
+use models::*;
 
 /// Main Python module definition
 #[pymodule]
 fn quantforge(m: &Bound<'_, PyModule>) -> PyResult<()> {
     // Version information
-    m.add("__version__", "0.1.0")?;
-
-    // Create submodules at top level
+    m.add("__version__", "0.2.0")?;  // Version 0.2.0 for Arrow-native
+    
+    // ========================================================================
+    // Black-Scholes Module
+    // ========================================================================
     let black_scholes_module = PyModule::new_bound(m.py(), "black_scholes")?;
-    black_scholes::register_functions(&black_scholes_module)?;
+    
+    // Scalar functions
+    black_scholes_module.add_function(wrap_pyfunction!(call_price, &black_scholes_module)?)?;
+    black_scholes_module.add_function(wrap_pyfunction!(put_price, &black_scholes_module)?)?;
+    black_scholes_module.add_function(wrap_pyfunction!(greeks, &black_scholes_module)?)?;
+    black_scholes_module.add_function(wrap_pyfunction!(implied_volatility, &black_scholes_module)?)?;
+    
+    // Batch functions
+    black_scholes_module.add_function(wrap_pyfunction!(call_price_batch, &black_scholes_module)?)?;
+    black_scholes_module.add_function(wrap_pyfunction!(put_price_batch, &black_scholes_module)?)?;
+    black_scholes_module.add_function(wrap_pyfunction!(greeks_batch, &black_scholes_module)?)?;
+    black_scholes_module.add_function(wrap_pyfunction!(implied_volatility_batch, &black_scholes_module)?)?;
+    
     m.add_submodule(&black_scholes_module)?;
-
-    let black76_module = black76::create_module(m.py())?;
-    m.add_submodule(&black76_module)?;
-
-    let merton_module = merton::create_module(m.py())?;
-    m.add_submodule(&merton_module)?;
-
-    let american_module = american::create_module(m.py())?;
-    m.add_submodule(&american_module)?;
-
-    // Add instrumented module for profiling
-    let instrumented_module = PyModule::new_bound(m.py(), "instrumented")?;
-    instrumented::register_instrumented(&instrumented_module)?;
-    m.add_submodule(&instrumented_module)?;
     
     // Ensure the module is available at the package level
     let sys_modules = m.py().import_bound("sys")?.getattr("modules")?;
-    sys_modules.set_item("quantforge.instrumented", &instrumented_module)?;
-
+    sys_modules.set_item("quantforge.black_scholes", &black_scholes_module)?;
+    
+    // ========================================================================
+    // Black76 Module (Futures)
+    // ========================================================================
+    let black76_module = PyModule::new_bound(m.py(), "black76")?;
+    
+    // Scalar functions
+    black76_module.add_function(wrap_pyfunction!(black76_call_price, &black76_module)?)?;
+    black76_module.add_function(wrap_pyfunction!(black76_put_price, &black76_module)?)?;
+    
+    m.add_submodule(&black76_module)?;
+    sys_modules.set_item("quantforge.black76", &black76_module)?;
+    
+    // ========================================================================
+    // Merton Module (Dividends)
+    // ========================================================================
+    let merton_module = PyModule::new_bound(m.py(), "merton")?;
+    
+    // Scalar functions
+    merton_module.add_function(wrap_pyfunction!(merton_call_price, &merton_module)?)?;
+    merton_module.add_function(wrap_pyfunction!(merton_put_price, &merton_module)?)?;
+    
+    m.add_submodule(&merton_module)?;
+    sys_modules.set_item("quantforge.merton", &merton_module)?;
+    
+    // ========================================================================
+    // American Options Module
+    // ========================================================================
+    let american_module = PyModule::new_bound(m.py(), "american")?;
+    
+    // Scalar functions
+    american_module.add_function(wrap_pyfunction!(american_call_price, &american_module)?)?;
+    american_module.add_function(wrap_pyfunction!(american_put_price, &american_module)?)?;
+    
+    m.add_submodule(&american_module)?;
+    sys_modules.set_item("quantforge.american", &american_module)?;
+    
     Ok(())
 }
