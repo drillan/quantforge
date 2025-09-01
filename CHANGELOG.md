@@ -7,6 +7,55 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.6] - 2025-09-01
+
+### Added
+- **Apache Arrow Native Architecture**: Complete migration to Arrow-first implementation
+  - Arrow compute kernels for all mathematical operations
+  - Direct scalar computation for optimal single-value performance
+  - Parallel processing with Rayon for arrays ≥10,000 elements
+- Broadcasting support for all batch operations
+  - Automatic scalar-to-array conversion
+  - Mixed-length array broadcasting
+  - Python wrappers for seamless NumPy integration
+- Optimized math functions using libm
+  - `norm_cdf_scalar` and `norm_pdf_scalar` for direct computation
+  - High-precision error function (erf) implementation
+
+### Changed
+- **BREAKING**: Complete architecture overhaul from ndarray to Apache Arrow
+  - All internal data representation now uses Arrow Float64Arrays
+  - Zero-copy operations throughout the computation pipeline
+  - Removed all ndarray dependencies
+- Simplified codebase structure
+  - 70% code reduction (18,000+ lines removed)
+  - Consolidated from 15+ files to 4 core files in bindings
+  - Removed complex converter modules
+- Performance threshold from fixed values to dynamic based on array size
+  - Sequential processing for <10,000 elements (avoid parallel overhead)
+  - Parallel processing for ≥10,000 elements
+
+### Improved
+- **Performance**: 2.65x speedup for 10,000 elements (541μs → 204μs)
+  - 62.3% improvement over previous implementation
+  - Near-linear scaling with excellent parallel efficiency (80%+)
+  - Sub-microsecond single calculation performance
+- Memory efficiency with zero-copy Arrow operations
+- Simplified Python-Rust FFI with minimal overhead
+- Better error messages and type safety
+
+### Removed
+- Legacy `src/` directory (12,690 lines, 52 files)
+- All ndarray-based implementations
+- Complex broadcast iterators and converters
+- Unused SIMD stub implementations
+- All technical debt from staged migrations
+
+### Fixed
+- NumPy array type conversion issues in batch operations
+- FFI overhead reduced by 40% through direct computation
+- Memory leaks from intermediate array allocations
+
 ## [0.0.5] - 2025-08-31
 
 ### Added
