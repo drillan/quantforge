@@ -1,6 +1,6 @@
 //! Merton model with dividend yield - Arrow-native implementation
 
-use arrow::array::{Float64Array, ArrayRef};
+use arrow::array::{ArrayRef, Float64Array};
 use arrow::error::ArrowError;
 
 /// Merton model implementation using Arrow arrays
@@ -18,10 +18,10 @@ impl Merton {
     ) -> Result<ArrayRef, ArrowError> {
         // Black-Scholes with dividend yield adjustment
         Err(ArrowError::NotYetImplemented(
-            "Merton model implementation pending".to_string()
+            "Merton model implementation pending".to_string(),
         ))
     }
-    
+
     /// Calculate put option price with dividend yield
     pub fn put_price(
         _spots: &Float64Array,
@@ -32,7 +32,7 @@ impl Merton {
         _sigmas: &Float64Array,
     ) -> Result<ArrayRef, ArrowError> {
         Err(ArrowError::NotYetImplemented(
-            "Merton model implementation pending".to_string()
+            "Merton model implementation pending".to_string(),
         ))
     }
 }

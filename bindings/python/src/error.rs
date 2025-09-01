@@ -42,9 +42,7 @@ pub fn arrow_to_py_err(err: ArrowError) -> PyErr {
         ArrowError::MemoryError(msg) => PyRuntimeError::new_err(format!("Memory error: {}", msg)),
         ArrowError::IoError(msg, _) => PyRuntimeError::new_err(format!("IO error: {}", msg)),
         ArrowError::ExternalError(e) => PyRuntimeError::new_err(format!("External error: {}", e)),
-        ArrowError::NotYetImplemented(msg) => {
-            pyo3::exceptions::PyNotImplementedError::new_err(msg)
-        }
+        ArrowError::NotYetImplemented(msg) => pyo3::exceptions::PyNotImplementedError::new_err(msg),
         _ => PyRuntimeError::new_err(format!("Arrow error: {}", err)),
     }
 }

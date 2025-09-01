@@ -1,7 +1,8 @@
 """Wrapper functions for broadcasting support."""
 
+from typing import Union
+
 import numpy as np
-from typing import Union, Dict
 from numpy.typing import NDArray
 
 # Import native module
@@ -30,7 +31,7 @@ def call_price_batch(
 ) -> NDArray[np.float64]:
     """
     Calculate Black-Scholes call option prices with broadcasting support.
-    
+
     Parameters
     ----------
     spots : array_like
@@ -43,7 +44,7 @@ def call_price_batch(
         Risk-free rates (scalar or array)
     sigmas : array_like
         Volatilities (scalar or array)
-        
+
     Returns
     -------
     numpy.ndarray
@@ -55,7 +56,7 @@ def call_price_batch(
     times = _ensure_array(times)
     rates = _ensure_array(rates)
     sigmas = _ensure_array(sigmas)
-    
+
     # Call native implementation
     return _native_call_batch(spots, strikes, times, rates, sigmas)
 
@@ -69,7 +70,7 @@ def put_price_batch(
 ) -> NDArray[np.float64]:
     """
     Calculate Black-Scholes put option prices with broadcasting support.
-    
+
     Parameters
     ----------
     spots : array_like
@@ -82,7 +83,7 @@ def put_price_batch(
         Risk-free rates (scalar or array)
     sigmas : array_like
         Volatilities (scalar or array)
-        
+
     Returns
     -------
     numpy.ndarray
@@ -94,7 +95,7 @@ def put_price_batch(
     times = _ensure_array(times)
     rates = _ensure_array(rates)
     sigmas = _ensure_array(sigmas)
-    
+
     # Call native implementation
     return _native_put_batch(spots, strikes, times, rates, sigmas)
 
@@ -106,10 +107,10 @@ def greeks_batch(
     rates: ArrayLike,
     sigmas: ArrayLike,
     is_call: bool = True,
-) -> Dict[str, NDArray[np.float64]]:
+) -> dict[str, NDArray[np.float64]]:
     """
     Calculate Black-Scholes Greeks with broadcasting support.
-    
+
     Parameters
     ----------
     spots : array_like
@@ -124,7 +125,7 @@ def greeks_batch(
         Volatilities (scalar or array)
     is_call : bool, default=True
         True for call options, False for put options
-        
+
     Returns
     -------
     dict
@@ -136,6 +137,6 @@ def greeks_batch(
     times = _ensure_array(times)
     rates = _ensure_array(rates)
     sigmas = _ensure_array(sigmas)
-    
+
     # Call native implementation
     return _native_greeks_batch(spots, strikes, times, rates, sigmas, is_call)

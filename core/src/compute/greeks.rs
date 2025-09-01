@@ -1,6 +1,6 @@
 //! Unified Greeks calculation for all models
 
-use arrow::array::{Float64Array, StructArray, ArrayRef};
+use arrow::array::{ArrayRef, Float64Array, StructArray};
 use arrow::datatypes::{DataType, Field};
 use arrow::error::ArrowError;
 
@@ -20,9 +20,10 @@ pub fn calculate_greeks(
         "black_scholes" | "bs" => {
             calculate_black_scholes_greeks(spots, strikes, times, rates, sigmas, is_call)
         }
-        _ => Err(ArrowError::NotYetImplemented(
-            format!("Greeks calculation for model '{}' not yet implemented", model)
-        ))
+        _ => Err(ArrowError::NotYetImplemented(format!(
+            "Greeks calculation for model '{}' not yet implemented",
+            model
+        ))),
     }
 }
 
@@ -41,7 +42,7 @@ fn calculate_black_scholes_greeks(
     let vega = BlackScholes::vega(spots, strikes, times, rates, sigmas)?;
     let theta = BlackScholes::theta(spots, strikes, times, rates, sigmas, is_call)?;
     let rho = BlackScholes::rho(spots, strikes, times, rates, sigmas, is_call)?;
-    
+
     // Create fields for the struct
     let fields = vec![
         Field::new("delta", DataType::Float64, false),
@@ -50,17 +51,18 @@ fn calculate_black_scholes_greeks(
         Field::new("theta", DataType::Float64, false),
         Field::new("rho", DataType::Float64, false),
     ];
-    
+
     // Create the StructArray
     let arrays: Vec<ArrayRef> = vec![delta, gamma, vega, theta, rho];
-    
+
     StructArray::try_new(fields.into(), arrays, None)
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    
+    use arrow::array::Array;
+
     #[test]
     fn test_calculate_greeks() {
         let spots = Float64Array::from(vec![100.0]);
@@ -68,7 +70,7 @@ mod tests {
         let times = Float64Array::from(vec![1.0]);
         let rates = Float64Array::from(vec![0.05]);
         let sigmas = Float64Array::from(vec![0.2]);
-        
+
         let greeks = calculate_greeks(
             "black_scholes",
             &spots,
@@ -76,19 +78,17 @@ mod tests {
             &times,
             &rates,
             &sigmas,
-            true
-        ).unwrap();
-        
+            true,
+        )
+        .unwrap();
+
         // Verify structure
         assert_eq!(greeks.len(), 1);
         assert_eq!(greeks.num_columns(), 5);
-        
+
         // Check field names
-        let fields: Vec<String> = greeks.fields()
-            .iter()
-            .map(|f| f.name().clone())
-            .collect();
-        
+        let fields: Vec<String> = greeks.fields().iter().map(|f| f.name().clone()).collect();
+
         assert_eq!(fields, vec!["delta", "gamma", "vega", "theta", "rho"]);
     }
 }

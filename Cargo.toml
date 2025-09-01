@@ -20,7 +20,7 @@ ndarray = "0.16"
 rayon = "1.10"
 
 # Arrow関連
-arrow = "56.0"
+arrow = { version = "56.0", features = ["ffi"] }
 arrow-array = "56.0"
 arrow-buffer = "56.0"
 

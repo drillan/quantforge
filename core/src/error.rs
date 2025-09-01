@@ -8,7 +8,7 @@ use thiserror::Error;
 pub enum QuantForgeError {
     #[error("Arrow computation error: {0}")]
     Arrow(#[from] ArrowError),
-    
+
     #[error("Invalid input: {0}")]
     InvalidInput(String),
 

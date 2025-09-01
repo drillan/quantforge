@@ -1,6 +1,6 @@
 //! American option pricing - Arrow-native implementation
 
-use arrow::array::{Float64Array, ArrayRef};
+use arrow::array::{ArrayRef, Float64Array};
 use arrow::error::ArrowError;
 
 /// American option model implementation using Arrow arrays
@@ -17,10 +17,10 @@ impl American {
     ) -> Result<ArrayRef, ArrowError> {
         // Binomial tree or finite difference implementation
         Err(ArrowError::NotYetImplemented(
-            "American option implementation pending".to_string()
+            "American option implementation pending".to_string(),
         ))
     }
-    
+
     /// Calculate American put option price
     pub fn put_price(
         _spots: &Float64Array,
@@ -30,7 +30,7 @@ impl American {
         _sigmas: &Float64Array,
     ) -> Result<ArrayRef, ArrowError> {
         Err(ArrowError::NotYetImplemented(
-            "American option implementation pending".to_string()
+            "American option implementation pending".to_string(),
         ))
     }
 }

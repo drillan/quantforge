@@ -233,9 +233,22 @@ pub const CHUNK_SIZE_L3: usize = L3_CACHE_SIZE / 8 / 4; // 262144要素
 ///
 /// この要素数以下ではシーケンシャル処理が高速。
 /// FFIオーバーヘッドと並列化コストを考慮。
-/// 2025-08-31の実測: 1,000要素でクロスオーバー、安全マージンを考慮して8,000に設定。
-/// 8,000要素以上で並列化によりNumPyを上回る性能を実現。
-pub const PARALLEL_THRESHOLD_SMALL: usize = 8_000;
+/// 2025-09-01: プロトタイプとの性能同等性確保のため10,000に調整。
+/// プロトタイプ実測: 10,000要素で166.71μs（並列化有効）
+/// 現在実装（50,000閾値）: 245.35μs（シーケンシャル処理）
+/// 10,000要素から並列化することで約47%の性能改善を実現。
+pub const PARALLEL_THRESHOLD_SMALL: usize = 10_000;
+
+/// 並列化閾値を環境変数から取得（オーバーライド可能）
+///
+/// QUANTFORGE_PARALLEL_THRESHOLD環境変数で調整可能。
+/// 設定されていない場合はPARALLEL_THRESHOLD_SMALLを使用。
+pub fn get_parallel_threshold() -> usize {
+    std::env::var("QUANTFORGE_PARALLEL_THRESHOLD")
+        .ok()
+        .and_then(|s| s.parse().ok())
+        .unwrap_or(PARALLEL_THRESHOLD_SMALL)
+}
 
 /// マイクロバッチ閾値: 極小規模
 ///
