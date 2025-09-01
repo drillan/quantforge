@@ -245,6 +245,11 @@ scratch/
 *_scratch.py
 *_temp.py
 
+# Backup directories (cleanup artifacts)
+*.backup/
+*.old/
+*_backup/
+
 # Progress tracking
 tracker/data.yaml        # 詳細データ（頻繁更新）
 tracker/*.tmp           # 一時ファイル
