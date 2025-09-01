@@ -1,14 +1,10 @@
-//! Core error types with Arrow integration
+//! Core error types without PyO3 dependencies
 
-use arrow::error::ArrowError;
 use thiserror::Error;
 
 /// Core error type for QuantForge
 #[derive(Error, Debug)]
 pub enum QuantForgeError {
-    #[error("Arrow computation error: {0}")]
-    Arrow(#[from] ArrowError),
-    
     #[error("Invalid input: {0}")]
     InvalidInput(String),
 

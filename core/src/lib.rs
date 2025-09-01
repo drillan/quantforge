@@ -1,22 +1,22 @@
-//! QuantForge Core - Pure Rust implementation
+//! QuantForge Core - Arrow-native option pricing library
 //!
-//! This crate provides the core computational engine for QuantForge
-//! without any Python dependencies.
+//! This crate provides high-performance option pricing using Apache Arrow
+//! for efficient vectorized computation.
 
+pub mod compute;
+pub mod math;
 pub mod constants;
 pub mod error;
-pub mod math;
-pub mod models;
-pub mod traits;
 
-// Re-export commonly used items
-pub use constants::*;
+// Re-export main computation modules
+pub use compute::black_scholes;
+pub use compute::black76;
+pub use compute::merton;
+pub use compute::american;
+pub use compute::greeks;
+
+// Re-export error types
 pub use error::{QuantForgeError, QuantForgeResult};
 
-// Re-export models
-pub use models::{
-    american::American, black76::Black76, black_scholes::BlackScholes, merton::Merton,
-};
-
-// Re-export traits
-pub use traits::{BatchProcessor, Greeks, OptionModel};
+// Re-export constants
+pub use constants::*;
