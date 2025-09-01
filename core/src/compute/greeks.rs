@@ -1,9 +1,8 @@
 //! Unified Greeks calculation for all models
 
-use arrow::array::{Array, Float64Array, StructArray, ArrayRef};
+use arrow::array::{Float64Array, StructArray, ArrayRef};
 use arrow::datatypes::{DataType, Field};
 use arrow::error::ArrowError;
-use std::sync::Arc;
 
 use crate::compute::black_scholes::BlackScholes;
 

@@ -23,46 +23,48 @@ use quantforge_core::compute::greeks::calculate_greeks;
 #[pyfunction]
 #[pyo3(signature = (s, k, t, r, sigma))]
 pub fn call_price(s: f64, k: f64, t: f64, r: f64, sigma: f64) -> PyResult<f64> {
-    // For scalar inputs, create single-element arrays
-    let spots = Float64Array::from(vec![s]);
-    let strikes = Float64Array::from(vec![k]);
-    let times = Float64Array::from(vec![t]);
-    let rates = Float64Array::from(vec![r]);
-    let sigmas = Float64Array::from(vec![sigma]);
+    // Direct scalar computation to avoid array overhead
+    use quantforge_core::math::distributions::norm_cdf;
     
-    // Call Arrow-native kernel
-    let result = BlackScholes::call_price(&spots, &strikes, &times, &rates, &sigmas)
-        .map_err(arrow_to_py_err)?;
+    // Validate inputs
+    if s <= 0.0 || k <= 0.0 || t <= 0.0 || sigma <= 0.0 {
+        return Err(pyo3::exceptions::PyValueError::new_err(
+            "s, k, t, and sigma must be positive"
+        ));
+    }
     
-    // Extract scalar result
-    let arr = result.as_any()
-        .downcast_ref::<Float64Array>()
-        .ok_or_else(|| pyo3::exceptions::PyTypeError::new_err("Expected Float64Array"))?;
+    // Black-Scholes formula (direct scalar computation)
+    let sqrt_t = t.sqrt();
+    let d1 = ((s / k).ln() + (r + sigma * sigma / 2.0) * t) / (sigma * sqrt_t);
+    let d2 = d1 - sigma * sqrt_t;
     
-    Ok(arr.value(0))
+    let call_price = s * norm_cdf(d1) - k * (-r * t).exp() * norm_cdf(d2);
+    
+    Ok(call_price)
 }
 
 /// Calculate Black-Scholes put option price (scalar)
 #[pyfunction]
 #[pyo3(signature = (s, k, t, r, sigma))]
 pub fn put_price(s: f64, k: f64, t: f64, r: f64, sigma: f64) -> PyResult<f64> {
-    // For scalar inputs, create single-element arrays
-    let spots = Float64Array::from(vec![s]);
-    let strikes = Float64Array::from(vec![k]);
-    let times = Float64Array::from(vec![t]);
-    let rates = Float64Array::from(vec![r]);
-    let sigmas = Float64Array::from(vec![sigma]);
+    // Direct scalar computation to avoid array overhead
+    use quantforge_core::math::distributions::norm_cdf;
     
-    // Call Arrow-native kernel
-    let result = BlackScholes::put_price(&spots, &strikes, &times, &rates, &sigmas)
-        .map_err(arrow_to_py_err)?;
+    // Validate inputs
+    if s <= 0.0 || k <= 0.0 || t <= 0.0 || sigma <= 0.0 {
+        return Err(pyo3::exceptions::PyValueError::new_err(
+            "s, k, t, and sigma must be positive"
+        ));
+    }
     
-    // Extract scalar result
-    let arr = result.as_any()
-        .downcast_ref::<Float64Array>()
-        .ok_or_else(|| pyo3::exceptions::PyTypeError::new_err("Expected Float64Array"))?;
+    // Black-Scholes formula (direct scalar computation)
+    let sqrt_t = t.sqrt();
+    let d1 = ((s / k).ln() + (r + sigma * sigma / 2.0) * t) / (sigma * sqrt_t);
+    let d2 = d1 - sigma * sqrt_t;
     
-    Ok(arr.value(0))
+    let put_price = k * (-r * t).exp() * norm_cdf(-d2) - s * norm_cdf(-d1);
+    
+    Ok(put_price)
 }
 
 /// Calculate Black-Scholes call option price (batch)
@@ -139,36 +141,61 @@ pub fn greeks<'py>(
     sigma: f64,
     is_call: bool,
 ) -> PyResult<Bound<'py, PyDict>> {
-    // Create single-element arrays
-    let spots = Float64Array::from(vec![s]);
-    let strikes = Float64Array::from(vec![k]);
-    let times = Float64Array::from(vec![t]);
-    let rates = Float64Array::from(vec![r]);
-    let sigmas = Float64Array::from(vec![sigma]);
+    // Direct scalar computation to avoid array overhead
+    use quantforge_core::math::distributions::{norm_cdf, norm_pdf};
     
-    // Calculate all Greeks
-    let greeks_struct = calculate_greeks(
-        "black_scholes",
-        &spots,
-        &strikes,
-        &times,
-        &rates,
-        &sigmas,
-        is_call
-    ).map_err(arrow_to_py_err)?;
+    // Validate inputs
+    if s <= 0.0 || k <= 0.0 || t <= 0.0 || sigma <= 0.0 {
+        return Err(pyo3::exceptions::PyValueError::new_err(
+            "s, k, t, and sigma must be positive"
+        ));
+    }
+    
+    // Calculate d1 and d2
+    let sqrt_t = t.sqrt();
+    let d1 = ((s / k).ln() + (r + sigma * sigma / 2.0) * t) / (sigma * sqrt_t);
+    let d2 = d1 - sigma * sqrt_t;
+    
+    // Calculate Greeks
+    let n_d1 = norm_cdf(d1);
+    let n_d2 = norm_cdf(d2);
+    let phi_d1 = norm_pdf(d1);
+    
+    // Delta
+    let delta = if is_call {
+        n_d1
+    } else {
+        n_d1 - 1.0
+    };
+    
+    // Gamma (same for call and put)
+    let gamma = phi_d1 / (s * sigma * sqrt_t);
+    
+    // Vega (same for call and put)  
+    let vega = s * phi_d1 * sqrt_t / 100.0;  // Divide by 100 for convention
+    
+    // Theta
+    let term1 = -s * phi_d1 * sigma / (2.0 * sqrt_t);
+    let theta = if is_call {
+        (term1 - r * k * (-r * t).exp() * n_d2) / 365.0  // Daily theta
+    } else {
+        (term1 + r * k * (-r * t).exp() * norm_cdf(-d2)) / 365.0
+    };
+    
+    // Rho
+    let rho = if is_call {
+        k * t * (-r * t).exp() * n_d2 / 100.0  // Divide by 100 for convention
+    } else {
+        -k * t * (-r * t).exp() * norm_cdf(-d2) / 100.0
+    };
     
     // Create Python dict with scalar values
     let dict = PyDict::new_bound(py);
-    
-    // Extract each Greek and convert to scalar
-    for (i, field) in greeks_struct.fields().iter().enumerate() {
-        let name = field.name();
-        let column = greeks_struct.column(i);
-        let arr = column.as_any()
-            .downcast_ref::<Float64Array>()
-            .ok_or_else(|| pyo3::exceptions::PyTypeError::new_err("Expected Float64Array"))?;
-        dict.set_item(name, arr.value(0))?;
-    }
+    dict.set_item("delta", delta)?;
+    dict.set_item("gamma", gamma)?;
+    dict.set_item("vega", vega)?;
+    dict.set_item("theta", theta)?;
+    dict.set_item("rho", rho)?;
     
     Ok(dict)
 }
@@ -234,9 +261,63 @@ pub fn implied_volatility(
     r: f64,
     is_call: bool,
 ) -> PyResult<f64> {
-    // TODO: Implement using Newton-Raphson or Brent's method with Arrow kernels
-    Err(pyo3::exceptions::PyNotImplementedError::new_err(
-        "Implied volatility not yet implemented in Arrow-native version"
+    use quantforge_core::math::distributions::{norm_cdf, norm_pdf};
+    
+    // Validate inputs
+    if s <= 0.0 || k <= 0.0 || t <= 0.0 || price <= 0.0 {
+        return Err(pyo3::exceptions::PyValueError::new_err(
+            "price, s, k, and t must be positive"
+        ));
+    }
+    
+    // Check for arbitrage violations
+    let intrinsic = if is_call {
+        (s - k * (-r * t).exp()).max(0.0)
+    } else {
+        (k * (-r * t).exp() - s).max(0.0)
+    };
+    
+    if price < intrinsic {
+        return Err(pyo3::exceptions::PyValueError::new_err(
+            "Option price violates arbitrage bounds"
+        ));
+    }
+    
+    // Newton-Raphson method for implied volatility
+    let mut sigma = 0.2;  // Initial guess
+    let tolerance = 1e-6;
+    let max_iterations = 50;
+    
+    for _ in 0..max_iterations {
+        // Calculate option price with current sigma
+        let sqrt_t = t.sqrt();
+        let d1 = ((s / k).ln() + (r + sigma * sigma / 2.0) * t) / (sigma * sqrt_t);
+        let d2 = d1 - sigma * sqrt_t;
+        
+        let computed_price = if is_call {
+            s * norm_cdf(d1) - k * (-r * t).exp() * norm_cdf(d2)
+        } else {
+            k * (-r * t).exp() * norm_cdf(-d2) - s * norm_cdf(-d1)
+        };
+        
+        // Calculate vega (derivative with respect to sigma)
+        let vega = s * norm_pdf(d1) * sqrt_t;
+        
+        // Check for convergence
+        let diff = computed_price - price;
+        if diff.abs() < tolerance {
+            return Ok(sigma);
+        }
+        
+        // Newton-Raphson update
+        sigma -= diff / vega;
+        
+        // Keep sigma in reasonable bounds
+        sigma = sigma.max(0.001).min(5.0);
+    }
+    
+    Err(pyo3::exceptions::PyRuntimeError::new_err(
+        "Implied volatility failed to converge"
     ))
 }
 

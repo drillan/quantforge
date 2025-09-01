@@ -3,19 +3,19 @@
 use arrow::array::{Float64Array, ArrayRef};
 use arrow::error::ArrowError;
 
-/// American option model using Bjerksund-Stensland approximation
+/// American option model implementation using Arrow arrays
 pub struct American;
 
 impl American {
     /// Calculate American call option price
     pub fn call_price(
-        spots: &Float64Array,
-        strikes: &Float64Array,
-        times: &Float64Array,
-        rates: &Float64Array,
-        sigmas: &Float64Array,
+        _spots: &Float64Array,
+        _strikes: &Float64Array,
+        _times: &Float64Array,
+        _rates: &Float64Array,
+        _sigmas: &Float64Array,
     ) -> Result<ArrayRef, ArrowError> {
-        // Bjerksund-Stensland approximation for American options
+        // Binomial tree or finite difference implementation
         Err(ArrowError::NotYetImplemented(
             "American option implementation pending".to_string()
         ))
@@ -23,11 +23,11 @@ impl American {
     
     /// Calculate American put option price
     pub fn put_price(
-        spots: &Float64Array,
-        strikes: &Float64Array,
-        times: &Float64Array,
-        rates: &Float64Array,
-        sigmas: &Float64Array,
+        _spots: &Float64Array,
+        _strikes: &Float64Array,
+        _times: &Float64Array,
+        _rates: &Float64Array,
+        _sigmas: &Float64Array,
     ) -> Result<ArrayRef, ArrowError> {
         Err(ArrowError::NotYetImplemented(
             "American option implementation pending".to_string()

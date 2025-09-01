@@ -6,8 +6,6 @@ use arrow::error::ArrowError;
 use std::sync::Arc;
 
 use crate::math::distributions::{norm_cdf_array, norm_pdf_array};
-use crate::constants::{MIN_PRICE, MAX_PRICE, MIN_TIME, MAX_TIME, MIN_RATE, MAX_RATE, MIN_VOLATILITY_PRACTICAL, MAX_VOLATILITY};
-use crate::error::QuantForgeError;
 
 /// Black-Scholes model implementation using Arrow arrays
 pub struct BlackScholes;
