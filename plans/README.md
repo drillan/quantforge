@@ -22,10 +22,10 @@
 ### 最近完了した計画
 | 計画名 | 完了日 | 成果 |
 |--------|--------|------|
+| [Apache Arrow Native移行](archive/2025-09-01-arrow-native-migration.md) | 2025-09-01 | Arrow-first実装、2.65倍高速化、コード70%削減 |
+| [Arrow実装コンテキスト](archive/2025-09-01-arrow-implementation-context.md) | 2025-09-01 | Phase 1-5完全実装、目標性能達成 |
 | [benchmarksパッケージ再構築](archive/2025-08-30-python-benchmarks-package-restructure.md) | 2025-08-30 | 完全なPythonパッケージ化、相対インポート依存排除 |
 | [README.md同期実装](archive/2025-08-28-readme-sync-implementation.md) | 2025-08-29 | プロジェクト現状の正確な反映（v0.0.2） |
-| [Pythonモジュール修正](archive/2025-08-28-python-fix-module-import-api.md) | 2025-08-29 | インポート問題の完全解決、mypy対応 |
-| [GitHub Pages英語ドキュメント](archive/2025-01-28-both-github-pages-english-first-docs.md) | 2025-08-29 | MkDocs + CI/CD自動デプロイ |
 
 ## 📁 ディレクトリ構造
 
