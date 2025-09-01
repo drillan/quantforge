@@ -98,7 +98,7 @@ fn call_price_batch<'py>(
     let mut times_vec = Vec::with_capacity(len);
     let mut rates_vec = Vec::with_capacity(len);
     let mut sigmas_vec = Vec::with_capacity(len);
-    
+
     for values in input_data {
         forwards_vec.push(values[0]);
         strikes_vec.push(values[1]);
@@ -117,9 +117,10 @@ fn call_price_batch<'py>(
             &rates_vec,
             &sigmas_vec,
         );
-        
+
         // Convert Results to f64 values
-        batch_results.into_iter()
+        batch_results
+            .into_iter()
             .map(|r| r.unwrap_or(f64::NAN))
             .collect::<Vec<f64>>()
     });
@@ -152,7 +153,7 @@ fn put_price_batch<'py>(
     let mut times_vec = Vec::with_capacity(len);
     let mut rates_vec = Vec::with_capacity(len);
     let mut sigmas_vec = Vec::with_capacity(len);
-    
+
     for values in input_data {
         forwards_vec.push(values[0]);
         strikes_vec.push(values[1]);
@@ -171,9 +172,10 @@ fn put_price_batch<'py>(
             &rates_vec,
             &sigmas_vec,
         );
-        
+
         // Convert Results to f64 values
-        batch_results.into_iter()
+        batch_results
+            .into_iter()
             .map(|r| r.unwrap_or(f64::NAN))
             .collect::<Vec<f64>>()
     });

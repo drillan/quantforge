@@ -208,12 +208,6 @@ pub const MIN_WORK_PER_THREAD: usize = 1000;
 /// システムのCPUコア数に基づいて動的に調整。
 pub const MAX_PARALLELISM: usize = 32;
 
-/// SIMDアラインメント（バイト）
-///
-/// AVX2命令セット用のメモリアラインメント。
-/// 32バイト境界にアラインすることで最高性能を実現。
-pub const SIMD_ALIGNMENT: usize = 32;
-
 /// プリフェッチ距離（要素数）
 ///
 /// CPUプリフェッチのための先読み距離。

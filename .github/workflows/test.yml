@@ -1,0 +1,164 @@
+name: Test
+
+on:
+  push:
+    branches: [ main, develop, feature/* ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  core-tests:
+    name: Core Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      
+      - name: Cache cargo
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-core-${{ hashFiles('**/Cargo.lock') }}
+      
+      - name: Build Core
+        run: cargo build --release
+        working-directory: core
+      
+      - name: Test Core
+        run: cargo test --all
+        working-directory: core
+      
+      - name: Clippy
+        run: cargo clippy --all-targets --all-features -- -D warnings
+        working-directory: core
+      
+      - name: Format Check
+        run: cargo fmt -- --check
+        working-directory: core
+
+  python-tests:
+    name: Python Tests
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ['3.12', '3.13']
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+      
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+      
+      - name: Install dependencies
+        run: |
+          uv venv
+          uv pip install maturin pytest numpy
+      
+      - name: Build Python bindings
+        run: |
+          source .venv/bin/activate
+          maturin develop --release
+      
+      - name: Run Python tests
+        run: |
+          source .venv/bin/activate
+          pytest tests/ -v
+      
+      - name: Run ruff
+        run: |
+          source .venv/bin/activate
+          uv pip install ruff
+          ruff check .
+      
+      - name: Type checking
+        run: |
+          source .venv/bin/activate
+          uv pip install mypy
+          mypy python/
+
+  integration-tests:
+    name: Integration Tests
+    needs: [core-tests, python-tests]
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+      
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+      
+      - name: Full Build
+        run: |
+          cargo build --workspace --release
+          uv venv
+          source .venv/bin/activate
+          uv pip install maturin
+          maturin build --release
+      
+      - name: Integration Tests
+        run: |
+          source .venv/bin/activate
+          uv pip install pytest numpy
+          pytest tests/integration/ tests/e2e/ -v
+
+  benchmarks:
+    name: Benchmarks
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+      
+      - name: Run Core Benchmarks
+        run: |
+          cargo bench --all | tee benchmark_results.txt
+        working-directory: core
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+      
+      - name: Run Performance Guard
+        run: |
+          uv sync
+          uv run python benchmarks/performance_guard.py
+      
+      - name: Check for Regression
+        run: |
+          uv run python benchmarks/baseline_manager.py --check-regression
+      
+      - name: Upload Benchmark Results
+        uses: actions/upload-artifact@v4
+        with:
+          name: benchmark-results
+          path: core/benchmark_results.txt

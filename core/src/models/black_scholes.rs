@@ -237,30 +237,54 @@ impl BlackScholes {
     ) -> Vec<QuantForgeResult<f64>> {
         let len = spots.len();
         let mut results = Vec::with_capacity(len);
-        
+
         // Process 4 elements at a time (loop unrolling)
         let chunks = len / 4;
-        
+
         for i in 0..chunks {
             let base = i * 4;
-            
+
             // Calculate 4 prices in parallel (compiler can auto-vectorize)
-            let p0 = self.call_price(spots[base], strikes[base], times[base], rates[base], sigmas[base]);
-            let p1 = self.call_price(spots[base+1], strikes[base+1], times[base+1], rates[base+1], sigmas[base+1]);
-            let p2 = self.call_price(spots[base+2], strikes[base+2], times[base+2], rates[base+2], sigmas[base+2]);
-            let p3 = self.call_price(spots[base+3], strikes[base+3], times[base+3], rates[base+3], sigmas[base+3]);
-            
+            let p0 = self.call_price(
+                spots[base],
+                strikes[base],
+                times[base],
+                rates[base],
+                sigmas[base],
+            );
+            let p1 = self.call_price(
+                spots[base + 1],
+                strikes[base + 1],
+                times[base + 1],
+                rates[base + 1],
+                sigmas[base + 1],
+            );
+            let p2 = self.call_price(
+                spots[base + 2],
+                strikes[base + 2],
+                times[base + 2],
+                rates[base + 2],
+                sigmas[base + 2],
+            );
+            let p3 = self.call_price(
+                spots[base + 3],
+                strikes[base + 3],
+                times[base + 3],
+                rates[base + 3],
+                sigmas[base + 3],
+            );
+
             results.push(p0);
             results.push(p1);
             results.push(p2);
             results.push(p3);
         }
-        
+
         // Process remaining elements
         for i in (chunks * 4)..len {
             results.push(self.call_price(spots[i], strikes[i], times[i], rates[i], sigmas[i]));
         }
-        
+
         results
     }
 
@@ -276,18 +300,12 @@ impl BlackScholes {
     ) -> Vec<QuantForgeResult<f64>> {
         let len = spots.len();
         let mut results = Vec::with_capacity(len);
-        
+
         // Index-based loop (faster than iterator chains for small sizes)
         for i in 0..len {
-            results.push(self.call_price(
-                spots[i],
-                strikes[i],
-                times[i],
-                rates[i],
-                sigmas[i],
-            ));
+            results.push(self.call_price(spots[i], strikes[i], times[i], rates[i], sigmas[i]));
         }
-        
+
         results
     }
 }

@@ -298,19 +298,21 @@ impl Merton {
                 .zip(rates.par_chunks(chunk_size))
                 .zip(dividend_yields.par_chunks(chunk_size))
                 .zip(sigmas.par_chunks(chunk_size))
-                .flat_map(|(((((s_chunk, k_chunk), t_chunk), r_chunk), q_chunk), sigma_chunk)| {
-                    s_chunk
-                        .iter()
-                        .zip(k_chunk.iter())
-                        .zip(t_chunk.iter())
-                        .zip(r_chunk.iter())
-                        .zip(q_chunk.iter())
-                        .zip(sigma_chunk.iter())
-                        .map(|(((((s, k), t), r), q), sigma)| {
-                            Self::call_price_merton(*s, *k, *t, *r, *q, *sigma)
-                        })
-                        .collect::<Vec<_>>()
-                })
+                .flat_map(
+                    |(((((s_chunk, k_chunk), t_chunk), r_chunk), q_chunk), sigma_chunk)| {
+                        s_chunk
+                            .iter()
+                            .zip(k_chunk.iter())
+                            .zip(t_chunk.iter())
+                            .zip(r_chunk.iter())
+                            .zip(q_chunk.iter())
+                            .zip(sigma_chunk.iter())
+                            .map(|(((((s, k), t), r), q), sigma)| {
+                                Self::call_price_merton(*s, *k, *t, *r, *q, *sigma)
+                            })
+                            .collect::<Vec<_>>()
+                    },
+                )
                 .collect()
         }
     }
@@ -328,35 +330,65 @@ impl Merton {
     ) -> Vec<QuantForgeResult<f64>> {
         let len = spots.len();
         let mut results = Vec::with_capacity(len);
-        
+
         // Process 4 elements at a time (loop unrolling)
         let chunks = len / 4;
-        
+
         for i in 0..chunks {
             let base = i * 4;
-            
+
             // Calculate 4 prices in parallel (compiler can auto-vectorize)
-            let p0 = Self::call_price_merton(spots[base], strikes[base], times[base], 
-                                            rates[base], dividend_yields[base], sigmas[base]);
-            let p1 = Self::call_price_merton(spots[base+1], strikes[base+1], times[base+1], 
-                                            rates[base+1], dividend_yields[base+1], sigmas[base+1]);
-            let p2 = Self::call_price_merton(spots[base+2], strikes[base+2], times[base+2], 
-                                            rates[base+2], dividend_yields[base+2], sigmas[base+2]);
-            let p3 = Self::call_price_merton(spots[base+3], strikes[base+3], times[base+3], 
-                                            rates[base+3], dividend_yields[base+3], sigmas[base+3]);
-            
+            let p0 = Self::call_price_merton(
+                spots[base],
+                strikes[base],
+                times[base],
+                rates[base],
+                dividend_yields[base],
+                sigmas[base],
+            );
+            let p1 = Self::call_price_merton(
+                spots[base + 1],
+                strikes[base + 1],
+                times[base + 1],
+                rates[base + 1],
+                dividend_yields[base + 1],
+                sigmas[base + 1],
+            );
+            let p2 = Self::call_price_merton(
+                spots[base + 2],
+                strikes[base + 2],
+                times[base + 2],
+                rates[base + 2],
+                dividend_yields[base + 2],
+                sigmas[base + 2],
+            );
+            let p3 = Self::call_price_merton(
+                spots[base + 3],
+                strikes[base + 3],
+                times[base + 3],
+                rates[base + 3],
+                dividend_yields[base + 3],
+                sigmas[base + 3],
+            );
+
             results.push(p0);
             results.push(p1);
             results.push(p2);
             results.push(p3);
         }
-        
+
         // Process remaining elements
         for i in (chunks * 4)..len {
-            results.push(Self::call_price_merton(spots[i], strikes[i], times[i], 
-                                                rates[i], dividend_yields[i], sigmas[i]));
+            results.push(Self::call_price_merton(
+                spots[i],
+                strikes[i],
+                times[i],
+                rates[i],
+                dividend_yields[i],
+                sigmas[i],
+            ));
         }
-        
+
         results
     }
 
@@ -373,7 +405,7 @@ impl Merton {
     ) -> Vec<QuantForgeResult<f64>> {
         let len = spots.len();
         let mut results = Vec::with_capacity(len);
-        
+
         // Index-based loop (faster than iterator chains for small sizes)
         for i in 0..len {
             results.push(Self::call_price_merton(
@@ -385,7 +417,7 @@ impl Merton {
                 sigmas[i],
             ));
         }
-        
+
         results
     }
 
@@ -423,19 +455,21 @@ impl Merton {
                 .zip(rates.par_chunks(chunk_size))
                 .zip(dividend_yields.par_chunks(chunk_size))
                 .zip(sigmas.par_chunks(chunk_size))
-                .flat_map(|(((((s_chunk, k_chunk), t_chunk), r_chunk), q_chunk), sigma_chunk)| {
-                    s_chunk
-                        .iter()
-                        .zip(k_chunk.iter())
-                        .zip(t_chunk.iter())
-                        .zip(r_chunk.iter())
-                        .zip(q_chunk.iter())
-                        .zip(sigma_chunk.iter())
-                        .map(|(((((s, k), t), r), q), sigma)| {
-                            Self::put_price_merton(*s, *k, *t, *r, *q, *sigma)
-                        })
-                        .collect::<Vec<_>>()
-                })
+                .flat_map(
+                    |(((((s_chunk, k_chunk), t_chunk), r_chunk), q_chunk), sigma_chunk)| {
+                        s_chunk
+                            .iter()
+                            .zip(k_chunk.iter())
+                            .zip(t_chunk.iter())
+                            .zip(r_chunk.iter())
+                            .zip(q_chunk.iter())
+                            .zip(sigma_chunk.iter())
+                            .map(|(((((s, k), t), r), q), sigma)| {
+                                Self::put_price_merton(*s, *k, *t, *r, *q, *sigma)
+                            })
+                            .collect::<Vec<_>>()
+                    },
+                )
                 .collect()
         }
     }
@@ -453,35 +487,65 @@ impl Merton {
     ) -> Vec<QuantForgeResult<f64>> {
         let len = spots.len();
         let mut results = Vec::with_capacity(len);
-        
+
         // Process 4 elements at a time (loop unrolling)
         let chunks = len / 4;
-        
+
         for i in 0..chunks {
             let base = i * 4;
-            
+
             // Calculate 4 prices in parallel (compiler can auto-vectorize)
-            let p0 = Self::put_price_merton(spots[base], strikes[base], times[base], 
-                                           rates[base], dividend_yields[base], sigmas[base]);
-            let p1 = Self::put_price_merton(spots[base+1], strikes[base+1], times[base+1], 
-                                           rates[base+1], dividend_yields[base+1], sigmas[base+1]);
-            let p2 = Self::put_price_merton(spots[base+2], strikes[base+2], times[base+2], 
-                                           rates[base+2], dividend_yields[base+2], sigmas[base+2]);
-            let p3 = Self::put_price_merton(spots[base+3], strikes[base+3], times[base+3], 
-                                           rates[base+3], dividend_yields[base+3], sigmas[base+3]);
-            
+            let p0 = Self::put_price_merton(
+                spots[base],
+                strikes[base],
+                times[base],
+                rates[base],
+                dividend_yields[base],
+                sigmas[base],
+            );
+            let p1 = Self::put_price_merton(
+                spots[base + 1],
+                strikes[base + 1],
+                times[base + 1],
+                rates[base + 1],
+                dividend_yields[base + 1],
+                sigmas[base + 1],
+            );
+            let p2 = Self::put_price_merton(
+                spots[base + 2],
+                strikes[base + 2],
+                times[base + 2],
+                rates[base + 2],
+                dividend_yields[base + 2],
+                sigmas[base + 2],
+            );
+            let p3 = Self::put_price_merton(
+                spots[base + 3],
+                strikes[base + 3],
+                times[base + 3],
+                rates[base + 3],
+                dividend_yields[base + 3],
+                sigmas[base + 3],
+            );
+
             results.push(p0);
             results.push(p1);
             results.push(p2);
             results.push(p3);
         }
-        
+
         // Process remaining elements
         for i in (chunks * 4)..len {
-            results.push(Self::put_price_merton(spots[i], strikes[i], times[i], 
-                                               rates[i], dividend_yields[i], sigmas[i]));
+            results.push(Self::put_price_merton(
+                spots[i],
+                strikes[i],
+                times[i],
+                rates[i],
+                dividend_yields[i],
+                sigmas[i],
+            ));
         }
-        
+
         results
     }
 
@@ -498,7 +562,7 @@ impl Merton {
     ) -> Vec<QuantForgeResult<f64>> {
         let len = spots.len();
         let mut results = Vec::with_capacity(len);
-        
+
         // Index-based loop (faster than iterator chains for small sizes)
         for i in 0..len {
             results.push(Self::put_price_merton(
@@ -510,7 +574,7 @@ impl Merton {
                 sigmas[i],
             ));
         }
-        
+
         results
     }
 }

@@ -84,58 +84,45 @@ macro_rules! impl_batch_traits {
    - 型安全性を維持しながら重複削除
    - 新モデル追加が3行で完了
 
-## 並列処理最適化パターン（2025-08-30）
+## 並列処理最適化の教訓（2025-08-31更新）
 
-### 動的並列化戦略の設計
-- **問題**: 固定の並列化閾値では様々なデータサイズで非効率
-- **解決**: データサイズとCPU特性に基づく動的戦略選択
+### 固定並列化閾値の最適化
+- **問題**: 初期の並列化閾値（1,000要素）が低すぎてFFIオーバーヘッドが発生
+- **解決**: 実測に基づく固定閾値の調整
 
-### ProcessingMode階層
+### 実測による最適な閾値
 ```rust
-pub enum ProcessingMode {
-    Sequential,          // < 1,000要素
-    CacheOptimizedL1,   // < 10,000要素（L1キャッシュ最適化）
-    CacheOptimizedL2,   // < 100,000要素（L2キャッシュ最適化）
-    FullParallel,       // < 1,000,000要素（フル並列）
-    HybridParallel,     // >= 1,000,000要素（ハイブリッド）
+pub const PARALLEL_THRESHOLD_SMALL: usize = 8_000;   // これ未満は逐次処理
+// commit 7dbf51e: 1,000 → 30,000への増加で大幅改善
+// commit 65c8054: 最終的に8,000に調整（10,000要素で0.94倍を達成）
+```
+
+### 並列化の判定パターン（シンプルな固定閾値）
+```rust
+if size < 8_000 {
+    // 逐次処理: FFIオーバーヘッド回避
+    iter.compute_with(|vals| compute(vals))
+} else {
+    // 並列処理: 大規模データで有効
+    iter.compute_parallel_with(|vals| compute(vals), chunk_size)
 }
 ```
 
-### キャッシュ最適化の原則
-1. **L1キャッシュ（32KB）**: 最高速、1,024要素チャンク
-2. **L2キャッシュ（256KB）**: 高速、8,192要素チャンク
-3. **L3キャッシュ（8MB）**: 中速、262,144要素チャンク
-
-### 実装パターン
-```rust
-// 1. 戦略選択
-let strategy = ParallelStrategy::select(data_size);
-
-// 2. 最適なチャンクサイズ計算
-let chunk_size = min(
-    cache_optimal,     // キャッシュサイズ制限
-    thread_optimal,    // スレッド均等分割
-    MIN_WORK_PER_THREAD // 最小ワークロード
-);
-
-// 3. 並列度の制御
-let parallelism = match mode {
-    Sequential => 1,
-    CacheOptimizedL1 => min(2, num_threads),
-    CacheOptimizedL2 => min(4, num_threads),
-    FullParallel => min(num_threads, MAX_PARALLELISM),
-};
-```
+### ゼロコピー実装の重要性（最も効果的な最適化）
+- **問題**: Bindings層で`iter.collect()`が全データをコピー
+- **解決**: Core層の`compute_with`メソッドでバッファ再利用
+- **効果**: 10,000要素で**750%改善**（NumPyの0.60倍→4.50倍）
+- **メモリ**: 400KB → 40バイト（**99%削減**）
 
 ### トレイト境界の重要性
 - **Send**: スレッド間でデータ送信可能
 - **Sync**: 複数スレッドから同時参照可能
 - **両方必要**: 並列処理では`T: Send + Sync`が必須
 
-### 性能改善の実績
-- 100,000要素: 3.6倍遅い → 4.57倍高速（1,657%改善）
-- スループット: 2.8M → 12.8M ops/sec（457%改善）
-   - forループで連続実行、総時間約20分で8ファイル完了
+### 教訓のまとめ
+1. **動的戦略は過度な複雑化**: シンプルな固定閾値で十分
+2. **ゼロコピーが最重要**: FFIオーバーヘッドの削減が最も効果的
+3. **実測に基づく調整**: プロファイリングで8,000要素の閾値を特定
 
 ### トラブルシューティング
 - **llama-cli パスエラー**: 絶対パス使用で解決

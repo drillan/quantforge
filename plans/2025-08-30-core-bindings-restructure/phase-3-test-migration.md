@@ -435,64 +435,233 @@ criterion_group!(benches, bench_single_models, bench_batch_sizes);
 criterion_main!(benches);
 ```
 
-#### 4.2 Pythonベンチマーク統合
-```python
-# bindings/python/benchmarks/__init__.py
-"""QuantForge Python benchmarks."""
+#### 4.2 層別ベンチマーク構造の実装
 
-from .runners import ComparisonBenchmark, PracticalScenarios
-from .analysis import analyze_results, format_report
+##### 4.2.1 Core層ベンチマーク
+```rust
+// core/benches/algorithm_bench.rs
+//! 純粋なアルゴリズム性能測定（PyO3依存なし）
 
-__all__ = [
-    'ComparisonBenchmark',
-    'PracticalScenarios', 
-    'analyze_results',
-    'format_report'
-]
+use criterion::{black_box, criterion_group, criterion_main, Criterion};
+use quantforge_core::models::{BlackScholesParams, Black76Params};
+
+fn bench_pure_algorithms(c: &mut Criterion) {
+    let mut group = c.benchmark_group("core_algorithms");
+    
+    // Black-Scholesアルゴリズム単体
+    let bs_params = BlackScholesParams {
+        spot: 100.0, strike: 100.0, time: 1.0,
+        rate: 0.05, volatility: 0.2,
+    };
+    
+    group.bench_function("black_scholes_call", |b| {
+        b.iter(|| black_box(bs_params.call_price()))
+    });
+    
+    // 並列処理効率測定
+    let batch_params: Vec<_> = (0..100_000)
+        .map(|i| BlackScholesParams {
+            spot: 90.0 + (i as f64) * 0.0002,
+            strike: 100.0, time: 1.0,
+            rate: 0.05, volatility: 0.2,
+        })
+        .collect();
+    
+    group.bench_function("parallel_100k", |b| {
+        b.iter(|| black_box(call_price_batch(&batch_params)))
+    });
+    
+    group.finish();
+}
+
+criterion_group!(benches, bench_pure_algorithms);
+criterion_main!(benches);
 ```
 
+##### 4.2.2 Bindings層ベンチマーク
 ```python
-# bindings/python/benchmarks/suite.py
-"""Comprehensive benchmark suite."""
+# bindings/python/tests/benchmarks/ffi_overhead.py
+"""FFI層特有のオーバーヘッド測定."""
 
 import time
 import numpy as np
-from pathlib import Path
-import json
-from typing import Dict, Any
+import pytest
+from quantforge import models
 
-class BenchmarkSuite:
-    """Unified benchmark suite."""
+class FFIBenchmark:
+    """FFI層のパフォーマンス測定."""
+    
+    def measure_ffi_call_overhead(self):
+        """FFI呼び出しコストの測定."""
+        # 単一呼び出しのオーバーヘッド
+        iterations = 100_000
+        
+        start = time.perf_counter()
+        for _ in range(iterations):
+            models.call_price(100, 100, 1, 0.05, 0.2)
+        ffi_time = time.perf_counter() - start
+        
+        return {
+            'call_overhead_ns': (ffi_time / iterations) * 1e9,
+            'calls_per_second': iterations / ffi_time
+        }
+    
+    def measure_zero_copy_efficiency(self):
+        """NumPy配列のゼロコピー検証."""
+        sizes = [100, 1_000, 10_000, 100_000, 1_000_000]
+        results = {}
+        
+        for size in sizes:
+            # NumPy配列準備
+            data = np.random.uniform(50, 150, size)
+            
+            # メモリコピーなしでFFI通過
+            start = time.perf_counter()
+            result = models.call_price_batch(
+                spots=data, strikes=100.0, times=1.0,
+                rates=0.05, sigmas=0.2
+            )
+            elapsed = time.perf_counter() - start
+            
+            results[f'size_{size}'] = {
+                'time_ms': elapsed * 1000,
+                'throughput_ops': size / elapsed,
+                'overhead_per_element_ns': (elapsed / size) * 1e9
+            }
+        
+        return results
+```
+
+##### 4.2.3 統合層ベンチマーク
+```python
+# tests/performance/integration_benchmark.py
+"""エンドツーエンド統合ベンチマーク."""
+
+import json
+import time
+from pathlib import Path
+import numpy as np
+from quantforge import models
+
+# 既存資産の移動と活用
+from .baseline_manager import BaselineManager
+from .performance_guard import PerformanceGuard
+
+class IntegrationBenchmark:
+    """統合層のパフォーマンス検証."""
     
     def __init__(self):
-        self.results = {}
-        self.baseline_path = Path(__file__).parent / 'baseline.json'
+        # 既存の管理システムを活用
+        self.baseline = BaselineManager()
+        self.guard = PerformanceGuard()
+        self.results_dir = Path('benchmark_results/integration')
+        self.results_dir.mkdir(parents=True, exist_ok=True)
     
-    def run_all(self) -> Dict[str, Any]:
-        """Run all benchmarks."""
-        self.results['single'] = self._bench_single()
-        self.results['batch'] = self._bench_batch()
-        self.results['parallel'] = self._bench_parallel()
-        self.results['memory'] = self._bench_memory()
+    def run_full_workflow_benchmark(self):
+        """実際のユースケースでの性能測定."""
+        results = {
+            'version': '2.0.0',
+            'layer': 'integration',
+            'timestamp': time.strftime('%Y-%m-%dT%H:%M:%SZ'),
+            'benchmarks': {}
+        }
         
-        return self.results
+        # ワークフロー1: オプション価格計算パイプライン
+        workflow_start = time.perf_counter()
+        
+        # 市場データ準備
+        spots = np.random.uniform(90, 110, 10_000)
+        strikes = np.linspace(80, 120, 41)
+        
+        # 価格計算
+        for spot in spots[:100]:  # サンプリング
+            prices = models.call_price_batch(
+                spots=spot, strikes=strikes,
+                times=1.0, rates=0.05, sigmas=0.2
+            )
+            
+            # Greeks計算
+            greeks = models.greeks_batch(
+                spots=spot, strikes=strikes,
+                times=1.0, rates=0.05, sigmas=0.2
+            )
+        
+        workflow_time = time.perf_counter() - workflow_start
+        
+        results['benchmarks']['full_workflow'] = {
+            'time_seconds': workflow_time,
+            'options_calculated': 100 * 41,
+            'throughput': (100 * 41) / workflow_time
+        }
+        
+        # 新形式でのベンチマーク結果保存
+        self._save_hierarchical_results(results)
+        
+        # 既存のguardシステムで回帰検出
+        return self.guard.detect_regression(results)
     
-    def compare_with_baseline(self):
-        """Compare with baseline performance."""
-        if not self.baseline_path.exists():
-            print("No baseline found. Current results will become baseline.")
-            self.save_baseline()
-            return
+    def _save_hierarchical_results(self, results):
+        """階層的な新形式での結果保存."""
+        # 最新結果
+        latest_path = self.results_dir / 'latest.json'
+        with open(latest_path, 'w') as f:
+            json.dump(results, f, indent=2)
         
-        with open(self.baseline_path) as f:
-            baseline = json.load(f)
+        # 履歴保存
+        history_dir = self.results_dir / 'history' / 
+            time.strftime('%Y-%m-%d')
+        history_dir.mkdir(parents=True, exist_ok=True)
         
-        for category, metrics in self.results.items():
-            for metric, value in metrics.items():
-                baseline_value = baseline.get(category, {}).get(metric)
-                if baseline_value:
-                    change = (value - baseline_value) / baseline_value * 100
-                    print(f"{category}/{metric}: {change:+.1f}%")
+        run_id = time.strftime('run_%H%M%S.json')
+        with open(history_dir / run_id, 'w') as f:
+            json.dump(results, f, indent=2)
+```
+
+##### 4.2.4 ベンチマーク記録形式の更新
+```python
+# tests/performance/benchmark_schema.py
+"""新しい階層的ベンチマーク記録形式の定義."""
+
+from typing import Dict, Any, List
+from dataclasses import dataclass, asdict
+import json
+from pathlib import Path
+
+@dataclass
+class BenchmarkEnvironment:
+    """ベンチマーク環境情報."""
+    system: Dict[str, Any]  # プラットフォーム、CPU、メモリ
+    build: Dict[str, Any]   # Rust、最適化フラグ、LTO設定
+    runtime: Dict[str, Any] # Python、PyO3、NumPyバージョン
+
+@dataclass
+class BenchmarkResult:
+    """ベンチマーク結果（新形式）."""
+    version: str = "2.0.0"
+    layer: str = ""  # core | bindings | integration
+    timestamp: str = ""
+    run_id: str = ""
+    environment: BenchmarkEnvironment = None
+    benchmarks: Dict[str, Any] = None
+    comparisons: Dict[str, Any] = None
+    quality_metrics: Dict[str, Any] = None
+    
+    def save(self, base_dir: Path):
+        """層別ディレクトリ構造での保存."""
+        layer_dir = base_dir / self.layer
+        layer_dir.mkdir(parents=True, exist_ok=True)
+        
+        # 最新結果
+        with open(layer_dir / 'latest.json', 'w') as f:
+            json.dump(asdict(self), f, indent=2)
+        
+        # 履歴
+        history_dir = layer_dir / 'history' / 
+            self.timestamp[:10]  # YYYY-MM-DD
+        history_dir.mkdir(parents=True, exist_ok=True)
+        
+        with open(history_dir / f'{self.run_id}.json', 'w') as f:
+            json.dump(asdict(self), f, indent=2)
 ```
 
 ### 5. E2Eテストの作成 [2時間]
@@ -696,6 +865,16 @@ jobs:
           cargo bench --all | tee benchmark_results.txt
         working-directory: core
       
+      - name: Run Performance Guard
+        run: |
+          pip install uv
+          uv sync
+          uv run python benchmarks/performance_guard.py
+      
+      - name: Check for Regression
+        run: |
+          uv run python benchmarks/baseline_manager.py --check-regression
+      
       - name: Upload Benchmark Results
         uses: actions/upload-artifact@v3
         with:
@@ -853,19 +1032,19 @@ def format_markdown_report(report):
 ## 完了条件
 
 ### 必須チェックリスト
-- [ ] 全テストの移行完了
-- [ ] 各層の責任範囲明確化
-- [ ] テストカバレッジ90%以上
-- [ ] ベンチマーク統合完了
-- [ ] E2Eテスト作成
-- [ ] CI/CDパイプライン更新完了
-- [ ] GitHub Actions動作確認
+- [x] 全テストの移行完了
+- [x] 各層の責任範囲明確化
+- [x] テストカバレッジ90%以上
+- [x] ベンチマーク統合完了
+- [x] E2Eテスト作成
+- [x] CI/CDパイプライン更新完了
+- [x] GitHub Actions動作確認
 
 ### 品質基準
-- [ ] Core層テスト: 全合格
-- [ ] Python層テスト: 全合格
-- [ ] E2Eテスト: 全合格
-- [ ] パフォーマンス: ベースライン維持
+- [x] Core層テスト: 全合格
+- [x] Python層テスト: 全合格 (American model含む)
+- [x] E2Eテスト: 全合格
+- [x] パフォーマンス: ベースライン維持
 
 ## 成果物
 

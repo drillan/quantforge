@@ -232,31 +232,59 @@ pub const PARALLEL_THRESHOLD_LARGE: usize = 100_000;
 
 // アルゴリズム係数（使用箇所の近くで定義）
 const NORM_CDF_UPPER_BOUND: f64 = 8.0;  // Φ(8) ≈ 1.0
+
+// American Option定数（2025-08-31追加）
+pub const BS2002_H_FACTOR: f64 = 2.0;  // Bjerksund-Stensland 2002のh(T)係数
+pub const BS2002_BETA_MIN: f64 = 0.5;  // beta計算の最小値
 ```
 
-### 動的並列化戦略パターン
+### 数値安定性パターン（2025-08-31追加）
 
 ```rust
-use crate::optimization::ParallelStrategy;
+// 浮動小数点演算の桁落ち回避
+// ❌ 危険：1 - exp(x) は x が小さい時に桁落ち
+let problematic = 1.0 - h_t.exp();
 
-// データサイズに基づく動的戦略選択
-let strategy = ParallelStrategy::select(data.len());
+// ✅ 安全：exp_m1(x) = exp(x) - 1 を高精度に計算
+let stable = (-h_t.exp_m1());  // 1 - exp(h_t) と等価
 
-// 汎用バッチ処理
-let results = strategy.process_batch(&data, |item| {
-    // 処理ロジック
-    process_item(item)
-});
+// log1p(x) = log(1 + x) の使用例
+let log_moneyness = (params.s / params.k).ln();  // 通常版
+let log_moneyness_stable = ((params.s - params.k) / params.k).ln_1p();  // S/K ≈ 1の時に有効
 
-// ゼロコピー処理（出力配列への直接書き込み）
-strategy.process_into(&input, &mut output, |item| {
-    calculate_value(item)
-});
+// 境界条件での数値誤差考慮
+// ❌ 厳密比較は数値誤差で誤動作
+if params.s >= boundary {
+    // 処理
+}
 
-// スレッドプール制御付き処理
-let results = strategy.process_with_pool_control(&data, |item| {
-    heavy_computation(item)
-});
+// ✅ 許容誤差を含む比較
+if params.s > boundary * (1.0 + 1e-10) {
+    // 処理
+}
+```
+
+### 並列化の閾値判定パターン（シンプルな固定閾値）
+
+```rust
+// 実測に基づく固定閾値（2025-08-31更新）
+const PARALLEL_THRESHOLD: usize = 8_000;
+
+// シンプルな判定ロジック
+if data.len() < PARALLEL_THRESHOLD {
+    // 逐次処理: FFIオーバーヘッド回避
+    // 8,000要素未満では並列化のコストが利益を上回る
+    iter.compute_with(|vals| {
+        process_single(vals[0], vals[1], vals[2], vals[3], vals[4])
+    })
+} else {
+    // 並列処理: 大規模データで有効
+    // Rayonによる並列処理、チャンクサイズは1,024（L1キャッシュ最適化）
+    iter.compute_parallel_with(
+        |vals| process_single(vals[0], vals[1], vals[2], vals[3], vals[4]),
+        1_024  // CHUNK_SIZE_L1
+    )
+}
 ```
 
 ### BatchProcessorパターン
