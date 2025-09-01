@@ -32,34 +32,59 @@ impl BlackScholes {
         // Validate input arrays have same length
         Self::validate_array_lengths(spots, strikes, times, rates, sigmas)?;
         
-        // Calculate d1 and d2
-        let (d1, d2) = Self::calculate_d1_d2(spots, strikes, times, rates, sigmas)?;
+        let len = spots.len();
+        let mut result = Vec::with_capacity(len);
         
-        // Calculate call price: C = S * N(d1) - K * exp(-r*T) * N(d2)
-        let n_d1 = norm_cdf_array(&d1)?;
-        let n_d2 = norm_cdf_array(&d2)?;
+        // Use direct scalar computation for efficiency (avoiding intermediate arrays)
+        use crate::math::distributions::norm_cdf;
         
-        // S * N(d1)
-        let n_d1_array = n_d1.as_any().downcast_ref::<Float64Array>().unwrap();
-        let term1: Float64Array = binary(spots, n_d1_array, |s: f64, n: f64| s * n)?;
-        
-        // K * exp(-r*T)
-        let neg_rt: Float64Array = binary(rates, times, |r: f64, t: f64| -(r * t))?;
-        let exp_neg_rt: Float64Array = unary(&neg_rt, |x: f64| x.exp());
-        let k_discount: Float64Array = binary(strikes, &exp_neg_rt, |k: f64, e: f64| k * e)?;
-        
-        // K * exp(-r*T) * N(d2)
-        let n_d2_array = n_d2.as_any().downcast_ref::<Float64Array>().unwrap();
-        let term2: Float64Array = binary(&k_discount, n_d2_array, |kd: f64, n: f64| kd * n)?;
-        
-        // Final call price
-        let result: Float64Array = binary(&term1, &term2, |t1: f64, t2: f64| t1 - t2)?;
-        Ok(Arc::new(result))
+        if len >= 10_000 {
+            // Parallel processing for large arrays
+            use rayon::prelude::*;
+            
+            let results: Vec<f64> = (0..len).into_par_iter()
+                .map(|i| {
+                    let s = spots.value(i);
+                    let k = strikes.value(i);
+                    let t = times.value(i);
+                    let r = rates.value(i);
+                    let sigma = sigmas.value(i);
+                    
+                    // Black-Scholes formula
+                    let sqrt_t = t.sqrt();
+                    let d1 = ((s / k).ln() + (r + sigma * sigma / 2.0) * t) / (sigma * sqrt_t);
+                    let d2 = d1 - sigma * sqrt_t;
+                    
+                    s * norm_cdf(d1) - k * (-r * t).exp() * norm_cdf(d2)
+                })
+                .collect();
+            
+            Ok(Arc::new(Float64Array::from(results)))
+        } else {
+            // Sequential processing for small arrays (avoid parallel overhead)
+            for i in 0..len {
+                let s = spots.value(i);
+                let k = strikes.value(i);
+                let t = times.value(i);
+                let r = rates.value(i);
+                let sigma = sigmas.value(i);
+                
+                // Black-Scholes formula
+                let sqrt_t = t.sqrt();
+                let d1 = ((s / k).ln() + (r + sigma * sigma / 2.0) * t) / (sigma * sqrt_t);
+                let d2 = d1 - sigma * sqrt_t;
+                
+                let call_price = s * norm_cdf(d1) - k * (-r * t).exp() * norm_cdf(d2);
+                result.push(call_price);
+            }
+            
+            Ok(Arc::new(Float64Array::from(result)))
+        }
     }
     
-    /// Calculate put option price using put-call parity
+    /// Calculate put option price using Black-Scholes formula
     ///
-    /// P = C - S + K * exp(-r*T)
+    /// P = K * exp(-r*T) * N(-d2) - S * N(-d1)
     pub fn put_price(
         spots: &Float64Array,
         strikes: &Float64Array,
@@ -67,19 +92,57 @@ impl BlackScholes {
         rates: &Float64Array,
         sigmas: &Float64Array,
     ) -> Result<ArrayRef, ArrowError> {
-        // Calculate call price
-        let call_prices = Self::call_price(spots, strikes, times, rates, sigmas)?;
-        let call_array = call_prices.as_any().downcast_ref::<Float64Array>().unwrap();
+        // Validate input arrays have same length
+        Self::validate_array_lengths(spots, strikes, times, rates, sigmas)?;
         
-        // Calculate K * exp(-r*T)
-        let neg_rt: Float64Array = binary(rates, times, |r: f64, t: f64| -(r * t))?;
-        let exp_neg_rt: Float64Array = unary(&neg_rt, |x: f64| x.exp());
-        let k_discount: Float64Array = binary(strikes, &exp_neg_rt, |k: f64, e: f64| k * e)?;
+        let len = spots.len();
+        let mut result = Vec::with_capacity(len);
         
-        // P = C - S + K * exp(-r*T)
-        let c_minus_s: Float64Array = binary(call_array, spots, |c: f64, s: f64| c - s)?;
-        let result: Float64Array = binary(&c_minus_s, &k_discount, |cs: f64, kd: f64| cs + kd)?;
-        Ok(Arc::new(result))
+        // Use direct scalar computation for efficiency
+        use crate::math::distributions::norm_cdf;
+        
+        if len >= 10_000 {
+            // Parallel processing for large arrays
+            use rayon::prelude::*;
+            
+            let results: Vec<f64> = (0..len).into_par_iter()
+                .map(|i| {
+                    let s = spots.value(i);
+                    let k = strikes.value(i);
+                    let t = times.value(i);
+                    let r = rates.value(i);
+                    let sigma = sigmas.value(i);
+                    
+                    // Black-Scholes formula for put
+                    let sqrt_t = t.sqrt();
+                    let d1 = ((s / k).ln() + (r + sigma * sigma / 2.0) * t) / (sigma * sqrt_t);
+                    let d2 = d1 - sigma * sqrt_t;
+                    
+                    k * (-r * t).exp() * norm_cdf(-d2) - s * norm_cdf(-d1)
+                })
+                .collect();
+            
+            Ok(Arc::new(Float64Array::from(results)))
+        } else {
+            // Sequential processing for small arrays
+            for i in 0..len {
+                let s = spots.value(i);
+                let k = strikes.value(i);
+                let t = times.value(i);
+                let r = rates.value(i);
+                let sigma = sigmas.value(i);
+                
+                // Black-Scholes formula for put
+                let sqrt_t = t.sqrt();
+                let d1 = ((s / k).ln() + (r + sigma * sigma / 2.0) * t) / (sigma * sqrt_t);
+                let d2 = d1 - sigma * sqrt_t;
+                
+                let put_price = k * (-r * t).exp() * norm_cdf(-d2) - s * norm_cdf(-d1);
+                result.push(put_price);
+            }
+            
+            Ok(Arc::new(Float64Array::from(result)))
+        }
     }
     
     /// Calculate d1 and d2 parameters
