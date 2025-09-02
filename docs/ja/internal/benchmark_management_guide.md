@@ -80,7 +80,7 @@ python tests/performance/generate_benchmark_report.py docs/ja/performance/latest
 cat benchmark_results/latest.json | jq .
 
 # 履歴から特定バージョンを検索
-grep '"version": "0.2.0"' benchmark_results/history.jsonl | jq .
+grep '"version": "0.0.6"' benchmark_results/history.jsonl | jq .
 ```
 
 ## データ形式
@@ -90,7 +90,7 @@ grep '"version": "0.2.0"' benchmark_results/history.jsonl | jq .
 
 ```json
 {
-  "version": "0.2.0",
+  "version": "0.0.6",
   "git_commit": "abc123",
   "timestamp": "2025-01-01T12:00:00Z",
   "environment": {

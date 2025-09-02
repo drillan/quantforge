@@ -652,7 +652,14 @@ pub fn black76_put_price(_f: f64, _k: f64, _t: f64, _r: f64, _sigma: f64) -> PyR
 /// Calculate Merton model call option price (scalar)
 #[pyfunction]
 #[pyo3(name = "call_price")]
-pub fn merton_call_price(_s: f64, _k: f64, _t: f64, _r: f64, _q: f64, _sigma: f64) -> PyResult<f64> {
+pub fn merton_call_price(
+    _s: f64,
+    _k: f64,
+    _t: f64,
+    _r: f64,
+    _q: f64,
+    _sigma: f64,
+) -> PyResult<f64> {
     // TODO: Implement using Arrow-native Merton kernel from core
     Err(pyo3::exceptions::PyNotImplementedError::new_err(
         "Merton model not yet implemented in Arrow-native version",

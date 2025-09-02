@@ -17,4 +17,3 @@ pub fn arrow_to_py_err(err: ArrowError) -> PyErr {
         _ => PyRuntimeError::new_err(format!("Arrow error: {err}")),
     }
 }
-

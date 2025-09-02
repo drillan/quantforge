@@ -13,8 +13,8 @@ use models::*;
 /// Main Python module definition
 #[pymodule]
 fn quantforge(m: &Bound<'_, PyModule>) -> PyResult<()> {
-    // Version information
-    m.add("__version__", "0.2.0")?; // Version 0.2.0 for Arrow-native
+    // Version information (automatically from Cargo.toml)
+    m.add("__version__", env!("CARGO_PKG_VERSION"))?;
 
     // ========================================================================
     // Black-Scholes Module
