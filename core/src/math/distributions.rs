@@ -1,6 +1,8 @@
 //! Statistical distribution functions optimized for Arrow arrays
 
-use crate::constants::INV_SQRT_2PI;
+use crate::constants::{
+    INV_SQRT_2PI, NORM_CDF_LOWER_BOUND, NORM_CDF_UPPER_BOUND, NORM_PDF_ZERO_BOUND,
+};
 use arrow::array::{ArrayRef, Float64Array};
 use arrow::compute::kernels::arity::unary;
 use arrow::error::ArrowError;
@@ -23,9 +25,9 @@ pub fn norm_cdf_array(x: &Float64Array) -> Result<ArrayRef, ArrowError> {
     let result: Float64Array = unary(x, move |x_val| {
         if x_val.is_nan() {
             f64::NAN
-        } else if x_val > 8.0 {
+        } else if x_val > NORM_CDF_UPPER_BOUND {
             1.0
-        } else if x_val < -8.0 {
+        } else if x_val < NORM_CDF_LOWER_BOUND {
             0.0
         } else {
             0.5 * (1.0 + erf(x_val / sqrt_2))
@@ -48,7 +50,7 @@ pub fn norm_pdf_array(x: &Float64Array) -> Result<ArrayRef, ArrowError> {
     let result: Float64Array = unary(x, |x_val| {
         if x_val.is_nan() {
             f64::NAN
-        } else if x_val.abs() > 40.0 {
+        } else if x_val.abs() > NORM_PDF_ZERO_BOUND {
             0.0
         } else {
             INV_SQRT_2PI * (-0.5 * x_val * x_val).exp()
@@ -63,9 +65,9 @@ pub fn norm_pdf_array(x: &Float64Array) -> Result<ArrayRef, ArrowError> {
 pub fn norm_cdf_scalar(x: f64) -> f64 {
     if x.is_nan() {
         f64::NAN
-    } else if x > 8.0 {
+    } else if x > NORM_CDF_UPPER_BOUND {
         1.0
-    } else if x < -8.0 {
+    } else if x < NORM_CDF_LOWER_BOUND {
         0.0
     } else {
         0.5 * (1.0 + erf(x / std::f64::consts::SQRT_2))
@@ -77,7 +79,7 @@ pub fn norm_cdf_scalar(x: f64) -> f64 {
 pub fn norm_pdf_scalar(x: f64) -> f64 {
     if x.is_nan() {
         f64::NAN
-    } else if x.abs() > 40.0 {
+    } else if x.abs() > NORM_PDF_ZERO_BOUND {
         0.0
     } else {
         INV_SQRT_2PI * (-0.5 * x * x).exp()

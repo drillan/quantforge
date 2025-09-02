@@ -1,11 +1,13 @@
 //! Black-Scholes option pricing model - Arrow-native implementation
 
+use arrow::array::builder::Float64Builder;
 use arrow::array::{ArrayRef, Float64Array};
 use arrow::error::ArrowError;
 use std::sync::Arc;
 
-use crate::constants::get_parallel_threshold;
+use super::formulas::{black_scholes_call_scalar, black_scholes_put_scalar};
 use super::{get_scalar_or_array_value, validate_broadcast_compatibility};
+use crate::constants::get_parallel_threshold;
 
 /// Black-Scholes model implementation using Arrow arrays
 pub struct BlackScholes;
@@ -31,10 +33,7 @@ impl BlackScholes {
     ) -> Result<ArrayRef, ArrowError> {
         // Validate arrays for broadcasting compatibility
         let len = validate_broadcast_compatibility(&[spots, strikes, times, rates, sigmas])?;
-        let mut result = Vec::with_capacity(len);
-
-        // Use direct scalar computation for efficiency (avoiding intermediate arrays)
-        use crate::math::distributions::norm_cdf;
+        let mut builder = Float64Builder::with_capacity(len);
 
         if len >= get_parallel_threshold() {
             // Parallel processing for large arrays
@@ -49,16 +48,12 @@ impl BlackScholes {
                     let r = get_scalar_or_array_value(rates, i);
                     let sigma = get_scalar_or_array_value(sigmas, i);
 
-                    // Black-Scholes formula
-                    let sqrt_t = t.sqrt();
-                    let d1 = ((s / k).ln() + (r + sigma * sigma / 2.0) * t) / (sigma * sqrt_t);
-                    let d2 = d1 - sigma * sqrt_t;
-
-                    s * norm_cdf(d1) - k * (-r * t).exp() * norm_cdf(d2)
+                    black_scholes_call_scalar(s, k, t, r, sigma)
                 })
                 .collect();
 
-            Ok(Arc::new(Float64Array::from(results)))
+            builder.append_slice(&results);
+            Ok(Arc::new(builder.finish()))
         } else {
             // Sequential processing for small arrays (avoid parallel overhead)
             for i in 0..len {
@@ -68,16 +63,11 @@ impl BlackScholes {
                 let r = get_scalar_or_array_value(rates, i);
                 let sigma = get_scalar_or_array_value(sigmas, i);
 
-                // Black-Scholes formula
-                let sqrt_t = t.sqrt();
-                let d1 = ((s / k).ln() + (r + sigma * sigma / 2.0) * t) / (sigma * sqrt_t);
-                let d2 = d1 - sigma * sqrt_t;
-
-                let call_price = s * norm_cdf(d1) - k * (-r * t).exp() * norm_cdf(d2);
-                result.push(call_price);
+                let call_price = black_scholes_call_scalar(s, k, t, r, sigma);
+                builder.append_value(call_price);
             }
 
-            Ok(Arc::new(Float64Array::from(result)))
+            Ok(Arc::new(builder.finish()))
         }
     }
 
@@ -93,10 +83,7 @@ impl BlackScholes {
     ) -> Result<ArrayRef, ArrowError> {
         // Validate arrays for broadcasting compatibility
         let len = validate_broadcast_compatibility(&[spots, strikes, times, rates, sigmas])?;
-        let mut result = Vec::with_capacity(len);
-
-        // Use direct scalar computation for efficiency
-        use crate::math::distributions::norm_cdf;
+        let mut builder = Float64Builder::with_capacity(len);
 
         if len >= get_parallel_threshold() {
             // Parallel processing for large arrays
@@ -111,16 +98,12 @@ impl BlackScholes {
                     let r = get_scalar_or_array_value(rates, i);
                     let sigma = get_scalar_or_array_value(sigmas, i);
 
-                    // Black-Scholes formula for put
-                    let sqrt_t = t.sqrt();
-                    let d1 = ((s / k).ln() + (r + sigma * sigma / 2.0) * t) / (sigma * sqrt_t);
-                    let d2 = d1 - sigma * sqrt_t;
-
-                    k * (-r * t).exp() * norm_cdf(-d2) - s * norm_cdf(-d1)
+                    black_scholes_put_scalar(s, k, t, r, sigma)
                 })
                 .collect();
 
-            Ok(Arc::new(Float64Array::from(results)))
+            builder.append_slice(&results);
+            Ok(Arc::new(builder.finish()))
         } else {
             // Sequential processing for small arrays
             for i in 0..len {
@@ -130,16 +113,11 @@ impl BlackScholes {
                 let r = get_scalar_or_array_value(rates, i);
                 let sigma = get_scalar_or_array_value(sigmas, i);
 
-                // Black-Scholes formula for put
-                let sqrt_t = t.sqrt();
-                let d1 = ((s / k).ln() + (r + sigma * sigma / 2.0) * t) / (sigma * sqrt_t);
-                let d2 = d1 - sigma * sqrt_t;
-
-                let put_price = k * (-r * t).exp() * norm_cdf(-d2) - s * norm_cdf(-d1);
-                result.push(put_price);
+                let put_price = black_scholes_put_scalar(s, k, t, r, sigma);
+                builder.append_value(put_price);
             }
 
-            Ok(Arc::new(Float64Array::from(result)))
+            Ok(Arc::new(builder.finish()))
         }
     }
 
@@ -166,10 +144,7 @@ impl BlackScholes {
     ) -> Result<ArrayRef, ArrowError> {
         // Skip validation for performance
         let len = spots.len();
-        let mut result = Vec::with_capacity(len);
-
-        // Use direct scalar computation for efficiency (avoiding intermediate arrays)
-        use crate::math::distributions::norm_cdf;
+        let mut builder = Float64Builder::with_capacity(len);
 
         if len >= get_parallel_threshold() {
             // Parallel processing for large arrays
@@ -184,16 +159,12 @@ impl BlackScholes {
                     let r = rates.value(i);
                     let sigma = sigmas.value(i);
 
-                    // Black-Scholes formula
-                    let sqrt_t = t.sqrt();
-                    let d1 = ((s / k).ln() + (r + sigma * sigma / 2.0) * t) / (sigma * sqrt_t);
-                    let d2 = d1 - sigma * sqrt_t;
-
-                    s * norm_cdf(d1) - k * (-r * t).exp() * norm_cdf(d2)
+                    black_scholes_call_scalar(s, k, t, r, sigma)
                 })
                 .collect();
 
-            Ok(Arc::new(Float64Array::from(results)))
+            builder.append_slice(&results);
+            Ok(Arc::new(builder.finish()))
         } else {
             // Sequential processing for small arrays (avoid parallel overhead)
             for i in 0..len {
@@ -203,16 +174,11 @@ impl BlackScholes {
                 let r = rates.value(i);
                 let sigma = sigmas.value(i);
 
-                // Black-Scholes formula
-                let sqrt_t = t.sqrt();
-                let d1 = ((s / k).ln() + (r + sigma * sigma / 2.0) * t) / (sigma * sqrt_t);
-                let d2 = d1 - sigma * sqrt_t;
-
-                let call_price = s * norm_cdf(d1) - k * (-r * t).exp() * norm_cdf(d2);
-                result.push(call_price);
+                let call_price = black_scholes_call_scalar(s, k, t, r, sigma);
+                builder.append_value(call_price);
             }
 
-            Ok(Arc::new(Float64Array::from(result)))
+            Ok(Arc::new(builder.finish()))
         }
     }
 
@@ -231,10 +197,7 @@ impl BlackScholes {
     ) -> Result<ArrayRef, ArrowError> {
         // Skip validation for performance
         let len = spots.len();
-        let mut result = Vec::with_capacity(len);
-
-        // Use direct scalar computation for efficiency
-        use crate::math::distributions::norm_cdf;
+        let mut builder = Float64Builder::with_capacity(len);
 
         if len >= get_parallel_threshold() {
             // Parallel processing for large arrays
@@ -249,16 +212,12 @@ impl BlackScholes {
                     let r = rates.value(i);
                     let sigma = sigmas.value(i);
 
-                    // Black-Scholes formula for put
-                    let sqrt_t = t.sqrt();
-                    let d1 = ((s / k).ln() + (r + sigma * sigma / 2.0) * t) / (sigma * sqrt_t);
-                    let d2 = d1 - sigma * sqrt_t;
-
-                    k * (-r * t).exp() * norm_cdf(-d2) - s * norm_cdf(-d1)
+                    black_scholes_put_scalar(s, k, t, r, sigma)
                 })
                 .collect();
 
-            Ok(Arc::new(Float64Array::from(results)))
+            builder.append_slice(&results);
+            Ok(Arc::new(builder.finish()))
         } else {
             // Sequential processing for small arrays
             for i in 0..len {
@@ -268,16 +227,11 @@ impl BlackScholes {
                 let r = rates.value(i);
                 let sigma = sigmas.value(i);
 
-                // Black-Scholes formula for put
-                let sqrt_t = t.sqrt();
-                let d1 = ((s / k).ln() + (r + sigma * sigma / 2.0) * t) / (sigma * sqrt_t);
-                let d2 = d1 - sigma * sqrt_t;
-
-                let put_price = k * (-r * t).exp() * norm_cdf(-d2) - s * norm_cdf(-d1);
-                result.push(put_price);
+                let put_price = black_scholes_put_scalar(s, k, t, r, sigma);
+                builder.append_value(put_price);
             }
 
-            Ok(Arc::new(Float64Array::from(result)))
+            Ok(Arc::new(builder.finish()))
         }
     }
 
@@ -290,25 +244,25 @@ impl BlackScholes {
         sigmas: &Float64Array,
     ) -> Result<(Float64Array, Float64Array), ArrowError> {
         let len = validate_broadcast_compatibility(&[spots, strikes, times, rates, sigmas])?;
-        let mut d1_values = Vec::with_capacity(len);
-        let mut d2_values = Vec::with_capacity(len);
-        
+        let mut d1_builder = Float64Builder::with_capacity(len);
+        let mut d2_builder = Float64Builder::with_capacity(len);
+
         for i in 0..len {
             let s = get_scalar_or_array_value(spots, i);
             let k = get_scalar_or_array_value(strikes, i);
             let t = get_scalar_or_array_value(times, i);
             let r = get_scalar_or_array_value(rates, i);
             let sigma = get_scalar_or_array_value(sigmas, i);
-            
+
             let sqrt_t = t.sqrt();
             let d1 = ((s / k).ln() + (r + sigma * sigma / 2.0) * t) / (sigma * sqrt_t);
             let d2 = d1 - sigma * sqrt_t;
-            
-            d1_values.push(d1);
-            d2_values.push(d2);
+
+            d1_builder.append_value(d1);
+            d2_builder.append_value(d2);
         }
 
-        Ok((Float64Array::from(d1_values), Float64Array::from(d2_values)))
+        Ok((d1_builder.finish(), d2_builder.finish()))
     }
 
     /// Calculate delta (∂C/∂S)
@@ -322,14 +276,14 @@ impl BlackScholes {
     ) -> Result<ArrayRef, ArrowError> {
         let (d1, _) = Self::calculate_d1_d2(spots, strikes, times, rates, sigmas)?;
         use crate::math::distributions::norm_cdf;
-        
-        let mut result = Vec::with_capacity(d1.len());
+
+        let mut builder = Float64Builder::with_capacity(d1.len());
         for i in 0..d1.len() {
             let n_d1 = norm_cdf(d1.value(i));
             let delta = if is_call { n_d1 } else { n_d1 - 1.0 };
-            result.push(delta);
+            builder.append_value(delta);
         }
-        Ok(Arc::new(Float64Array::from(result)))
+        Ok(Arc::new(builder.finish()))
     }
 
     /// Calculate gamma (∂²C/∂S²)
@@ -342,19 +296,19 @@ impl BlackScholes {
     ) -> Result<ArrayRef, ArrowError> {
         let (d1, _) = Self::calculate_d1_d2(spots, strikes, times, rates, sigmas)?;
         use crate::math::distributions::norm_pdf;
-        
+
         let len = validate_broadcast_compatibility(&[spots, strikes, times, rates, sigmas])?;
-        let mut result = Vec::with_capacity(len);
-        
+        let mut builder = Float64Builder::with_capacity(len);
+
         for i in 0..len {
             let s = get_scalar_or_array_value(spots, i);
             let t = get_scalar_or_array_value(times, i);
             let sigma = get_scalar_or_array_value(sigmas, i);
             let phi_d1 = norm_pdf(d1.value(i));
             let gamma = phi_d1 / (s * sigma * t.sqrt());
-            result.push(gamma);
+            builder.append_value(gamma);
         }
-        Ok(Arc::new(Float64Array::from(result)))
+        Ok(Arc::new(builder.finish()))
     }
 
     /// Calculate vega (∂C/∂σ)
@@ -367,18 +321,18 @@ impl BlackScholes {
     ) -> Result<ArrayRef, ArrowError> {
         let (d1, _) = Self::calculate_d1_d2(spots, strikes, times, rates, sigmas)?;
         use crate::math::distributions::norm_pdf;
-        
+
         let len = validate_broadcast_compatibility(&[spots, strikes, times, rates, sigmas])?;
-        let mut result = Vec::with_capacity(len);
-        
+        let mut builder = Float64Builder::with_capacity(len);
+
         for i in 0..len {
             let s = get_scalar_or_array_value(spots, i);
             let t = get_scalar_or_array_value(times, i);
             let phi_d1 = norm_pdf(d1.value(i));
             let vega = s * phi_d1 * t.sqrt();
-            result.push(vega);
+            builder.append_value(vega);
         }
-        Ok(Arc::new(Float64Array::from(result)))
+        Ok(Arc::new(builder.finish()))
     }
 
     /// Calculate theta (∂C/∂T)
@@ -392,20 +346,20 @@ impl BlackScholes {
     ) -> Result<ArrayRef, ArrowError> {
         let (d1, d2) = Self::calculate_d1_d2(spots, strikes, times, rates, sigmas)?;
         use crate::math::distributions::{norm_cdf, norm_pdf};
-        
+
         let len = validate_broadcast_compatibility(&[spots, strikes, times, rates, sigmas])?;
-        let mut result = Vec::with_capacity(len);
-        
+        let mut builder = Float64Builder::with_capacity(len);
+
         for i in 0..len {
             let s = get_scalar_or_array_value(spots, i);
             let k = get_scalar_or_array_value(strikes, i);
             let t = get_scalar_or_array_value(times, i);
             let r = get_scalar_or_array_value(rates, i);
             let sigma = get_scalar_or_array_value(sigmas, i);
-            
+
             let phi_d1 = norm_pdf(d1.value(i));
             let common_term = -(s * phi_d1 * sigma) / (2.0 * t.sqrt());
-            
+
             let theta = if is_call {
                 let n_d2 = norm_cdf(d2.value(i));
                 common_term - r * k * (-r * t).exp() * n_d2
@@ -413,10 +367,10 @@ impl BlackScholes {
                 let n_neg_d2 = norm_cdf(-d2.value(i));
                 common_term + r * k * (-r * t).exp() * n_neg_d2
             };
-            
-            result.push(theta);
+
+            builder.append_value(theta);
         }
-        Ok(Arc::new(Float64Array::from(result)))
+        Ok(Arc::new(builder.finish()))
     }
 
     /// Calculate rho (∂C/∂r)
@@ -430,26 +384,26 @@ impl BlackScholes {
     ) -> Result<ArrayRef, ArrowError> {
         let (_, d2) = Self::calculate_d1_d2(spots, strikes, times, rates, sigmas)?;
         use crate::math::distributions::norm_cdf;
-        
+
         let len = validate_broadcast_compatibility(&[spots, strikes, times, rates, sigmas])?;
-        let mut result = Vec::with_capacity(len);
-        
+        let mut builder = Float64Builder::with_capacity(len);
+
         for i in 0..len {
             let k = get_scalar_or_array_value(strikes, i);
             let t = get_scalar_or_array_value(times, i);
             let r = get_scalar_or_array_value(rates, i);
-            
+
             let k_t_exp = k * t * (-r * t).exp();
-            
+
             let rho = if is_call {
                 k_t_exp * norm_cdf(d2.value(i))
             } else {
                 -k_t_exp * norm_cdf(-d2.value(i))
             };
-            
-            result.push(rho);
+
+            builder.append_value(rho);
         }
-        Ok(Arc::new(Float64Array::from(result)))
+        Ok(Arc::new(builder.finish()))
     }
 }
 

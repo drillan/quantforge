@@ -10,6 +10,9 @@ use crate::error::arrow_to_py_err;
 
 // Import Arrow-native compute kernels from core
 use quantforge_core::compute::black_scholes::BlackScholes;
+use quantforge_core::compute::formulas::{
+    black_scholes_call_scalar, black_scholes_d1_d2, black_scholes_put_scalar,
+};
 use quantforge_core::compute::greeks::calculate_greeks;
 
 // ============================================================================
@@ -103,9 +106,6 @@ fn broadcast_to_length(
 /// Calculate Black-Scholes call option price (scalar)
 #[pyfunction]
 pub fn call_price(s: f64, k: f64, t: f64, r: f64, sigma: f64) -> PyResult<f64> {
-    // Direct scalar computation to avoid array overhead
-    use quantforge_core::math::distributions::norm_cdf;
-
     // Validate inputs
     if s <= 0.0 || k <= 0.0 || t <= 0.0 || sigma <= 0.0 {
         return Err(pyo3::exceptions::PyValueError::new_err(
@@ -113,22 +113,13 @@ pub fn call_price(s: f64, k: f64, t: f64, r: f64, sigma: f64) -> PyResult<f64> {
         ));
     }
 
-    // Black-Scholes formula (direct scalar computation)
-    let sqrt_t = t.sqrt();
-    let d1 = ((s / k).ln() + (r + sigma * sigma / 2.0) * t) / (sigma * sqrt_t);
-    let d2 = d1 - sigma * sqrt_t;
-
-    let call_price = s * norm_cdf(d1) - k * (-r * t).exp() * norm_cdf(d2);
-
-    Ok(call_price)
+    // Use common formula
+    Ok(black_scholes_call_scalar(s, k, t, r, sigma))
 }
 
 /// Calculate Black-Scholes put option price (scalar)
 #[pyfunction]
 pub fn put_price(s: f64, k: f64, t: f64, r: f64, sigma: f64) -> PyResult<f64> {
-    // Direct scalar computation to avoid array overhead
-    use quantforge_core::math::distributions::norm_cdf;
-
     // Validate inputs
     if s <= 0.0 || k <= 0.0 || t <= 0.0 || sigma <= 0.0 {
         return Err(pyo3::exceptions::PyValueError::new_err(
@@ -136,14 +127,8 @@ pub fn put_price(s: f64, k: f64, t: f64, r: f64, sigma: f64) -> PyResult<f64> {
         ));
     }
 
-    // Black-Scholes formula (direct scalar computation)
-    let sqrt_t = t.sqrt();
-    let d1 = ((s / k).ln() + (r + sigma * sigma / 2.0) * t) / (sigma * sqrt_t);
-    let d2 = d1 - sigma * sqrt_t;
-
-    let put_price = k * (-r * t).exp() * norm_cdf(-d2) - s * norm_cdf(-d1);
-
-    Ok(put_price)
+    // Use common formula
+    Ok(black_scholes_put_scalar(s, k, t, r, sigma))
 }
 
 /// Calculate Black-Scholes call option price (batch)
@@ -436,10 +421,9 @@ pub fn greeks<'py>(
         ));
     }
 
-    // Calculate d1 and d2
+    // Use common formula for d1 and d2
+    let (d1, d2) = black_scholes_d1_d2(s, k, t, r, sigma);
     let sqrt_t = t.sqrt();
-    let d1 = ((s / k).ln() + (r + sigma * sigma / 2.0) * t) / (sigma * sqrt_t);
-    let d2 = d1 - sigma * sqrt_t;
 
     // Calculate Greeks
     let n_d1 = norm_cdf(d1);
