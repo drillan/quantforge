@@ -4,8 +4,7 @@
 
 use pyo3::prelude::*;
 
-mod arrow_convert;
-mod arrow_native; // Simplified implementation
+mod arrow_native;
 mod error;
 mod models;
 
@@ -92,7 +91,7 @@ fn quantforge(m: &Bound<'_, PyModule>) -> PyResult<()> {
     sys_modules.set_item("quantforge.american", &american_module)?;
 
     // ========================================================================
-    // Arrow Native Module (Simplified implementation)
+    // Arrow Native Module
     // ========================================================================
     let arrow_module = PyModule::new(m.py(), "arrow_native")?;
     arrow_native::register_arrow_functions(&arrow_module)?;

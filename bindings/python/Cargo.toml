@@ -12,6 +12,7 @@ crate-type = ["cdylib"]
 [dependencies]
 quantforge-core = { path = "../../core" }
 pyo3.workspace = true
+pyo3-arrow.workspace = true
 numpy.workspace = true
 ndarray.workspace = true
 thiserror.workspace = true

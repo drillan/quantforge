@@ -1,18 +1,101 @@
 //! Arrow-native model implementations with Python bindings
 
-use numpy::{PyArray1, PyReadonlyArray1};
+use arrow::array::{ArrayRef, Float64Array};
+use arrow::error::ArrowError;
+use numpy::{PyArray1, PyArrayMethods, PyReadonlyArray1};
 use pyo3::prelude::*;
 use pyo3::types::PyDict;
 
-use crate::arrow_convert::{
-    all_same_length, arrayref_to_numpy, broadcast_to_length, find_broadcast_length,
-    numpy_to_arrow_direct,
-};
 use crate::error::arrow_to_py_err;
 
 // Import Arrow-native compute kernels from core
 use quantforge_core::compute::black_scholes::BlackScholes;
 use quantforge_core::compute::greeks::calculate_greeks;
+
+// ============================================================================
+// Arrow Conversion Utilities (integrated from arrow_convert.rs)
+// ============================================================================
+
+/// Convert NumPy array to Arrow Float64Array (direct conversion without broadcasting)
+fn numpy_to_arrow_direct(arr: PyReadonlyArray1<f64>) -> Result<Float64Array, ArrowError> {
+    let slice = arr
+        .as_slice()
+        .map_err(|e| ArrowError::InvalidArgumentError(format!("Failed to get slice: {}", e)))?;
+    Ok(Float64Array::from(slice.to_vec()))
+}
+
+/// Convert ArrayRef to NumPy array
+fn arrayref_to_numpy<'py>(py: Python<'py>, arr: ArrayRef) -> PyResult<Bound<'py, PyArray1<f64>>> {
+    let float_array = arr
+        .as_any()
+        .downcast_ref::<Float64Array>()
+        .ok_or_else(|| pyo3::exceptions::PyTypeError::new_err("Expected Float64Array"))?;
+
+    let vec: Vec<f64> = (0..float_array.len())
+        .map(|i| float_array.value(i))
+        .collect();
+
+    Ok(PyArray1::from_vec(py, vec))
+}
+
+/// Check if all arrays have the same length
+fn all_same_length(arrays: &[&PyReadonlyArray1<f64>]) -> bool {
+    if arrays.is_empty() {
+        return true;
+    }
+
+    let first_len = arrays[0].len().unwrap_or(0);
+    arrays.iter().all(|arr| arr.len().unwrap_or(0) == first_len)
+}
+
+/// Find the maximum length among multiple arrays for broadcasting
+fn find_broadcast_length(arrays: &[&PyReadonlyArray1<f64>]) -> Result<usize, ArrowError> {
+    let mut max_len = 1;
+
+    for arr in arrays {
+        let len = arr.len().map_err(|e| {
+            ArrowError::InvalidArgumentError(format!("Failed to get array length: {}", e))
+        })?;
+        if len > 1 {
+            if max_len > 1 && len != max_len {
+                return Err(ArrowError::InvalidArgumentError(
+                    "Shape mismatch: arrays have incompatible lengths for broadcasting".to_string(),
+                ));
+            }
+            max_len = max_len.max(len);
+        }
+    }
+
+    Ok(max_len)
+}
+
+/// Broadcast arrays to the same length
+fn broadcast_to_length(
+    arr: PyReadonlyArray1<f64>,
+    target_len: usize,
+) -> Result<Float64Array, ArrowError> {
+    let arr_len = arr.len().map_err(|e| {
+        ArrowError::InvalidArgumentError(format!("Failed to get array length: {}", e))
+    })?;
+
+    if arr_len == 1 {
+        // Scalar broadcast: repeat the single value
+        let slice = arr
+            .as_slice()
+            .map_err(|e| ArrowError::InvalidArgumentError(format!("Failed to get slice: {}", e)))?;
+        let value = slice[0];
+        Ok(Float64Array::from(vec![value; target_len]))
+    } else if arr_len == target_len {
+        // Same length: direct conversion
+        numpy_to_arrow_direct(arr)
+    } else {
+        // Shape mismatch
+        Err(ArrowError::InvalidArgumentError(format!(
+            "Cannot broadcast array of length {} to length {}",
+            arr_len, target_len
+        )))
+    }
+}
 
 // ============================================================================
 // Black-Scholes Model
