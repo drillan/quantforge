@@ -4,7 +4,6 @@
 
 use pyo3::prelude::*;
 
-mod arrow_native;
 mod error;
 mod models;
 
@@ -91,10 +90,10 @@ fn quantforge(m: &Bound<'_, PyModule>) -> PyResult<()> {
     sys_modules.set_item("quantforge.american", &american_module)?;
 
     // ========================================================================
-    // Arrow Native Module
+    // Arrow Native Module (Zero-Copy FFI functions from unified models.rs)
     // ========================================================================
     let arrow_module = PyModule::new(m.py(), "arrow_native")?;
-    arrow_native::register_arrow_functions(&arrow_module)?;
+    register_arrow_functions(&arrow_module)?; // Functions from models.rs
 
     m.add_submodule(&arrow_module)?;
     sys_modules.set_item("quantforge.arrow_native", &arrow_module)?;

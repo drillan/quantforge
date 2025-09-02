@@ -5,7 +5,7 @@ use arrow::array::{ArrayRef, Float64Array};
 use arrow::error::ArrowError;
 use std::sync::Arc;
 
-use super::formulas::{black76_call_scalar, black76_put_scalar};
+use super::formulas::{black76_call_scalar, black76_d1_d2, black76_put_scalar};
 use super::{get_scalar_or_array_value, validate_broadcast_compatibility};
 use crate::constants::get_parallel_threshold;
 use crate::math::distributions::norm_cdf;
@@ -149,8 +149,7 @@ impl Black76 {
             let r = get_scalar_or_array_value(rates, i);
             let sigma = get_scalar_or_array_value(sigmas, i);
 
-            let sqrt_t = t.sqrt();
-            let d1 = ((f / k).ln() + (sigma * sigma / 2.0) * t) / (sigma * sqrt_t);
+            let (d1, _d2) = black76_d1_d2(f, k, t, sigma);
 
             let delta = if is_call {
                 (-r * t).exp() * norm_cdf(d1)
@@ -184,8 +183,8 @@ impl Black76 {
             let r = get_scalar_or_array_value(rates, i);
             let sigma = get_scalar_or_array_value(sigmas, i);
 
+            let (d1, _d2) = black76_d1_d2(f, k, t, sigma);
             let sqrt_t = t.sqrt();
-            let d1 = ((f / k).ln() + (sigma * sigma / 2.0) * t) / (sigma * sqrt_t);
 
             let gamma = (-r * t).exp() * norm_pdf(d1) / (f * sigma * sqrt_t);
             builder.append_value(gamma);
@@ -214,8 +213,8 @@ impl Black76 {
             let r = get_scalar_or_array_value(rates, i);
             let sigma = get_scalar_or_array_value(sigmas, i);
 
+            let (d1, _d2) = black76_d1_d2(f, k, t, sigma);
             let sqrt_t = t.sqrt();
-            let d1 = ((f / k).ln() + (sigma * sigma / 2.0) * t) / (sigma * sqrt_t);
 
             let vega = (-r * t).exp() * f * norm_pdf(d1) * sqrt_t;
             builder.append_value(vega);
@@ -245,9 +244,8 @@ impl Black76 {
             let r = get_scalar_or_array_value(rates, i);
             let sigma = get_scalar_or_array_value(sigmas, i);
 
+            let (d1, d2) = black76_d1_d2(f, k, t, sigma);
             let sqrt_t = t.sqrt();
-            let d1 = ((f / k).ln() + (sigma * sigma / 2.0) * t) / (sigma * sqrt_t);
-            let d2 = d1 - sigma * sqrt_t;
 
             let discount = (-r * t).exp();
             let common_term = -discount * f * norm_pdf(d1) * sigma / (2.0 * sqrt_t);
@@ -283,9 +281,7 @@ impl Black76 {
             let r = get_scalar_or_array_value(rates, i);
             let sigma = get_scalar_or_array_value(sigmas, i);
 
-            let sqrt_t = t.sqrt();
-            let d1 = ((f / k).ln() + (sigma * sigma / 2.0) * t) / (sigma * sqrt_t);
-            let d2 = d1 - sigma * sqrt_t;
+            let (d1, d2) = black76_d1_d2(f, k, t, sigma);
 
             let discount = (-r * t).exp();
 

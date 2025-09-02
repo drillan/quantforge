@@ -3,6 +3,7 @@
 from typing import Union
 
 import numpy as np
+import pyarrow as pa
 from numpy.typing import NDArray
 
 # Import native module
@@ -57,8 +58,18 @@ def call_price_batch(
     rates = _ensure_array(rates)
     sigmas = _ensure_array(sigmas)
 
-    # Call native implementation
-    return _native_call_batch(spots, strikes, times, rates, sigmas)
+    # Convert numpy arrays to Arrow arrays
+    spots_arrow = pa.array(spots, type=pa.float64())
+    strikes_arrow = pa.array(strikes, type=pa.float64())
+    times_arrow = pa.array(times, type=pa.float64())
+    rates_arrow = pa.array(rates, type=pa.float64())
+    sigmas_arrow = pa.array(sigmas, type=pa.float64())
+
+    # Call native implementation with Arrow arrays
+    result_arrow = _native_call_batch(spots_arrow, strikes_arrow, times_arrow, rates_arrow, sigmas_arrow)
+    
+    # Convert result back to numpy
+    return result_arrow.to_numpy()
 
 
 def put_price_batch(
@@ -96,8 +107,18 @@ def put_price_batch(
     rates = _ensure_array(rates)
     sigmas = _ensure_array(sigmas)
 
-    # Call native implementation
-    return _native_put_batch(spots, strikes, times, rates, sigmas)
+    # Convert numpy arrays to Arrow arrays
+    spots_arrow = pa.array(spots, type=pa.float64())
+    strikes_arrow = pa.array(strikes, type=pa.float64())
+    times_arrow = pa.array(times, type=pa.float64())
+    rates_arrow = pa.array(rates, type=pa.float64())
+    sigmas_arrow = pa.array(sigmas, type=pa.float64())
+
+    # Call native implementation with Arrow arrays
+    result_arrow = _native_put_batch(spots_arrow, strikes_arrow, times_arrow, rates_arrow, sigmas_arrow)
+    
+    # Convert result back to numpy
+    return result_arrow.to_numpy()
 
 
 def greeks_batch(
@@ -138,5 +159,19 @@ def greeks_batch(
     rates = _ensure_array(rates)
     sigmas = _ensure_array(sigmas)
 
-    # Call native implementation
-    return _native_greeks_batch(spots, strikes, times, rates, sigmas, is_call)
+    # Convert numpy arrays to Arrow arrays
+    spots_arrow = pa.array(spots, type=pa.float64())
+    strikes_arrow = pa.array(strikes, type=pa.float64())
+    times_arrow = pa.array(times, type=pa.float64())
+    rates_arrow = pa.array(rates, type=pa.float64())
+    sigmas_arrow = pa.array(sigmas, type=pa.float64())
+
+    # Call native implementation with Arrow arrays
+    result_dict = _native_greeks_batch(spots_arrow, strikes_arrow, times_arrow, rates_arrow, sigmas_arrow, is_call)
+    
+    # Convert Arrow arrays to numpy in the result dictionary
+    numpy_result = {}
+    for key, value in result_dict.items():
+        numpy_result[key] = value.to_numpy()
+    
+    return numpy_result

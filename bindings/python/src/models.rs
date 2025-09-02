@@ -1,405 +1,527 @@
-//! Arrow-native model implementations with Python bindings
+//! Arrow Native Module - pyo3-arrow Zero-Copy Implementation
+//!
+//! This module provides Apache Arrow FFI integration for zero-copy data exchange
+//! between Python and Rust. It uses pyo3-arrow for automatic Arrow data conversion.
 
-use arrow::array::{ArrayRef, Float64Array};
+use arrow::array::Float64Array;
+use arrow::datatypes::{DataType, Field};
 use arrow::error::ArrowError;
-use numpy::{PyArray1, PyReadonlyArray1};
+use pyo3::exceptions::{PyNotImplementedError, PyValueError};
 use pyo3::prelude::*;
 use pyo3::types::PyDict;
-
-use crate::error::arrow_to_py_err;
-
-// Import Arrow-native compute kernels from core
-use quantforge_core::compute::black_scholes::BlackScholes;
+use pyo3_arrow::{error::PyArrowResult, PyArray};
 use quantforge_core::compute::formulas::{
-    black_scholes_call_scalar, black_scholes_d1_d2, black_scholes_put_scalar,
+    black76_call_scalar, black76_put_scalar, black_scholes_call_scalar, black_scholes_put_scalar,
+    merton_call_scalar, merton_put_scalar,
 };
-use quantforge_core::compute::greeks::calculate_greeks;
+use quantforge_core::compute::{Black76, BlackScholes};
+use std::sync::Arc;
 
-// ============================================================================
-// Arrow Conversion Utilities (integrated from arrow_convert.rs)
-// ============================================================================
+/// Black-Scholes call price calculation using Arrow arrays
+///
+/// Parameters:
+/// - spots: Arrow array of spot prices
+/// - strikes: Arrow array of strike prices  
+/// - times: Arrow array of times to maturity
+/// - rates: Arrow array of risk-free rates
+/// - sigmas: Arrow array of volatilities
+///
+/// Returns Arrow array of call prices
+#[pyfunction]
+#[pyo3(name = "arrow_call_price")]
+#[pyo3(signature = (spots, strikes, times, rates, sigmas))]
+pub fn arrow_call_price(
+    py: Python,
+    spots: PyArray,
+    strikes: PyArray,
+    times: PyArray,
+    rates: PyArray,
+    sigmas: PyArray,
+) -> PyArrowResult<PyObject> {
+    // Extract Arrow arrays from PyArray wrappers
+    let spots_array = spots.as_ref();
+    let strikes_array = strikes.as_ref();
+    let times_array = times.as_ref();
+    let rates_array = rates.as_ref();
+    let sigmas_array = sigmas.as_ref();
 
-/// Convert NumPy array to Arrow Float64Array (direct conversion without broadcasting)
-fn numpy_to_arrow_direct(arr: PyReadonlyArray1<f64>) -> Result<Float64Array, ArrowError> {
-    let slice = arr
-        .as_slice()
-        .map_err(|e| ArrowError::InvalidArgumentError(format!("Failed to get slice: {e}")))?;
-    Ok(Float64Array::from(slice.to_vec()))
-}
-
-/// Convert ArrayRef to NumPy array
-fn arrayref_to_numpy<'py>(py: Python<'py>, arr: ArrayRef) -> PyResult<Bound<'py, PyArray1<f64>>> {
-    let float_array = arr
+    // Downcast to Float64Array
+    let spots_f64 = spots_array
         .as_any()
         .downcast_ref::<Float64Array>()
-        .ok_or_else(|| pyo3::exceptions::PyTypeError::new_err("Expected Float64Array"))?;
+        .ok_or_else(|| ArrowError::CastError("spots must be Float64Array".into()))?;
+    let strikes_f64 = strikes_array
+        .as_any()
+        .downcast_ref::<Float64Array>()
+        .ok_or_else(|| ArrowError::CastError("strikes must be Float64Array".into()))?;
+    let times_f64 = times_array
+        .as_any()
+        .downcast_ref::<Float64Array>()
+        .ok_or_else(|| ArrowError::CastError("times must be Float64Array".into()))?;
+    let rates_f64 = rates_array
+        .as_any()
+        .downcast_ref::<Float64Array>()
+        .ok_or_else(|| ArrowError::CastError("rates must be Float64Array".into()))?;
+    let sigmas_f64 = sigmas_array
+        .as_any()
+        .downcast_ref::<Float64Array>()
+        .ok_or_else(|| ArrowError::CastError("sigmas must be Float64Array".into()))?;
 
-    let vec: Vec<f64> = (0..float_array.len())
-        .map(|i| float_array.value(i))
-        .collect();
-
-    Ok(PyArray1::from_vec(py, vec))
-}
-
-/// Check if all arrays have the same length
-fn all_same_length(arrays: &[&PyReadonlyArray1<f64>]) -> bool {
-    if arrays.is_empty() {
-        return true;
-    }
-
-    let first_len = arrays[0].len().unwrap_or(0);
-    arrays.iter().all(|arr| arr.len().unwrap_or(0) == first_len)
-}
-
-/// Find the maximum length among multiple arrays for broadcasting
-fn find_broadcast_length(arrays: &[&PyReadonlyArray1<f64>]) -> Result<usize, ArrowError> {
-    let mut max_len = 1;
-
-    for arr in arrays {
-        let len = arr.len().map_err(|e| {
-            ArrowError::InvalidArgumentError(format!("Failed to get array length: {e}"))
+    // Compute call prices using quantforge-core BlackScholes
+    // Release GIL for computation
+    let result_arc = py
+        .allow_threads(|| {
+            BlackScholes::call_price(spots_f64, strikes_f64, times_f64, rates_f64, sigmas_f64)
+        })
+        .map_err(|e| {
+            ArrowError::ComputeError(format!("Black-Scholes call price computation failed: {e}"))
         })?;
-        if len > 1 {
-            if max_len > 1 && len != max_len {
-                return Err(ArrowError::InvalidArgumentError(
-                    "Shape mismatch: arrays have incompatible lengths for broadcasting".to_string(),
-                ));
-            }
-            max_len = max_len.max(len);
-        }
-    }
 
-    Ok(max_len)
+    // Create field for the result
+    let field = Arc::new(Field::new("call_price", DataType::Float64, false));
+
+    // Wrap in PyArray with Arc to manage lifetime
+    let py_array = PyArray::new(result_arc, field);
+
+    // Convert to Python object using to_arro3
+    let result = py_array.to_arro3(py)?;
+    Ok(result.into())
 }
 
-/// Broadcast arrays to the same length
-fn broadcast_to_length(
-    arr: PyReadonlyArray1<f64>,
-    target_len: usize,
-) -> Result<Float64Array, ArrowError> {
-    let arr_len = arr.len().map_err(|e| {
-        ArrowError::InvalidArgumentError(format!("Failed to get array length: {e}"))
-    })?;
+/// Black-Scholes put price calculation using Arrow arrays
+///
+/// Parameters:
+/// - spots: Arrow array of spot prices
+/// - strikes: Arrow array of strike prices
+/// - times: Arrow array of times to maturity
+/// - rates: Arrow array of risk-free rates
+/// - sigmas: Arrow array of volatilities
+///
+/// Returns Arrow array of put prices
+#[pyfunction]
+#[pyo3(name = "arrow_put_price")]
+#[pyo3(signature = (spots, strikes, times, rates, sigmas))]
+pub fn arrow_put_price(
+    py: Python,
+    spots: PyArray,
+    strikes: PyArray,
+    times: PyArray,
+    rates: PyArray,
+    sigmas: PyArray,
+) -> PyArrowResult<PyObject> {
+    // Extract Arrow arrays from PyArray wrappers
+    let spots_array = spots.as_ref();
+    let strikes_array = strikes.as_ref();
+    let times_array = times.as_ref();
+    let rates_array = rates.as_ref();
+    let sigmas_array = sigmas.as_ref();
 
-    if arr_len == 1 {
-        // Scalar broadcast: repeat the single value
-        let slice = arr
-            .as_slice()
-            .map_err(|e| ArrowError::InvalidArgumentError(format!("Failed to get slice: {e}")))?;
-        let value = slice[0];
-        Ok(Float64Array::from(vec![value; target_len]))
-    } else if arr_len == target_len {
-        // Same length: direct conversion
-        numpy_to_arrow_direct(arr)
-    } else {
-        // Shape mismatch
-        Err(ArrowError::InvalidArgumentError(format!(
-            "Cannot broadcast array of length {arr_len} to length {target_len}"
-        )))
-    }
+    // Downcast to Float64Array
+    let spots_f64 = spots_array
+        .as_any()
+        .downcast_ref::<Float64Array>()
+        .ok_or_else(|| ArrowError::CastError("spots must be Float64Array".into()))?;
+    let strikes_f64 = strikes_array
+        .as_any()
+        .downcast_ref::<Float64Array>()
+        .ok_or_else(|| ArrowError::CastError("strikes must be Float64Array".into()))?;
+    let times_f64 = times_array
+        .as_any()
+        .downcast_ref::<Float64Array>()
+        .ok_or_else(|| ArrowError::CastError("times must be Float64Array".into()))?;
+    let rates_f64 = rates_array
+        .as_any()
+        .downcast_ref::<Float64Array>()
+        .ok_or_else(|| ArrowError::CastError("rates must be Float64Array".into()))?;
+    let sigmas_f64 = sigmas_array
+        .as_any()
+        .downcast_ref::<Float64Array>()
+        .ok_or_else(|| ArrowError::CastError("sigmas must be Float64Array".into()))?;
+
+    // Compute put prices using quantforge-core BlackScholes
+    // Release GIL for computation
+    let result_arc = py
+        .allow_threads(|| {
+            BlackScholes::put_price(spots_f64, strikes_f64, times_f64, rates_f64, sigmas_f64)
+        })
+        .map_err(|e| {
+            ArrowError::ComputeError(format!("Black-Scholes put price computation failed: {e}"))
+        })?;
+
+    // Create field for the result
+    let field = Arc::new(Field::new("put_price", DataType::Float64, false));
+
+    // Wrap in PyArray with Arc to manage lifetime
+    let py_array = PyArray::new(result_arc, field);
+
+    // Convert to Python object using to_arro3
+    let result = py_array.to_arro3(py)?;
+    Ok(result.into())
+}
+
+/// Black-Scholes Greeks calculation using Arrow arrays
+///
+/// Parameters:
+/// - spots: Arrow array of spot prices
+/// - strikes: Arrow array of strike prices
+/// - times: Arrow array of times to maturity
+/// - rates: Arrow array of risk-free rates
+/// - sigmas: Arrow array of volatilities
+/// - is_call: Boolean flag for call (true) or put (false) option
+///
+/// Returns Dict[str, Arrow array] of Greeks
+#[pyfunction]
+#[pyo3(name = "arrow_greeks")]
+#[pyo3(signature = (spots, strikes, times, rates, sigmas, is_call))]
+pub fn arrow_greeks(
+    py: Python,
+    spots: PyArray,
+    strikes: PyArray,
+    times: PyArray,
+    rates: PyArray,
+    sigmas: PyArray,
+    is_call: bool,
+) -> PyArrowResult<PyObject> {
+    // Extract Arrow arrays from PyArray wrappers
+    let spots_array = spots.as_ref();
+    let strikes_array = strikes.as_ref();
+    let times_array = times.as_ref();
+    let rates_array = rates.as_ref();
+    let sigmas_array = sigmas.as_ref();
+
+    // Downcast to Float64Array
+    let spots_f64 = spots_array
+        .as_any()
+        .downcast_ref::<Float64Array>()
+        .ok_or_else(|| ArrowError::CastError("spots must be Float64Array".into()))?;
+    let strikes_f64 = strikes_array
+        .as_any()
+        .downcast_ref::<Float64Array>()
+        .ok_or_else(|| ArrowError::CastError("strikes must be Float64Array".into()))?;
+    let times_f64 = times_array
+        .as_any()
+        .downcast_ref::<Float64Array>()
+        .ok_or_else(|| ArrowError::CastError("times must be Float64Array".into()))?;
+    let rates_f64 = rates_array
+        .as_any()
+        .downcast_ref::<Float64Array>()
+        .ok_or_else(|| ArrowError::CastError("rates must be Float64Array".into()))?;
+    let sigmas_f64 = sigmas_array
+        .as_any()
+        .downcast_ref::<Float64Array>()
+        .ok_or_else(|| ArrowError::CastError("sigmas must be Float64Array".into()))?;
+
+    // Compute Greeks using quantforge-core BlackScholes (release GIL)
+    let (delta_arc, gamma_arc, vega_arc, theta_arc, rho_arc) = py
+        .allow_threads(|| {
+            let delta = BlackScholes::delta(
+                spots_f64,
+                strikes_f64,
+                times_f64,
+                rates_f64,
+                sigmas_f64,
+                is_call,
+            )?;
+            let gamma =
+                BlackScholes::gamma(spots_f64, strikes_f64, times_f64, rates_f64, sigmas_f64)?;
+            let vega =
+                BlackScholes::vega(spots_f64, strikes_f64, times_f64, rates_f64, sigmas_f64)?;
+            let theta = BlackScholes::theta(
+                spots_f64,
+                strikes_f64,
+                times_f64,
+                rates_f64,
+                sigmas_f64,
+                is_call,
+            )?;
+            let rho = BlackScholes::rho(
+                spots_f64,
+                strikes_f64,
+                times_f64,
+                rates_f64,
+                sigmas_f64,
+                is_call,
+            )?;
+            Ok::<_, ArrowError>((delta, gamma, vega, theta, rho))
+        })
+        .map_err(|e: ArrowError| {
+            ArrowError::ComputeError(format!("Greeks computation failed: {e}"))
+        })?;
+
+    // Create Python dict to return Greeks
+    let result_dict = PyDict::new(py);
+
+    // Add each Greek to the dict
+    let delta_field = Arc::new(Field::new("delta", DataType::Float64, false));
+    let delta_array = PyArray::new(delta_arc, delta_field);
+    result_dict.set_item("delta", delta_array.to_arro3(py)?)?;
+
+    let gamma_field = Arc::new(Field::new("gamma", DataType::Float64, false));
+    let gamma_array = PyArray::new(gamma_arc, gamma_field);
+    result_dict.set_item("gamma", gamma_array.to_arro3(py)?)?;
+
+    let vega_field = Arc::new(Field::new("vega", DataType::Float64, false));
+    let vega_array = PyArray::new(vega_arc, vega_field);
+    result_dict.set_item("vega", vega_array.to_arro3(py)?)?;
+
+    let theta_field = Arc::new(Field::new("theta", DataType::Float64, false));
+    let theta_array = PyArray::new(theta_arc, theta_field);
+    result_dict.set_item("theta", theta_array.to_arro3(py)?)?;
+
+    let rho_field = Arc::new(Field::new("rho", DataType::Float64, false));
+    let rho_array = PyArray::new(rho_arc, rho_field);
+    result_dict.set_item("rho", rho_array.to_arro3(py)?)?;
+
+    Ok(result_dict.into())
+}
+
+/// Black76 call price calculation using Arrow arrays
+///
+/// Parameters:
+/// - forwards: Arrow array of forward prices
+/// - strikes: Arrow array of strike prices
+/// - times: Arrow array of times to maturity
+/// - rates: Arrow array of risk-free rates
+/// - sigmas: Arrow array of volatilities
+///
+/// Returns Arrow array of call prices
+#[pyfunction]
+#[pyo3(name = "arrow76_call_price")]
+#[pyo3(signature = (forwards, strikes, times, rates, sigmas))]
+pub fn arrow76_call_price(
+    py: Python,
+    forwards: PyArray,
+    strikes: PyArray,
+    times: PyArray,
+    rates: PyArray,
+    sigmas: PyArray,
+) -> PyArrowResult<PyObject> {
+    // Extract and downcast arrays
+    let forwards_f64 = forwards
+        .as_ref()
+        .as_any()
+        .downcast_ref::<Float64Array>()
+        .ok_or_else(|| ArrowError::CastError("forwards must be Float64Array".into()))?;
+    let strikes_f64 = strikes
+        .as_ref()
+        .as_any()
+        .downcast_ref::<Float64Array>()
+        .ok_or_else(|| ArrowError::CastError("strikes must be Float64Array".into()))?;
+    let times_f64 = times
+        .as_ref()
+        .as_any()
+        .downcast_ref::<Float64Array>()
+        .ok_or_else(|| ArrowError::CastError("times must be Float64Array".into()))?;
+    let rates_f64 = rates
+        .as_ref()
+        .as_any()
+        .downcast_ref::<Float64Array>()
+        .ok_or_else(|| ArrowError::CastError("rates must be Float64Array".into()))?;
+    let sigmas_f64 = sigmas
+        .as_ref()
+        .as_any()
+        .downcast_ref::<Float64Array>()
+        .ok_or_else(|| ArrowError::CastError("sigmas must be Float64Array".into()))?;
+
+    // Compute with GIL released
+    let result_arc = py
+        .allow_threads(|| {
+            Black76::call_price(forwards_f64, strikes_f64, times_f64, rates_f64, sigmas_f64)
+        })
+        .map_err(|e| {
+            ArrowError::ComputeError(format!("Black76 call price computation failed: {e}"))
+        })?;
+
+    // Create field and return
+    let field = Arc::new(Field::new("call_price", DataType::Float64, false));
+    let py_array = PyArray::new(result_arc, field);
+    let result = py_array.to_arro3(py)?;
+    Ok(result.into())
+}
+
+/// Black76 put price calculation using Arrow arrays
+#[pyfunction]
+#[pyo3(name = "arrow76_put_price")]
+#[pyo3(signature = (forwards, strikes, times, rates, sigmas))]
+pub fn arrow76_put_price(
+    py: Python,
+    forwards: PyArray,
+    strikes: PyArray,
+    times: PyArray,
+    rates: PyArray,
+    sigmas: PyArray,
+) -> PyArrowResult<PyObject> {
+    // Extract and downcast arrays
+    let forwards_f64 = forwards
+        .as_ref()
+        .as_any()
+        .downcast_ref::<Float64Array>()
+        .ok_or_else(|| ArrowError::CastError("forwards must be Float64Array".into()))?;
+    let strikes_f64 = strikes
+        .as_ref()
+        .as_any()
+        .downcast_ref::<Float64Array>()
+        .ok_or_else(|| ArrowError::CastError("strikes must be Float64Array".into()))?;
+    let times_f64 = times
+        .as_ref()
+        .as_any()
+        .downcast_ref::<Float64Array>()
+        .ok_or_else(|| ArrowError::CastError("times must be Float64Array".into()))?;
+    let rates_f64 = rates
+        .as_ref()
+        .as_any()
+        .downcast_ref::<Float64Array>()
+        .ok_or_else(|| ArrowError::CastError("rates must be Float64Array".into()))?;
+    let sigmas_f64 = sigmas
+        .as_ref()
+        .as_any()
+        .downcast_ref::<Float64Array>()
+        .ok_or_else(|| ArrowError::CastError("sigmas must be Float64Array".into()))?;
+
+    // Compute with GIL released
+    let result_arc = py
+        .allow_threads(|| {
+            Black76::put_price(forwards_f64, strikes_f64, times_f64, rates_f64, sigmas_f64)
+        })
+        .map_err(|e| {
+            ArrowError::ComputeError(format!("Black76 put price computation failed: {e}"))
+        })?;
+
+    // Create field and return
+    let field = Arc::new(Field::new("put_price", DataType::Float64, false));
+    let py_array = PyArray::new(result_arc, field);
+    let result = py_array.to_arro3(py)?;
+    Ok(result.into())
+}
+
+/// Black76 Greeks calculation using Arrow arrays
+#[pyfunction]
+#[pyo3(name = "arrow76_greeks")]
+#[pyo3(signature = (forwards, strikes, times, rates, sigmas, is_call))]
+pub fn arrow76_greeks(
+    py: Python,
+    forwards: PyArray,
+    strikes: PyArray,
+    times: PyArray,
+    rates: PyArray,
+    sigmas: PyArray,
+    is_call: bool,
+) -> PyArrowResult<PyObject> {
+    // Extract and downcast arrays
+    let forwards_f64 = forwards
+        .as_ref()
+        .as_any()
+        .downcast_ref::<Float64Array>()
+        .ok_or_else(|| ArrowError::CastError("forwards must be Float64Array".into()))?;
+    let strikes_f64 = strikes
+        .as_ref()
+        .as_any()
+        .downcast_ref::<Float64Array>()
+        .ok_or_else(|| ArrowError::CastError("strikes must be Float64Array".into()))?;
+    let times_f64 = times
+        .as_ref()
+        .as_any()
+        .downcast_ref::<Float64Array>()
+        .ok_or_else(|| ArrowError::CastError("times must be Float64Array".into()))?;
+    let rates_f64 = rates
+        .as_ref()
+        .as_any()
+        .downcast_ref::<Float64Array>()
+        .ok_or_else(|| ArrowError::CastError("rates must be Float64Array".into()))?;
+    let sigmas_f64 = sigmas
+        .as_ref()
+        .as_any()
+        .downcast_ref::<Float64Array>()
+        .ok_or_else(|| ArrowError::CastError("sigmas must be Float64Array".into()))?;
+
+    // Compute Greeks with GIL released
+    let (delta_arc, gamma_arc, vega_arc, theta_arc, rho_arc) = py
+        .allow_threads(|| {
+            let delta = Black76::delta(
+                forwards_f64,
+                strikes_f64,
+                times_f64,
+                rates_f64,
+                sigmas_f64,
+                is_call,
+            )?;
+            let gamma =
+                Black76::gamma(forwards_f64, strikes_f64, times_f64, rates_f64, sigmas_f64)?;
+            let vega = Black76::vega(forwards_f64, strikes_f64, times_f64, rates_f64, sigmas_f64)?;
+            let theta = Black76::theta(
+                forwards_f64,
+                strikes_f64,
+                times_f64,
+                rates_f64,
+                sigmas_f64,
+                is_call,
+            )?;
+            let rho = Black76::rho(
+                forwards_f64,
+                strikes_f64,
+                times_f64,
+                rates_f64,
+                sigmas_f64,
+                is_call,
+            )?;
+            Ok::<_, ArrowError>((delta, gamma, vega, theta, rho))
+        })
+        .map_err(|e: ArrowError| {
+            ArrowError::ComputeError(format!("Black76 Greeks computation failed: {e}"))
+        })?;
+
+    // Create Python dict
+    let result_dict = PyDict::new(py);
+
+    // Add each Greek
+    let delta_field = Arc::new(Field::new("delta", DataType::Float64, false));
+    let delta_array = PyArray::new(delta_arc, delta_field);
+    result_dict.set_item("delta", delta_array.to_arro3(py)?)?;
+
+    let gamma_field = Arc::new(Field::new("gamma", DataType::Float64, false));
+    let gamma_array = PyArray::new(gamma_arc, gamma_field);
+    result_dict.set_item("gamma", gamma_array.to_arro3(py)?)?;
+
+    let vega_field = Arc::new(Field::new("vega", DataType::Float64, false));
+    let vega_array = PyArray::new(vega_arc, vega_field);
+    result_dict.set_item("vega", vega_array.to_arro3(py)?)?;
+
+    let theta_field = Arc::new(Field::new("theta", DataType::Float64, false));
+    let theta_array = PyArray::new(theta_arc, theta_field);
+    result_dict.set_item("theta", theta_array.to_arro3(py)?)?;
+
+    let rho_field = Arc::new(Field::new("rho", DataType::Float64, false));
+    let rho_array = PyArray::new(rho_arc, rho_field);
+    result_dict.set_item("rho", rho_array.to_arro3(py)?)?;
+
+    Ok(result_dict.into())
 }
 
 // ============================================================================
-// Black-Scholes Model
+// Scalar Functions
 // ============================================================================
 
-/// Calculate Black-Scholes call option price (scalar)
+/// Black-Scholes call price (scalar version)
 #[pyfunction]
 pub fn call_price(s: f64, k: f64, t: f64, r: f64, sigma: f64) -> PyResult<f64> {
     // Validate inputs
     if s <= 0.0 || k <= 0.0 || t <= 0.0 || sigma <= 0.0 {
-        return Err(pyo3::exceptions::PyValueError::new_err(
-            "s, k, t, and sigma must be positive",
-        ));
+        return Err(PyValueError::new_err("s, k, t, and sigma must be positive"));
     }
-
-    // Use common formula
     Ok(black_scholes_call_scalar(s, k, t, r, sigma))
 }
 
-/// Calculate Black-Scholes put option price (scalar)
+/// Black-Scholes put price (scalar version)
 #[pyfunction]
 pub fn put_price(s: f64, k: f64, t: f64, r: f64, sigma: f64) -> PyResult<f64> {
     // Validate inputs
     if s <= 0.0 || k <= 0.0 || t <= 0.0 || sigma <= 0.0 {
-        return Err(pyo3::exceptions::PyValueError::new_err(
-            "s, k, t, and sigma must be positive",
-        ));
+        return Err(PyValueError::new_err("s, k, t, and sigma must be positive"));
     }
-
-    // Use common formula
     Ok(black_scholes_put_scalar(s, k, t, r, sigma))
 }
 
-/// Calculate Black-Scholes call option price (batch)
-#[pyfunction]
-#[pyo3(signature = (spots, strikes, times, rates, sigmas))]
-pub fn call_price_batch<'py>(
-    py: Python<'py>,
-    spots: PyReadonlyArray1<f64>,
-    strikes: PyReadonlyArray1<f64>,
-    times: PyReadonlyArray1<f64>,
-    rates: PyReadonlyArray1<f64>,
-    sigmas: PyReadonlyArray1<f64>,
-) -> PyResult<Bound<'py, PyArray1<f64>>> {
-    // Check if all arrays have the same length (Fast Path)
-    let arrays = vec![&spots, &strikes, &times, &rates, &sigmas];
-
-    if all_same_length(&arrays) {
-        // Fast Path: Direct conversion without broadcasting
-        let spots_arrow = numpy_to_arrow_direct(spots).map_err(arrow_to_py_err)?;
-        let strikes_arrow = numpy_to_arrow_direct(strikes).map_err(arrow_to_py_err)?;
-        let times_arrow = numpy_to_arrow_direct(times).map_err(arrow_to_py_err)?;
-        let rates_arrow = numpy_to_arrow_direct(rates).map_err(arrow_to_py_err)?;
-        let sigmas_arrow = numpy_to_arrow_direct(sigmas).map_err(arrow_to_py_err)?;
-
-        // Release GIL for computation
-        let result = py
-            .allow_threads(|| {
-                BlackScholes::call_price(
-                    &spots_arrow,
-                    &strikes_arrow,
-                    &times_arrow,
-                    &rates_arrow,
-                    &sigmas_arrow,
-                )
-            })
-            .map_err(arrow_to_py_err)?;
-
-        return arrayref_to_numpy(py, result);
-    }
-
-    // Regular Path: Need broadcasting
-    let target_len = find_broadcast_length(&arrays).map_err(arrow_to_py_err)?;
-
-    // Broadcast all arrays to same length
-    let spots_arrow = broadcast_to_length(spots, target_len).map_err(arrow_to_py_err)?;
-    let strikes_arrow = broadcast_to_length(strikes, target_len).map_err(arrow_to_py_err)?;
-    let times_arrow = broadcast_to_length(times, target_len).map_err(arrow_to_py_err)?;
-    let rates_arrow = broadcast_to_length(rates, target_len).map_err(arrow_to_py_err)?;
-    let sigmas_arrow = broadcast_to_length(sigmas, target_len).map_err(arrow_to_py_err)?;
-
-    // Release GIL for computation
-    let result = py
-        .allow_threads(|| {
-            BlackScholes::call_price(
-                &spots_arrow,
-                &strikes_arrow,
-                &times_arrow,
-                &rates_arrow,
-                &sigmas_arrow,
-            )
-        })
-        .map_err(arrow_to_py_err)?;
-
-    // Convert result back to NumPy
-    arrayref_to_numpy(py, result)
-}
-
-/// Calculate Black-Scholes put option price (batch)
-#[pyfunction]
-#[pyo3(signature = (spots, strikes, times, rates, sigmas))]
-pub fn put_price_batch<'py>(
-    py: Python<'py>,
-    spots: PyReadonlyArray1<f64>,
-    strikes: PyReadonlyArray1<f64>,
-    times: PyReadonlyArray1<f64>,
-    rates: PyReadonlyArray1<f64>,
-    sigmas: PyReadonlyArray1<f64>,
-) -> PyResult<Bound<'py, PyArray1<f64>>> {
-    // Check if all arrays have the same length (Fast Path)
-    let arrays = vec![&spots, &strikes, &times, &rates, &sigmas];
-
-    if all_same_length(&arrays) {
-        // Fast Path: Direct conversion without broadcasting
-        let spots_arrow = numpy_to_arrow_direct(spots).map_err(arrow_to_py_err)?;
-        let strikes_arrow = numpy_to_arrow_direct(strikes).map_err(arrow_to_py_err)?;
-        let times_arrow = numpy_to_arrow_direct(times).map_err(arrow_to_py_err)?;
-        let rates_arrow = numpy_to_arrow_direct(rates).map_err(arrow_to_py_err)?;
-        let sigmas_arrow = numpy_to_arrow_direct(sigmas).map_err(arrow_to_py_err)?;
-
-        // Release GIL for computation
-        let result = py
-            .allow_threads(|| {
-                BlackScholes::put_price(
-                    &spots_arrow,
-                    &strikes_arrow,
-                    &times_arrow,
-                    &rates_arrow,
-                    &sigmas_arrow,
-                )
-            })
-            .map_err(arrow_to_py_err)?;
-
-        return arrayref_to_numpy(py, result);
-    }
-
-    // Regular Path: Need broadcasting
-    let target_len = find_broadcast_length(&arrays).map_err(arrow_to_py_err)?;
-
-    // Broadcast all arrays to same length
-    let spots_arrow = broadcast_to_length(spots, target_len).map_err(arrow_to_py_err)?;
-    let strikes_arrow = broadcast_to_length(strikes, target_len).map_err(arrow_to_py_err)?;
-    let times_arrow = broadcast_to_length(times, target_len).map_err(arrow_to_py_err)?;
-    let rates_arrow = broadcast_to_length(rates, target_len).map_err(arrow_to_py_err)?;
-    let sigmas_arrow = broadcast_to_length(sigmas, target_len).map_err(arrow_to_py_err)?;
-
-    // Release GIL for computation
-    let result = py
-        .allow_threads(|| {
-            BlackScholes::put_price(
-                &spots_arrow,
-                &strikes_arrow,
-                &times_arrow,
-                &rates_arrow,
-                &sigmas_arrow,
-            )
-        })
-        .map_err(arrow_to_py_err)?;
-
-    // Convert result back to NumPy
-    arrayref_to_numpy(py, result)
-}
-
-/// Calculate Black-Scholes call option price (batch) WITHOUT validation
-///
-/// ⚠️ WARNING: This function skips input validation for performance.
-/// Use only when inputs are pre-validated. Invalid inputs may cause
-/// incorrect results or undefined behavior.
-#[pyfunction]
-#[pyo3(signature = (spots, strikes, times, rates, sigmas))]
-pub fn call_price_batch_no_validation<'py>(
-    py: Python<'py>,
-    spots: PyReadonlyArray1<f64>,
-    strikes: PyReadonlyArray1<f64>,
-    times: PyReadonlyArray1<f64>,
-    rates: PyReadonlyArray1<f64>,
-    sigmas: PyReadonlyArray1<f64>,
-) -> PyResult<Bound<'py, PyArray1<f64>>> {
-    // Check if all arrays have the same length (Fast Path)
-    let arrays = vec![&spots, &strikes, &times, &rates, &sigmas];
-
-    if all_same_length(&arrays) {
-        // Fast Path: Direct conversion without broadcasting
-        let spots_arrow = numpy_to_arrow_direct(spots).map_err(arrow_to_py_err)?;
-        let strikes_arrow = numpy_to_arrow_direct(strikes).map_err(arrow_to_py_err)?;
-        let times_arrow = numpy_to_arrow_direct(times).map_err(arrow_to_py_err)?;
-        let rates_arrow = numpy_to_arrow_direct(rates).map_err(arrow_to_py_err)?;
-        let sigmas_arrow = numpy_to_arrow_direct(sigmas).map_err(arrow_to_py_err)?;
-
-        // Release GIL for computation (using unchecked version)
-        let result = py
-            .allow_threads(|| {
-                BlackScholes::call_price_unchecked(
-                    &spots_arrow,
-                    &strikes_arrow,
-                    &times_arrow,
-                    &rates_arrow,
-                    &sigmas_arrow,
-                )
-            })
-            .map_err(arrow_to_py_err)?;
-
-        return arrayref_to_numpy(py, result);
-    }
-
-    // Regular Path: Need broadcasting
-    let target_len = find_broadcast_length(&arrays).map_err(arrow_to_py_err)?;
-
-    // Broadcast all arrays to same length
-    let spots_arrow = broadcast_to_length(spots, target_len).map_err(arrow_to_py_err)?;
-    let strikes_arrow = broadcast_to_length(strikes, target_len).map_err(arrow_to_py_err)?;
-    let times_arrow = broadcast_to_length(times, target_len).map_err(arrow_to_py_err)?;
-    let rates_arrow = broadcast_to_length(rates, target_len).map_err(arrow_to_py_err)?;
-    let sigmas_arrow = broadcast_to_length(sigmas, target_len).map_err(arrow_to_py_err)?;
-
-    // Release GIL for computation (using unchecked version)
-    let result = py
-        .allow_threads(|| {
-            BlackScholes::call_price_unchecked(
-                &spots_arrow,
-                &strikes_arrow,
-                &times_arrow,
-                &rates_arrow,
-                &sigmas_arrow,
-            )
-        })
-        .map_err(arrow_to_py_err)?;
-
-    // Convert result back to NumPy
-    arrayref_to_numpy(py, result)
-}
-
-/// Calculate Black-Scholes put option price (batch) WITHOUT validation
-///
-/// ⚠️ WARNING: This function skips input validation for performance.
-/// Use only when inputs are pre-validated. Invalid inputs may cause
-/// incorrect results or undefined behavior.
-#[pyfunction]
-#[pyo3(signature = (spots, strikes, times, rates, sigmas))]
-pub fn put_price_batch_no_validation<'py>(
-    py: Python<'py>,
-    spots: PyReadonlyArray1<f64>,
-    strikes: PyReadonlyArray1<f64>,
-    times: PyReadonlyArray1<f64>,
-    rates: PyReadonlyArray1<f64>,
-    sigmas: PyReadonlyArray1<f64>,
-) -> PyResult<Bound<'py, PyArray1<f64>>> {
-    // Check if all arrays have the same length (Fast Path)
-    let arrays = vec![&spots, &strikes, &times, &rates, &sigmas];
-
-    if all_same_length(&arrays) {
-        // Fast Path: Direct conversion without broadcasting
-        let spots_arrow = numpy_to_arrow_direct(spots).map_err(arrow_to_py_err)?;
-        let strikes_arrow = numpy_to_arrow_direct(strikes).map_err(arrow_to_py_err)?;
-        let times_arrow = numpy_to_arrow_direct(times).map_err(arrow_to_py_err)?;
-        let rates_arrow = numpy_to_arrow_direct(rates).map_err(arrow_to_py_err)?;
-        let sigmas_arrow = numpy_to_arrow_direct(sigmas).map_err(arrow_to_py_err)?;
-
-        // Release GIL for computation (using unchecked version)
-        let result = py
-            .allow_threads(|| {
-                BlackScholes::put_price_unchecked(
-                    &spots_arrow,
-                    &strikes_arrow,
-                    &times_arrow,
-                    &rates_arrow,
-                    &sigmas_arrow,
-                )
-            })
-            .map_err(arrow_to_py_err)?;
-
-        return arrayref_to_numpy(py, result);
-    }
-
-    // Regular Path: Need broadcasting
-    let target_len = find_broadcast_length(&arrays).map_err(arrow_to_py_err)?;
-
-    // Broadcast all arrays to same length
-    let spots_arrow = broadcast_to_length(spots, target_len).map_err(arrow_to_py_err)?;
-    let strikes_arrow = broadcast_to_length(strikes, target_len).map_err(arrow_to_py_err)?;
-    let times_arrow = broadcast_to_length(times, target_len).map_err(arrow_to_py_err)?;
-    let rates_arrow = broadcast_to_length(rates, target_len).map_err(arrow_to_py_err)?;
-    let sigmas_arrow = broadcast_to_length(sigmas, target_len).map_err(arrow_to_py_err)?;
-
-    // Release GIL for computation (using unchecked version)
-    let result = py
-        .allow_threads(|| {
-            BlackScholes::put_price_unchecked(
-                &spots_arrow,
-                &strikes_arrow,
-                &times_arrow,
-                &rates_arrow,
-                &sigmas_arrow,
-            )
-        })
-        .map_err(arrow_to_py_err)?;
-
-    // Convert result back to NumPy
-    arrayref_to_numpy(py, result)
-}
-
-/// Calculate Greeks for Black-Scholes model (scalar)
+/// Calculate all Greeks for Black-Scholes (scalar version)
 #[pyfunction]
 #[pyo3(signature = (s, k, t, r, sigma, is_call=true))]
 pub fn greeks<'py>(
@@ -411,113 +533,128 @@ pub fn greeks<'py>(
     sigma: f64,
     is_call: bool,
 ) -> PyResult<Bound<'py, PyDict>> {
-    // Direct scalar computation to avoid array overhead
-    use quantforge_core::math::distributions::{norm_cdf, norm_pdf};
-
     // Validate inputs
     if s <= 0.0 || k <= 0.0 || t <= 0.0 || sigma <= 0.0 {
-        return Err(pyo3::exceptions::PyValueError::new_err(
-            "s, k, t, and sigma must be positive",
+        return Err(PyValueError::new_err("s, k, t, and sigma must be positive"));
+    }
+
+    // Calculate all Greeks using scalar arrays of size 1
+    let spots = Float64Array::from(vec![s]);
+    let strikes = Float64Array::from(vec![k]);
+    let times = Float64Array::from(vec![t]);
+    let rates = Float64Array::from(vec![r]);
+    let sigmas = Float64Array::from(vec![sigma]);
+
+    // Calculate each Greek
+    let delta_arc = BlackScholes::delta(&spots, &strikes, &times, &rates, &sigmas, is_call)
+        .map_err(|e| PyValueError::new_err(e.to_string()))?;
+    let gamma_arc = BlackScholes::gamma(&spots, &strikes, &times, &rates, &sigmas)
+        .map_err(|e| PyValueError::new_err(e.to_string()))?;
+    let vega_arc = BlackScholes::vega(&spots, &strikes, &times, &rates, &sigmas)
+        .map_err(|e| PyValueError::new_err(e.to_string()))?;
+    let theta_arc = BlackScholes::theta(&spots, &strikes, &times, &rates, &sigmas, is_call)
+        .map_err(|e| PyValueError::new_err(e.to_string()))?;
+    let rho_arc = BlackScholes::rho(&spots, &strikes, &times, &rates, &sigmas, is_call)
+        .map_err(|e| PyValueError::new_err(e.to_string()))?;
+
+    // Downcast to Float64Array and extract scalar values
+    let delta_f64 = delta_arc
+        .as_any()
+        .downcast_ref::<Float64Array>()
+        .ok_or_else(|| PyValueError::new_err("Failed to downcast delta"))?;
+    let gamma_f64 = gamma_arc
+        .as_any()
+        .downcast_ref::<Float64Array>()
+        .ok_or_else(|| PyValueError::new_err("Failed to downcast gamma"))?;
+    let vega_f64 = vega_arc
+        .as_any()
+        .downcast_ref::<Float64Array>()
+        .ok_or_else(|| PyValueError::new_err("Failed to downcast vega"))?;
+    let theta_f64 = theta_arc
+        .as_any()
+        .downcast_ref::<Float64Array>()
+        .ok_or_else(|| PyValueError::new_err("Failed to downcast theta"))?;
+    let rho_f64 = rho_arc
+        .as_any()
+        .downcast_ref::<Float64Array>()
+        .ok_or_else(|| PyValueError::new_err("Failed to downcast rho"))?;
+
+    // Extract scalar values and return as dict
+    let dict = PyDict::new(py);
+    dict.set_item("delta", delta_f64.value(0))?;
+    dict.set_item("gamma", gamma_f64.value(0))?;
+    dict.set_item("vega", vega_f64.value(0))?;
+    dict.set_item("theta", theta_f64.value(0))?;
+    dict.set_item("rho", rho_f64.value(0))?;
+
+    Ok(dict)
+}
+
+/// Black76 call price (scalar version)
+#[pyfunction]
+pub fn black76_call_price(f: f64, k: f64, t: f64, r: f64, sigma: f64) -> PyResult<f64> {
+    // Validate inputs
+    if f <= 0.0 || k <= 0.0 || t <= 0.0 || sigma <= 0.0 {
+        return Err(PyValueError::new_err("f, k, t, and sigma must be positive"));
+    }
+    Ok(black76_call_scalar(f, k, t, r, sigma))
+}
+
+/// Black76 put price (scalar version)
+#[pyfunction]
+pub fn black76_put_price(f: f64, k: f64, t: f64, r: f64, sigma: f64) -> PyResult<f64> {
+    // Validate inputs
+    if f <= 0.0 || k <= 0.0 || t <= 0.0 || sigma <= 0.0 {
+        return Err(PyValueError::new_err("f, k, t, and sigma must be positive"));
+    }
+    Ok(black76_put_scalar(f, k, t, r, sigma))
+}
+
+/// Merton call price (scalar version with dividends)
+#[pyfunction]
+pub fn merton_call_price(s: f64, k: f64, t: f64, r: f64, q: f64, sigma: f64) -> PyResult<f64> {
+    // Validate inputs
+    if s <= 0.0 || k <= 0.0 || t <= 0.0 || sigma <= 0.0 || q < 0.0 {
+        return Err(PyValueError::new_err(
+            "s, k, t, and sigma must be positive; q must be non-negative",
         ));
     }
-
-    // Use common formula for d1 and d2
-    let (d1, d2) = black_scholes_d1_d2(s, k, t, r, sigma);
-    let sqrt_t = t.sqrt();
-
-    // Calculate Greeks
-    let n_d1 = norm_cdf(d1);
-    let n_d2 = norm_cdf(d2);
-    let phi_d1 = norm_pdf(d1);
-
-    // Delta
-    let delta = if is_call { n_d1 } else { n_d1 - 1.0 };
-
-    // Gamma (same for call and put)
-    let gamma = phi_d1 / (s * sigma * sqrt_t);
-
-    // Vega (same for call and put)
-    let vega = s * phi_d1 * sqrt_t / 100.0; // Divide by 100 for convention
-
-    // Theta
-    let term1 = -s * phi_d1 * sigma / (2.0 * sqrt_t);
-    let theta = if is_call {
-        (term1 - r * k * (-r * t).exp() * n_d2) / 365.0 // Daily theta
-    } else {
-        (term1 + r * k * (-r * t).exp() * norm_cdf(-d2)) / 365.0
-    };
-
-    // Rho
-    let rho = if is_call {
-        k * t * (-r * t).exp() * n_d2 / 100.0 // Divide by 100 for convention
-    } else {
-        -k * t * (-r * t).exp() * norm_cdf(-d2) / 100.0
-    };
-
-    // Create Python dict with scalar values
-    let dict = PyDict::new(py);
-    dict.set_item("delta", delta)?;
-    dict.set_item("gamma", gamma)?;
-    dict.set_item("vega", vega)?;
-    dict.set_item("theta", theta)?;
-    dict.set_item("rho", rho)?;
-
-    Ok(dict)
+    Ok(merton_call_scalar(s, k, t, r, q, sigma))
 }
 
-/// Calculate Greeks for Black-Scholes model (batch)
+/// Merton put price (scalar version with dividends)
 #[pyfunction]
-#[pyo3(signature = (spots, strikes, times, rates, sigmas, is_call=true))]
-pub fn greeks_batch<'py>(
-    py: Python<'py>,
-    spots: PyReadonlyArray1<f64>,
-    strikes: PyReadonlyArray1<f64>,
-    times: PyReadonlyArray1<f64>,
-    rates: PyReadonlyArray1<f64>,
-    sigmas: PyReadonlyArray1<f64>,
-    is_call: bool,
-) -> PyResult<Bound<'py, PyDict>> {
-    // Find broadcast length
-    let arrays = vec![&spots, &strikes, &times, &rates, &sigmas];
-    let target_len = find_broadcast_length(&arrays).map_err(arrow_to_py_err)?;
-
-    // Broadcast all arrays to same length
-    let spots_arrow = broadcast_to_length(spots, target_len).map_err(arrow_to_py_err)?;
-    let strikes_arrow = broadcast_to_length(strikes, target_len).map_err(arrow_to_py_err)?;
-    let times_arrow = broadcast_to_length(times, target_len).map_err(arrow_to_py_err)?;
-    let rates_arrow = broadcast_to_length(rates, target_len).map_err(arrow_to_py_err)?;
-    let sigmas_arrow = broadcast_to_length(sigmas, target_len).map_err(arrow_to_py_err)?;
-
-    // Release GIL for computation
-    let greeks_struct = py
-        .allow_threads(|| {
-            calculate_greeks(
-                "black_scholes",
-                &spots_arrow,
-                &strikes_arrow,
-                &times_arrow,
-                &rates_arrow,
-                &sigmas_arrow,
-                is_call,
-            )
-        })
-        .map_err(arrow_to_py_err)?;
-
-    // Create Python dict with NumPy arrays
-    let dict = PyDict::new(py);
-
-    // Extract each Greek and convert to NumPy
-    for (i, field) in greeks_struct.fields().iter().enumerate() {
-        let name = field.name();
-        let column = greeks_struct.column(i);
-        let numpy_array = arrayref_to_numpy(py, column.clone())?;
-        dict.set_item(name, numpy_array)?;
+pub fn merton_put_price(s: f64, k: f64, t: f64, r: f64, q: f64, sigma: f64) -> PyResult<f64> {
+    // Validate inputs
+    if s <= 0.0 || k <= 0.0 || t <= 0.0 || sigma <= 0.0 || q < 0.0 {
+        return Err(PyValueError::new_err(
+            "s, k, t, and sigma must be positive; q must be non-negative",
+        ));
     }
-
-    Ok(dict)
+    Ok(merton_put_scalar(s, k, t, r, q, sigma))
 }
 
-/// Calculate implied volatility (scalar)
+/// American call price (placeholder)
+#[pyfunction]
+pub fn american_call_price(_s: f64, _k: f64, _t: f64, _r: f64, _sigma: f64) -> PyResult<f64> {
+    Err(PyNotImplementedError::new_err(
+        "American options not yet implemented",
+    ))
+}
+
+/// American put price (placeholder)
+#[pyfunction]
+pub fn american_put_price(_s: f64, _k: f64, _t: f64, _r: f64, _sigma: f64) -> PyResult<f64> {
+    Err(PyNotImplementedError::new_err(
+        "American options not yet implemented",
+    ))
+}
+
+// ============================================================================
+// Implied Volatility Functions
+// ============================================================================
+
+/// Calculate implied volatility using Newton-Raphson method
 #[pyfunction]
 #[pyo3(signature = (price, s, k, t, r, is_call=true))]
 pub fn implied_volatility(
@@ -528,16 +665,12 @@ pub fn implied_volatility(
     r: f64,
     is_call: bool,
 ) -> PyResult<f64> {
-    use quantforge_core::math::distributions::{norm_cdf, norm_pdf};
-
     // Validate inputs
-    if s <= 0.0 || k <= 0.0 || t <= 0.0 || price <= 0.0 {
-        return Err(pyo3::exceptions::PyValueError::new_err(
-            "price, s, k, and t must be positive",
-        ));
+    if price <= 0.0 || s <= 0.0 || k <= 0.0 || t <= 0.0 {
+        return Err(PyValueError::new_err("price, s, k, and t must be positive"));
     }
 
-    // Check for arbitrage violations
+    // Check for arbitrage bounds
     let intrinsic = if is_call {
         (s - k * (-r * t).exp()).max(0.0)
     } else {
@@ -545,141 +678,186 @@ pub fn implied_volatility(
     };
 
     if price < intrinsic {
-        return Err(pyo3::exceptions::PyValueError::new_err(
+        return Err(PyValueError::new_err(
             "Option price violates arbitrage bounds",
         ));
     }
 
-    // Newton-Raphson method for implied volatility
-    let mut sigma = 0.2; // Initial guess
-    let tolerance = 1e-6;
-    let max_iterations = 50;
+    // Newton-Raphson iteration
+    let mut sigma = 0.3; // Initial guess
+    let max_iterations = 100;
+    let tolerance = 1e-8;
 
     for _ in 0..max_iterations {
-        // Calculate option price with current sigma
-        let sqrt_t = t.sqrt();
-        let d1 = ((s / k).ln() + (r + sigma * sigma / 2.0) * t) / (sigma * sqrt_t);
-        let d2 = d1 - sigma * sqrt_t;
-
-        let computed_price = if is_call {
-            s * norm_cdf(d1) - k * (-r * t).exp() * norm_cdf(d2)
+        let calc_price = if is_call {
+            black_scholes_call_scalar(s, k, t, r, sigma)
         } else {
-            k * (-r * t).exp() * norm_cdf(-d2) - s * norm_cdf(-d1)
+            black_scholes_put_scalar(s, k, t, r, sigma)
         };
 
-        // Calculate vega (derivative with respect to sigma)
-        let vega = s * norm_pdf(d1) * sqrt_t;
-
-        // Check for convergence
-        let diff = computed_price - price;
+        let diff = calc_price - price;
         if diff.abs() < tolerance {
             return Ok(sigma);
         }
 
-        // Newton-Raphson update
-        sigma -= diff / vega;
+        // Calculate vega for Newton-Raphson update
+        let spots = Float64Array::from(vec![s]);
+        let strikes = Float64Array::from(vec![k]);
+        let times = Float64Array::from(vec![t]);
+        let rates = Float64Array::from(vec![r]);
+        let sigmas = Float64Array::from(vec![sigma]);
 
-        // Keep sigma in reasonable bounds
-        sigma = sigma.clamp(0.001, 5.0);
+        let vega_arc = BlackScholes::vega(&spots, &strikes, &times, &rates, &sigmas)
+            .map_err(|e| PyValueError::new_err(e.to_string()))?;
+        let vega_f64 = vega_arc
+            .as_any()
+            .downcast_ref::<Float64Array>()
+            .ok_or_else(|| PyValueError::new_err("Failed to downcast vega"))?;
+        let vega_value = vega_f64.value(0);
+
+        if vega_value < 1e-10 {
+            return Err(PyValueError::new_err("Vega too small for convergence"));
+        }
+
+        sigma -= diff / vega_value;
+
+        // Keep sigma positive
+        if sigma <= 0.0 {
+            sigma = 0.001;
+        }
     }
 
-    Err(pyo3::exceptions::PyRuntimeError::new_err(
-        "Implied volatility failed to converge",
-    ))
-}
-
-/// Calculate implied volatility (batch)
-#[pyfunction]
-pub fn implied_volatility_batch<'py>(
-    _py: Python<'py>,
-    _prices: PyReadonlyArray1<f64>,
-    _spots: PyReadonlyArray1<f64>,
-    _strikes: PyReadonlyArray1<f64>,
-    _times: PyReadonlyArray1<f64>,
-    _rates: PyReadonlyArray1<f64>,
-    _is_calls: PyReadonlyArray1<bool>,
-) -> PyResult<Bound<'py, PyArray1<f64>>> {
-    // TODO: Implement batch implied volatility
-    Err(pyo3::exceptions::PyNotImplementedError::new_err(
-        "Batch implied volatility not yet implemented in Arrow-native version",
+    Err(PyValueError::new_err(
+        "Failed to converge in implied volatility calculation",
     ))
 }
 
 // ============================================================================
-// Black76 Model (Futures)
+// Batch Functions (Arrow-based)
 // ============================================================================
 
-/// Calculate Black76 call option price (scalar)
+/// Black-Scholes call price batch calculation
 #[pyfunction]
-#[pyo3(name = "call_price")]
-pub fn black76_call_price(_f: f64, _k: f64, _t: f64, _r: f64, _sigma: f64) -> PyResult<f64> {
-    // TODO: Implement using Arrow-native Black76 kernel from core
-    Err(pyo3::exceptions::PyNotImplementedError::new_err(
-        "Black76 not yet implemented in Arrow-native version",
+pub fn call_price_batch(
+    py: Python,
+    spots: PyArray,
+    strikes: PyArray,
+    times: PyArray,
+    rates: PyArray,
+    sigmas: PyArray,
+) -> PyArrowResult<PyObject> {
+    // Direct call to arrow function
+    arrow_call_price(py, spots, strikes, times, rates, sigmas)
+}
+
+/// Black-Scholes put price batch calculation
+#[pyfunction]
+pub fn put_price_batch(
+    py: Python,
+    spots: PyArray,
+    strikes: PyArray,
+    times: PyArray,
+    rates: PyArray,
+    sigmas: PyArray,
+) -> PyArrowResult<PyObject> {
+    // Direct call to arrow function
+    arrow_put_price(py, spots, strikes, times, rates, sigmas)
+}
+
+/// Black-Scholes Greeks batch calculation
+#[pyfunction]
+#[pyo3(signature = (spots, strikes, times, rates, sigmas, is_call=true))]
+pub fn greeks_batch(
+    py: Python,
+    spots: PyArray,
+    strikes: PyArray,
+    times: PyArray,
+    rates: PyArray,
+    sigmas: PyArray,
+    is_call: bool,
+) -> PyArrowResult<PyObject> {
+    // Direct call to arrow function
+    arrow_greeks(py, spots, strikes, times, rates, sigmas, is_call)
+}
+
+/// Implied volatility batch calculation (placeholder)
+#[pyfunction]
+pub fn implied_volatility_batch(
+    _py: Python,
+    _prices: PyArray,
+    _spots: PyArray,
+    _strikes: PyArray,
+    _times: PyArray,
+    _rates: PyArray,
+    _is_call: bool,
+) -> PyArrowResult<PyObject> {
+    Err(pyo3_arrow::error::PyArrowError::PyErr(
+        PyNotImplementedError::new_err("Batch implied volatility not yet implemented"),
     ))
 }
 
-/// Calculate Black76 put option price (scalar)
-#[pyfunction]
-#[pyo3(name = "put_price")]
-pub fn black76_put_price(_f: f64, _k: f64, _t: f64, _r: f64, _sigma: f64) -> PyResult<f64> {
-    // TODO: Implement using Arrow-native Black76 kernel from core
-    Err(pyo3::exceptions::PyNotImplementedError::new_err(
-        "Black76 not yet implemented in Arrow-native version",
-    ))
-}
-
 // ============================================================================
-// Merton Model (Dividends)
+// Fast No-Validation Batch Functions
 // ============================================================================
 
-/// Calculate Merton model call option price (scalar)
+/// Black-Scholes call price batch without validation (for performance)
 #[pyfunction]
-#[pyo3(name = "call_price")]
-pub fn merton_call_price(
-    _s: f64,
-    _k: f64,
-    _t: f64,
-    _r: f64,
-    _q: f64,
-    _sigma: f64,
-) -> PyResult<f64> {
-    // TODO: Implement using Arrow-native Merton kernel from core
-    Err(pyo3::exceptions::PyNotImplementedError::new_err(
-        "Merton model not yet implemented in Arrow-native version",
-    ))
+#[pyo3(name = "call_price_batch_no_validation")]
+pub fn call_price_batch_no_validation(
+    py: Python,
+    spots: PyArray,
+    strikes: PyArray,
+    times: PyArray,
+    rates: PyArray,
+    sigmas: PyArray,
+) -> PyArrowResult<PyObject> {
+    // Directly call the arrow function without any validation
+    // This is the same as arrow_call_price but with a different name
+    arrow_call_price(py, spots, strikes, times, rates, sigmas)
 }
 
-/// Calculate Merton model put option price (scalar)
+/// Black-Scholes put price batch without validation (for performance)
 #[pyfunction]
-#[pyo3(name = "put_price")]
-pub fn merton_put_price(_s: f64, _k: f64, _t: f64, _r: f64, _q: f64, _sigma: f64) -> PyResult<f64> {
-    // TODO: Implement using Arrow-native Merton kernel from core
-    Err(pyo3::exceptions::PyNotImplementedError::new_err(
-        "Merton model not yet implemented in Arrow-native version",
-    ))
+#[pyo3(name = "put_price_batch_no_validation")]
+pub fn put_price_batch_no_validation(
+    py: Python,
+    spots: PyArray,
+    strikes: PyArray,
+    times: PyArray,
+    rates: PyArray,
+    sigmas: PyArray,
+) -> PyArrowResult<PyObject> {
+    // Directly call the arrow function without any validation
+    arrow_put_price(py, spots, strikes, times, rates, sigmas)
 }
 
-// ============================================================================
-// American Options
-// ============================================================================
+/// Module registration
+pub fn register_arrow_functions(m: &Bound<'_, PyModule>) -> PyResult<()> {
+    // Arrow batch functions
+    m.add_function(wrap_pyfunction!(arrow_call_price, m)?)?;
+    m.add_function(wrap_pyfunction!(arrow_put_price, m)?)?;
+    m.add_function(wrap_pyfunction!(arrow_greeks, m)?)?;
+    m.add_function(wrap_pyfunction!(arrow76_call_price, m)?)?;
+    m.add_function(wrap_pyfunction!(arrow76_put_price, m)?)?;
+    m.add_function(wrap_pyfunction!(arrow76_greeks, m)?)?;
 
-/// Calculate American call option price (scalar)
-#[pyfunction]
-#[pyo3(name = "call_price")]
-pub fn american_call_price(_s: f64, _k: f64, _t: f64, _r: f64, _sigma: f64) -> PyResult<f64> {
-    // TODO: Implement using Arrow-native American kernel from core
-    Err(pyo3::exceptions::PyNotImplementedError::new_err(
-        "American options not yet implemented in Arrow-native version",
-    ))
-}
+    // Scalar functions
+    m.add_function(wrap_pyfunction!(call_price, m)?)?;
+    m.add_function(wrap_pyfunction!(put_price, m)?)?;
+    m.add_function(wrap_pyfunction!(greeks, m)?)?;
+    m.add_function(wrap_pyfunction!(black76_call_price, m)?)?;
+    m.add_function(wrap_pyfunction!(black76_put_price, m)?)?;
+    m.add_function(wrap_pyfunction!(merton_call_price, m)?)?;
+    m.add_function(wrap_pyfunction!(merton_put_price, m)?)?;
+    m.add_function(wrap_pyfunction!(american_call_price, m)?)?;
+    m.add_function(wrap_pyfunction!(american_put_price, m)?)?;
 
-/// Calculate American put option price (scalar)
-#[pyfunction]
-#[pyo3(name = "put_price")]
-pub fn american_put_price(_s: f64, _k: f64, _t: f64, _r: f64, _sigma: f64) -> PyResult<f64> {
-    // TODO: Implement using Arrow-native American kernel from core
-    Err(pyo3::exceptions::PyNotImplementedError::new_err(
-        "American options not yet implemented in Arrow-native version",
-    ))
+    // Implied volatility
+    m.add_function(wrap_pyfunction!(implied_volatility, m)?)?;
+
+    // No-validation batch functions
+    m.add_function(wrap_pyfunction!(call_price_batch_no_validation, m)?)?;
+    m.add_function(wrap_pyfunction!(put_price_batch_no_validation, m)?)?;
+
+    Ok(())
 }

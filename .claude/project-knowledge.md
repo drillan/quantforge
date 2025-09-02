@@ -49,6 +49,36 @@ docs/
 4. **並列処理**: 
    - バッチ翻訳で複数ファイルを効率的に処理
 
+## Critical Rules遵守とコード品質改善（2025-09-02）
+
+### 共通フォーミュラモジュール（formulas.rs）
+- **目的**: Black-Scholes、Black76等のフォーミュラ重複排除
+- **効果**: 6箇所の重複 → 1箇所に統合
+- **実装**: core/src/compute/formulas.rs
+
+### 定数管理パターン
+```rust
+// constants.rsに階層的に配置
+pub const PRACTICAL_TOLERANCE: f64 = 1e-3;   // 実務精度
+pub const THEORETICAL_TOLERANCE: f64 = 1e-5;  // 理論精度 
+pub const NUMERICAL_TOLERANCE: f64 = 1e-7;    // 数値精度
+
+// 数値計算用定数
+pub const HALF: f64 = 0.5;
+pub const VOL_SQUARED_HALF: f64 = 2.0;
+pub const NORM_CDF_UPPER_BOUND: f64 = 8.0;
+```
+
+### DRY原則の実践
+1. **d1/d2計算の統一**:
+   - `black_scholes_d1_d2()` と `black76_d1_d2()` を formulas.rs に集約
+   - 各モジュールからインライン計算を完全排除
+
+2. **パフォーマンス結果**（vs NumPy）:
+   - 100要素: 7.75倍高速 (9.7μs vs 75.2μs)
+   - 1,000要素: 3.41倍高速 (33.9μs vs 115.3μs)
+   - 10,000要素: 1.60倍高速 (246.8μs vs 395.3μs)
+
 ## コード重複削減とリファクタリング（2025-08-30）
 
 ### similarity-rsによる重複検出

@@ -5,6 +5,7 @@ use pyo3::exceptions::{PyRuntimeError, PyValueError};
 use pyo3::prelude::*;
 
 /// Convert ArrowError to Python exception
+#[allow(dead_code)]
 pub fn arrow_to_py_err(err: ArrowError) -> PyErr {
     match err {
         ArrowError::InvalidArgumentError(msg) => PyValueError::new_err(msg),

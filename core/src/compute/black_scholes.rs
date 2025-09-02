@@ -5,7 +5,7 @@ use arrow::array::{ArrayRef, Float64Array};
 use arrow::error::ArrowError;
 use std::sync::Arc;
 
-use super::formulas::{black_scholes_call_scalar, black_scholes_put_scalar};
+use super::formulas::{black_scholes_call_scalar, black_scholes_d1_d2, black_scholes_put_scalar};
 use super::{get_scalar_or_array_value, validate_broadcast_compatibility};
 use crate::constants::get_parallel_threshold;
 
@@ -254,9 +254,7 @@ impl BlackScholes {
             let r = get_scalar_or_array_value(rates, i);
             let sigma = get_scalar_or_array_value(sigmas, i);
 
-            let sqrt_t = t.sqrt();
-            let d1 = ((s / k).ln() + (r + sigma * sigma / 2.0) * t) / (sigma * sqrt_t);
-            let d2 = d1 - sigma * sqrt_t;
+            let (d1, d2) = black_scholes_d1_d2(s, k, t, r, sigma);
 
             d1_builder.append_value(d1);
             d2_builder.append_value(d2);
