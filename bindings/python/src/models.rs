@@ -2,7 +2,7 @@
 
 use arrow::array::{ArrayRef, Float64Array};
 use arrow::error::ArrowError;
-use numpy::{PyArray1, PyArrayMethods, PyReadonlyArray1};
+use numpy::{PyArray1, PyReadonlyArray1};
 use pyo3::prelude::*;
 use pyo3::types::PyDict;
 
@@ -20,7 +20,7 @@ use quantforge_core::compute::greeks::calculate_greeks;
 fn numpy_to_arrow_direct(arr: PyReadonlyArray1<f64>) -> Result<Float64Array, ArrowError> {
     let slice = arr
         .as_slice()
-        .map_err(|e| ArrowError::InvalidArgumentError(format!("Failed to get slice: {}", e)))?;
+        .map_err(|e| ArrowError::InvalidArgumentError(format!("Failed to get slice: {e}")))?;
     Ok(Float64Array::from(slice.to_vec()))
 }
 
@@ -54,7 +54,7 @@ fn find_broadcast_length(arrays: &[&PyReadonlyArray1<f64>]) -> Result<usize, Arr
 
     for arr in arrays {
         let len = arr.len().map_err(|e| {
-            ArrowError::InvalidArgumentError(format!("Failed to get array length: {}", e))
+            ArrowError::InvalidArgumentError(format!("Failed to get array length: {e}"))
         })?;
         if len > 1 {
             if max_len > 1 && len != max_len {
@@ -75,14 +75,14 @@ fn broadcast_to_length(
     target_len: usize,
 ) -> Result<Float64Array, ArrowError> {
     let arr_len = arr.len().map_err(|e| {
-        ArrowError::InvalidArgumentError(format!("Failed to get array length: {}", e))
+        ArrowError::InvalidArgumentError(format!("Failed to get array length: {e}"))
     })?;
 
     if arr_len == 1 {
         // Scalar broadcast: repeat the single value
         let slice = arr
             .as_slice()
-            .map_err(|e| ArrowError::InvalidArgumentError(format!("Failed to get slice: {}", e)))?;
+            .map_err(|e| ArrowError::InvalidArgumentError(format!("Failed to get slice: {e}")))?;
         let value = slice[0];
         Ok(Float64Array::from(vec![value; target_len]))
     } else if arr_len == target_len {
@@ -91,8 +91,7 @@ fn broadcast_to_length(
     } else {
         // Shape mismatch
         Err(ArrowError::InvalidArgumentError(format!(
-            "Cannot broadcast array of length {} to length {}",
-            arr_len, target_len
+            "Cannot broadcast array of length {arr_len} to length {target_len}"
         )))
     }
 }
@@ -103,7 +102,6 @@ fn broadcast_to_length(
 
 /// Calculate Black-Scholes call option price (scalar)
 #[pyfunction]
-#[pyo3(signature = (s, k, t, r, sigma))]
 pub fn call_price(s: f64, k: f64, t: f64, r: f64, sigma: f64) -> PyResult<f64> {
     // Direct scalar computation to avoid array overhead
     use quantforge_core::math::distributions::norm_cdf;
@@ -127,7 +125,6 @@ pub fn call_price(s: f64, k: f64, t: f64, r: f64, sigma: f64) -> PyResult<f64> {
 
 /// Calculate Black-Scholes put option price (scalar)
 #[pyfunction]
-#[pyo3(signature = (s, k, t, r, sigma))]
 pub fn put_price(s: f64, k: f64, t: f64, r: f64, sigma: f64) -> PyResult<f64> {
     // Direct scalar computation to avoid array overhead
     use quantforge_core::math::distributions::norm_cdf;
@@ -286,7 +283,7 @@ pub fn put_price_batch<'py>(
 /// incorrect results or undefined behavior.
 #[pyfunction]
 #[pyo3(signature = (spots, strikes, times, rates, sigmas))]
-pub fn call_price_batch_unsafe<'py>(
+pub fn call_price_batch_no_validation<'py>(
     py: Python<'py>,
     spots: PyReadonlyArray1<f64>,
     strikes: PyReadonlyArray1<f64>,
@@ -355,7 +352,7 @@ pub fn call_price_batch_unsafe<'py>(
 /// incorrect results or undefined behavior.
 #[pyfunction]
 #[pyo3(signature = (spots, strikes, times, rates, sigmas))]
-pub fn put_price_batch_unsafe<'py>(
+pub fn put_price_batch_no_validation<'py>(
     py: Python<'py>,
     spots: PyReadonlyArray1<f64>,
     strikes: PyReadonlyArray1<f64>,
@@ -599,7 +596,7 @@ pub fn implied_volatility(
         sigma -= diff / vega;
 
         // Keep sigma in reasonable bounds
-        sigma = sigma.max(0.001).min(5.0);
+        sigma = sigma.clamp(0.001, 5.0);
     }
 
     Err(pyo3::exceptions::PyRuntimeError::new_err(
@@ -609,15 +606,14 @@ pub fn implied_volatility(
 
 /// Calculate implied volatility (batch)
 #[pyfunction]
-#[pyo3(signature = (prices, spots, strikes, times, rates, is_calls))]
 pub fn implied_volatility_batch<'py>(
-    py: Python<'py>,
-    prices: PyReadonlyArray1<f64>,
-    spots: PyReadonlyArray1<f64>,
-    strikes: PyReadonlyArray1<f64>,
-    times: PyReadonlyArray1<f64>,
-    rates: PyReadonlyArray1<f64>,
-    is_calls: PyReadonlyArray1<bool>,
+    _py: Python<'py>,
+    _prices: PyReadonlyArray1<f64>,
+    _spots: PyReadonlyArray1<f64>,
+    _strikes: PyReadonlyArray1<f64>,
+    _times: PyReadonlyArray1<f64>,
+    _rates: PyReadonlyArray1<f64>,
+    _is_calls: PyReadonlyArray1<bool>,
 ) -> PyResult<Bound<'py, PyArray1<f64>>> {
     // TODO: Implement batch implied volatility
     Err(pyo3::exceptions::PyNotImplementedError::new_err(
@@ -632,8 +628,7 @@ pub fn implied_volatility_batch<'py>(
 /// Calculate Black76 call option price (scalar)
 #[pyfunction]
 #[pyo3(name = "call_price")]
-#[pyo3(signature = (f, k, t, r, sigma))]
-pub fn black76_call_price(f: f64, k: f64, t: f64, r: f64, sigma: f64) -> PyResult<f64> {
+pub fn black76_call_price(_f: f64, _k: f64, _t: f64, _r: f64, _sigma: f64) -> PyResult<f64> {
     // TODO: Implement using Arrow-native Black76 kernel from core
     Err(pyo3::exceptions::PyNotImplementedError::new_err(
         "Black76 not yet implemented in Arrow-native version",
@@ -643,8 +638,7 @@ pub fn black76_call_price(f: f64, k: f64, t: f64, r: f64, sigma: f64) -> PyResul
 /// Calculate Black76 put option price (scalar)
 #[pyfunction]
 #[pyo3(name = "put_price")]
-#[pyo3(signature = (f, k, t, r, sigma))]
-pub fn black76_put_price(f: f64, k: f64, t: f64, r: f64, sigma: f64) -> PyResult<f64> {
+pub fn black76_put_price(_f: f64, _k: f64, _t: f64, _r: f64, _sigma: f64) -> PyResult<f64> {
     // TODO: Implement using Arrow-native Black76 kernel from core
     Err(pyo3::exceptions::PyNotImplementedError::new_err(
         "Black76 not yet implemented in Arrow-native version",
@@ -658,8 +652,7 @@ pub fn black76_put_price(f: f64, k: f64, t: f64, r: f64, sigma: f64) -> PyResult
 /// Calculate Merton model call option price (scalar)
 #[pyfunction]
 #[pyo3(name = "call_price")]
-#[pyo3(signature = (s, k, t, r, q, sigma))]
-pub fn merton_call_price(s: f64, k: f64, t: f64, r: f64, q: f64, sigma: f64) -> PyResult<f64> {
+pub fn merton_call_price(_s: f64, _k: f64, _t: f64, _r: f64, _q: f64, _sigma: f64) -> PyResult<f64> {
     // TODO: Implement using Arrow-native Merton kernel from core
     Err(pyo3::exceptions::PyNotImplementedError::new_err(
         "Merton model not yet implemented in Arrow-native version",
@@ -669,8 +662,7 @@ pub fn merton_call_price(s: f64, k: f64, t: f64, r: f64, q: f64, sigma: f64) -> 
 /// Calculate Merton model put option price (scalar)
 #[pyfunction]
 #[pyo3(name = "put_price")]
-#[pyo3(signature = (s, k, t, r, q, sigma))]
-pub fn merton_put_price(s: f64, k: f64, t: f64, r: f64, q: f64, sigma: f64) -> PyResult<f64> {
+pub fn merton_put_price(_s: f64, _k: f64, _t: f64, _r: f64, _q: f64, _sigma: f64) -> PyResult<f64> {
     // TODO: Implement using Arrow-native Merton kernel from core
     Err(pyo3::exceptions::PyNotImplementedError::new_err(
         "Merton model not yet implemented in Arrow-native version",
@@ -684,8 +676,7 @@ pub fn merton_put_price(s: f64, k: f64, t: f64, r: f64, q: f64, sigma: f64) -> P
 /// Calculate American call option price (scalar)
 #[pyfunction]
 #[pyo3(name = "call_price")]
-#[pyo3(signature = (s, k, t, r, sigma))]
-pub fn american_call_price(s: f64, k: f64, t: f64, r: f64, sigma: f64) -> PyResult<f64> {
+pub fn american_call_price(_s: f64, _k: f64, _t: f64, _r: f64, _sigma: f64) -> PyResult<f64> {
     // TODO: Implement using Arrow-native American kernel from core
     Err(pyo3::exceptions::PyNotImplementedError::new_err(
         "American options not yet implemented in Arrow-native version",
@@ -695,8 +686,7 @@ pub fn american_call_price(s: f64, k: f64, t: f64, r: f64, sigma: f64) -> PyResu
 /// Calculate American put option price (scalar)
 #[pyfunction]
 #[pyo3(name = "put_price")]
-#[pyo3(signature = (s, k, t, r, sigma))]
-pub fn american_put_price(s: f64, k: f64, t: f64, r: f64, sigma: f64) -> PyResult<f64> {
+pub fn american_put_price(_s: f64, _k: f64, _t: f64, _r: f64, _sigma: f64) -> PyResult<f64> {
     // TODO: Implement using Arrow-native American kernel from core
     Err(pyo3::exceptions::PyNotImplementedError::new_err(
         "American options not yet implemented in Arrow-native version",

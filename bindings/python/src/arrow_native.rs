@@ -69,8 +69,7 @@ pub fn arrow_call_price(
         })
         .map_err(|e| {
             ArrowError::ComputeError(format!(
-                "Black-Scholes call price computation failed: {}",
-                e
+                "Black-Scholes call price computation failed: {e}"
             ))
         })?;
 
@@ -142,7 +141,7 @@ pub fn arrow_put_price(
             BlackScholes::put_price(spots_f64, strikes_f64, times_f64, rates_f64, sigmas_f64)
         })
         .map_err(|e| {
-            ArrowError::ComputeError(format!("Black-Scholes put price computation failed: {}", e))
+            ArrowError::ComputeError(format!("Black-Scholes put price computation failed: {e}"))
         })?;
 
     // Create field for the result

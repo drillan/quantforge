@@ -335,9 +335,7 @@ mod tests {
         let expected = 7.9004418077181455;
         assert!(
             (actual - expected).abs() < 1e-10,
-            "Put price mismatch: expected {}, got {}",
-            expected,
-            actual
+            "Put price mismatch: expected {expected}, got {actual}"
         );
     }
 

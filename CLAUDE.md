@@ -10,6 +10,7 @@ QuantForge 高性能オプション価格計算ライブラリ（Rust + PyO3）�
 - [ ] パフォーマンス改善？ → SIMD提案は禁止
 - [ ] 複雑な実装？ → 段階的実装は禁止  
 - [ ] 最適化提案？ → プロファイリング結果はあるか
+- [ ] Arrow統合？ → NumPy/PyList変換は禁止
 
 ### 🚫 絶対禁止リスト（計画に含めてはいけない）
 
@@ -27,6 +28,11 @@ QuantForge 高性能オプション価格計算ライブラリ（Rust + PyO3）�
    - プロファイリング前の推測禁止
    - ❌ 禁句: 「おそらく遅い」「〜が原因と思われる」
    - ✅ 代替: 測定→分析→改善
+
+4. **Arrow型変換** → @.claude/antipatterns/arrow-type-conversion-trap.md
+   - Arrow Nativeと言いながらNumPy/PyList変換は矛盾
+   - ❌ 禁句: 「to_numpy()」「to_pylist()」「互換性のため変換」
+   - ✅ 代替: pyo3-arrow/arro3-coreで直接処理
 
 **Plan Mode時の必須アクション**: 
 1. 上記チェックリスト確認

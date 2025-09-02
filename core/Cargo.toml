@@ -25,10 +25,3 @@ approx.workspace = true
 criterion.workspace = true
 proptest.workspace = true
 
-[[bench]]
-name = "models_benchmark"
-harness = false
-
-[[bench]]
-name = "math_benchmark"
-harness = false

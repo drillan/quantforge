@@ -10,6 +10,7 @@ AIアシスタントは必ずこれを参照し、同じ間違いを繰り返さ
 | SIMD最適化の提案 | [simd-optimization-trap.md](./simd-optimization-trap.md) | 2025-08-27 | マルチプラットフォーム地獄、Rustエコシステム未成熟 |
 | 段階的実装 | [stage-implementation.md](./stage-implementation.md) | 複数回 | C004違反、技術的負債の蓄積 |
 | 早すぎる最適化 | [premature-optimization.md](./premature-optimization.md) | 継続中 | 測定前の推測は時間の無駄 |
+| Arrow型変換 | [arrow-type-conversion-trap.md](./arrow-type-conversion-trap.md) | 2025-09-02 | Arrow Nativeと言いながらNumPy/PyList変換は矛盾 |
 
 ## 🚨 AIへの警告
 
@@ -27,6 +28,10 @@ AIアシスタントは必ずこれを参照し、同じ間違いを繰り返さ
 3. **推測で最適化しない**
    - プロファイリング前の最適化提案禁止
    - 「おそらく〜が遅い」という推測禁止
+
+4. **Arrow型変換を提案しない**
+   - Arrow → NumPy/PyList変換は偽のArrow Native
+   - ゼロコピーを死守すること
 
 #### ✅ 必ずやること
 1. **プロファイリングを最初に実施**
@@ -81,11 +86,22 @@ AIアシスタントは必ずこれを参照し、同じ間違いを繰り返さ
 
 **詳細**: [premature-optimization.md](./premature-optimization.md)
 
+### 4. Arrow型変換の罠
+**症状**: 「Arrow Nativeと言いながらNumPy/PyListに変換」
+
+**現実**:
+- ゼロコピーの利点を完全に放棄
+- パフォーマンス2-3倍劣化、メモリ3倍使用
+- 真のArrow Nativeは変換なしの直接処理
+
+**詳細**: [arrow-type-conversion-trap.md](./arrow-type-conversion-trap.md)
+
 ## 🔄 更新履歴
 
 | 日付 | 追加内容 | 理由 |
 |------|----------|------|
 | 2025-08-30 | 初版作成 | SIMD最適化の繰り返し提案を防ぐため |
+| 2025-09-02 | Arrow型変換の罠追加 | Arrow Native実装での型変換問題を防ぐため |
 
 ## 📌 必読資料
 

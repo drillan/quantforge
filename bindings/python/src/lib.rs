@@ -38,13 +38,13 @@ fn quantforge(m: &Bound<'_, PyModule>) -> PyResult<()> {
         &black_scholes_module
     )?)?;
 
-    // Unsafe batch functions (no validation for performance)
+    // Fast batch functions (no validation for performance)
     black_scholes_module.add_function(wrap_pyfunction!(
-        call_price_batch_unsafe,
+        call_price_batch_no_validation,
         &black_scholes_module
     )?)?;
     black_scholes_module.add_function(wrap_pyfunction!(
-        put_price_batch_unsafe,
+        put_price_batch_no_validation,
         &black_scholes_module
     )?)?;
 
