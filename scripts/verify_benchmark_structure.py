@@ -3,12 +3,12 @@
 
 import json
 import sys
-from pathlib import Path
 from datetime import datetime
-from typing import Dict, Any, List
+from pathlib import Path
+from typing import Any
 
 
-def check_directory_structure() -> Dict[str, bool]:
+def check_directory_structure() -> dict[str, bool]:
     """ディレクトリ構造の確認"""
     checks = {
         "core_benches": Path("core/benches").exists(),
@@ -28,7 +28,7 @@ def check_directory_structure() -> Dict[str, bool]:
     return checks
 
 
-def check_new_format_data() -> Dict[str, Any]:
+def check_new_format_data() -> dict[str, Any]:
     """新形式データの存在確認"""
     results = {"has_data": False, "layers": {}, "format_version": None}
 
@@ -57,7 +57,7 @@ def check_new_format_data() -> Dict[str, Any]:
     return results
 
 
-def check_old_structure() -> Dict[str, Any]:
+def check_old_structure() -> dict[str, Any]:
     """旧構造の確認"""
     old_benchmarks = Path("benchmarks")
 
@@ -77,7 +77,7 @@ def check_old_structure() -> Dict[str, Any]:
     return result
 
 
-def check_benchmark_code() -> Dict[str, Any]:
+def check_benchmark_code() -> dict[str, Any]:
     """ベンチマークコードの存在確認"""
     checks = {}
 
@@ -121,7 +121,7 @@ def format_size(size_bytes: int) -> str:
     return f"{size_bytes:.2f} TB"
 
 
-def print_report(all_checks: Dict[str, Any]) -> bool:
+def print_report(all_checks: dict[str, Any]) -> bool:
     """検証結果のレポート出力"""
     print("\n" + "=" * 60)
     print("ベンチマーク構造検証レポート")
@@ -154,7 +154,7 @@ def print_report(all_checks: Dict[str, Any]) -> bool:
     print("\n📊 新形式データ (v2.0.0):")
     new_data = all_checks["new_format"]
     if new_data["has_data"]:
-        print(f"  ✅ データ存在: True")
+        print("  ✅ データ存在: True")
         print(f"  📌 フォーマットバージョン: {new_data['format_version']}")
         for layer, info in new_data["layers"].items():
             if info["exists"]:
@@ -173,7 +173,7 @@ def print_report(all_checks: Dict[str, Any]) -> bool:
     print("\n📦 旧構造 (benchmarks/):")
     old_structure = all_checks["old_structure"]
     if old_structure["exists"]:
-        print(f"  ⚠️  旧構造が存在: benchmarks/")
+        print("  ⚠️  旧構造が存在: benchmarks/")
         if old_structure["has_results"]:
             print(f"  📊 結果ファイル: {len(old_structure['result_files'])} files")
             print(f"  💾 合計サイズ: {format_size(old_structure['total_size'])}")

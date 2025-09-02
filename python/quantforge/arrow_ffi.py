@@ -6,7 +6,6 @@ It attempts to minimize data copies when passing arrays between Python and Rust.
 """
 
 import ctypes
-from typing import Tuple
 
 import numpy as np
 import pyarrow as pa
@@ -21,7 +20,7 @@ class ArrowCDataInterface:
     """
 
     @staticmethod
-    def export_array(array: pa.Array) -> Tuple[int, int]:
+    def export_array(array: pa.Array) -> tuple[int, int]:
         """
         Export a PyArrow array to C Data Interface pointers.
 

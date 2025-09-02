@@ -2,7 +2,6 @@
 Test for TRUE Arrow FFI implementation without NumPy.
 """
 
-import pytest
 import pyarrow as pa
 import quantforge.arrow_native as arrow_native
 

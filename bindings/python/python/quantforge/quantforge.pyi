@@ -1,6 +1,7 @@
 """Type stubs for quantforge native module"""
 
-from typing import Dict, Union, Optional
+from typing import Union
+
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
 
@@ -78,7 +79,7 @@ class black_scholes:
         ...
 
     @staticmethod
-    def greeks(s: float, k: float, t: float, r: float, sigma: float, is_call: bool = True) -> Dict[str, float]:
+    def greeks(s: float, k: float, t: float, r: float, sigma: float, is_call: bool = True) -> dict[str, float]:
         """Calculate Greeks for Black-Scholes model.
 
         Args:
@@ -101,8 +102,8 @@ class black_scholes:
         times: FloatOrArray,
         rates: FloatOrArray,
         sigmas: FloatOrArray,
-        is_calls: Optional[FloatOrArray] = None,
-    ) -> Dict[str, NDArray[np.float64]]:
+        is_calls: FloatOrArray | None = None,
+    ) -> dict[str, NDArray[np.float64]]:
         """Calculate batch of Greeks for Black-Scholes model.
 
         Args:
@@ -230,7 +231,7 @@ class black76:
         ...
 
     @staticmethod
-    def greeks(f: float, k: float, t: float, r: float, sigma: float, is_call: bool = True) -> Dict[str, float]:
+    def greeks(f: float, k: float, t: float, r: float, sigma: float, is_call: bool = True) -> dict[str, float]:
         """Calculate Greeks for Black76 model.
 
         Args:
@@ -253,8 +254,8 @@ class black76:
         times: FloatOrArray,
         rates: FloatOrArray,
         sigmas: FloatOrArray,
-        is_calls: Optional[FloatOrArray] = None,
-    ) -> Dict[str, NDArray[np.float64]]:
+        is_calls: FloatOrArray | None = None,
+    ) -> dict[str, NDArray[np.float64]]:
         """Calculate batch of Greeks for Black76 model.
 
         Args:
@@ -398,7 +399,7 @@ class merton:
     @staticmethod
     def greeks(
         s: float, k: float, t: float, r: float, q: float, sigma: float, is_call: bool = True
-    ) -> Dict[str, float]:
+    ) -> dict[str, float]:
         """Calculate Greeks for Merton model.
 
         Args:
@@ -423,8 +424,8 @@ class merton:
         rates: FloatOrArray,
         dividend_yields: FloatOrArray,
         sigmas: FloatOrArray,
-        is_calls: Optional[FloatOrArray] = None,
-    ) -> Dict[str, NDArray[np.float64]]:
+        is_calls: FloatOrArray | None = None,
+    ) -> dict[str, NDArray[np.float64]]:
         """Calculate batch of Greeks for Merton model.
 
         Args:
@@ -572,7 +573,7 @@ class american:
     @staticmethod
     def greeks(
         s: float, k: float, t: float, r: float, q: float, sigma: float, is_call: bool = True
-    ) -> Dict[str, float]:
+    ) -> dict[str, float]:
         """Calculate Greeks for American model.
 
         Args:
@@ -597,8 +598,8 @@ class american:
         rates: FloatOrArray,
         dividend_yields: FloatOrArray,
         sigmas: FloatOrArray,
-        is_calls: Optional[FloatOrArray] = None,
-    ) -> Dict[str, NDArray[np.float64]]:
+        is_calls: FloatOrArray | None = None,
+    ) -> dict[str, NDArray[np.float64]]:
         """Calculate batch of Greeks for American model.
 
         Args:

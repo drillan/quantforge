@@ -1,10 +1,12 @@
 """Integration tests for all models."""
 
-import pytest
-import numpy as np
-from python.quantforge import models
 import json
 from pathlib import Path
+
+import numpy as np
+import pytest
+
+from python.quantforge import models
 
 
 class TestModelsIntegration:

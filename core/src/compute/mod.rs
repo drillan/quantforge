@@ -4,6 +4,7 @@ pub mod american;
 pub mod arrow_native;
 pub mod black76;
 pub mod black_scholes;
+pub mod formulas;
 pub mod greeks;
 pub mod merton;
 
@@ -23,9 +24,9 @@ use arrow::array::Float64Array;
 #[inline(always)]
 pub fn get_scalar_or_array_value(array: &Float64Array, index: usize) -> f64 {
     if array.len() == 1 {
-        array.value(0)  // Scalar value applied to all
+        array.value(0) // Scalar value applied to all
     } else {
-        array.value(index)  // Array value at index
+        array.value(index) // Array value at index
     }
 }
 
@@ -37,25 +38,27 @@ pub fn get_max_length(arrays: &[&Float64Array]) -> usize {
 
 /// Validate arrays for broadcasting compatibility
 /// Arrays must have length 1 (scalar) or the same length as the maximum
-pub fn validate_broadcast_compatibility(arrays: &[&Float64Array]) -> Result<usize, arrow::error::ArrowError> {
+pub fn validate_broadcast_compatibility(
+    arrays: &[&Float64Array],
+) -> Result<usize, arrow::error::ArrowError> {
     let max_len = get_max_length(arrays);
-    
+
     if max_len == 0 {
         return Err(arrow::error::ArrowError::InvalidArgumentError(
-            "At least one array must have non-zero length".to_string()
+            "At least one array must have non-zero length".to_string(),
         ));
     }
-    
+
     for (i, array) in arrays.iter().enumerate() {
         if array.len() != 1 && array.len() != max_len {
-            return Err(arrow::error::ArrowError::InvalidArgumentError(
-                format!(
-                    "Array at index {} has incompatible length {} for broadcasting (expected 1 or {})",
-                    i, array.len(), max_len
-                )
-            ));
+            return Err(arrow::error::ArrowError::InvalidArgumentError(format!(
+                "Array at index {} has incompatible length {} for broadcasting (expected 1 or {})",
+                i,
+                array.len(),
+                max_len
+            )));
         }
     }
-    
+
     Ok(max_len)
 }

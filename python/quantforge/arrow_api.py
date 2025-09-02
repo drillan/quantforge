@@ -10,10 +10,9 @@ import pyarrow as pa
 
 from . import black_scholes  # 既存のNumPyベースのバインディング
 from .arrow_ffi import (
-    prepare_arrow_arrays,
     arrays_to_numpy_fallback,
     numpy_to_arrow,
-    validate_ffi_available,
+    prepare_arrow_arrays,
 )
 
 

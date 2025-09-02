@@ -131,12 +131,12 @@ mod tests {
         let prices_array = prices.as_any().downcast_ref::<Float64Array>().unwrap();
         assert_eq!(prices_array.len(), 2);
     }
-    
+
     #[test]
     fn test_incompatible_lengths() {
         // Test incompatible lengths (not 1 and not matching)
-        let spots = Float64Array::from(vec![100.0, 105.0]);  // length 2
-        let strikes = Float64Array::from(vec![100.0, 95.0, 90.0]);  // length 3 (incompatible)
+        let spots = Float64Array::from(vec![100.0, 105.0]); // length 2
+        let strikes = Float64Array::from(vec![100.0, 95.0, 90.0]); // length 3 (incompatible)
         let times = Float64Array::from(vec![1.0]);
         let rates = Float64Array::from(vec![0.05]);
         let sigmas = Float64Array::from(vec![0.2]);

@@ -1,8 +1,7 @@
 """Test Arrow Native Broadcasting functionality."""
 
-import pytest
 import pyarrow as pa
-import numpy as np
+import pytest
 from quantforge import arrow_native
 
 

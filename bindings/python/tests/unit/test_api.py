@@ -1,7 +1,7 @@
 """Test Black-Scholes Python API bindings."""
 
-import pytest
 import numpy as np
+
 from python.quantforge import models
 
 

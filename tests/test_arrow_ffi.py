@@ -1,7 +1,7 @@
 """Test for Arrow FFI implementation using pyo3-arrow and arro3-core"""
 
-import pytest
 import numpy as np
+import pytest
 
 try:
     import pyarrow as pa

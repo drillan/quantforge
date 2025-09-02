@@ -1,7 +1,7 @@
 """Comprehensive unit tests for American option model module."""
 
 import math
-import pytest
+
 import quantforge as qf
 
 # Direct access to modules

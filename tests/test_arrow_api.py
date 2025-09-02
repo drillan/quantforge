@@ -2,9 +2,9 @@
 Tests for Apache Arrow Native API.
 """
 
-import pytest
 import numpy as np
 import pyarrow as pa
+import pytest
 import quantforge.arrow_api as qf_arrow
 import quantforge.numpy_compat as qf_numpy
 from quantforge import black_scholes

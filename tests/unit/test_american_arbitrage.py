@@ -1,6 +1,5 @@
 """Test no-arbitrage conditions for American options."""
 
-import pytest
 import quantforge as qf
 
 # Direct access to modules
@@ -122,7 +121,7 @@ class TestAmericanNoArbitrage:
         amer_puts = american.put_price_batch(spots, strikes, times, rates, 0.0, sigmas)
         euro_puts = merton.put_price_batch(spots, strikes, times, rates, 0.0, sigmas)
 
-        for i, (amer, euro, s, k) in enumerate(zip(amer_puts, euro_puts, spots, strikes)):
+        for i, (amer, euro, s, k) in enumerate(zip(amer_puts, euro_puts, spots, strikes, strict=False)):
             intrinsic = max(k - s, 0)
             assert amer >= euro - 1e-10, f"Batch put {i}: American ({amer}) < European ({euro})"
             assert amer >= intrinsic - 1e-10, f"Batch put {i}: American ({amer}) < intrinsic ({intrinsic})"
@@ -131,7 +130,7 @@ class TestAmericanNoArbitrage:
         amer_calls = american.call_price_batch(spots, strikes, times, rates, 0.0, sigmas)
         euro_calls = merton.call_price_batch(spots, strikes, times, rates, 0.0, sigmas)
 
-        for i, (amer, euro, s, k) in enumerate(zip(amer_calls, euro_calls, spots, strikes)):
+        for i, (amer, euro, s, k) in enumerate(zip(amer_calls, euro_calls, spots, strikes, strict=False)):
             intrinsic = max(s - k, 0)
             assert amer >= euro - 1e-10, f"Batch call {i}: American ({amer}) < European ({euro})"
             assert amer >= intrinsic - 1e-10, f"Batch call {i}: American ({amer}) < intrinsic ({intrinsic})"

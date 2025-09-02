@@ -1,8 +1,9 @@
 """Performance benchmarks for Python bindings."""
 
 import time
+
 import numpy as np
-import pytest
+
 from python.quantforge import models
 
 
@@ -41,8 +42,8 @@ class TestPerformance:
 
     def test_gil_release(self):
         """Test that GIL is properly released."""
-        import threading
         import queue
+        import threading
 
         def worker(q, n):
             spots = np.random.uniform(50, 150, n)

@@ -2,11 +2,11 @@
 小バッチ最適化のPython側実装サンプル
 """
 
-import numpy as np
 import time
-from typing import Union, Tuple
+
+import numpy as np
 import quantforge as qf
-from numba import jit, prange
+from numba import jit
 
 # Phase 3: Bindings層の最適化
 
@@ -289,7 +289,7 @@ def benchmark_optimization():
     print(f"NumPy比: {row_100['speedup_vs_numpy']:.2f}x")
 
     # プロファイラーの統計を表示
-    print(f"\n=== プロファイラー統計 ===")
+    print("\n=== プロファイラー統計 ===")
     print(f"要素あたりコスト: {optimized.profiler.cost_per_element * 1e9:.2f}ns")
     print(f"並列化オーバーヘッド: {optimized.profiler.parallel_overhead * 1e6:.2f}μs")
     print(f"最適バッチサイズ: {optimized.profiler.get_optimal_batch_size()}")

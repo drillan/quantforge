@@ -9,7 +9,7 @@ use arrow::error::ArrowError;
 use pyo3::prelude::*;
 use pyo3::types::PyDict;
 use pyo3_arrow::{error::PyArrowResult, PyArray};
-use quantforge_core::compute::{BlackScholes, Black76};
+use quantforge_core::compute::{Black76, BlackScholes};
 use std::sync::Arc;
 
 /// Black-Scholes call price calculation using Arrow arrays
@@ -209,11 +209,34 @@ pub fn arrow_greeks(
     // Compute Greeks using quantforge-core BlackScholes (release GIL)
     let (delta_arc, gamma_arc, vega_arc, theta_arc, rho_arc) = py
         .allow_threads(|| {
-            let delta = BlackScholes::delta(spots_f64, strikes_f64, times_f64, rates_f64, sigmas_f64, is_call)?;
-            let gamma = BlackScholes::gamma(spots_f64, strikes_f64, times_f64, rates_f64, sigmas_f64)?;
-            let vega = BlackScholes::vega(spots_f64, strikes_f64, times_f64, rates_f64, sigmas_f64)?;
-            let theta = BlackScholes::theta(spots_f64, strikes_f64, times_f64, rates_f64, sigmas_f64, is_call)?;
-            let rho = BlackScholes::rho(spots_f64, strikes_f64, times_f64, rates_f64, sigmas_f64, is_call)?;
+            let delta = BlackScholes::delta(
+                spots_f64,
+                strikes_f64,
+                times_f64,
+                rates_f64,
+                sigmas_f64,
+                is_call,
+            )?;
+            let gamma =
+                BlackScholes::gamma(spots_f64, strikes_f64, times_f64, rates_f64, sigmas_f64)?;
+            let vega =
+                BlackScholes::vega(spots_f64, strikes_f64, times_f64, rates_f64, sigmas_f64)?;
+            let theta = BlackScholes::theta(
+                spots_f64,
+                strikes_f64,
+                times_f64,
+                rates_f64,
+                sigmas_f64,
+                is_call,
+            )?;
+            let rho = BlackScholes::rho(
+                spots_f64,
+                strikes_f64,
+                times_f64,
+                rates_f64,
+                sigmas_f64,
+                is_call,
+            )?;
             Ok::<_, ArrowError>((delta, gamma, vega, theta, rho))
         })
         .map_err(|e: ArrowError| {
@@ -222,24 +245,24 @@ pub fn arrow_greeks(
 
     // Create Python dict to return Greeks
     let result_dict = PyDict::new(py);
-    
+
     // Add each Greek to the dict
     let delta_field = Arc::new(Field::new("delta", DataType::Float64, false));
     let delta_array = PyArray::new(delta_arc, delta_field);
     result_dict.set_item("delta", delta_array.to_arro3(py)?)?;
-    
+
     let gamma_field = Arc::new(Field::new("gamma", DataType::Float64, false));
     let gamma_array = PyArray::new(gamma_arc, gamma_field);
     result_dict.set_item("gamma", gamma_array.to_arro3(py)?)?;
-    
+
     let vega_field = Arc::new(Field::new("vega", DataType::Float64, false));
     let vega_array = PyArray::new(vega_arc, vega_field);
     result_dict.set_item("vega", vega_array.to_arro3(py)?)?;
-    
+
     let theta_field = Arc::new(Field::new("theta", DataType::Float64, false));
     let theta_array = PyArray::new(theta_arc, theta_field);
     result_dict.set_item("theta", theta_array.to_arro3(py)?)?;
-    
+
     let rho_field = Arc::new(Field::new("rho", DataType::Float64, false));
     let rho_array = PyArray::new(rho_arc, rho_field);
     result_dict.set_item("rho", rho_array.to_arro3(py)?)?;
@@ -269,23 +292,28 @@ pub fn arrow76_call_price(
     sigmas: PyArray,
 ) -> PyArrowResult<PyObject> {
     // Extract and downcast arrays
-    let forwards_f64 = forwards.as_ref()
+    let forwards_f64 = forwards
+        .as_ref()
         .as_any()
         .downcast_ref::<Float64Array>()
         .ok_or_else(|| ArrowError::CastError("forwards must be Float64Array".into()))?;
-    let strikes_f64 = strikes.as_ref()
+    let strikes_f64 = strikes
+        .as_ref()
         .as_any()
         .downcast_ref::<Float64Array>()
         .ok_or_else(|| ArrowError::CastError("strikes must be Float64Array".into()))?;
-    let times_f64 = times.as_ref()
+    let times_f64 = times
+        .as_ref()
         .as_any()
         .downcast_ref::<Float64Array>()
         .ok_or_else(|| ArrowError::CastError("times must be Float64Array".into()))?;
-    let rates_f64 = rates.as_ref()
+    let rates_f64 = rates
+        .as_ref()
         .as_any()
         .downcast_ref::<Float64Array>()
         .ok_or_else(|| ArrowError::CastError("rates must be Float64Array".into()))?;
-    let sigmas_f64 = sigmas.as_ref()
+    let sigmas_f64 = sigmas
+        .as_ref()
         .as_any()
         .downcast_ref::<Float64Array>()
         .ok_or_else(|| ArrowError::CastError("sigmas must be Float64Array".into()))?;
@@ -319,23 +347,28 @@ pub fn arrow76_put_price(
     sigmas: PyArray,
 ) -> PyArrowResult<PyObject> {
     // Extract and downcast arrays
-    let forwards_f64 = forwards.as_ref()
+    let forwards_f64 = forwards
+        .as_ref()
         .as_any()
         .downcast_ref::<Float64Array>()
         .ok_or_else(|| ArrowError::CastError("forwards must be Float64Array".into()))?;
-    let strikes_f64 = strikes.as_ref()
+    let strikes_f64 = strikes
+        .as_ref()
         .as_any()
         .downcast_ref::<Float64Array>()
         .ok_or_else(|| ArrowError::CastError("strikes must be Float64Array".into()))?;
-    let times_f64 = times.as_ref()
+    let times_f64 = times
+        .as_ref()
         .as_any()
         .downcast_ref::<Float64Array>()
         .ok_or_else(|| ArrowError::CastError("times must be Float64Array".into()))?;
-    let rates_f64 = rates.as_ref()
+    let rates_f64 = rates
+        .as_ref()
         .as_any()
         .downcast_ref::<Float64Array>()
         .ok_or_else(|| ArrowError::CastError("rates must be Float64Array".into()))?;
-    let sigmas_f64 = sigmas.as_ref()
+    let sigmas_f64 = sigmas
+        .as_ref()
         .as_any()
         .downcast_ref::<Float64Array>()
         .ok_or_else(|| ArrowError::CastError("sigmas must be Float64Array".into()))?;
@@ -370,23 +403,28 @@ pub fn arrow76_greeks(
     is_call: bool,
 ) -> PyArrowResult<PyObject> {
     // Extract and downcast arrays
-    let forwards_f64 = forwards.as_ref()
+    let forwards_f64 = forwards
+        .as_ref()
         .as_any()
         .downcast_ref::<Float64Array>()
         .ok_or_else(|| ArrowError::CastError("forwards must be Float64Array".into()))?;
-    let strikes_f64 = strikes.as_ref()
+    let strikes_f64 = strikes
+        .as_ref()
         .as_any()
         .downcast_ref::<Float64Array>()
         .ok_or_else(|| ArrowError::CastError("strikes must be Float64Array".into()))?;
-    let times_f64 = times.as_ref()
+    let times_f64 = times
+        .as_ref()
         .as_any()
         .downcast_ref::<Float64Array>()
         .ok_or_else(|| ArrowError::CastError("times must be Float64Array".into()))?;
-    let rates_f64 = rates.as_ref()
+    let rates_f64 = rates
+        .as_ref()
         .as_any()
         .downcast_ref::<Float64Array>()
         .ok_or_else(|| ArrowError::CastError("rates must be Float64Array".into()))?;
-    let sigmas_f64 = sigmas.as_ref()
+    let sigmas_f64 = sigmas
+        .as_ref()
         .as_any()
         .downcast_ref::<Float64Array>()
         .ok_or_else(|| ArrowError::CastError("sigmas must be Float64Array".into()))?;
@@ -394,11 +432,33 @@ pub fn arrow76_greeks(
     // Compute Greeks with GIL released
     let (delta_arc, gamma_arc, vega_arc, theta_arc, rho_arc) = py
         .allow_threads(|| {
-            let delta = Black76::delta(forwards_f64, strikes_f64, times_f64, rates_f64, sigmas_f64, is_call)?;
-            let gamma = Black76::gamma(forwards_f64, strikes_f64, times_f64, rates_f64, sigmas_f64)?;
+            let delta = Black76::delta(
+                forwards_f64,
+                strikes_f64,
+                times_f64,
+                rates_f64,
+                sigmas_f64,
+                is_call,
+            )?;
+            let gamma =
+                Black76::gamma(forwards_f64, strikes_f64, times_f64, rates_f64, sigmas_f64)?;
             let vega = Black76::vega(forwards_f64, strikes_f64, times_f64, rates_f64, sigmas_f64)?;
-            let theta = Black76::theta(forwards_f64, strikes_f64, times_f64, rates_f64, sigmas_f64, is_call)?;
-            let rho = Black76::rho(forwards_f64, strikes_f64, times_f64, rates_f64, sigmas_f64, is_call)?;
+            let theta = Black76::theta(
+                forwards_f64,
+                strikes_f64,
+                times_f64,
+                rates_f64,
+                sigmas_f64,
+                is_call,
+            )?;
+            let rho = Black76::rho(
+                forwards_f64,
+                strikes_f64,
+                times_f64,
+                rates_f64,
+                sigmas_f64,
+                is_call,
+            )?;
             Ok::<_, ArrowError>((delta, gamma, vega, theta, rho))
         })
         .map_err(|e: ArrowError| {
@@ -407,24 +467,24 @@ pub fn arrow76_greeks(
 
     // Create Python dict
     let result_dict = PyDict::new(py);
-    
+
     // Add each Greek
     let delta_field = Arc::new(Field::new("delta", DataType::Float64, false));
     let delta_array = PyArray::new(delta_arc, delta_field);
     result_dict.set_item("delta", delta_array.to_arro3(py)?)?;
-    
+
     let gamma_field = Arc::new(Field::new("gamma", DataType::Float64, false));
     let gamma_array = PyArray::new(gamma_arc, gamma_field);
     result_dict.set_item("gamma", gamma_array.to_arro3(py)?)?;
-    
+
     let vega_field = Arc::new(Field::new("vega", DataType::Float64, false));
     let vega_array = PyArray::new(vega_arc, vega_field);
     result_dict.set_item("vega", vega_array.to_arro3(py)?)?;
-    
+
     let theta_field = Arc::new(Field::new("theta", DataType::Float64, false));
     let theta_array = PyArray::new(theta_arc, theta_field);
     result_dict.set_item("theta", theta_array.to_arro3(py)?)?;
-    
+
     let rho_field = Arc::new(Field::new("rho", DataType::Float64, false));
     let rho_array = PyArray::new(rho_arc, rho_field);
     result_dict.set_item("rho", rho_array.to_arro3(py)?)?;

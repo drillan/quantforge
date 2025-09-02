@@ -1,7 +1,8 @@
 """Black-Scholes model with broadcasting support."""
 
+from typing import Union
+
 import numpy as np
-from typing import Union, Dict
 from numpy.typing import NDArray
 
 # Import native implementation
@@ -136,7 +137,7 @@ def put_price_batch(
     return _native.put_price_batch(spots, strikes, times, rates, sigmas)
 
 
-def greeks(s: float, k: float, t: float, r: float, sigma: float, is_call: bool = True) -> Dict[str, float]:
+def greeks(s: float, k: float, t: float, r: float, sigma: float, is_call: bool = True) -> dict[str, float]:
     """
     Calculate Black-Scholes Greeks.
 
@@ -165,7 +166,7 @@ def greeks(s: float, k: float, t: float, r: float, sigma: float, is_call: bool =
 
 def greeks_batch(
     spots: ArrayLike, strikes: ArrayLike, times: ArrayLike, rates: ArrayLike, sigmas: ArrayLike, is_call: bool = True
-) -> Dict[str, NDArray[np.float64]]:
+) -> dict[str, NDArray[np.float64]]:
     """
     Calculate Black-Scholes Greeks with broadcasting.
 

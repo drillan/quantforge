@@ -17,25 +17,25 @@ automatically expanded to match the length of other arrays.
 Example:
     >>> import pyarrow as pa
     >>> from quantforge.arrow_native import arrow_call_price
-    >>> 
+    >>>
     >>> # Multiple spots, single strike (broadcasting)
     >>> spots = pa.array([100.0, 105.0, 110.0])
     >>> strikes = pa.array([100.0])  # Will broadcast to all spots
     >>> times = pa.array([1.0])
     >>> rates = pa.array([0.05])
     >>> sigmas = pa.array([0.2])
-    >>> 
+    >>>
     >>> prices = arrow_call_price(spots, strikes, times, rates, sigmas)
 """
 
 # Import all arrow_native functions from the compiled module
 from .quantforge import (
-    arrow_call_price,
-    arrow_put_price,
-    arrow_greeks,
     arrow76_call_price,
-    arrow76_put_price,
     arrow76_greeks,
+    arrow76_put_price,
+    arrow_call_price,
+    arrow_greeks,
+    arrow_put_price,
 )
 
 __all__ = [
