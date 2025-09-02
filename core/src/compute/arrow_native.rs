@@ -114,9 +114,10 @@ mod tests {
     }
 
     #[test]
-    fn test_shape_mismatch() {
+    fn test_broadcasting_support() {
+        // Test that broadcasting is now supported
         let spots = Float64Array::from(vec![100.0, 105.0]);
-        let strikes = Float64Array::from(vec![100.0]); // 長さが異なる
+        let strikes = Float64Array::from(vec![100.0]); // Single value broadcasts
         let times = Float64Array::from(vec![1.0, 1.0]);
         let rates = Float64Array::from(vec![0.05, 0.05]);
         let sigmas = Float64Array::from(vec![0.2, 0.2]);
@@ -124,6 +125,26 @@ mod tests {
         let result =
             ArrowNativeCompute::black_scholes_call_price(&spots, &strikes, &times, &rates, &sigmas);
 
+        // Broadcasting should work now
+        assert!(result.is_ok());
+        let prices = result.unwrap();
+        let prices_array = prices.as_any().downcast_ref::<Float64Array>().unwrap();
+        assert_eq!(prices_array.len(), 2);
+    }
+    
+    #[test]
+    fn test_incompatible_lengths() {
+        // Test incompatible lengths (not 1 and not matching)
+        let spots = Float64Array::from(vec![100.0, 105.0]);  // length 2
+        let strikes = Float64Array::from(vec![100.0, 95.0, 90.0]);  // length 3 (incompatible)
+        let times = Float64Array::from(vec![1.0]);
+        let rates = Float64Array::from(vec![0.05]);
+        let sigmas = Float64Array::from(vec![0.2]);
+
+        let result =
+            ArrowNativeCompute::black_scholes_call_price(&spots, &strikes, &times, &rates, &sigmas);
+
+        // Should fail with incompatible lengths
         assert!(result.is_err());
     }
 }
