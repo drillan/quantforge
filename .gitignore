@@ -263,7 +263,7 @@ tracker_temp.yaml
 # Performance and benchmarks
 benchmark_results/
 benchmark_results_*.json
-benchmarks/results/
+benchmarks/
 perf_*.log
 
 # Local translation system (private work area)
