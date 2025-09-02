@@ -1,6 +1,5 @@
 """Type checking tests for quantforge module"""
 
-
 import numpy as np
 import pytest
 from quantforge import black76, black_scholes, merton

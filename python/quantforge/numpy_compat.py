@@ -6,7 +6,6 @@ leverage the performance of QuantForge without converting to Arrow arrays.
 For best performance, use the Arrow API directly.
 """
 
-
 import numpy as np
 import pyarrow as pa
 

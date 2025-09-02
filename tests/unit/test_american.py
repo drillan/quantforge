@@ -107,35 +107,35 @@ class TestAmericanGreeks:
     def test_greeks_call_atm(self) -> None:
         """Test Greeks for at-the-money American call."""
         greeks = american.greeks(s=100.0, k=100.0, t=1.0, r=0.05, q=0.02, sigma=0.2, is_call=True)
-        
+
         # Delta should be around 0.5 for ATM
         assert 0.4 < greeks["delta"] < 0.7
-        
+
         # Gamma should be positive
         assert greeks["gamma"] > 0
-        
+
         # Vega should be positive
         assert greeks["vega"] > 0
-        
+
         # Theta should be negative for calls
         assert greeks["theta"] < 0
-        
+
         # Rho should be positive for calls
         assert greeks["rho"] > 0
 
     def test_greeks_put_atm(self) -> None:
         """Test Greeks for at-the-money American put."""
         greeks = american.greeks(s=100.0, k=100.0, t=1.0, r=0.05, q=0.02, sigma=0.2, is_call=False)
-        
+
         # Delta should be around -0.5 for ATM
         assert -0.7 < greeks["delta"] < -0.3
-        
+
         # Gamma should be positive
         assert greeks["gamma"] > 0
-        
+
         # Vega should be positive
         assert greeks["vega"] > 0
-        
+
         # Rho should be negative for puts
         assert greeks["rho"] < 0
 
@@ -146,16 +146,16 @@ class TestAmericanBatchOperations:
     def test_call_price_batch(self) -> None:
         """Test batch calculation of American call prices."""
         import numpy as np
-        
+
         spots = np.array([90.0, 100.0, 110.0])
         strikes = np.array([100.0, 100.0, 100.0])
         times = 1.0
         rates = 0.05
         dividend_yields = 0.02
         sigmas = 0.2
-        
+
         prices = american.call_price_batch(spots, strikes, times, rates, dividend_yields, sigmas)
-        
+
         assert len(prices) == 3
         assert all(p >= 0 for p in prices)
         # Prices should increase with spot
@@ -164,16 +164,16 @@ class TestAmericanBatchOperations:
     def test_put_price_batch(self) -> None:
         """Test batch calculation of American put prices."""
         import numpy as np
-        
+
         spots = np.array([90.0, 100.0, 110.0])
         strikes = np.array([100.0, 100.0, 100.0])
         times = 1.0
         rates = 0.05
         dividend_yields = 0.02
         sigmas = 0.2
-        
+
         prices = american.put_price_batch(spots, strikes, times, rates, dividend_yields, sigmas)
-        
+
         assert len(prices) == 3
         assert all(p >= 0 for p in prices)
         # Prices should decrease with spot
@@ -182,22 +182,22 @@ class TestAmericanBatchOperations:
     def test_greeks_batch(self) -> None:
         """Test batch calculation of American Greeks."""
         import numpy as np
-        
+
         spots = np.array([90.0, 100.0, 110.0])
         strikes = 100.0
         times = 1.0
         rates = 0.05
         dividend_yields = 0.02
         sigmas = 0.2
-        
+
         greeks = american.greeks_batch(spots, strikes, times, rates, dividend_yields, sigmas, is_calls=True)
-        
+
         assert "delta" in greeks
         assert "gamma" in greeks
         assert "vega" in greeks
         assert "theta" in greeks
         assert "rho" in greeks
-        
+
         assert len(greeks["delta"]) == 3
         assert all(0 < d < 1 for d in greeks["delta"])
         # Delta should increase with spot for calls
@@ -212,10 +212,10 @@ class TestAmericanImpliedVolatility:
         # First calculate a price with known volatility
         target_vol = 0.25
         price = american.call_price(s=100.0, k=100.0, t=1.0, r=0.05, q=0.02, sigma=target_vol)
-        
+
         # Then solve for implied volatility
         iv = american.implied_volatility(price=price, s=100.0, k=100.0, t=1.0, r=0.05, q=0.02, is_call=True)
-        
+
         assert abs(iv - target_vol) < 1e-4
 
     def test_implied_volatility_put(self) -> None:
@@ -223,23 +223,23 @@ class TestAmericanImpliedVolatility:
         # First calculate a price with known volatility
         target_vol = 0.25
         price = american.put_price(s=100.0, k=100.0, t=1.0, r=0.05, q=0.02, sigma=target_vol)
-        
+
         # Then solve for implied volatility
         iv = american.implied_volatility(price=price, s=100.0, k=100.0, t=1.0, r=0.05, q=0.02, is_call=False)
-        
+
         assert abs(iv - target_vol) < 1e-4
 
     def test_implied_volatility_batch(self) -> None:
         """Test batch implied volatility calculation."""
         import numpy as np
-        
+
         # Calculate prices with known volatility
         spots = np.array([90.0, 100.0, 110.0])
         target_vol = 0.25
         prices = american.call_price_batch(spots, 100.0, 1.0, 0.05, 0.02, target_vol)
-        
+
         # Solve for implied volatilities
         ivs = american.implied_volatility_batch(prices, spots, 100.0, 1.0, 0.05, 0.02, is_calls=True)
-        
+
         assert len(ivs) == 3
         assert all(abs(iv - target_vol) < 1e-3 for iv in ivs)

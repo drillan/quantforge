@@ -19,24 +19,19 @@ black_scholes.put_price_batch = put_price_batch
 black_scholes.greeks_batch = greeks_batch
 
 # Import Arrow API modules
-from . import arrow_api, numpy_compat
+from . import arrow_api, arrow_native, numpy_compat
 
-# Import optional modules
-try:
-    from .quantforge import arrow_native
-    has_arrow_native = True
-except ImportError:
-    has_arrow_native = False
+# Arrow native is now always available
+has_arrow_native = True
 
 try:
     from .quantforge import instrumented
+
     has_instrumented = True
 except ImportError:
     has_instrumented = False
 
 # Build __all__ list based on available modules
-__all__ = ["__version__", "black_scholes", "black76", "merton", "american", "arrow_api", "numpy_compat"]
-if has_arrow_native:
-    __all__.append("arrow_native")
+__all__ = ["__version__", "black_scholes", "black76", "merton", "american", "arrow_api", "arrow_native", "numpy_compat"]
 if has_instrumented:
     __all__.append("instrumented")

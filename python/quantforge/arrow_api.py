@@ -5,7 +5,6 @@ This module provides Arrow-first API for option pricing calculations.
 Internally uses optimized Arrow arrays for zero-copy operations where possible.
 """
 
-
 import numpy as np
 import pyarrow as pa
 
@@ -60,18 +59,14 @@ def call_price(
     >>> prices = qf.call_price(spots, strikes, times, rates, sigmas)
     """
     # Prepare arrays for FFI
-    spots, strikes, times, rates, sigmas = prepare_arrow_arrays(
-        spots, strikes, times, rates, sigmas
-    )
-    
+    spots, strikes, times, rates, sigmas = prepare_arrow_arrays(spots, strikes, times, rates, sigmas)
+
     # 長さの検証
     _validate_array_lengths(spots, strikes, times, rates, sigmas)
 
     # Check if we can use true FFI (future implementation)
     # For now, use optimized fallback
-    spots_np, strikes_np, times_np, rates_np, sigmas_np = arrays_to_numpy_fallback(
-        spots, strikes, times, rates, sigmas
-    )
+    spots_np, strikes_np, times_np, rates_np, sigmas_np = arrays_to_numpy_fallback(spots, strikes, times, rates, sigmas)
 
     # 既存のバッチ処理関数を使用
     result_np = black_scholes.call_price_batch(spots_np, strikes_np, times_np, rates_np, sigmas_np)
@@ -109,18 +104,14 @@ def put_price(
         Put option prices
     """
     # Prepare arrays for FFI
-    spots, strikes, times, rates, sigmas = prepare_arrow_arrays(
-        spots, strikes, times, rates, sigmas
-    )
-    
+    spots, strikes, times, rates, sigmas = prepare_arrow_arrays(spots, strikes, times, rates, sigmas)
+
     # 長さの検証
     _validate_array_lengths(spots, strikes, times, rates, sigmas)
 
     # Check if we can use true FFI (future implementation)
     # For now, use optimized fallback
-    spots_np, strikes_np, times_np, rates_np, sigmas_np = arrays_to_numpy_fallback(
-        spots, strikes, times, rates, sigmas
-    )
+    spots_np, strikes_np, times_np, rates_np, sigmas_np = arrays_to_numpy_fallback(spots, strikes, times, rates, sigmas)
 
     # 既存のバッチ処理関数を使用
     result_np = black_scholes.put_price_batch(spots_np, strikes_np, times_np, rates_np, sigmas_np)
@@ -162,18 +153,14 @@ def greeks(
         Each value is a pyarrow.Array
     """
     # Prepare arrays for FFI
-    spots, strikes, times, rates, sigmas = prepare_arrow_arrays(
-        spots, strikes, times, rates, sigmas
-    )
-    
+    spots, strikes, times, rates, sigmas = prepare_arrow_arrays(spots, strikes, times, rates, sigmas)
+
     # 長さの検証
     _validate_array_lengths(spots, strikes, times, rates, sigmas)
 
     # Check if we can use true FFI (future implementation)
     # For now, use optimized fallback
-    spots_np, strikes_np, times_np, rates_np, sigmas_np = arrays_to_numpy_fallback(
-        spots, strikes, times, rates, sigmas
-    )
+    spots_np, strikes_np, times_np, rates_np, sigmas_np = arrays_to_numpy_fallback(spots, strikes, times, rates, sigmas)
 
     # 既存のバッチ処理関数を使用
     greeks_dict = black_scholes.greeks_batch(spots_np, strikes_np, times_np, rates_np, sigmas_np, is_call)
@@ -217,18 +204,14 @@ def implied_volatility(
         Implied volatilities
     """
     # Prepare arrays for FFI
-    prices, spots, strikes, times, rates = prepare_arrow_arrays(
-        prices, spots, strikes, times, rates
-    )
-    
+    prices, spots, strikes, times, rates = prepare_arrow_arrays(prices, spots, strikes, times, rates)
+
     # 長さの検証
     _validate_array_lengths(prices, spots, strikes, times, rates)
 
     # Check if we can use true FFI (future implementation)
     # For now, use optimized fallback
-    prices_np, spots_np, strikes_np, times_np, rates_np = arrays_to_numpy_fallback(
-        prices, spots, strikes, times, rates
-    )
+    prices_np, spots_np, strikes_np, times_np, rates_np = arrays_to_numpy_fallback(prices, spots, strikes, times, rates)
 
     # Initial guessの処理
     if initial_guess is not None:

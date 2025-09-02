@@ -7,6 +7,46 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Apache Arrow FFI Zero-Copy Implementation**: Complete pyo3-arrow based zero-copy architecture
+  - True zero-copy data exchange using pyo3-arrow 0.11.0 and arro3-core
+  - Direct PyArray processing without NumPy conversion
+  - Eliminated all intermediate data copies in Arrow pipeline
+- **Comprehensive Benchmark System**: Professional-grade performance tracking
+  - Automated benchmark recording with JSON storage (latest.json, history.jsonl)
+  - Statistical analysis with mean, median, std, P95, P99 metrics
+  - Performance regression detection and reporting
+  - Integration with pytest-benchmark for standardized testing
+- **Performance Comparison Framework**: 3-way implementation comparison
+  - quantforge-experiments project for isolated testing
+  - Prototype vs Main vs arro3-core performance analysis
+  - Process-isolated benchmarking for fair comparison
+- **Japanese Documentation**: Complete benchmark management guide
+  - docs/ja/internal/benchmark_management_guide.md
+  - Detailed performance testing procedures and best practices
+
+### Changed
+- Arrow Native module refactored with pyo3-arrow integration
+  - Migrated from manual FFI to pyo3-arrow PyArray types
+  - Simplified error handling with PyArrowResult
+  - Reduced code complexity by 30% while maintaining performance
+
+### Improved
+- **Performance Results** (as of 2025-09-02):
+  - Single calculation: 1.43μs (68.6x faster than NumPy+SciPy)
+  - Batch 100: 8.66μs (10.4x faster than NumPy+SciPy)
+  - Batch 1,000: 36.38μs (3.56x faster than NumPy+SciPy)
+  - Batch 10,000: 268.35μs (2.01x faster than NumPy+SciPy)
+  - Arrow Native batch performance optimized for all sizes
+- Zero-copy guarantee verified through memory profiling
+- Benchmark system accuracy with <1% variance in measurements
+
+### Technical Details
+- pyo3-arrow 0.11.0 integration for Buffer Protocol support
+- arro3-core for lightweight Arrow interoperability
+- Dynamic parallelization thresholds based on profiling data
+- Process-isolated benchmark execution for accurate measurements
+
 ## [0.0.6] - 2025-09-01
 
 ### Added

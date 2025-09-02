@@ -16,9 +16,11 @@ from scipy.stats import norm
 # Arrow Native import check
 try:
     import pyarrow as pa
+
     HAS_ARROW_NATIVE = True
     try:
         from quantforge import arrow_native
+
         HAS_ARROW_NATIVE_MODULE = True
     except ImportError as e:
         print(f"Warning: arrow_native import failed: {e}")
@@ -194,41 +196,40 @@ class TestModelComparison:
 
 
 @pytest.mark.benchmark
-@pytest.mark.skipif(
-    not (HAS_ARROW_NATIVE and HAS_ARROW_NATIVE_MODULE),
-    reason="Arrow Native or PyArrow not available"
-)
+@pytest.mark.skipif(not (HAS_ARROW_NATIVE and HAS_ARROW_NATIVE_MODULE), reason="Arrow Native or PyArrow not available")
 class TestArrowNative:
     """Benchmark tests for Arrow Native zero-copy implementation."""
 
     def setup_method(self):
         """Setup Arrow arrays for testing."""
         import random
+
         random.seed(42)
-    
+
     def _generate_arrow_batch_data(self, size: int) -> tuple:
         """Generate Arrow arrays directly without NumPy intermediary.
-        
+
         This method creates Arrow arrays from Python lists to avoid
         unnecessary NumPy array creation and conversion overhead.
         """
         import random
+
         random.seed(42)
-        
+
         # Generate Python lists directly (avoid NumPy)
         spots_list = [random.uniform(80, 120) for _ in range(size)]
         strikes_list = [100.0] * size
         times_list = [1.0] * size
         rates_list = [0.05] * size
         sigmas_list = [random.uniform(0.15, 0.35) for _ in range(size)]
-        
+
         # Create Arrow arrays directly from Python lists
         spots = pa.array(spots_list)
         strikes = pa.array(strikes_list)
         times = pa.array(times_list)
         rates = pa.array(rates_list)
         sigmas = pa.array(sigmas_list)
-        
+
         return spots, strikes, times, rates, sigmas
 
     @pytest.mark.parametrize("size", [100, 1000, 10000])
@@ -254,7 +255,7 @@ class TestArrowNative:
     def test_arrow_vs_numpy_memory(self, benchmark):
         """Compare memory efficiency: Arrow Native vs NumPy conversion."""
         size = 10000
-        
+
         # Generate Arrow arrays directly (true zero-copy potential)
         spots_arrow, strikes_arrow, times_arrow, rates_arrow, sigmas_arrow = self._generate_arrow_batch_data(size)
 

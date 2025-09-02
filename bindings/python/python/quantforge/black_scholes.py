@@ -19,7 +19,7 @@ def _ensure_array(x: ArrayLike) -> NDArray[np.float64]:
 def call_price(s: float, k: float, t: float, r: float, sigma: float) -> float:
     """
     Calculate Black-Scholes call option price.
-    
+
     Parameters
     ----------
     s : float
@@ -32,7 +32,7 @@ def call_price(s: float, k: float, t: float, r: float, sigma: float) -> float:
         Risk-free rate
     sigma : float
         Volatility
-        
+
     Returns
     -------
     float
@@ -44,7 +44,7 @@ def call_price(s: float, k: float, t: float, r: float, sigma: float) -> float:
 def put_price(s: float, k: float, t: float, r: float, sigma: float) -> float:
     """
     Calculate Black-Scholes put option price.
-    
+
     Parameters
     ----------
     s : float
@@ -57,7 +57,7 @@ def put_price(s: float, k: float, t: float, r: float, sigma: float) -> float:
         Risk-free rate
     sigma : float
         Volatility
-        
+
     Returns
     -------
     float
@@ -67,15 +67,11 @@ def put_price(s: float, k: float, t: float, r: float, sigma: float) -> float:
 
 
 def call_price_batch(
-    spots: ArrayLike,
-    strikes: ArrayLike,
-    times: ArrayLike,
-    rates: ArrayLike,
-    sigmas: ArrayLike
+    spots: ArrayLike, strikes: ArrayLike, times: ArrayLike, rates: ArrayLike, sigmas: ArrayLike
 ) -> NDArray[np.float64]:
     """
     Calculate Black-Scholes call option prices with broadcasting.
-    
+
     Parameters
     ----------
     spots : array_like
@@ -88,7 +84,7 @@ def call_price_batch(
         Risk-free rates (scalar or array)
     sigmas : array_like
         Volatilities (scalar or array)
-        
+
     Returns
     -------
     numpy.ndarray
@@ -100,21 +96,17 @@ def call_price_batch(
     times = _ensure_array(times)
     rates = _ensure_array(rates)
     sigmas = _ensure_array(sigmas)
-    
+
     # Call native implementation
     return _native.call_price_batch(spots, strikes, times, rates, sigmas)
 
 
 def put_price_batch(
-    spots: ArrayLike,
-    strikes: ArrayLike,
-    times: ArrayLike,
-    rates: ArrayLike,
-    sigmas: ArrayLike
+    spots: ArrayLike, strikes: ArrayLike, times: ArrayLike, rates: ArrayLike, sigmas: ArrayLike
 ) -> NDArray[np.float64]:
     """
     Calculate Black-Scholes put option prices with broadcasting.
-    
+
     Parameters
     ----------
     spots : array_like
@@ -127,7 +119,7 @@ def put_price_batch(
         Risk-free rates (scalar or array)
     sigmas : array_like
         Volatilities (scalar or array)
-        
+
     Returns
     -------
     numpy.ndarray
@@ -139,22 +131,15 @@ def put_price_batch(
     times = _ensure_array(times)
     rates = _ensure_array(rates)
     sigmas = _ensure_array(sigmas)
-    
+
     # Call native implementation
     return _native.put_price_batch(spots, strikes, times, rates, sigmas)
 
 
-def greeks(
-    s: float,
-    k: float,
-    t: float,
-    r: float,
-    sigma: float,
-    is_call: bool = True
-) -> Dict[str, float]:
+def greeks(s: float, k: float, t: float, r: float, sigma: float, is_call: bool = True) -> Dict[str, float]:
     """
     Calculate Black-Scholes Greeks.
-    
+
     Parameters
     ----------
     s : float
@@ -169,7 +154,7 @@ def greeks(
         Volatility
     is_call : bool, default=True
         True for call, False for put
-        
+
     Returns
     -------
     dict
@@ -179,16 +164,11 @@ def greeks(
 
 
 def greeks_batch(
-    spots: ArrayLike,
-    strikes: ArrayLike,
-    times: ArrayLike,
-    rates: ArrayLike,
-    sigmas: ArrayLike,
-    is_call: bool = True
+    spots: ArrayLike, strikes: ArrayLike, times: ArrayLike, rates: ArrayLike, sigmas: ArrayLike, is_call: bool = True
 ) -> Dict[str, NDArray[np.float64]]:
     """
     Calculate Black-Scholes Greeks with broadcasting.
-    
+
     Parameters
     ----------
     spots : array_like
@@ -203,7 +183,7 @@ def greeks_batch(
         Volatilities (scalar or array)
     is_call : bool, default=True
         True for call, False for put
-        
+
     Returns
     -------
     dict
@@ -215,22 +195,15 @@ def greeks_batch(
     times = _ensure_array(times)
     rates = _ensure_array(rates)
     sigmas = _ensure_array(sigmas)
-    
+
     # Call native implementation
     return _native.greeks_batch(spots, strikes, times, rates, sigmas, is_call)
 
 
-def implied_volatility(
-    price: float,
-    s: float,
-    k: float,
-    t: float,
-    r: float,
-    is_call: bool = True
-) -> float:
+def implied_volatility(price: float, s: float, k: float, t: float, r: float, is_call: bool = True) -> float:
     """
     Calculate implied volatility using Newton-Raphson method.
-    
+
     Parameters
     ----------
     price : float
@@ -245,7 +218,7 @@ def implied_volatility(
         Risk-free rate
     is_call : bool, default=True
         True for call, False for put
-        
+
     Returns
     -------
     float
@@ -255,16 +228,11 @@ def implied_volatility(
 
 
 def implied_volatility_batch(
-    prices: ArrayLike,
-    spots: ArrayLike,
-    strikes: ArrayLike,
-    times: ArrayLike,
-    rates: ArrayLike,
-    is_calls: ArrayLike
+    prices: ArrayLike, spots: ArrayLike, strikes: ArrayLike, times: ArrayLike, rates: ArrayLike, is_calls: ArrayLike
 ) -> NDArray[np.float64]:
     """
     Calculate implied volatility with broadcasting.
-    
+
     Parameters
     ----------
     prices : array_like
@@ -279,7 +247,7 @@ def implied_volatility_batch(
         Risk-free rates (scalar or array)
     is_calls : array_like
         True for calls, False for puts (scalar or array)
-        
+
     Returns
     -------
     numpy.ndarray
@@ -292,6 +260,6 @@ def implied_volatility_batch(
     times = _ensure_array(times)
     rates = _ensure_array(rates)
     is_calls = np.atleast_1d(np.asarray(is_calls, dtype=bool))
-    
-    # Call native implementation  
+
+    # Call native implementation
     return _native.implied_volatility_batch(prices, spots, strikes, times, rates, is_calls)
