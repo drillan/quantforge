@@ -4,7 +4,7 @@
 //! コード重複を排除し、保守性と一貫性を向上。
 
 use crate::constants::{HALF, VOL_SQUARED_HALF};
-use crate::math::distributions::norm_cdf;
+use crate::math::distributions::{norm_cdf, norm_pdf};
 
 /// Black-Scholes d1, d2パラメータ計算
 ///
@@ -185,6 +185,114 @@ pub fn merton_call_scalar(s: f64, k: f64, t: f64, r: f64, q: f64, sigma: f64) ->
 pub fn merton_put_scalar(s: f64, k: f64, t: f64, r: f64, q: f64, sigma: f64) -> f64 {
     let (d1, d2) = merton_d1_d2(s, k, t, r, q, sigma);
     k * (-r * t).exp() * norm_cdf(-d2) - s * (-q * t).exp() * norm_cdf(-d1)
+}
+
+// ============================================================================
+// Merton Greeks スカラー関数
+// ============================================================================
+
+/// Merton Delta（コール）- スポット価格に対する感応度
+///
+/// Delta_call = e^(-qT) N(d1)
+#[inline(always)]
+pub fn merton_delta_call_scalar(s: f64, k: f64, t: f64, r: f64, q: f64, sigma: f64) -> f64 {
+    let (d1, _) = merton_d1_d2(s, k, t, r, q, sigma);
+    (-q * t).exp() * norm_cdf(d1)
+}
+
+/// Merton Delta（プット）- スポット価格に対する感応度
+///
+/// Delta_put = -e^(-qT) N(-d1)
+#[inline(always)]
+pub fn merton_delta_put_scalar(s: f64, k: f64, t: f64, r: f64, q: f64, sigma: f64) -> f64 {
+    let (d1, _) = merton_d1_d2(s, k, t, r, q, sigma);
+    -(-q * t).exp() * norm_cdf(-d1)
+}
+
+/// Merton Gamma - Deltaの変化率（コール/プット共通）
+///
+/// Gamma = e^(-qT) n(d1) / (S σ √T)
+#[inline(always)]
+pub fn merton_gamma_scalar(s: f64, k: f64, t: f64, r: f64, q: f64, sigma: f64) -> f64 {
+    let (d1, _) = merton_d1_d2(s, k, t, r, q, sigma);
+    let sqrt_t = t.sqrt();
+    (-q * t).exp() * norm_pdf(d1) / (s * sigma * sqrt_t)
+}
+
+/// Merton Vega - ボラティリティに対する感応度（コール/プット共通）
+///
+/// Vega = S e^(-qT) n(d1) √T
+#[inline(always)]
+pub fn merton_vega_scalar(s: f64, k: f64, t: f64, r: f64, q: f64, sigma: f64) -> f64 {
+    let (d1, _) = merton_d1_d2(s, k, t, r, q, sigma);
+    let sqrt_t = t.sqrt();
+    s * (-q * t).exp() * norm_pdf(d1) * sqrt_t
+}
+
+/// Merton Theta（コール）- 時間経過に対する感応度
+///
+/// Theta_call = -Se^(-qT)n(d1)σ/(2√T) - rKe^(-rT)N(d2) + qSe^(-qT)N(d1)
+#[inline(always)]
+pub fn merton_theta_call_scalar(s: f64, k: f64, t: f64, r: f64, q: f64, sigma: f64) -> f64 {
+    let (d1, d2) = merton_d1_d2(s, k, t, r, q, sigma);
+    let sqrt_t = t.sqrt();
+    let exp_qt = (-q * t).exp();
+    let exp_rt = (-r * t).exp();
+    
+    -(s * exp_qt * norm_pdf(d1) * sigma) / (2.0 * sqrt_t)
+        - r * k * exp_rt * norm_cdf(d2)
+        + q * s * exp_qt * norm_cdf(d1)
+}
+
+/// Merton Theta（プット）- 時間経過に対する感応度
+///
+/// Theta_put = -Se^(-qT)n(d1)σ/(2√T) + rKe^(-rT)N(-d2) - qSe^(-qT)N(-d1)
+#[inline(always)]
+pub fn merton_theta_put_scalar(s: f64, k: f64, t: f64, r: f64, q: f64, sigma: f64) -> f64 {
+    let (d1, d2) = merton_d1_d2(s, k, t, r, q, sigma);
+    let sqrt_t = t.sqrt();
+    let exp_qt = (-q * t).exp();
+    let exp_rt = (-r * t).exp();
+    
+    -(s * exp_qt * norm_pdf(d1) * sigma) / (2.0 * sqrt_t)
+        + r * k * exp_rt * norm_cdf(-d2)
+        - q * s * exp_qt * norm_cdf(-d1)
+}
+
+/// Merton Rho（コール）- 金利に対する感応度
+///
+/// Rho_call = KTe^(-rT) N(d2)
+#[inline(always)]
+pub fn merton_rho_call_scalar(s: f64, k: f64, t: f64, r: f64, q: f64, sigma: f64) -> f64 {
+    let (_, d2) = merton_d1_d2(s, k, t, r, q, sigma);
+    k * t * (-r * t).exp() * norm_cdf(d2)
+}
+
+/// Merton Rho（プット）- 金利に対する感応度
+///
+/// Rho_put = -KTe^(-rT) N(-d2)
+#[inline(always)]
+pub fn merton_rho_put_scalar(s: f64, k: f64, t: f64, r: f64, q: f64, sigma: f64) -> f64 {
+    let (_, d2) = merton_d1_d2(s, k, t, r, q, sigma);
+    -k * t * (-r * t).exp() * norm_cdf(-d2)
+}
+
+/// Merton Dividend Rho（コール）- 配当利回りに対する感応度
+///
+/// DividendRho_call = -STe^(-qT) N(d1)
+#[inline(always)]
+pub fn merton_dividend_rho_call_scalar(s: f64, k: f64, t: f64, r: f64, q: f64, sigma: f64) -> f64 {
+    let (d1, _) = merton_d1_d2(s, k, t, r, q, sigma);
+    -s * t * (-q * t).exp() * norm_cdf(d1)
+}
+
+/// Merton Dividend Rho（プット）- 配当利回りに対する感応度
+///
+/// DividendRho_put = STe^(-qT) N(-d1)
+#[inline(always)]
+pub fn merton_dividend_rho_put_scalar(s: f64, k: f64, t: f64, r: f64, q: f64, sigma: f64) -> f64 {
+    let (d1, _) = merton_d1_d2(s, k, t, r, q, sigma);
+    s * t * (-q * t).exp() * norm_cdf(-d1)
 }
 
 #[cfg(test)]

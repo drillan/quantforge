@@ -95,8 +95,7 @@ fn quantforge(m: &Bound<'_, PyModule>) -> PyResult<()> {
     // Batch functions
     merton_module.add_function(wrap_pyfunction!(merton_call_price_batch, &merton_module)?)?;
     merton_module.add_function(wrap_pyfunction!(merton_put_price_batch, &merton_module)?)?;
-    // Greeks batch not yet implemented
-    // merton_module.add_function(wrap_pyfunction!(merton_greeks_batch, &merton_module)?)?;
+    merton_module.add_function(wrap_pyfunction!(merton_greeks_batch, &merton_module)?)?;
     merton_module.add_function(wrap_pyfunction!(
         merton_implied_volatility_batch,
         &merton_module

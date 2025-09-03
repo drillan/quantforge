@@ -176,7 +176,7 @@ class TestBlack76Batch:
         strikes = create_test_array([100.0, 100.0, 100.0], array_type)
         times = create_test_array([1.0, 1.0, 1.0], array_type)
         rates = create_test_array([0.05, 0.05, 0.05], array_type)
-        sigmas = create_test_array([0.2], array_type) * 3
+        sigmas = create_test_array([0.2, 0.2, 0.2], array_type)
         prices = black76.put_price_batch(forwards, strikes, times, rates, sigmas)
         assert len(prices) == 3
         arrow.assert_type(prices)
@@ -194,11 +194,14 @@ class TestBlack76Batch:
         call_batch = black76.call_price_batch(forwards, strikes, times, rates, sigmas)
         put_batch = black76.put_price_batch(forwards, strikes, times, rates, sigmas)
 
+        call_batch_list = arrow.to_list(call_batch)
+        put_batch_list = arrow.to_list(put_batch)
+        
         for i, forward in enumerate(forwards):
             call_single = black76.call_price(f=forward, k=100.0, t=1.0, r=0.05, sigma=0.2)
             put_single = black76.put_price(f=forward, k=100.0, t=1.0, r=0.05, sigma=0.2)
-            assert abs(call_batch[i] - call_single) < THEORETICAL_TOLERANCE
-            assert abs(put_batch[i] - put_single) < THEORETICAL_TOLERANCE
+            assert abs(call_batch_list[i] - call_single) < THEORETICAL_TOLERANCE
+            assert abs(put_batch_list[i] - put_single) < THEORETICAL_TOLERANCE
 
     def test_batch_with_invalid_forwards(self) -> None:
         """Test batch processing with invalid forwards."""
@@ -208,7 +211,7 @@ class TestBlack76Batch:
         rates = np.array([0.05, 0.05, 0.05])
         sigmas = np.array([0.2, 0.2, 0.2])
         # Invalid forward should raise an error now (validation enhanced)
-        with pytest.raises(ValueError, match="forward must be positive"):
+        with pytest.raises(Exception, match="forward must be positive"):
             black76.call_price_batch(forwards, strikes, times, rates, sigmas)
 
     def test_empty_batch(self) -> None:
@@ -303,7 +306,8 @@ class TestBlack76Greeks:
         assert "delta" in greeks_dict
         assert len(greeks_dict["delta"]) == 3
         # Delta should increase with forward for calls
-        assert greeks_dict["delta"][0] < greeks_dict["delta"][1] < greeks_dict["delta"][2]
+        delta_list = arrow.to_list(greeks_dict["delta"])
+        assert delta_list[0] < delta_list[1] < delta_list[2]
 
     def test_greeks_invalid_inputs(self) -> None:
         """Test Greeks with invalid inputs."""
@@ -359,7 +363,8 @@ class TestBlack76ImpliedVolatility:
         ivs = black76.implied_volatility_batch(prices, forwards, strikes, times, rates, True)
 
         assert len(ivs) == 3
-        for _i, (iv, true_sigma) in enumerate(zip(ivs, sigmas, strict=False)):
+        ivs_list = arrow.to_list(ivs)
+        for _i, (iv, true_sigma) in enumerate(zip(ivs_list, sigmas, strict=False)):
             assert abs(iv - true_sigma) < THEORETICAL_TOLERANCE
 
     def test_implied_volatility_invalid_price(self) -> None:

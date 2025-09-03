@@ -41,6 +41,7 @@ pub mod field_names {
     pub const VEGA: &str = "vega";
     pub const THETA: &str = "theta";
     pub const RHO: &str = "rho";
+    pub const DIVIDEND_RHO: &str = "dividend_rho";
     pub const IMPLIED_VOLATILITY: &str = "implied_volatility";
 }
 
@@ -285,6 +286,51 @@ pub fn create_greeks_dict<'py>(
     let rho_field = Arc::new(Field::new(field_names::RHO, DataType::Float64, false));
     let rho_array = PyArray::new(rho_arc, rho_field);
     result_dict.set_item(field_names::RHO, rho_array.to_arro3(py)?)?;
+
+    Ok(result_dict)
+}
+
+/// Create Python dict for Merton Greeks results (includes dividend_rho)
+pub fn create_merton_greeks_dict<'py>(
+    py: Python<'py>,
+    delta_arc: Arc<dyn arrow::array::Array>,
+    gamma_arc: Arc<dyn arrow::array::Array>,
+    vega_arc: Arc<dyn arrow::array::Array>,
+    theta_arc: Arc<dyn arrow::array::Array>,
+    rho_arc: Arc<dyn arrow::array::Array>,
+    dividend_rho_arc: Arc<dyn arrow::array::Array>,
+) -> PyArrowResult<Bound<'py, PyDict>> {
+    let result_dict = PyDict::new(py);
+
+    // Delta
+    let delta_field = Arc::new(Field::new(field_names::DELTA, DataType::Float64, false));
+    let delta_array = PyArray::new(delta_arc, delta_field);
+    result_dict.set_item(field_names::DELTA, delta_array.to_arro3(py)?)?;
+
+    // Gamma
+    let gamma_field = Arc::new(Field::new(field_names::GAMMA, DataType::Float64, false));
+    let gamma_array = PyArray::new(gamma_arc, gamma_field);
+    result_dict.set_item(field_names::GAMMA, gamma_array.to_arro3(py)?)?;
+
+    // Vega
+    let vega_field = Arc::new(Field::new(field_names::VEGA, DataType::Float64, false));
+    let vega_array = PyArray::new(vega_arc, vega_field);
+    result_dict.set_item(field_names::VEGA, vega_array.to_arro3(py)?)?;
+
+    // Theta
+    let theta_field = Arc::new(Field::new(field_names::THETA, DataType::Float64, false));
+    let theta_array = PyArray::new(theta_arc, theta_field);
+    result_dict.set_item(field_names::THETA, theta_array.to_arro3(py)?)?;
+
+    // Rho
+    let rho_field = Arc::new(Field::new(field_names::RHO, DataType::Float64, false));
+    let rho_array = PyArray::new(rho_arc, rho_field);
+    result_dict.set_item(field_names::RHO, rho_array.to_arro3(py)?)?;
+
+    // Dividend Rho (Merton-specific)
+    let dividend_rho_field = Arc::new(Field::new(field_names::DIVIDEND_RHO, DataType::Float64, false));
+    let dividend_rho_array = PyArray::new(dividend_rho_arc, dividend_rho_field);
+    result_dict.set_item(field_names::DIVIDEND_RHO, dividend_rho_array.to_arro3(py)?)?;
 
     Ok(result_dict)
 }

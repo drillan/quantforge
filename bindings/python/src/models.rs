@@ -434,9 +434,10 @@ pub fn black76_put_price(f: f64, k: f64, t: f64, r: f64, sigma: f64) -> PyResult
 #[pyfunction]
 pub fn merton_call_price(s: f64, k: f64, t: f64, r: f64, q: f64, sigma: f64) -> PyResult<f64> {
     validate_scalar_inputs_detailed(s, k, t, r, sigma)?;
-    if q < 0.0 {
+    // Allow negative dividend (storage cost) within reasonable range
+    if q < -1.0 || q > 1.0 {
         return Err(PyValueError::new_err(
-            "q (dividend yield) must be non-negative",
+            format!("dividend_yield out of range [-1.0, 1.0] (got {q})")
         ));
     }
     Ok(merton_call_scalar(s, k, t, r, q, sigma))
@@ -446,9 +447,10 @@ pub fn merton_call_price(s: f64, k: f64, t: f64, r: f64, q: f64, sigma: f64) -> 
 #[pyfunction]
 pub fn merton_put_price(s: f64, k: f64, t: f64, r: f64, q: f64, sigma: f64) -> PyResult<f64> {
     validate_scalar_inputs_detailed(s, k, t, r, sigma)?;
-    if q < 0.0 {
+    // Allow negative dividend (storage cost) within reasonable range
+    if q < -1.0 || q > 1.0 {
         return Err(PyValueError::new_err(
-            "q (dividend yield) must be non-negative",
+            format!("dividend_yield out of range [-1.0, 1.0] (got {q})")
         ));
     }
     Ok(merton_put_scalar(s, k, t, r, q, sigma))
@@ -736,34 +738,31 @@ pub fn merton_greeks<'py>(
     is_call: bool,
 ) -> PyResult<Bound<'py, PyDict>> {
     validate_scalar_inputs_detailed(s, k, t, r, sigma)?;
-    if q < 0.0 {
+    // Allow negative dividend (storage cost) within reasonable range
+    if q < -1.0 || q > 1.0 {
         return Err(PyValueError::new_err(
-            "q (dividend yield) must be non-negative",
+            format!("dividend_yield out of range [-1.0, 1.0] (got {q})")
         ));
     }
 
-    // For Merton, we can use BlackScholes Greeks with adjusted spot price
-    // Merton is Black-Scholes with dividend yield adjustment
-    // We use the same Greeks calculations as BlackScholes but with dividend adjustment
+    // Use Merton-specific Greeks from core implementation
     let spots = Float64Array::from(vec![s]);
     let strikes = Float64Array::from(vec![k]);
     let times = Float64Array::from(vec![t]);
     let rates = Float64Array::from(vec![r]);
     let sigmas = Float64Array::from(vec![sigma]);
-    let _dividend_yields = Float64Array::from(vec![q]);
+    let dividend_yields = Float64Array::from(vec![q]);
 
-    // For Greeks, we need to implement Merton-specific Greeks in Rust core
-    // For now, we'll use Black-Scholes Greeks with dividend adjustment
-    // This is a temporary implementation until Merton Greeks are added to core
-    let delta_arc = BlackScholes::delta(&spots, &strikes, &times, &rates, &sigmas, is_call)
+    // Use Merton Greeks which properly account for dividends
+    let delta_arc = Merton::delta(&spots, &strikes, &times, &rates, &dividend_yields, &sigmas, is_call)
         .map_err(|e| PyValueError::new_err(e.to_string()))?;
-    let gamma_arc = BlackScholes::gamma(&spots, &strikes, &times, &rates, &sigmas)
+    let gamma_arc = Merton::gamma(&spots, &strikes, &times, &rates, &dividend_yields, &sigmas)
         .map_err(|e| PyValueError::new_err(e.to_string()))?;
-    let vega_arc = BlackScholes::vega(&spots, &strikes, &times, &rates, &sigmas)
+    let vega_arc = Merton::vega(&spots, &strikes, &times, &rates, &dividend_yields, &sigmas)
         .map_err(|e| PyValueError::new_err(e.to_string()))?;
-    let theta_arc = BlackScholes::theta(&spots, &strikes, &times, &rates, &sigmas, is_call)
+    let theta_arc = Merton::theta(&spots, &strikes, &times, &rates, &dividend_yields, &sigmas, is_call)
         .map_err(|e| PyValueError::new_err(e.to_string()))?;
-    let rho_arc = BlackScholes::rho(&spots, &strikes, &times, &rates, &sigmas, is_call)
+    let rho_arc = Merton::rho(&spots, &strikes, &times, &rates, &dividend_yields, &sigmas, is_call)
         .map_err(|e| PyValueError::new_err(e.to_string()))?;
 
     // Extract scalar values
@@ -793,8 +792,15 @@ pub fn merton_greeks<'py>(
         .unwrap()
         .value(0);
 
-    // Dividend rho for Merton (sensitivity to dividend yield)
-    let dividend_rho = -s * t * (-q * t).exp() * delta;
+    // Add dividend_rho from Merton model
+    let dividend_rho_arc = Merton::dividend_rho(&spots, &strikes, &times, &rates, &dividend_yields, &sigmas, is_call)
+        .map_err(|e| PyValueError::new_err(e.to_string()))?;
+    
+    let dividend_rho = dividend_rho_arc
+        .as_any()
+        .downcast_ref::<Float64Array>()
+        .unwrap()
+        .value(0);
 
     // Create Python dict
     let dict = PyDict::new(py);
@@ -808,6 +814,68 @@ pub fn merton_greeks<'py>(
     Ok(dict)
 }
 
+/// Merton call price calculation using Arrow arrays
+///
+/// Parameters:
+/// - spots: Spot prices (float or Arrow array)
+/// - strikes: Strike prices (float or Arrow array)
+/// - times: Times to maturity (float or Arrow array)
+/// - rates: Risk-free rates (float or Arrow array)
+/// - dividend_yields: Dividend yields (float or Arrow array)
+/// - sigmas: Volatilities (float or Arrow array)
+///
+/// Returns Arrow array of call prices
+#[pyfunction]
+#[pyo3(name = "arrow_merton_call_price")]
+#[pyo3(signature = (spots, strikes, times, rates, dividend_yields, sigmas))]
+pub fn arrow_merton_call_price(
+    py: Python,
+    spots: &Bound<'_, PyAny>,
+    strikes: &Bound<'_, PyAny>,
+    times: &Bound<'_, PyAny>,
+    rates: &Bound<'_, PyAny>,
+    dividend_yields: &Bound<'_, PyAny>,
+    sigmas: &Bound<'_, PyAny>,
+) -> PyArrowResult<PyObject> {
+    // Parse parameters using Merton-specific function
+    let params = parse_merton_params(py, spots, strikes, times, rates, dividend_yields, sigmas)?;
+
+    // Extract arrays
+    let spots_f64 = params.spots.as_ref().as_any().downcast_ref::<Float64Array>()
+        .ok_or_else(|| ArrowError::CastError("spots must be Float64Array".to_string()))?;
+    let strikes_f64 = params.strikes.as_ref().as_any().downcast_ref::<Float64Array>()
+        .ok_or_else(|| ArrowError::CastError("strikes must be Float64Array".to_string()))?;
+    let times_f64 = params.times.as_ref().as_any().downcast_ref::<Float64Array>()
+        .ok_or_else(|| ArrowError::CastError("times must be Float64Array".to_string()))?;
+    let rates_f64 = params.rates.as_ref().as_any().downcast_ref::<Float64Array>()
+        .ok_or_else(|| ArrowError::CastError("rates must be Float64Array".to_string()))?;
+    let dividend_yields_f64 = params.dividend_yields.as_ref().as_any().downcast_ref::<Float64Array>()
+        .ok_or_else(|| ArrowError::CastError("dividend_yields must be Float64Array".to_string()))?;
+    let sigmas_f64 = params.sigmas.as_ref().as_any().downcast_ref::<Float64Array>()
+        .ok_or_else(|| ArrowError::CastError("sigmas must be Float64Array".to_string()))?;
+
+    // Validate arrays
+    validate_black_scholes_arrays_with_rates(spots_f64, strikes_f64, times_f64, rates_f64, sigmas_f64)?;
+
+    // Compute using Merton model with GIL released
+    let result_arc = py
+        .allow_threads(|| {
+            Merton::call_price(
+                spots_f64,
+                strikes_f64,
+                times_f64,
+                rates_f64,
+                dividend_yields_f64,
+                sigmas_f64,
+            )
+        })
+        .map_err(|e| {
+            ArrowError::ComputeError(format!("Merton call price computation failed: {e}"))
+        })?;
+
+    wrap_result_array(py, result_arc, field_names::CALL_PRICE)
+}
+
 /// Merton call price batch calculation
 #[pyfunction]
 pub fn merton_call_price_batch(
@@ -819,48 +887,70 @@ pub fn merton_call_price_batch(
     dividend_yields: &Bound<'_, PyAny>,
     sigmas: &Bound<'_, PyAny>,
 ) -> PyArrowResult<PyObject> {
-    // Parse parameters
-    let params = parse_black_scholes_params(py, spots, strikes, times, rates, sigmas)?;
-    let div_params = parse_black_scholes_params(
-        py,
-        dividend_yields,
-        dividend_yields,
-        dividend_yields,
-        dividend_yields,
-        dividend_yields,
-    )?;
-    let div_array = &div_params.spots; // Use first parsed array as dividend yields
+    // Use existing arrow_merton_call_price function
+    arrow_merton_call_price(py, spots, strikes, times, rates, dividend_yields, sigmas)
+}
+
+/// Merton put price calculation using Arrow arrays
+///
+/// Parameters:
+/// - spots: Spot prices (float or Arrow array)
+/// - strikes: Strike prices (float or Arrow array)
+/// - times: Times to maturity (float or Arrow array)
+/// - rates: Risk-free rates (float or Arrow array)
+/// - dividend_yields: Dividend yields (float or Arrow array)
+/// - sigmas: Volatilities (float or Arrow array)
+///
+/// Returns Arrow array of put prices
+#[pyfunction]
+#[pyo3(name = "arrow_merton_put_price")]
+#[pyo3(signature = (spots, strikes, times, rates, dividend_yields, sigmas))]
+pub fn arrow_merton_put_price(
+    py: Python,
+    spots: &Bound<'_, PyAny>,
+    strikes: &Bound<'_, PyAny>,
+    times: &Bound<'_, PyAny>,
+    rates: &Bound<'_, PyAny>,
+    dividend_yields: &Bound<'_, PyAny>,
+    sigmas: &Bound<'_, PyAny>,
+) -> PyArrowResult<PyObject> {
+    // Parse parameters using Merton-specific function
+    let params = parse_merton_params(py, spots, strikes, times, rates, dividend_yields, sigmas)?;
 
     // Extract arrays
-    let (spots_f64, strikes_f64, times_f64, rates_f64, sigmas_f64) =
-        extract_black_scholes_arrays(&params)?;
+    let spots_f64 = params.spots.as_ref().as_any().downcast_ref::<Float64Array>()
+        .ok_or_else(|| ArrowError::CastError("spots must be Float64Array".to_string()))?;
+    let strikes_f64 = params.strikes.as_ref().as_any().downcast_ref::<Float64Array>()
+        .ok_or_else(|| ArrowError::CastError("strikes must be Float64Array".to_string()))?;
+    let times_f64 = params.times.as_ref().as_any().downcast_ref::<Float64Array>()
+        .ok_or_else(|| ArrowError::CastError("times must be Float64Array".to_string()))?;
+    let rates_f64 = params.rates.as_ref().as_any().downcast_ref::<Float64Array>()
+        .ok_or_else(|| ArrowError::CastError("rates must be Float64Array".to_string()))?;
+    let dividend_yields_f64 = params.dividend_yields.as_ref().as_any().downcast_ref::<Float64Array>()
+        .ok_or_else(|| ArrowError::CastError("dividend_yields must be Float64Array".to_string()))?;
+    let sigmas_f64 = params.sigmas.as_ref().as_any().downcast_ref::<Float64Array>()
+        .ok_or_else(|| ArrowError::CastError("sigmas must be Float64Array".to_string()))?;
 
-    // Convert dividend_yields PyArray to Float64Array
-    let div_f64 = div_array
-        .as_ref()
-        .as_any()
-        .downcast_ref::<Float64Array>()
-        .ok_or_else(|| {
-            ArrowError::ComputeError("Failed to cast dividend_yields to Float64Array".to_string())
-        })?;
+    // Validate arrays
+    validate_black_scholes_arrays_with_rates(spots_f64, strikes_f64, times_f64, rates_f64, sigmas_f64)?;
 
-    // Compute using Merton model
+    // Compute using Merton model with GIL released
     let result_arc = py
         .allow_threads(|| {
-            Merton::call_price(
+            Merton::put_price(
                 spots_f64,
                 strikes_f64,
                 times_f64,
                 rates_f64,
-                div_f64,
+                dividend_yields_f64,
                 sigmas_f64,
             )
         })
         .map_err(|e| {
-            ArrowError::ComputeError(format!("Merton call price computation failed: {e}"))
+            ArrowError::ComputeError(format!("Merton put price computation failed: {e}"))
         })?;
 
-    wrap_result_array(py, result_arc, field_names::CALL_PRICE)
+    wrap_result_array(py, result_arc, field_names::PUT_PRICE)
 }
 
 /// Merton put price batch calculation
@@ -874,67 +964,147 @@ pub fn merton_put_price_batch(
     dividend_yields: &Bound<'_, PyAny>,
     sigmas: &Bound<'_, PyAny>,
 ) -> PyArrowResult<PyObject> {
-    // Parse parameters
-    let params = parse_black_scholes_params(py, spots, strikes, times, rates, sigmas)?;
-    let div_params = parse_black_scholes_params(
-        py,
-        dividend_yields,
-        dividend_yields,
-        dividend_yields,
-        dividend_yields,
-        dividend_yields,
-    )?;
-    let div_array = &div_params.spots; // Use first parsed array as dividend yields
+    // Use existing arrow_merton_put_price function
+    arrow_merton_put_price(py, spots, strikes, times, rates, dividend_yields, sigmas)
+}
+
+/// Merton Greeks calculation using Arrow arrays
+///
+/// Parameters:
+/// - spots: Spot prices (float or Arrow array)
+/// - strikes: Strike prices (float or Arrow array)
+/// - times: Times to maturity (float or Arrow array)
+/// - rates: Risk-free rates (float or Arrow array)
+/// - dividend_yields: Dividend yields (float or Arrow array)
+/// - sigmas: Volatilities (float or Arrow array)
+/// - is_call: Boolean flag for call (true) or put (false) option
+///
+/// Returns Dict[str, Arrow array] of Greeks
+#[pyfunction]
+#[pyo3(name = "arrow_merton_greeks")]
+#[pyo3(signature = (spots, strikes, times, rates, dividend_yields, sigmas, is_call))]
+#[allow(clippy::too_many_arguments)]
+pub fn arrow_merton_greeks(
+    py: Python,
+    spots: &Bound<'_, PyAny>,
+    strikes: &Bound<'_, PyAny>,
+    times: &Bound<'_, PyAny>,
+    rates: &Bound<'_, PyAny>,
+    dividend_yields: &Bound<'_, PyAny>,
+    sigmas: &Bound<'_, PyAny>,
+    is_call: bool,
+) -> PyArrowResult<PyObject> {
+    // Parse parameters using Merton-specific function
+    let params = parse_merton_params(py, spots, strikes, times, rates, dividend_yields, sigmas)?;
 
     // Extract arrays
-    let (spots_f64, strikes_f64, times_f64, rates_f64, sigmas_f64) =
-        extract_black_scholes_arrays(&params)?;
+    let spots_f64 = params.spots.as_ref().as_any().downcast_ref::<Float64Array>()
+        .ok_or_else(|| ArrowError::CastError("spots must be Float64Array".to_string()))?;
+    let strikes_f64 = params.strikes.as_ref().as_any().downcast_ref::<Float64Array>()
+        .ok_or_else(|| ArrowError::CastError("strikes must be Float64Array".to_string()))?;
+    let times_f64 = params.times.as_ref().as_any().downcast_ref::<Float64Array>()
+        .ok_or_else(|| ArrowError::CastError("times must be Float64Array".to_string()))?;
+    let rates_f64 = params.rates.as_ref().as_any().downcast_ref::<Float64Array>()
+        .ok_or_else(|| ArrowError::CastError("rates must be Float64Array".to_string()))?;
+    let dividend_yields_f64 = params.dividend_yields.as_ref().as_any().downcast_ref::<Float64Array>()
+        .ok_or_else(|| ArrowError::CastError("dividend_yields must be Float64Array".to_string()))?;
+    let sigmas_f64 = params.sigmas.as_ref().as_any().downcast_ref::<Float64Array>()
+        .ok_or_else(|| ArrowError::CastError("sigmas must be Float64Array".to_string()))?;
 
-    // Convert dividend_yields PyArray to Float64Array
-    let div_f64 = div_array
-        .as_ref()
-        .as_any()
-        .downcast_ref::<Float64Array>()
-        .ok_or_else(|| {
-            ArrowError::ComputeError("Failed to cast dividend_yields to Float64Array".to_string())
-        })?;
+    // Validate arrays
+    validate_black_scholes_arrays_with_rates(spots_f64, strikes_f64, times_f64, rates_f64, sigmas_f64)?;
 
-    // Compute using Merton model
-    let result_arc = py
+    // Compute Greeks using quantforge-core Merton (release GIL)
+    let (delta_arc, gamma_arc, vega_arc, theta_arc, rho_arc, dividend_rho_arc) = py
         .allow_threads(|| {
-            Merton::put_price(
+            let delta = Merton::delta(
                 spots_f64,
                 strikes_f64,
                 times_f64,
                 rates_f64,
-                div_f64,
+                dividend_yields_f64,
                 sigmas_f64,
-            )
+                is_call,
+            )?;
+            let gamma = Merton::gamma(
+                spots_f64,
+                strikes_f64,
+                times_f64,
+                rates_f64,
+                dividend_yields_f64,
+                sigmas_f64,
+            )?;
+            let vega = Merton::vega(
+                spots_f64,
+                strikes_f64,
+                times_f64,
+                rates_f64,
+                dividend_yields_f64,
+                sigmas_f64,
+            )?;
+            let theta = Merton::theta(
+                spots_f64,
+                strikes_f64,
+                times_f64,
+                rates_f64,
+                dividend_yields_f64,
+                sigmas_f64,
+                is_call,
+            )?;
+            let rho = Merton::rho(
+                spots_f64,
+                strikes_f64,
+                times_f64,
+                rates_f64,
+                dividend_yields_f64,
+                sigmas_f64,
+                is_call,
+            )?;
+            let dividend_rho = Merton::dividend_rho(
+                spots_f64,
+                strikes_f64,
+                times_f64,
+                rates_f64,
+                dividend_yields_f64,
+                sigmas_f64,
+                is_call,
+            )?;
+            Ok::<_, ArrowError>((delta, gamma, vega, theta, rho, dividend_rho))
         })
-        .map_err(|e| {
-            ArrowError::ComputeError(format!("Merton put price computation failed: {e}"))
+        .map_err(|e: ArrowError| {
+            ArrowError::ComputeError(format!("Merton Greeks computation failed: {e}"))
         })?;
 
-    wrap_result_array(py, result_arc, field_names::PUT_PRICE)
+    // Create Python dict with all Greeks including dividend_rho
+    use crate::arrow_common::create_merton_greeks_dict;
+    let result_dict = create_merton_greeks_dict(
+        py,
+        delta_arc,
+        gamma_arc,
+        vega_arc,
+        theta_arc,
+        rho_arc,
+        dividend_rho_arc,
+    )?;
+    Ok(result_dict.into())
 }
 
-/// Merton Greeks batch (placeholder)
+/// Merton Greeks batch calculation
 #[pyfunction]
-#[pyo3(signature = (_spots, _strikes, _times, _rates, _dividend_yields, _sigmas, _is_calls=true))]
-#[allow(dead_code, clippy::too_many_arguments, clippy::extra_unused_lifetimes)]
-pub fn merton_greeks_batch<'py>(
-    _py: Python,
-    _spots: &Bound<'_, PyAny>,
-    _strikes: &Bound<'_, PyAny>,
-    _times: &Bound<'_, PyAny>,
-    _rates: &Bound<'_, PyAny>,
-    _dividend_yields: &Bound<'_, PyAny>,
-    _sigmas: &Bound<'_, PyAny>,
-    _is_calls: bool,
+#[pyo3(signature = (spots, strikes, times, rates, dividend_yields, sigmas, is_calls=true))]
+#[allow(clippy::too_many_arguments)]
+pub fn merton_greeks_batch(
+    py: Python,
+    spots: &Bound<'_, PyAny>,
+    strikes: &Bound<'_, PyAny>,
+    times: &Bound<'_, PyAny>,
+    rates: &Bound<'_, PyAny>,
+    dividend_yields: &Bound<'_, PyAny>,
+    sigmas: &Bound<'_, PyAny>,
+    is_calls: bool,
 ) -> PyArrowResult<PyObject> {
-    Err(pyo3_arrow::error::PyArrowError::PyErr(
-        PyNotImplementedError::new_err("Merton batch Greeks not yet implemented"),
-    ))
+    // Use existing arrow_merton_greeks function
+    arrow_merton_greeks(py, spots, strikes, times, rates, dividend_yields, sigmas, is_calls)
 }
 
 /// Merton implied volatility (scalar)
@@ -953,9 +1123,10 @@ pub fn merton_implied_volatility(
     if price <= 0.0 || s <= 0.0 || k <= 0.0 || t <= 0.0 {
         return Err(PyValueError::new_err("price, s, k, and t must be positive"));
     }
-    if q < 0.0 {
+    // Allow negative dividend (storage cost) within reasonable range
+    if q < -1.0 || q > 1.0 {
         return Err(PyValueError::new_err(
-            "q (dividend yield) must be non-negative",
+            format!("dividend_yield out of range [-1.0, 1.0] (got {q})")
         ));
     }
 
@@ -1350,14 +1521,19 @@ pub fn register_arrow_functions(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(black76_greeks_batch, m)?)?;
     m.add_function(wrap_pyfunction!(black76_implied_volatility_batch, m)?)?;
 
-    // Merton functions
+    // Merton Arrow functions
+    m.add_function(wrap_pyfunction!(arrow_merton_call_price, m)?)?;
+    m.add_function(wrap_pyfunction!(arrow_merton_put_price, m)?)?;
+    m.add_function(wrap_pyfunction!(arrow_merton_greeks, m)?)?;
+    
+    // Merton scalar and batch functions
     m.add_function(wrap_pyfunction!(merton_call_price, m)?)?;
     m.add_function(wrap_pyfunction!(merton_put_price, m)?)?;
     m.add_function(wrap_pyfunction!(merton_greeks, m)?)?;
     m.add_function(wrap_pyfunction!(merton_implied_volatility, m)?)?;
     m.add_function(wrap_pyfunction!(merton_call_price_batch, m)?)?;
     m.add_function(wrap_pyfunction!(merton_put_price_batch, m)?)?;
-    // m.add_function(wrap_pyfunction!(merton_greeks_batch, m)?)?; // Not yet fully implemented
+    m.add_function(wrap_pyfunction!(merton_greeks_batch, m)?)?;
     m.add_function(wrap_pyfunction!(merton_implied_volatility_batch, m)?)?;
 
     // American functions (placeholder)

@@ -5,7 +5,12 @@ use arrow::array::{ArrayRef, BooleanArray, Float64Array};
 use arrow::error::ArrowError;
 use std::sync::Arc;
 
-use super::formulas::{merton_call_scalar, merton_d1_d2, merton_put_scalar};
+use super::formulas::{
+    merton_call_scalar, merton_d1_d2, merton_delta_call_scalar, merton_delta_put_scalar,
+    merton_dividend_rho_call_scalar, merton_dividend_rho_put_scalar, merton_gamma_scalar,
+    merton_put_scalar, merton_rho_call_scalar, merton_rho_put_scalar,
+    merton_theta_call_scalar, merton_theta_put_scalar, merton_vega_scalar,
+};
 use super::{get_scalar_or_array_value, validate_broadcast_compatibility};
 use crate::constants::get_parallel_threshold;
 
@@ -42,6 +47,12 @@ impl Merton {
             dividend_yields,
             sigmas,
         ])?;
+        
+        // Handle empty arrays
+        if len == 0 {
+            return Ok(Arc::new(Float64Builder::new().finish()));
+        }
+        
         let mut builder = Float64Builder::with_capacity(len);
 
         if len >= get_parallel_threshold() {
@@ -111,6 +122,12 @@ impl Merton {
             dividend_yields,
             sigmas,
         ])?;
+        
+        // Handle empty arrays
+        if len == 0 {
+            return Ok(Arc::new(Float64Builder::new().finish()));
+        }
+        
         let mut builder = Float64Builder::with_capacity(len);
 
         if len >= get_parallel_threshold() {
@@ -350,6 +367,452 @@ impl Merton {
 
             Ok(Arc::new(builder.finish()))
         }
+    }
+
+    /// Calculate delta (rate of change with respect to spot price)
+    ///
+    /// # Arguments
+    /// * `spots` - Current spot prices (S)
+    /// * `strikes` - Strike prices (K)
+    /// * `times` - Time to maturity in years (T)
+    /// * `rates` - Risk-free interest rates (r)
+    /// * `dividend_yields` - Continuous dividend yields (q)
+    /// * `sigmas` - Volatilities (σ)
+    /// * `is_call` - True for call options, false for put options
+    ///
+    /// # Returns
+    /// Arrow Float64Array of delta values
+    pub fn delta(
+        spots: &Float64Array,
+        strikes: &Float64Array,
+        times: &Float64Array,
+        rates: &Float64Array,
+        dividend_yields: &Float64Array,
+        sigmas: &Float64Array,
+        is_call: bool,
+    ) -> Result<ArrayRef, ArrowError> {
+        let len = validate_broadcast_compatibility(&[
+            spots,
+            strikes,
+            times,
+            rates,
+            dividend_yields,
+            sigmas,
+        ])?;
+        
+        // Handle empty arrays
+        if len == 0 {
+            return Ok(Arc::new(Float64Builder::new().finish()));
+        }
+        
+        let mut builder = Float64Builder::with_capacity(len);
+
+        if len >= get_parallel_threshold() {
+            use rayon::prelude::*;
+            let results: Vec<f64> = (0..len)
+                .into_par_iter()
+                .map(|i| {
+                    let s = get_scalar_or_array_value(spots, i);
+                    let k = get_scalar_or_array_value(strikes, i);
+                    let t = get_scalar_or_array_value(times, i);
+                    let r = get_scalar_or_array_value(rates, i);
+                    let q = get_scalar_or_array_value(dividend_yields, i);
+                    let sigma = get_scalar_or_array_value(sigmas, i);
+                    if is_call {
+                        merton_delta_call_scalar(s, k, t, r, q, sigma)
+                    } else {
+                        merton_delta_put_scalar(s, k, t, r, q, sigma)
+                    }
+                })
+                .collect();
+            for value in results {
+                builder.append_value(value);
+            }
+        } else {
+            for i in 0..len {
+                let s = get_scalar_or_array_value(spots, i);
+                let k = get_scalar_or_array_value(strikes, i);
+                let t = get_scalar_or_array_value(times, i);
+                let r = get_scalar_or_array_value(rates, i);
+                let q = get_scalar_or_array_value(dividend_yields, i);
+                let sigma = get_scalar_or_array_value(sigmas, i);
+                let delta = if is_call {
+                    merton_delta_call_scalar(s, k, t, r, q, sigma)
+                } else {
+                    merton_delta_put_scalar(s, k, t, r, q, sigma)
+                };
+                builder.append_value(delta);
+            }
+        }
+        Ok(Arc::new(builder.finish()))
+    }
+
+    /// Calculate gamma (rate of change of delta with respect to spot price)
+    ///
+    /// # Arguments
+    /// * `spots` - Current spot prices (S)
+    /// * `strikes` - Strike prices (K)
+    /// * `times` - Time to maturity in years (T)
+    /// * `rates` - Risk-free interest rates (r)
+    /// * `dividend_yields` - Continuous dividend yields (q)
+    /// * `sigmas` - Volatilities (σ)
+    ///
+    /// # Returns
+    /// Arrow Float64Array of gamma values
+    pub fn gamma(
+        spots: &Float64Array,
+        strikes: &Float64Array,
+        times: &Float64Array,
+        rates: &Float64Array,
+        dividend_yields: &Float64Array,
+        sigmas: &Float64Array,
+    ) -> Result<ArrayRef, ArrowError> {
+        let len = validate_broadcast_compatibility(&[
+            spots,
+            strikes,
+            times,
+            rates,
+            dividend_yields,
+            sigmas,
+        ])?;
+        
+        // Handle empty arrays
+        if len == 0 {
+            return Ok(Arc::new(Float64Builder::new().finish()));
+        }
+        
+        let mut builder = Float64Builder::with_capacity(len);
+
+        if len >= get_parallel_threshold() {
+            use rayon::prelude::*;
+            let results: Vec<f64> = (0..len)
+                .into_par_iter()
+                .map(|i| {
+                    let s = get_scalar_or_array_value(spots, i);
+                    let k = get_scalar_or_array_value(strikes, i);
+                    let t = get_scalar_or_array_value(times, i);
+                    let r = get_scalar_or_array_value(rates, i);
+                    let q = get_scalar_or_array_value(dividend_yields, i);
+                    let sigma = get_scalar_or_array_value(sigmas, i);
+                    merton_gamma_scalar(s, k, t, r, q, sigma)
+                })
+                .collect();
+            for value in results {
+                builder.append_value(value);
+            }
+        } else {
+            for i in 0..len {
+                let s = get_scalar_or_array_value(spots, i);
+                let k = get_scalar_or_array_value(strikes, i);
+                let t = get_scalar_or_array_value(times, i);
+                let r = get_scalar_or_array_value(rates, i);
+                let q = get_scalar_or_array_value(dividend_yields, i);
+                let sigma = get_scalar_or_array_value(sigmas, i);
+                builder.append_value(merton_gamma_scalar(s, k, t, r, q, sigma));
+            }
+        }
+        Ok(Arc::new(builder.finish()))
+    }
+
+    /// Calculate vega (sensitivity to volatility)
+    ///
+    /// # Arguments
+    /// * `spots` - Current spot prices (S)
+    /// * `strikes` - Strike prices (K)
+    /// * `times` - Time to maturity in years (T)
+    /// * `rates` - Risk-free interest rates (r)
+    /// * `dividend_yields` - Continuous dividend yields (q)
+    /// * `sigmas` - Volatilities (σ)
+    ///
+    /// # Returns
+    /// Arrow Float64Array of vega values
+    pub fn vega(
+        spots: &Float64Array,
+        strikes: &Float64Array,
+        times: &Float64Array,
+        rates: &Float64Array,
+        dividend_yields: &Float64Array,
+        sigmas: &Float64Array,
+    ) -> Result<ArrayRef, ArrowError> {
+        let len = validate_broadcast_compatibility(&[
+            spots,
+            strikes,
+            times,
+            rates,
+            dividend_yields,
+            sigmas,
+        ])?;
+        
+        // Handle empty arrays
+        if len == 0 {
+            return Ok(Arc::new(Float64Builder::new().finish()));
+        }
+        
+        let mut builder = Float64Builder::with_capacity(len);
+
+        if len >= get_parallel_threshold() {
+            use rayon::prelude::*;
+            let results: Vec<f64> = (0..len)
+                .into_par_iter()
+                .map(|i| {
+                    let s = get_scalar_or_array_value(spots, i);
+                    let k = get_scalar_or_array_value(strikes, i);
+                    let t = get_scalar_or_array_value(times, i);
+                    let r = get_scalar_or_array_value(rates, i);
+                    let q = get_scalar_or_array_value(dividend_yields, i);
+                    let sigma = get_scalar_or_array_value(sigmas, i);
+                    merton_vega_scalar(s, k, t, r, q, sigma)
+                })
+                .collect();
+            for value in results {
+                builder.append_value(value);
+            }
+        } else {
+            for i in 0..len {
+                let s = get_scalar_or_array_value(spots, i);
+                let k = get_scalar_or_array_value(strikes, i);
+                let t = get_scalar_or_array_value(times, i);
+                let r = get_scalar_or_array_value(rates, i);
+                let q = get_scalar_or_array_value(dividend_yields, i);
+                let sigma = get_scalar_or_array_value(sigmas, i);
+                builder.append_value(merton_vega_scalar(s, k, t, r, q, sigma));
+            }
+        }
+        Ok(Arc::new(builder.finish()))
+    }
+
+    /// Calculate theta (time decay)
+    ///
+    /// # Arguments
+    /// * `spots` - Current spot prices (S)
+    /// * `strikes` - Strike prices (K)
+    /// * `times` - Time to maturity in years (T)
+    /// * `rates` - Risk-free interest rates (r)
+    /// * `dividend_yields` - Continuous dividend yields (q)
+    /// * `sigmas` - Volatilities (σ)
+    /// * `is_call` - True for call options, false for put options
+    ///
+    /// # Returns
+    /// Arrow Float64Array of theta values
+    pub fn theta(
+        spots: &Float64Array,
+        strikes: &Float64Array,
+        times: &Float64Array,
+        rates: &Float64Array,
+        dividend_yields: &Float64Array,
+        sigmas: &Float64Array,
+        is_call: bool,
+    ) -> Result<ArrayRef, ArrowError> {
+        let len = validate_broadcast_compatibility(&[
+            spots,
+            strikes,
+            times,
+            rates,
+            dividend_yields,
+            sigmas,
+        ])?;
+        
+        // Handle empty arrays
+        if len == 0 {
+            return Ok(Arc::new(Float64Builder::new().finish()));
+        }
+        
+        let mut builder = Float64Builder::with_capacity(len);
+
+        if len >= get_parallel_threshold() {
+            use rayon::prelude::*;
+            let results: Vec<f64> = (0..len)
+                .into_par_iter()
+                .map(|i| {
+                    let s = get_scalar_or_array_value(spots, i);
+                    let k = get_scalar_or_array_value(strikes, i);
+                    let t = get_scalar_or_array_value(times, i);
+                    let r = get_scalar_or_array_value(rates, i);
+                    let q = get_scalar_or_array_value(dividend_yields, i);
+                    let sigma = get_scalar_or_array_value(sigmas, i);
+                    if is_call {
+                        merton_theta_call_scalar(s, k, t, r, q, sigma)
+                    } else {
+                        merton_theta_put_scalar(s, k, t, r, q, sigma)
+                    }
+                })
+                .collect();
+            for value in results {
+                builder.append_value(value);
+            }
+        } else {
+            for i in 0..len {
+                let s = get_scalar_or_array_value(spots, i);
+                let k = get_scalar_or_array_value(strikes, i);
+                let t = get_scalar_or_array_value(times, i);
+                let r = get_scalar_or_array_value(rates, i);
+                let q = get_scalar_or_array_value(dividend_yields, i);
+                let sigma = get_scalar_or_array_value(sigmas, i);
+                let theta = if is_call {
+                    merton_theta_call_scalar(s, k, t, r, q, sigma)
+                } else {
+                    merton_theta_put_scalar(s, k, t, r, q, sigma)
+                };
+                builder.append_value(theta);
+            }
+        }
+        Ok(Arc::new(builder.finish()))
+    }
+
+    /// Calculate rho (sensitivity to interest rate)
+    ///
+    /// # Arguments
+    /// * `spots` - Current spot prices (S)
+    /// * `strikes` - Strike prices (K)
+    /// * `times` - Time to maturity in years (T)
+    /// * `rates` - Risk-free interest rates (r)
+    /// * `dividend_yields` - Continuous dividend yields (q)
+    /// * `sigmas` - Volatilities (σ)
+    /// * `is_call` - True for call options, false for put options
+    ///
+    /// # Returns
+    /// Arrow Float64Array of rho values
+    pub fn rho(
+        spots: &Float64Array,
+        strikes: &Float64Array,
+        times: &Float64Array,
+        rates: &Float64Array,
+        dividend_yields: &Float64Array,
+        sigmas: &Float64Array,
+        is_call: bool,
+    ) -> Result<ArrayRef, ArrowError> {
+        let len = validate_broadcast_compatibility(&[
+            spots,
+            strikes,
+            times,
+            rates,
+            dividend_yields,
+            sigmas,
+        ])?;
+        
+        // Handle empty arrays
+        if len == 0 {
+            return Ok(Arc::new(Float64Builder::new().finish()));
+        }
+        
+        let mut builder = Float64Builder::with_capacity(len);
+
+        if len >= get_parallel_threshold() {
+            use rayon::prelude::*;
+            let results: Vec<f64> = (0..len)
+                .into_par_iter()
+                .map(|i| {
+                    let s = get_scalar_or_array_value(spots, i);
+                    let k = get_scalar_or_array_value(strikes, i);
+                    let t = get_scalar_or_array_value(times, i);
+                    let r = get_scalar_or_array_value(rates, i);
+                    let q = get_scalar_or_array_value(dividend_yields, i);
+                    let sigma = get_scalar_or_array_value(sigmas, i);
+                    if is_call {
+                        merton_rho_call_scalar(s, k, t, r, q, sigma)
+                    } else {
+                        merton_rho_put_scalar(s, k, t, r, q, sigma)
+                    }
+                })
+                .collect();
+            for value in results {
+                builder.append_value(value);
+            }
+        } else {
+            for i in 0..len {
+                let s = get_scalar_or_array_value(spots, i);
+                let k = get_scalar_or_array_value(strikes, i);
+                let t = get_scalar_or_array_value(times, i);
+                let r = get_scalar_or_array_value(rates, i);
+                let q = get_scalar_or_array_value(dividend_yields, i);
+                let sigma = get_scalar_or_array_value(sigmas, i);
+                let rho = if is_call {
+                    merton_rho_call_scalar(s, k, t, r, q, sigma)
+                } else {
+                    merton_rho_put_scalar(s, k, t, r, q, sigma)
+                };
+                builder.append_value(rho);
+            }
+        }
+        Ok(Arc::new(builder.finish()))
+    }
+
+    /// Calculate dividend rho (sensitivity to dividend yield)
+    ///
+    /// # Arguments
+    /// * `spots` - Current spot prices (S)
+    /// * `strikes` - Strike prices (K)
+    /// * `times` - Time to maturity in years (T)
+    /// * `rates` - Risk-free interest rates (r)
+    /// * `dividend_yields` - Continuous dividend yields (q)
+    /// * `sigmas` - Volatilities (σ)
+    /// * `is_call` - True for call options, false for put options
+    ///
+    /// # Returns
+    /// Arrow Float64Array of dividend rho values
+    pub fn dividend_rho(
+        spots: &Float64Array,
+        strikes: &Float64Array,
+        times: &Float64Array,
+        rates: &Float64Array,
+        dividend_yields: &Float64Array,
+        sigmas: &Float64Array,
+        is_call: bool,
+    ) -> Result<ArrayRef, ArrowError> {
+        let len = validate_broadcast_compatibility(&[
+            spots,
+            strikes,
+            times,
+            rates,
+            dividend_yields,
+            sigmas,
+        ])?;
+        
+        // Handle empty arrays
+        if len == 0 {
+            return Ok(Arc::new(Float64Builder::new().finish()));
+        }
+        
+        let mut builder = Float64Builder::with_capacity(len);
+
+        if len >= get_parallel_threshold() {
+            use rayon::prelude::*;
+            let results: Vec<f64> = (0..len)
+                .into_par_iter()
+                .map(|i| {
+                    let s = get_scalar_or_array_value(spots, i);
+                    let k = get_scalar_or_array_value(strikes, i);
+                    let t = get_scalar_or_array_value(times, i);
+                    let r = get_scalar_or_array_value(rates, i);
+                    let q = get_scalar_or_array_value(dividend_yields, i);
+                    let sigma = get_scalar_or_array_value(sigmas, i);
+                    if is_call {
+                        merton_dividend_rho_call_scalar(s, k, t, r, q, sigma)
+                    } else {
+                        merton_dividend_rho_put_scalar(s, k, t, r, q, sigma)
+                    }
+                })
+                .collect();
+            for value in results {
+                builder.append_value(value);
+            }
+        } else {
+            for i in 0..len {
+                let s = get_scalar_or_array_value(spots, i);
+                let k = get_scalar_or_array_value(strikes, i);
+                let t = get_scalar_or_array_value(times, i);
+                let r = get_scalar_or_array_value(rates, i);
+                let q = get_scalar_or_array_value(dividend_yields, i);
+                let sigma = get_scalar_or_array_value(sigmas, i);
+                let dividend_rho = if is_call {
+                    merton_dividend_rho_call_scalar(s, k, t, r, q, sigma)
+                } else {
+                    merton_dividend_rho_put_scalar(s, k, t, r, q, sigma)
+                };
+                builder.append_value(dividend_rho);
+            }
+        }
+        Ok(Arc::new(builder.finish()))
     }
 }
 

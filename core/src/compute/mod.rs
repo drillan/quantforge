@@ -43,10 +43,9 @@ pub fn validate_broadcast_compatibility(
 ) -> Result<usize, arrow::error::ArrowError> {
     let max_len = get_max_length(arrays);
 
+    // Allow empty arrays - return 0 for length
     if max_len == 0 {
-        return Err(arrow::error::ArrowError::InvalidArgumentError(
-            "At least one array must have non-zero length".to_string(),
-        ));
+        return Ok(0);
     }
 
     for (i, array) in arrays.iter().enumerate() {
