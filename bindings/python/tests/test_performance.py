@@ -223,7 +223,7 @@ class TestPerformance:
         for input_type, data in inputs.items():
             start = time.perf_counter()
             for _ in range(100):
-                _ = black_scholes.call_price_batch(data, 100, 1, 0.05, 0.2)
+                _ = black_scholes.call_price_batch(data, 100, 1, 0.05, 0.2)  # type: ignore[arg-type]
             elapsed = (time.perf_counter() - start) / 100
 
             if input_type == "scalar":

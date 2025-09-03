@@ -4,20 +4,22 @@
 //! between Python and Rust. It uses pyo3-arrow for automatic Arrow data conversion.
 
 use arrow::array::Float64Array;
-use arrow::datatypes::{DataType, Field};
 use arrow::error::ArrowError;
 use pyo3::exceptions::{PyNotImplementedError, PyValueError};
 use pyo3::prelude::*;
 use pyo3::types::PyDict;
-use pyo3_arrow::{error::PyArrowResult, PyArray};
+use pyo3_arrow::error::PyArrowResult;
 use quantforge_core::compute::formulas::{
     black76_call_scalar, black76_put_scalar, black_scholes_call_scalar, black_scholes_put_scalar,
     merton_call_scalar, merton_put_scalar,
 };
 use quantforge_core::compute::{Black76, BlackScholes};
-use std::sync::Arc;
 
-use crate::utils::pyany_to_arrow;
+use crate::arrow_common::{
+    create_greeks_dict, extract_black76_arrays, extract_black_scholes_arrays, field_names,
+    parse_black76_params, parse_black_scholes_params, validate_black76_scalar_inputs,
+    validate_scalar_inputs, wrap_result_array,
+};
 
 /// Black-Scholes call price calculation using Arrow arrays
 ///
@@ -40,41 +42,12 @@ pub fn arrow_call_price(
     rates: &Bound<'_, PyAny>,
     sigmas: &Bound<'_, PyAny>,
 ) -> PyArrowResult<PyObject> {
-    // Convert PyAny to Arrow arrays (scalars become length-1 arrays)
-    let spots_pyarray = pyany_to_arrow(py, spots)?;
-    let strikes_pyarray = pyany_to_arrow(py, strikes)?;
-    let times_pyarray = pyany_to_arrow(py, times)?;
-    let rates_pyarray = pyany_to_arrow(py, rates)?;
-    let sigmas_pyarray = pyany_to_arrow(py, sigmas)?;
+    // Parse parameters using common function
+    let params = parse_black_scholes_params(py, spots, strikes, times, rates, sigmas)?;
 
-    // Extract Arrow arrays from PyArray wrappers
-    let spots_array = spots_pyarray.as_ref();
-    let strikes_array = strikes_pyarray.as_ref();
-    let times_array = times_pyarray.as_ref();
-    let rates_array = rates_pyarray.as_ref();
-    let sigmas_array = sigmas_pyarray.as_ref();
-
-    // Downcast to Float64Array
-    let spots_f64 = spots_array
-        .as_any()
-        .downcast_ref::<Float64Array>()
-        .ok_or_else(|| ArrowError::CastError("spots must be Float64Array".into()))?;
-    let strikes_f64 = strikes_array
-        .as_any()
-        .downcast_ref::<Float64Array>()
-        .ok_or_else(|| ArrowError::CastError("strikes must be Float64Array".into()))?;
-    let times_f64 = times_array
-        .as_any()
-        .downcast_ref::<Float64Array>()
-        .ok_or_else(|| ArrowError::CastError("times must be Float64Array".into()))?;
-    let rates_f64 = rates_array
-        .as_any()
-        .downcast_ref::<Float64Array>()
-        .ok_or_else(|| ArrowError::CastError("rates must be Float64Array".into()))?;
-    let sigmas_f64 = sigmas_array
-        .as_any()
-        .downcast_ref::<Float64Array>()
-        .ok_or_else(|| ArrowError::CastError("sigmas must be Float64Array".into()))?;
+    // Extract arrays
+    let (spots_f64, strikes_f64, times_f64, rates_f64, sigmas_f64) =
+        extract_black_scholes_arrays(&params)?;
 
     // Compute call prices using quantforge-core BlackScholes
     // Release GIL for computation
@@ -86,15 +59,8 @@ pub fn arrow_call_price(
             ArrowError::ComputeError(format!("Black-Scholes call price computation failed: {e}"))
         })?;
 
-    // Create field for the result
-    let field = Arc::new(Field::new("call_price", DataType::Float64, false));
-
-    // Wrap in PyArray with Arc to manage lifetime
-    let py_array = PyArray::new(result_arc, field);
-
-    // Convert to Python object using to_arro3
-    let result = py_array.to_arro3(py)?;
-    Ok(result.into())
+    // Wrap result using common function
+    wrap_result_array(py, result_arc, field_names::CALL_PRICE)
 }
 
 /// Black-Scholes put price calculation using Arrow arrays
@@ -118,41 +84,12 @@ pub fn arrow_put_price(
     rates: &Bound<'_, PyAny>,
     sigmas: &Bound<'_, PyAny>,
 ) -> PyArrowResult<PyObject> {
-    // Convert PyAny to Arrow arrays (scalars become length-1 arrays)
-    let spots_pyarray = pyany_to_arrow(py, spots)?;
-    let strikes_pyarray = pyany_to_arrow(py, strikes)?;
-    let times_pyarray = pyany_to_arrow(py, times)?;
-    let rates_pyarray = pyany_to_arrow(py, rates)?;
-    let sigmas_pyarray = pyany_to_arrow(py, sigmas)?;
+    // Parse parameters using common function
+    let params = parse_black_scholes_params(py, spots, strikes, times, rates, sigmas)?;
 
-    // Extract Arrow arrays from PyArray wrappers
-    let spots_array = spots_pyarray.as_ref();
-    let strikes_array = strikes_pyarray.as_ref();
-    let times_array = times_pyarray.as_ref();
-    let rates_array = rates_pyarray.as_ref();
-    let sigmas_array = sigmas_pyarray.as_ref();
-
-    // Downcast to Float64Array
-    let spots_f64 = spots_array
-        .as_any()
-        .downcast_ref::<Float64Array>()
-        .ok_or_else(|| ArrowError::CastError("spots must be Float64Array".into()))?;
-    let strikes_f64 = strikes_array
-        .as_any()
-        .downcast_ref::<Float64Array>()
-        .ok_or_else(|| ArrowError::CastError("strikes must be Float64Array".into()))?;
-    let times_f64 = times_array
-        .as_any()
-        .downcast_ref::<Float64Array>()
-        .ok_or_else(|| ArrowError::CastError("times must be Float64Array".into()))?;
-    let rates_f64 = rates_array
-        .as_any()
-        .downcast_ref::<Float64Array>()
-        .ok_or_else(|| ArrowError::CastError("rates must be Float64Array".into()))?;
-    let sigmas_f64 = sigmas_array
-        .as_any()
-        .downcast_ref::<Float64Array>()
-        .ok_or_else(|| ArrowError::CastError("sigmas must be Float64Array".into()))?;
+    // Extract arrays
+    let (spots_f64, strikes_f64, times_f64, rates_f64, sigmas_f64) =
+        extract_black_scholes_arrays(&params)?;
 
     // Compute put prices using quantforge-core BlackScholes
     // Release GIL for computation
@@ -164,15 +101,8 @@ pub fn arrow_put_price(
             ArrowError::ComputeError(format!("Black-Scholes put price computation failed: {e}"))
         })?;
 
-    // Create field for the result
-    let field = Arc::new(Field::new("put_price", DataType::Float64, false));
-
-    // Wrap in PyArray with Arc to manage lifetime
-    let py_array = PyArray::new(result_arc, field);
-
-    // Convert to Python object using to_arro3
-    let result = py_array.to_arro3(py)?;
-    Ok(result.into())
+    // Wrap result using common function
+    wrap_result_array(py, result_arc, field_names::PUT_PRICE)
 }
 
 /// Black-Scholes Greeks calculation using Arrow arrays
@@ -198,41 +128,12 @@ pub fn arrow_greeks(
     sigmas: &Bound<'_, PyAny>,
     is_call: bool,
 ) -> PyArrowResult<PyObject> {
-    // Convert PyAny to Arrow arrays (scalars become length-1 arrays)
-    let spots_pyarray = pyany_to_arrow(py, spots)?;
-    let strikes_pyarray = pyany_to_arrow(py, strikes)?;
-    let times_pyarray = pyany_to_arrow(py, times)?;
-    let rates_pyarray = pyany_to_arrow(py, rates)?;
-    let sigmas_pyarray = pyany_to_arrow(py, sigmas)?;
+    // Parse parameters using common function
+    let params = parse_black_scholes_params(py, spots, strikes, times, rates, sigmas)?;
 
-    // Extract Arrow arrays from PyArray wrappers
-    let spots_array = spots_pyarray.as_ref();
-    let strikes_array = strikes_pyarray.as_ref();
-    let times_array = times_pyarray.as_ref();
-    let rates_array = rates_pyarray.as_ref();
-    let sigmas_array = sigmas_pyarray.as_ref();
-
-    // Downcast to Float64Array
-    let spots_f64 = spots_array
-        .as_any()
-        .downcast_ref::<Float64Array>()
-        .ok_or_else(|| ArrowError::CastError("spots must be Float64Array".into()))?;
-    let strikes_f64 = strikes_array
-        .as_any()
-        .downcast_ref::<Float64Array>()
-        .ok_or_else(|| ArrowError::CastError("strikes must be Float64Array".into()))?;
-    let times_f64 = times_array
-        .as_any()
-        .downcast_ref::<Float64Array>()
-        .ok_or_else(|| ArrowError::CastError("times must be Float64Array".into()))?;
-    let rates_f64 = rates_array
-        .as_any()
-        .downcast_ref::<Float64Array>()
-        .ok_or_else(|| ArrowError::CastError("rates must be Float64Array".into()))?;
-    let sigmas_f64 = sigmas_array
-        .as_any()
-        .downcast_ref::<Float64Array>()
-        .ok_or_else(|| ArrowError::CastError("sigmas must be Float64Array".into()))?;
+    // Extract arrays
+    let (spots_f64, strikes_f64, times_f64, rates_f64, sigmas_f64) =
+        extract_black_scholes_arrays(&params)?;
 
     // Compute Greeks using quantforge-core BlackScholes (release GIL)
     let (delta_arc, gamma_arc, vega_arc, theta_arc, rho_arc) = py
@@ -271,30 +172,8 @@ pub fn arrow_greeks(
             ArrowError::ComputeError(format!("Greeks computation failed: {e}"))
         })?;
 
-    // Create Python dict to return Greeks
-    let result_dict = PyDict::new(py);
-
-    // Add each Greek to the dict
-    let delta_field = Arc::new(Field::new("delta", DataType::Float64, false));
-    let delta_array = PyArray::new(delta_arc, delta_field);
-    result_dict.set_item("delta", delta_array.to_arro3(py)?)?;
-
-    let gamma_field = Arc::new(Field::new("gamma", DataType::Float64, false));
-    let gamma_array = PyArray::new(gamma_arc, gamma_field);
-    result_dict.set_item("gamma", gamma_array.to_arro3(py)?)?;
-
-    let vega_field = Arc::new(Field::new("vega", DataType::Float64, false));
-    let vega_array = PyArray::new(vega_arc, vega_field);
-    result_dict.set_item("vega", vega_array.to_arro3(py)?)?;
-
-    let theta_field = Arc::new(Field::new("theta", DataType::Float64, false));
-    let theta_array = PyArray::new(theta_arc, theta_field);
-    result_dict.set_item("theta", theta_array.to_arro3(py)?)?;
-
-    let rho_field = Arc::new(Field::new("rho", DataType::Float64, false));
-    let rho_array = PyArray::new(rho_arc, rho_field);
-    result_dict.set_item("rho", rho_array.to_arro3(py)?)?;
-
+    // Create Python dict using common function
+    let result_dict = create_greeks_dict(py, delta_arc, gamma_arc, vega_arc, theta_arc, rho_arc)?;
     Ok(result_dict.into())
 }
 
@@ -319,39 +198,12 @@ pub fn arrow76_call_price(
     rates: &Bound<'_, PyAny>,
     sigmas: &Bound<'_, PyAny>,
 ) -> PyArrowResult<PyObject> {
-    // Convert PyAny to Arrow arrays (scalars become length-1 arrays)
-    let forwards_pyarray = pyany_to_arrow(py, forwards)?;
-    let strikes_pyarray = pyany_to_arrow(py, strikes)?;
-    let times_pyarray = pyany_to_arrow(py, times)?;
-    let rates_pyarray = pyany_to_arrow(py, rates)?;
-    let sigmas_pyarray = pyany_to_arrow(py, sigmas)?;
+    // Parse parameters using common function
+    let params = parse_black76_params(py, forwards, strikes, times, rates, sigmas)?;
 
-    // Extract and downcast arrays
-    let forwards_f64 = forwards_pyarray
-        .as_ref()
-        .as_any()
-        .downcast_ref::<Float64Array>()
-        .ok_or_else(|| ArrowError::CastError("forwards must be Float64Array".into()))?;
-    let strikes_f64 = strikes_pyarray
-        .as_ref()
-        .as_any()
-        .downcast_ref::<Float64Array>()
-        .ok_or_else(|| ArrowError::CastError("strikes must be Float64Array".into()))?;
-    let times_f64 = times_pyarray
-        .as_ref()
-        .as_any()
-        .downcast_ref::<Float64Array>()
-        .ok_or_else(|| ArrowError::CastError("times must be Float64Array".into()))?;
-    let rates_f64 = rates_pyarray
-        .as_ref()
-        .as_any()
-        .downcast_ref::<Float64Array>()
-        .ok_or_else(|| ArrowError::CastError("rates must be Float64Array".into()))?;
-    let sigmas_f64 = sigmas_pyarray
-        .as_ref()
-        .as_any()
-        .downcast_ref::<Float64Array>()
-        .ok_or_else(|| ArrowError::CastError("sigmas must be Float64Array".into()))?;
+    // Extract arrays
+    let (forwards_f64, strikes_f64, times_f64, rates_f64, sigmas_f64) =
+        extract_black76_arrays(&params)?;
 
     // Compute with GIL released
     let result_arc = py
@@ -362,11 +214,8 @@ pub fn arrow76_call_price(
             ArrowError::ComputeError(format!("Black76 call price computation failed: {e}"))
         })?;
 
-    // Create field and return
-    let field = Arc::new(Field::new("call_price", DataType::Float64, false));
-    let py_array = PyArray::new(result_arc, field);
-    let result = py_array.to_arro3(py)?;
-    Ok(result.into())
+    // Wrap result using common function
+    wrap_result_array(py, result_arc, field_names::CALL_PRICE)
 }
 
 /// Black76 put price calculation using Arrow arrays
@@ -381,39 +230,12 @@ pub fn arrow76_put_price(
     rates: &Bound<'_, PyAny>,
     sigmas: &Bound<'_, PyAny>,
 ) -> PyArrowResult<PyObject> {
-    // Convert PyAny to Arrow arrays (scalars become length-1 arrays)
-    let forwards_pyarray = pyany_to_arrow(py, forwards)?;
-    let strikes_pyarray = pyany_to_arrow(py, strikes)?;
-    let times_pyarray = pyany_to_arrow(py, times)?;
-    let rates_pyarray = pyany_to_arrow(py, rates)?;
-    let sigmas_pyarray = pyany_to_arrow(py, sigmas)?;
+    // Parse parameters using common function
+    let params = parse_black76_params(py, forwards, strikes, times, rates, sigmas)?;
 
-    // Extract and downcast arrays
-    let forwards_f64 = forwards_pyarray
-        .as_ref()
-        .as_any()
-        .downcast_ref::<Float64Array>()
-        .ok_or_else(|| ArrowError::CastError("forwards must be Float64Array".into()))?;
-    let strikes_f64 = strikes_pyarray
-        .as_ref()
-        .as_any()
-        .downcast_ref::<Float64Array>()
-        .ok_or_else(|| ArrowError::CastError("strikes must be Float64Array".into()))?;
-    let times_f64 = times_pyarray
-        .as_ref()
-        .as_any()
-        .downcast_ref::<Float64Array>()
-        .ok_or_else(|| ArrowError::CastError("times must be Float64Array".into()))?;
-    let rates_f64 = rates_pyarray
-        .as_ref()
-        .as_any()
-        .downcast_ref::<Float64Array>()
-        .ok_or_else(|| ArrowError::CastError("rates must be Float64Array".into()))?;
-    let sigmas_f64 = sigmas_pyarray
-        .as_ref()
-        .as_any()
-        .downcast_ref::<Float64Array>()
-        .ok_or_else(|| ArrowError::CastError("sigmas must be Float64Array".into()))?;
+    // Extract arrays
+    let (forwards_f64, strikes_f64, times_f64, rates_f64, sigmas_f64) =
+        extract_black76_arrays(&params)?;
 
     // Compute with GIL released
     let result_arc = py
@@ -424,11 +246,8 @@ pub fn arrow76_put_price(
             ArrowError::ComputeError(format!("Black76 put price computation failed: {e}"))
         })?;
 
-    // Create field and return
-    let field = Arc::new(Field::new("put_price", DataType::Float64, false));
-    let py_array = PyArray::new(result_arc, field);
-    let result = py_array.to_arro3(py)?;
-    Ok(result.into())
+    // Wrap result using common function
+    wrap_result_array(py, result_arc, field_names::PUT_PRICE)
 }
 
 /// Black76 Greeks calculation using Arrow arrays
@@ -444,39 +263,12 @@ pub fn arrow76_greeks(
     sigmas: &Bound<'_, PyAny>,
     is_call: bool,
 ) -> PyArrowResult<PyObject> {
-    // Convert PyAny to Arrow arrays (scalars become length-1 arrays)
-    let forwards_pyarray = pyany_to_arrow(py, forwards)?;
-    let strikes_pyarray = pyany_to_arrow(py, strikes)?;
-    let times_pyarray = pyany_to_arrow(py, times)?;
-    let rates_pyarray = pyany_to_arrow(py, rates)?;
-    let sigmas_pyarray = pyany_to_arrow(py, sigmas)?;
+    // Parse parameters using common function
+    let params = parse_black76_params(py, forwards, strikes, times, rates, sigmas)?;
 
-    // Extract and downcast arrays
-    let forwards_f64 = forwards_pyarray
-        .as_ref()
-        .as_any()
-        .downcast_ref::<Float64Array>()
-        .ok_or_else(|| ArrowError::CastError("forwards must be Float64Array".into()))?;
-    let strikes_f64 = strikes_pyarray
-        .as_ref()
-        .as_any()
-        .downcast_ref::<Float64Array>()
-        .ok_or_else(|| ArrowError::CastError("strikes must be Float64Array".into()))?;
-    let times_f64 = times_pyarray
-        .as_ref()
-        .as_any()
-        .downcast_ref::<Float64Array>()
-        .ok_or_else(|| ArrowError::CastError("times must be Float64Array".into()))?;
-    let rates_f64 = rates_pyarray
-        .as_ref()
-        .as_any()
-        .downcast_ref::<Float64Array>()
-        .ok_or_else(|| ArrowError::CastError("rates must be Float64Array".into()))?;
-    let sigmas_f64 = sigmas_pyarray
-        .as_ref()
-        .as_any()
-        .downcast_ref::<Float64Array>()
-        .ok_or_else(|| ArrowError::CastError("sigmas must be Float64Array".into()))?;
+    // Extract arrays
+    let (forwards_f64, strikes_f64, times_f64, rates_f64, sigmas_f64) =
+        extract_black76_arrays(&params)?;
 
     // Compute Greeks with GIL released
     let (delta_arc, gamma_arc, vega_arc, theta_arc, rho_arc) = py
@@ -514,30 +306,8 @@ pub fn arrow76_greeks(
             ArrowError::ComputeError(format!("Black76 Greeks computation failed: {e}"))
         })?;
 
-    // Create Python dict
-    let result_dict = PyDict::new(py);
-
-    // Add each Greek
-    let delta_field = Arc::new(Field::new("delta", DataType::Float64, false));
-    let delta_array = PyArray::new(delta_arc, delta_field);
-    result_dict.set_item("delta", delta_array.to_arro3(py)?)?;
-
-    let gamma_field = Arc::new(Field::new("gamma", DataType::Float64, false));
-    let gamma_array = PyArray::new(gamma_arc, gamma_field);
-    result_dict.set_item("gamma", gamma_array.to_arro3(py)?)?;
-
-    let vega_field = Arc::new(Field::new("vega", DataType::Float64, false));
-    let vega_array = PyArray::new(vega_arc, vega_field);
-    result_dict.set_item("vega", vega_array.to_arro3(py)?)?;
-
-    let theta_field = Arc::new(Field::new("theta", DataType::Float64, false));
-    let theta_array = PyArray::new(theta_arc, theta_field);
-    result_dict.set_item("theta", theta_array.to_arro3(py)?)?;
-
-    let rho_field = Arc::new(Field::new("rho", DataType::Float64, false));
-    let rho_array = PyArray::new(rho_arc, rho_field);
-    result_dict.set_item("rho", rho_array.to_arro3(py)?)?;
-
+    // Create Python dict using common function
+    let result_dict = create_greeks_dict(py, delta_arc, gamma_arc, vega_arc, theta_arc, rho_arc)?;
     Ok(result_dict.into())
 }
 
@@ -548,20 +318,14 @@ pub fn arrow76_greeks(
 /// Black-Scholes call price (scalar version)
 #[pyfunction]
 pub fn call_price(s: f64, k: f64, t: f64, r: f64, sigma: f64) -> PyResult<f64> {
-    // Validate inputs
-    if s <= 0.0 || k <= 0.0 || t <= 0.0 || sigma <= 0.0 {
-        return Err(PyValueError::new_err("s, k, t, and sigma must be positive"));
-    }
+    validate_scalar_inputs(s, k, t, sigma)?;
     Ok(black_scholes_call_scalar(s, k, t, r, sigma))
 }
 
 /// Black-Scholes put price (scalar version)
 #[pyfunction]
 pub fn put_price(s: f64, k: f64, t: f64, r: f64, sigma: f64) -> PyResult<f64> {
-    // Validate inputs
-    if s <= 0.0 || k <= 0.0 || t <= 0.0 || sigma <= 0.0 {
-        return Err(PyValueError::new_err("s, k, t, and sigma must be positive"));
-    }
+    validate_scalar_inputs(s, k, t, sigma)?;
     Ok(black_scholes_put_scalar(s, k, t, r, sigma))
 }
 
@@ -577,10 +341,7 @@ pub fn greeks<'py>(
     sigma: f64,
     is_call: bool,
 ) -> PyResult<Bound<'py, PyDict>> {
-    // Validate inputs
-    if s <= 0.0 || k <= 0.0 || t <= 0.0 || sigma <= 0.0 {
-        return Err(PyValueError::new_err("s, k, t, and sigma must be positive"));
-    }
+    validate_scalar_inputs(s, k, t, sigma)?;
 
     // Calculate all Greeks using scalar arrays of size 1
     let spots = Float64Array::from(vec![s]);
@@ -637,30 +398,24 @@ pub fn greeks<'py>(
 /// Black76 call price (scalar version)
 #[pyfunction]
 pub fn black76_call_price(f: f64, k: f64, t: f64, r: f64, sigma: f64) -> PyResult<f64> {
-    // Validate inputs
-    if f <= 0.0 || k <= 0.0 || t <= 0.0 || sigma <= 0.0 {
-        return Err(PyValueError::new_err("f, k, t, and sigma must be positive"));
-    }
+    validate_black76_scalar_inputs(f, k, t, sigma)?;
     Ok(black76_call_scalar(f, k, t, r, sigma))
 }
 
 /// Black76 put price (scalar version)
 #[pyfunction]
 pub fn black76_put_price(f: f64, k: f64, t: f64, r: f64, sigma: f64) -> PyResult<f64> {
-    // Validate inputs
-    if f <= 0.0 || k <= 0.0 || t <= 0.0 || sigma <= 0.0 {
-        return Err(PyValueError::new_err("f, k, t, and sigma must be positive"));
-    }
+    validate_black76_scalar_inputs(f, k, t, sigma)?;
     Ok(black76_put_scalar(f, k, t, r, sigma))
 }
 
 /// Merton call price (scalar version with dividends)
 #[pyfunction]
 pub fn merton_call_price(s: f64, k: f64, t: f64, r: f64, q: f64, sigma: f64) -> PyResult<f64> {
-    // Validate inputs
-    if s <= 0.0 || k <= 0.0 || t <= 0.0 || sigma <= 0.0 || q < 0.0 {
+    validate_scalar_inputs(s, k, t, sigma)?;
+    if q < 0.0 {
         return Err(PyValueError::new_err(
-            "s, k, t, and sigma must be positive; q must be non-negative",
+            "q (dividend yield) must be non-negative",
         ));
     }
     Ok(merton_call_scalar(s, k, t, r, q, sigma))
@@ -669,10 +424,10 @@ pub fn merton_call_price(s: f64, k: f64, t: f64, r: f64, q: f64, sigma: f64) -> 
 /// Merton put price (scalar version with dividends)
 #[pyfunction]
 pub fn merton_put_price(s: f64, k: f64, t: f64, r: f64, q: f64, sigma: f64) -> PyResult<f64> {
-    // Validate inputs
-    if s <= 0.0 || k <= 0.0 || t <= 0.0 || sigma <= 0.0 || q < 0.0 {
+    validate_scalar_inputs(s, k, t, sigma)?;
+    if q < 0.0 {
         return Err(PyValueError::new_err(
-            "s, k, t, and sigma must be positive; q must be non-negative",
+            "q (dividend yield) must be non-negative",
         ));
     }
     Ok(merton_put_scalar(s, k, t, r, q, sigma))
@@ -828,11 +583,11 @@ pub fn greeks_batch(
 #[pyfunction]
 pub fn implied_volatility_batch(
     _py: Python,
-    _prices: PyArray,
-    _spots: PyArray,
-    _strikes: PyArray,
-    _times: PyArray,
-    _rates: PyArray,
+    _prices: &Bound<'_, PyAny>,
+    _spots: &Bound<'_, PyAny>,
+    _strikes: &Bound<'_, PyAny>,
+    _times: &Bound<'_, PyAny>,
+    _rates: &Bound<'_, PyAny>,
     _is_call: bool,
 ) -> PyArrowResult<PyObject> {
     Err(pyo3_arrow::error::PyArrowError::PyErr(

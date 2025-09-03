@@ -4,9 +4,10 @@ import math
 
 import numpy as np
 import pytest
-from conftest import PRACTICAL_TOLERANCE, THEORETICAL_TOLERANCE
 from quantforge.models import black_scholes
 from scipy import stats
+
+from tests.conftest import PRACTICAL_TOLERANCE, THEORETICAL_TOLERANCE
 
 
 @pytest.mark.unit

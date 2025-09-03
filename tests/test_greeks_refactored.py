@@ -9,8 +9,9 @@ from typing import Any
 
 import numpy as np
 import pytest
-from conftest import NUMERICAL_TOLERANCE
 from quantforge import black_scholes
+
+from tests.conftest import NUMERICAL_TOLERANCE
 
 
 class TestGreeksParameterized:

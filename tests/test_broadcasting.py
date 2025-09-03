@@ -2,7 +2,7 @@
 
 import pyarrow as pa
 import pytest
-import quantforge.black_scholes as bs
+import quantforge.black_scholes as bs  # type: ignore[import-not-found]
 
 
 class TestBroadcasting:

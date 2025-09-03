@@ -42,11 +42,11 @@ class FFIOverheadBenchmark:
             times.append((end - start) / (iterations // 10))
         
         return {
-            'mean': np.mean(times),
-            'std': np.std(times),
-            'min': np.min(times),
-            'max': np.max(times),
-            'median': np.median(times),
+            'mean': float(np.mean(times)),
+            'std': float(np.std(times)),
+            'min': float(np.min(times)),
+            'max': float(np.max(times)),
+            'median': float(np.median(times)),
             'iterations': iterations
         }
     
@@ -70,7 +70,7 @@ class FFIOverheadBenchmark:
             # american.call_price(*args_large) 
             results['args_6'] = 0.0  # プレースホルダー
         except:
-            results['args_6'] = None
+            results['args_6'] = 0.0
         
         return results
     

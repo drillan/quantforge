@@ -9,7 +9,7 @@ from quantforge import black_scholes  # type: ignore[import-untyped]
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from conftest import PRACTICAL_TOLERANCE  # type: ignore[import-not-found]
+from conftest import PRACTICAL_TOLERANCE
 
 
 def test_put_single_calculation() -> None:

@@ -4,8 +4,11 @@ import math
 
 import numpy as np
 import pytest
-from conftest import THEORETICAL_TOLERANCE
 from quantforge.models import black_scholes
+
+from tests.conftest import (
+    THEORETICAL_TOLERANCE,
+)
 
 
 class TestBlackScholesCallPrice:

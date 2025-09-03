@@ -23,13 +23,15 @@ class BenchmarkReportGenerator:
         """Load the most recent benchmark results."""
         if self.latest_file.exists():
             with open(self.latest_file) as f:
-                return json.load(f)
+                result: dict[str, Any] = json.load(f)
+                return result
         elif self.history_file.exists():
             # Read last line from history
             with open(self.history_file) as f:
                 lines = f.readlines()
                 if lines:
-                    return json.loads(lines[-1])
+                    last_result: dict[str, Any] = json.loads(lines[-1])
+                    return last_result
         return None
 
     def format_time(self, seconds: float) -> str:
@@ -55,7 +57,7 @@ class BenchmarkReportGenerator:
 
     def extract_benchmark_times(self, benchmarks: list[dict]) -> dict[str, dict[str, float]]:
         """Extract benchmark times organized by test type."""
-        results = {}
+        results: dict[str, dict[str, float]] = {}
 
         for bench in benchmarks:
             name = bench["name"]
@@ -97,7 +99,10 @@ class BenchmarkReportGenerator:
         """Generate comprehensive benchmark report."""
         data = self.load_latest_results()
         if not data:
-            return "# ベンチマーク結果\n\nNo benchmark data available. Run `pytest tests/performance/ -m benchmark` first.\n"
+            return (
+                "# ベンチマーク結果\n\n"
+                "No benchmark data available. Run `pytest tests/performance/ -m benchmark` first.\n"
+            )
 
         lines = []
         lines.append("# ベンチマーク結果")
@@ -135,15 +140,13 @@ class BenchmarkReportGenerator:
             py_time = single.get("pure_python", 0)
             np_time = single.get("numpy_scipy", 0)
 
-            lines.append(
-                f"| **QuantForge** (Rust) | {self.format_time(qf_time)} | - | {self.calculate_speedup(py_time, qf_time)} |"
-            )
-            lines.append(
-                f"| **Pure Python** (math) | {self.format_time(py_time)} | {self.calculate_speedup(qf_time, py_time)} | - |"
-            )
-            lines.append(
-                f"| **NumPy+SciPy** | {self.format_time(np_time)} | {self.calculate_speedup(qf_time, np_time)} | {self.calculate_speedup(py_time, np_time)} |"
-            )
+            speedup_py_qf = self.calculate_speedup(py_time, qf_time)
+            lines.append(f"| **QuantForge** (Rust) | {self.format_time(qf_time)} | - | {speedup_py_qf} |")
+            speedup_qf_py = self.calculate_speedup(qf_time, py_time)
+            lines.append(f"| **Pure Python** (math) | {self.format_time(py_time)} | {speedup_qf_py} | - |")
+            speedup_qf_np = self.calculate_speedup(qf_time, np_time)
+            speedup_py_np = self.calculate_speedup(py_time, np_time)
+            lines.append(f"| **NumPy+SciPy** | {self.format_time(np_time)} | {speedup_qf_np} | {speedup_py_np} |")
             lines.append("")
 
         # Batch calculations
@@ -169,12 +172,12 @@ class BenchmarkReportGenerator:
                 lines.append(
                     f"| **QuantForge** | {self.format_time(qf_time)} | {qf_throughput / 1000:.1f}K ops/sec | - |"
                 )
-                lines.append(
-                    f"| **Pure Python** | {self.format_time(py_time)} | {py_throughput / 1000:.1f}K ops/sec | {self.calculate_speedup(qf_time, py_time)} |"
-                )
-                lines.append(
-                    f"| **NumPy+SciPy** | {self.format_time(np_time)} | {np_throughput / 1000:.1f}K ops/sec | {self.calculate_speedup(qf_time, np_time)} |"
-                )
+                speedup_qf_py = self.calculate_speedup(qf_time, py_time)
+                py_ops = f"{py_throughput / 1000:.1f}K ops/sec"
+                lines.append(f"| **Pure Python** | {self.format_time(py_time)} | {py_ops} | {speedup_qf_py} |")
+                speedup_qf_np = self.calculate_speedup(qf_time, np_time)
+                np_ops = f"{np_throughput / 1000:.1f}K ops/sec"
+                lines.append(f"| **NumPy+SciPy** | {self.format_time(np_time)} | {np_ops} | {speedup_qf_np} |")
                 lines.append("")
 
         # Performance summary

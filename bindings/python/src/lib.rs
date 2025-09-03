@@ -4,6 +4,7 @@
 
 use pyo3::prelude::*;
 
+mod arrow_common;
 mod error;
 mod models;
 mod utils;

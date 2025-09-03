@@ -7,9 +7,10 @@ from collections.abc import Callable
 
 import numpy as np
 import pytest
-from conftest import NUMERICAL_TOLERANCE, PRACTICAL_TOLERANCE
 from numpy.typing import NDArray
 from quantforge import black_scholes
+
+from tests.conftest import NUMERICAL_TOLERANCE, PRACTICAL_TOLERANCE
 
 
 class TestBlackScholesAPI:

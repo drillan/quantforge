@@ -5,8 +5,9 @@ from pathlib import Path
 
 import numpy as np
 import pytest
+import quantforge
 
-from python.quantforge import models
+models = quantforge
 
 
 class TestModelsIntegration:

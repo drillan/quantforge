@@ -1,5 +1,7 @@
 """End-to-end tests for complete workflows."""
 
+from typing import Any
+
 import numpy as np
 import pytest
 
@@ -48,7 +50,12 @@ class TestE2EWorkflows:
         prices = quantforge.black_scholes.call_price_batch(spots, strike, time, rate, vol)
 
         assert len(prices) == 21
-        assert all(p >= 0 for p in prices)
+        # Convert Arrow result to numpy if needed
+        if hasattr(prices, "to_numpy"):
+            prices_np = prices.to_numpy()
+        else:
+            prices_np = np.array([float(p.as_py()) if hasattr(p, "as_py") else float(p) for p in prices])
+        assert all(p >= 0 for p in prices_np)
 
     def test_cross_model_workflow(self):
         """Test workflow across different models."""
@@ -74,19 +81,30 @@ class TestE2EWorkflows:
         }
 
         # Calculate prices
-        prices = quantforge.black_scholes.call_price_batch(**market_data)
+        prices = quantforge.black_scholes.call_price_batch(**market_data)  # type: ignore[arg-type]
 
         # Calculate Greeks
-        greeks = quantforge.black_scholes.greeks_batch(**market_data)
+        greeks = quantforge.black_scholes.greeks_batch(**market_data)  # type: ignore[arg-type]
 
         # Validate results
         assert len(prices) == 100
-        assert all(p >= 0 for p in prices)
+        # Convert Arrow result to numpy if needed
+        if hasattr(prices, "to_numpy"):
+            prices_np = prices.to_numpy()
+        else:
+            prices_np = np.array([float(p.as_py()) if hasattr(p, "as_py") else float(p) for p in prices])
+        assert all(p >= 0 for p in prices_np)
 
         # Greeks should be dict of arrays
         assert isinstance(greeks, dict)
         assert all(len(greeks[k]) == 100 for k in greeks)
-        assert all(0 <= greeks["delta"][i] <= 1 for i in range(100))
+        # Convert Arrow results to numpy if needed
+        delta_vals = greeks["delta"]
+        if hasattr(delta_vals, "to_numpy"):
+            delta_np = delta_vals.to_numpy()
+        else:
+            delta_np = np.array([float(d.as_py()) if hasattr(d, "as_py") else float(d) for d in delta_vals])
+        assert all(0 <= delta_np[i] <= 1 for i in range(100))
 
     def test_american_options_workflow(self):
         """Test American options pricing workflow."""
@@ -158,10 +176,10 @@ class TestE2EWorkflows:
     def test_portfolio_valuation_workflow(self):
         """Test portfolio valuation workflow."""
         # Portfolio of options
-        portfolio = [
-            {"type": "call", "spot": 100, "strike": 95, "time": 0.5, "quantity": 10},
-            {"type": "put", "spot": 100, "strike": 105, "time": 0.5, "quantity": -5},
-            {"type": "call", "spot": 100, "strike": 100, "time": 1.0, "quantity": 20},
+        portfolio: list[dict[str, Any]] = [
+            {"type": "call", "spot": 100.0, "strike": 95.0, "time": 0.5, "quantity": 10.0},
+            {"type": "put", "spot": 100.0, "strike": 105.0, "time": 0.5, "quantity": -5.0},
+            {"type": "call", "spot": 100.0, "strike": 100.0, "time": 1.0, "quantity": 20.0},
         ]
 
         rate = 0.05
@@ -174,25 +192,22 @@ class TestE2EWorkflows:
         total_vega = 0.0
 
         for position in portfolio:
-            if position["type"] == "call":
-                price = quantforge.black_scholes.call_price(
-                    position["spot"], position["strike"], position["time"], rate, vol
-                )
-                greeks = quantforge.black_scholes.greeks(
-                    position["spot"], position["strike"], position["time"], rate, vol, is_call=True
-                )
-            else:
-                price = quantforge.black_scholes.put_price(
-                    position["spot"], position["strike"], position["time"], rate, vol
-                )
-                greeks = quantforge.black_scholes.greeks(
-                    position["spot"], position["strike"], position["time"], rate, vol, is_call=False
-                )
+            spot = position["spot"]  # Already a float from definition
+            strike = position["strike"]  # Already a float from definition
+            time = position["time"]  # Already a float from definition
+            quantity = position["quantity"]  # Already a float from definition
 
-            total_value += price * position["quantity"]
-            total_delta += greeks["delta"] * position["quantity"]
-            total_gamma += greeks["gamma"] * position["quantity"]
-            total_vega += greeks["vega"] * position["quantity"]
+            if position["type"] == "call":
+                price = quantforge.black_scholes.call_price(spot, strike, time, rate, vol)
+                greeks = quantforge.black_scholes.greeks(spot, strike, time, rate, vol, is_call=True)
+            else:
+                price = quantforge.black_scholes.put_price(spot, strike, time, rate, vol)
+                greeks = quantforge.black_scholes.greeks(spot, strike, time, rate, vol, is_call=False)
+
+            total_value += price * quantity
+            total_delta += greeks["delta"] * quantity
+            total_gamma += greeks["gamma"] * quantity
+            total_vega += greeks["vega"] * quantity
 
         # Portfolio should have meaningful values
         assert total_value != 0

@@ -30,7 +30,7 @@ def check_directory_structure() -> dict[str, bool]:
 
 def check_new_format_data() -> dict[str, Any]:
     """新形式データの存在確認"""
-    results = {"has_data": False, "layers": {}, "format_version": None}
+    results: dict[str, Any] = {"has_data": False, "layers": {}, "format_version": None}
 
     layers = ["core", "bindings/python", "integration"]
 
@@ -41,18 +41,21 @@ def check_new_format_data() -> dict[str, Any]:
             try:
                 with open(latest_path) as f:
                     data = json.load(f)
-                    results["layers"][layer] = {
+                    layer_info: dict[str, Any] = {
                         "exists": True,
                         "version": data.get("version", "unknown"),
                         "layer": data.get("layer", "unknown"),
                         "timestamp": data.get("metadata", {}).get("timestamp", "unknown"),
                     }
+                    results["layers"][layer] = layer_info
                     if not results["format_version"]:
                         results["format_version"] = data.get("version")
             except Exception as e:
-                results["layers"][layer] = {"exists": True, "error": str(e)}
+                error_info: dict[str, Any] = {"exists": True, "error": str(e)}
+                results["layers"][layer] = error_info
         else:
-            results["layers"][layer] = {"exists": False}
+            no_data: dict[str, Any] = {"exists": False}
+            results["layers"][layer] = no_data
 
     return results
 
@@ -61,7 +64,12 @@ def check_old_structure() -> dict[str, Any]:
     """旧構造の確認"""
     old_benchmarks = Path("benchmarks")
 
-    result = {"exists": old_benchmarks.exists(), "has_results": False, "result_files": [], "total_size": 0}
+    result: dict[str, Any] = {
+        "exists": old_benchmarks.exists(),
+        "has_results": False,
+        "result_files": [],
+        "total_size": 0,
+    }
 
     if old_benchmarks.exists():
         results_dir = old_benchmarks / "results"
@@ -114,11 +122,12 @@ def check_benchmark_code() -> dict[str, Any]:
 
 def format_size(size_bytes: int) -> str:
     """バイトサイズを人間が読みやすい形式に変換"""
+    size_float: float = float(size_bytes)
     for unit in ["B", "KB", "MB", "GB"]:
-        if size_bytes < 1024.0:
-            return f"{size_bytes:.2f} {unit}"
-        size_bytes /= 1024.0
-    return f"{size_bytes:.2f} TB"
+        if size_float < 1024.0:
+            return f"{size_float:.2f} {unit}"
+        size_float /= 1024.0
+    return f"{size_float:.2f} TB"
 
 
 def print_report(all_checks: dict[str, Any]) -> bool:

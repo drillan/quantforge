@@ -1,8 +1,9 @@
 """Test the new models-based API structure."""
 
 import numpy as np
-from conftest import NUMERICAL_TOLERANCE, PRACTICAL_TOLERANCE
 from quantforge import black_scholes
+
+from tests.conftest import NUMERICAL_TOLERANCE, PRACTICAL_TOLERANCE
 
 
 class TestBlackScholesModuleAPI:

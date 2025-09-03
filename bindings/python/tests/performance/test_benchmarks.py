@@ -3,8 +3,9 @@
 import time
 
 import numpy as np
+import quantforge
 
-from python.quantforge import models
+models = quantforge
 
 
 class TestPerformance:
@@ -52,7 +53,7 @@ class TestPerformance:
             q.put(time.perf_counter() - start)
 
         # Run in parallel
-        q = queue.Queue()
+        q: queue.Queue[float] = queue.Queue()
         threads = []
         n = 100000
         n_threads = 4

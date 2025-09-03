@@ -151,11 +151,16 @@ warn_unreachable = true
 strict_equality = true
 check_untyped_defs = true
 mypy_path = "bindings/python/stubs"
+explicit_package_bases = true
 exclude = [
     "playground/",  # 一時的な検証スクリプトは除外
     "scratch/",  # テンポラリファイルは除外
+    "draft/",  # ドラフトファイルは除外
+    "plans/",  # 計画文書は除外
     "tests/integration/test_put_options.py",  # 型スタブ未対応のため一時除外
     "tests/unit/test_implied_volatility.py",  # PyO3バインディングの型情報不完全
+    "docs/",  # Sphinx configuration files
+    "translations/",  # Translation comparison scripts
 ]
 
 [[tool.mypy.overrides]]

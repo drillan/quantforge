@@ -67,7 +67,7 @@ class IntegrationBenchmark:
 
         # ポートフォリオ統計
         results["total_value"] = np.sum(prices)
-        results["mean_price"] = np.mean(prices)
+        results["mean_price"] = float(np.mean(prices))
         results["portfolio_size"] = portfolio_size
         results["throughput"] = portfolio_size / results["valuation_time"]
 

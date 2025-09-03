@@ -1,0 +1,1104 @@
+{
+  "verification_level": "exists",
+  "total_blocks": 137,
+  "successful": 137,
+  "failed": 0,
+  "results": [
+    {
+      "file": "/home/driller/repo/quantforge/docs/ja/user_guide/basic_usage.md",
+      "line": 7,
+      "language": "python",
+      "success": true,
+      "message": "All imports verified: from quantforge.models import black_scholes",
+      "details": null
+    },
+    {
+      "file": "/home/driller/repo/quantforge/docs/ja/user_guide/basic_usage.md",
+      "line": 15,
+      "language": "python",
+      "success": true,
+      "message": "All imports verified: from quantforge.models import black_scholes",
+      "details": null
+    },
+    {
+      "file": "/home/driller/repo/quantforge/docs/ja/user_guide/basic_usage.md",
+      "line": 51,
+      "language": "python",
+      "success": true,
+      "message": "All imports verified: from quantforge.models import black_scholes",
+      "details": null
+    },
+    {
+      "file": "/home/driller/repo/quantforge/docs/ja/user_guide/basic_usage.md",
+      "line": 77,
+      "language": "python",
+      "success": true,
+      "message": "All imports verified: from quantforge.models import black_scholes",
+      "details": null
+    },
+    {
+      "file": "/home/driller/repo/quantforge/docs/ja/user_guide/basic_usage.md",
+      "line": 110,
+      "language": "python",
+      "success": true,
+      "message": "No quantforge imports to verify",
+      "details": null
+    },
+    {
+      "file": "/home/driller/repo/quantforge/docs/ja/user_guide/index.md",
+      "line": 55,
+      "language": "python",
+      "success": true,
+      "message": "All imports verified: from quantforge.models import black_scholes",
+      "details": null
+    },
+    {
+      "file": "/home/driller/repo/quantforge/docs/ja/user_guide/index.md",
+      "line": 66,
+      "language": "python",
+      "success": true,
+      "message": "No quantforge imports to verify",
+      "details": null
+    },
+    {
+      "file": "/home/driller/repo/quantforge/docs/ja/user_guide/index.md",
+      "line": 79,
+      "language": "python",
+      "success": true,
+      "message": "No quantforge imports to verify",
+      "details": null
+    },
+    {
+      "file": "/home/driller/repo/quantforge/docs/ja/user_guide/examples.md",
+      "line": 9,
+      "language": "python",
+      "success": true,
+      "message": "All imports verified: import quantforge, from quantforge.models import black_scholes",
+      "details": null
+    },
+    {
+      "file": "/home/driller/repo/quantforge/docs/ja/user_guide/examples.md",
+      "line": 100,
+      "language": "python",
+      "success": true,
+      "message": "No quantforge imports to verify",
+      "details": null
+    },
+    {
+      "file": "/home/driller/repo/quantforge/docs/ja/user_guide/advanced_models.md",
+      "line": 20,
+      "language": "python",
+      "success": true,
+      "message": "All imports verified: from quantforge.models import american, from quantforge.models import black_scholes",
+      "details": null
+    },
+    {
+      "file": "/home/driller/repo/quantforge/docs/ja/user_guide/advanced_models.md",
+      "line": 51,
+      "language": "python",
+      "success": true,
+      "message": "No quantforge imports to verify",
+      "details": null
+    },
+    {
+      "file": "/home/driller/repo/quantforge/docs/ja/user_guide/advanced_models.md",
+      "line": 102,
+      "language": "python",
+      "success": true,
+      "message": "All imports verified: from quantforge.models import black_scholes, from quantforge.models import american",
+      "details": null
+    },
+    {
+      "file": "/home/driller/repo/quantforge/docs/ja/user_guide/arrow_native_guide.md",
+      "line": 13,
+      "language": "python",
+      "success": true,
+      "message": "No quantforge imports to verify",
+      "details": null
+    },
+    {
+      "file": "/home/driller/repo/quantforge/docs/ja/user_guide/arrow_native_guide.md",
+      "line": 24,
+      "language": "python",
+      "success": true,
+      "message": "No quantforge imports to verify",
+      "details": null
+    },
+    {
+      "file": "/home/driller/repo/quantforge/docs/ja/user_guide/arrow_native_guide.md",
+      "line": 42,
+      "language": "python",
+      "success": true,
+      "message": "No quantforge imports to verify",
+      "details": null
+    },
+    {
+      "file": "/home/driller/repo/quantforge/docs/ja/user_guide/arrow_native_guide.md",
+      "line": 77,
+      "language": "python",
+      "success": true,
+      "message": "All imports verified: from quantforge.models import black_scholes",
+      "details": null
+    },
+    {
+      "file": "/home/driller/repo/quantforge/docs/ja/user_guide/arrow_native_guide.md",
+      "line": 100,
+      "language": "python",
+      "success": true,
+      "message": "No quantforge imports to verify",
+      "details": null
+    },
+    {
+      "file": "/home/driller/repo/quantforge/docs/ja/user_guide/arrow_native_guide.md",
+      "line": 131,
+      "language": "python",
+      "success": true,
+      "message": "No quantforge imports to verify",
+      "details": null
+    },
+    {
+      "file": "/home/driller/repo/quantforge/docs/ja/user_guide/arrow_native_guide.md",
+      "line": 152,
+      "language": "python",
+      "success": true,
+      "message": "No quantforge imports to verify",
+      "details": null
+    },
+    {
+      "file": "/home/driller/repo/quantforge/docs/ja/user_guide/numpy_integration.md",
+      "line": 11,
+      "language": "python",
+      "success": true,
+      "message": "All imports verified: from quantforge import black_scholes",
+      "details": null
+    },
+    {
+      "file": "/home/driller/repo/quantforge/docs/ja/user_guide/numpy_integration.md",
+      "line": 30,
+      "language": "python",
+      "success": true,
+      "message": "No quantforge imports to verify",
+      "details": null
+    },
+    {
+      "file": "/home/driller/repo/quantforge/docs/ja/user_guide/numpy_integration.md",
+      "line": 49,
+      "language": "python",
+      "success": true,
+      "message": "No quantforge imports to verify",
+      "details": null
+    },
+    {
+      "file": "/home/driller/repo/quantforge/docs/ja/user_guide/numpy_integration.md",
+      "line": 61,
+      "language": "python",
+      "success": true,
+      "message": "No quantforge imports to verify",
+      "details": null
+    },
+    {
+      "file": "/home/driller/repo/quantforge/docs/ja/user_guide/numpy_integration.md",
+      "line": 83,
+      "language": "python",
+      "success": true,
+      "message": "No quantforge imports to verify",
+      "details": null
+    },
+    {
+      "file": "/home/driller/repo/quantforge/docs/ja/user_guide/numpy_integration.md",
+      "line": 96,
+      "language": "python",
+      "success": true,
+      "message": "No quantforge imports to verify",
+      "details": null
+    },
+    {
+      "file": "/home/driller/repo/quantforge/docs/ja/user_guide/numpy_integration.md",
+      "line": 112,
+      "language": "python",
+      "success": true,
+      "message": "No quantforge imports to verify",
+      "details": null
+    },
+    {
+      "file": "/home/driller/repo/quantforge/docs/ja/api/python/index.md",
+      "line": 7,
+      "language": "python",
+      "success": true,
+      "message": "All imports verified: from quantforge.models import black_scholes",
+      "details": null
+    },
+    {
+      "file": "/home/driller/repo/quantforge/docs/ja/api/python/index.md",
+      "line": 17,
+      "language": "python",
+      "success": true,
+      "message": "All imports verified: from quantforge.models import black_scholes, from quantforge.models import black76",
+      "details": null
+    },
+    {
+      "file": "/home/driller/repo/quantforge/docs/ja/api/python/index.md",
+      "line": 45,
+      "language": "python",
+      "success": true,
+      "message": "All imports verified: from quantforge.models import black_scholes, from quantforge.models import black76",
+      "details": null
+    },
+    {
+      "file": "/home/driller/repo/quantforge/docs/ja/api/python/index.md",
+      "line": 73,
+      "language": "python",
+      "success": true,
+      "message": "No quantforge imports to verify",
+      "details": null
+    },
+    {
+      "file": "/home/driller/repo/quantforge/docs/ja/api/python/black76.md",
+      "line": 14,
+      "language": "python",
+      "success": true,
+      "message": "All imports verified: from quantforge.models import black76",
+      "details": null
+    },
+    {
+      "file": "/home/driller/repo/quantforge/docs/ja/api/python/black76.md",
+      "line": 28,
+      "language": "python",
+      "success": true,
+      "message": "No quantforge imports to verify",
+      "details": null
+    },
+    {
+      "file": "/home/driller/repo/quantforge/docs/ja/api/python/black76.md",
+      "line": 65,
+      "language": "python",
+      "success": true,
+      "message": "No quantforge imports to verify",
+      "details": null
+    },
+    {
+      "file": "/home/driller/repo/quantforge/docs/ja/api/python/implied_vol.md",
+      "line": 16,
+      "language": "python",
+      "success": true,
+      "message": "All imports verified: from quantforge.models import black_scholes",
+      "details": null
+    },
+    {
+      "file": "/home/driller/repo/quantforge/docs/ja/api/python/implied_vol.md",
+      "line": 37,
+      "language": "python",
+      "success": true,
+      "message": "All imports verified: from quantforge.models import black76",
+      "details": null
+    },
+    {
+      "file": "/home/driller/repo/quantforge/docs/ja/api/python/implied_vol.md",
+      "line": 58,
+      "language": "python",
+      "success": true,
+      "message": "All imports verified: from quantforge.models import merton",
+      "details": null
+    },
+    {
+      "file": "/home/driller/repo/quantforge/docs/ja/api/python/implied_vol.md",
+      "line": 80,
+      "language": "python",
+      "success": true,
+      "message": "All imports verified: from quantforge.models import american",
+      "details": null
+    },
+    {
+      "file": "/home/driller/repo/quantforge/docs/ja/api/python/implied_vol.md",
+      "line": 102,
+      "language": "python",
+      "success": true,
+      "message": "All imports verified: from quantforge.models import black_scholes",
+      "details": null
+    },
+    {
+      "file": "/home/driller/repo/quantforge/docs/ja/api/python/implied_vol.md",
+      "line": 182,
+      "language": "python",
+      "success": true,
+      "message": "No quantforge imports to verify",
+      "details": null
+    },
+    {
+      "file": "/home/driller/repo/quantforge/docs/ja/api/python/implied_vol.md",
+      "line": 201,
+      "language": "python",
+      "success": true,
+      "message": "All imports verified: from quantforge.models import black_scholes, from quantforge.models import black76",
+      "details": null
+    },
+    {
+      "file": "/home/driller/repo/quantforge/docs/ja/api/python/implied_vol.md",
+      "line": 260,
+      "language": "python",
+      "success": true,
+      "message": "All imports verified: from quantforge.models import black_scholes",
+      "details": null
+    },
+    {
+      "file": "/home/driller/repo/quantforge/docs/ja/api/python/merton.md",
+      "line": 16,
+      "language": "python",
+      "success": true,
+      "message": "All imports verified: from quantforge.models import merton",
+      "details": null
+    },
+    {
+      "file": "/home/driller/repo/quantforge/docs/ja/api/python/merton.md",
+      "line": 32,
+      "language": "python",
+      "success": true,
+      "message": "No quantforge imports to verify",
+      "details": null
+    },
+    {
+      "file": "/home/driller/repo/quantforge/docs/ja/api/python/merton.md",
+      "line": 72,
+      "language": "python",
+      "success": true,
+      "message": "No quantforge imports to verify",
+      "details": null
+    },
+    {
+      "file": "/home/driller/repo/quantforge/docs/ja/api/python/american.md",
+      "line": 14,
+      "language": "python",
+      "success": true,
+      "message": "All imports verified: from quantforge.models import american",
+      "details": null
+    },
+    {
+      "file": "/home/driller/repo/quantforge/docs/ja/api/python/american.md",
+      "line": 28,
+      "language": "python",
+      "success": true,
+      "message": "No quantforge imports to verify",
+      "details": null
+    },
+    {
+      "file": "/home/driller/repo/quantforge/docs/ja/api/python/american.md",
+      "line": 70,
+      "language": "python",
+      "success": true,
+      "message": "No quantforge imports to verify",
+      "details": null
+    },
+    {
+      "file": "/home/driller/repo/quantforge/docs/ja/api/python/pricing.md",
+      "line": 10,
+      "language": "python",
+      "success": true,
+      "message": "No quantforge imports to verify",
+      "details": null
+    },
+    {
+      "file": "/home/driller/repo/quantforge/docs/ja/api/python/greeks.md",
+      "line": 15,
+      "language": "python",
+      "success": true,
+      "message": "No quantforge imports to verify",
+      "details": null
+    },
+    {
+      "file": "/home/driller/repo/quantforge/docs/ja/api/python/greeks.md",
+      "line": 29,
+      "language": "python",
+      "success": true,
+      "message": "No quantforge imports to verify",
+      "details": null
+    },
+    {
+      "file": "/home/driller/repo/quantforge/docs/ja/api/python/greeks.md",
+      "line": 49,
+      "language": "python",
+      "success": true,
+      "message": "No quantforge imports to verify",
+      "details": null
+    },
+    {
+      "file": "/home/driller/repo/quantforge/docs/ja/api/python/batch_processing.md",
+      "line": 26,
+      "language": "python",
+      "success": true,
+      "message": "All imports verified: from quantforge.models import black_scholes",
+      "details": null
+    },
+    {
+      "file": "/home/driller/repo/quantforge/docs/ja/api/python/batch_processing.md",
+      "line": 49,
+      "language": "python",
+      "success": true,
+      "message": "No quantforge imports to verify",
+      "details": null
+    },
+    {
+      "file": "/home/driller/repo/quantforge/docs/ja/api/python/batch_processing.md",
+      "line": 67,
+      "language": "python",
+      "success": true,
+      "message": "No quantforge imports to verify",
+      "details": null
+    },
+    {
+      "file": "/home/driller/repo/quantforge/docs/ja/api/python/batch_processing.md",
+      "line": 81,
+      "language": "python",
+      "success": true,
+      "message": "No quantforge imports to verify",
+      "details": null
+    },
+    {
+      "file": "/home/driller/repo/quantforge/docs/ja/api/python/batch_processing.md",
+      "line": 100,
+      "language": "python",
+      "success": true,
+      "message": "No quantforge imports to verify",
+      "details": null
+    },
+    {
+      "file": "/home/driller/repo/quantforge/docs/ja/api/python/batch_processing.md",
+      "line": 122,
+      "language": "python",
+      "success": true,
+      "message": "No quantforge imports to verify",
+      "details": null
+    },
+    {
+      "file": "/home/driller/repo/quantforge/docs/ja/api/python/batch_processing.md",
+      "line": 140,
+      "language": "python",
+      "success": true,
+      "message": "No quantforge imports to verify",
+      "details": null
+    },
+    {
+      "file": "/home/driller/repo/quantforge/docs/ja/api/python/batch_processing.md",
+      "line": 146,
+      "language": "python",
+      "success": true,
+      "message": "No quantforge imports to verify",
+      "details": null
+    },
+    {
+      "file": "/home/driller/repo/quantforge/docs/ja/api/python/batch_processing.md",
+      "line": 152,
+      "language": "python",
+      "success": true,
+      "message": "No quantforge imports to verify",
+      "details": null
+    },
+    {
+      "file": "/home/driller/repo/quantforge/docs/ja/api/python/batch_processing.md",
+      "line": 162,
+      "language": "python",
+      "success": true,
+      "message": "No quantforge imports to verify",
+      "details": null
+    },
+    {
+      "file": "/home/driller/repo/quantforge/docs/ja/api/python/batch_processing.md",
+      "line": 179,
+      "language": "python",
+      "success": true,
+      "message": "No quantforge imports to verify",
+      "details": null
+    },
+    {
+      "file": "/home/driller/repo/quantforge/docs/ja/api/python/batch_processing.md",
+      "line": 185,
+      "language": "python",
+      "success": true,
+      "message": "No quantforge imports to verify",
+      "details": null
+    },
+    {
+      "file": "/home/driller/repo/quantforge/docs/ja/api/python/batch_processing.md",
+      "line": 191,
+      "language": "python",
+      "success": true,
+      "message": "No quantforge imports to verify",
+      "details": null
+    },
+    {
+      "file": "/home/driller/repo/quantforge/docs/ja/api/python/batch_processing.md",
+      "line": 205,
+      "language": "python",
+      "success": true,
+      "message": "No quantforge imports to verify",
+      "details": null
+    },
+    {
+      "file": "/home/driller/repo/quantforge/docs/ja/api/python/batch_processing.md",
+      "line": 211,
+      "language": "python",
+      "success": true,
+      "message": "No quantforge imports to verify",
+      "details": null
+    },
+    {
+      "file": "/home/driller/repo/quantforge/docs/ja/api/python/batch_processing.md",
+      "line": 217,
+      "language": "python",
+      "success": true,
+      "message": "No quantforge imports to verify",
+      "details": null
+    },
+    {
+      "file": "/home/driller/repo/quantforge/docs/ja/api/python/batch_processing.md",
+      "line": 223,
+      "language": "python",
+      "success": true,
+      "message": "No quantforge imports to verify",
+      "details": null
+    },
+    {
+      "file": "/home/driller/repo/quantforge/docs/ja/api/python/batch_processing.md",
+      "line": 236,
+      "language": "python",
+      "success": true,
+      "message": "No quantforge imports to verify",
+      "details": null
+    },
+    {
+      "file": "/home/driller/repo/quantforge/docs/ja/api/python/batch_processing.md",
+      "line": 247,
+      "language": "python",
+      "success": true,
+      "message": "All imports verified: from quantforge.models import black_scholes",
+      "details": null
+    },
+    {
+      "file": "/home/driller/repo/quantforge/docs/ja/api/python/batch_processing.md",
+      "line": 265,
+      "language": "python",
+      "success": true,
+      "message": "No quantforge imports to verify",
+      "details": null
+    },
+    {
+      "file": "/home/driller/repo/quantforge/docs/ja/api/python/black_scholes.md",
+      "line": 18,
+      "language": "python",
+      "success": true,
+      "message": "No quantforge imports to verify",
+      "details": null
+    },
+    {
+      "file": "/home/driller/repo/quantforge/docs/en/user_guide/basic_usage.md",
+      "line": 7,
+      "language": "python",
+      "success": true,
+      "message": "All imports verified: from quantforge.models import black_scholes",
+      "details": null
+    },
+    {
+      "file": "/home/driller/repo/quantforge/docs/en/user_guide/basic_usage.md",
+      "line": 15,
+      "language": "python",
+      "success": true,
+      "message": "All imports verified: from quantforge.models import black_scholes",
+      "details": null
+    },
+    {
+      "file": "/home/driller/repo/quantforge/docs/en/user_guide/basic_usage.md",
+      "line": 51,
+      "language": "python",
+      "success": true,
+      "message": "All imports verified: from quantforge.models import black_scholes",
+      "details": null
+    },
+    {
+      "file": "/home/driller/repo/quantforge/docs/en/user_guide/basic_usage.md",
+      "line": 77,
+      "language": "python",
+      "success": true,
+      "message": "All imports verified: from quantforge.models import black_scholes",
+      "details": null
+    },
+    {
+      "file": "/home/driller/repo/quantforge/docs/en/user_guide/basic_usage.md",
+      "line": 107,
+      "language": "python",
+      "success": true,
+      "message": "No quantforge imports to verify",
+      "details": null
+    },
+    {
+      "file": "/home/driller/repo/quantforge/docs/en/user_guide/index.md",
+      "line": 55,
+      "language": "python",
+      "success": true,
+      "message": "All imports verified: from quantforge.models import black_scholes",
+      "details": null
+    },
+    {
+      "file": "/home/driller/repo/quantforge/docs/en/user_guide/index.md",
+      "line": 70,
+      "language": "python",
+      "success": true,
+      "message": "All imports verified: from quantforge.models import black_scholes",
+      "details": null
+    },
+    {
+      "file": "/home/driller/repo/quantforge/docs/en/user_guide/index.md",
+      "line": 88,
+      "language": "python",
+      "success": true,
+      "message": "All imports verified: from quantforge.models import black_scholes",
+      "details": null
+    },
+    {
+      "file": "/home/driller/repo/quantforge/docs/en/user_guide/examples.md",
+      "line": 9,
+      "language": "python",
+      "success": true,
+      "message": "All imports verified: import quantforge, from quantforge.models import black_scholes",
+      "details": null
+    },
+    {
+      "file": "/home/driller/repo/quantforge/docs/en/user_guide/examples.md",
+      "line": 100,
+      "language": "python",
+      "success": true,
+      "message": "No quantforge imports to verify",
+      "details": null
+    },
+    {
+      "file": "/home/driller/repo/quantforge/docs/en/user_guide/advanced_models.md",
+      "line": 19,
+      "language": "python",
+      "success": true,
+      "message": "No quantforge imports to verify",
+      "details": null
+    },
+    {
+      "file": "/home/driller/repo/quantforge/docs/en/user_guide/advanced_models.md",
+      "line": 52,
+      "language": "python",
+      "success": true,
+      "message": "No quantforge imports to verify",
+      "details": null
+    },
+    {
+      "file": "/home/driller/repo/quantforge/docs/en/user_guide/numpy_integration.md",
+      "line": 9,
+      "language": "python",
+      "success": true,
+      "message": "All imports verified: import quantforge, from quantforge.models import black_scholes",
+      "details": null
+    },
+    {
+      "file": "/home/driller/repo/quantforge/docs/en/user_guide/numpy_integration.md",
+      "line": 34,
+      "language": "python",
+      "success": true,
+      "message": "No quantforge imports to verify",
+      "details": null
+    },
+    {
+      "file": "/home/driller/repo/quantforge/docs/en/api/python/index.md",
+      "line": 7,
+      "language": "python",
+      "success": true,
+      "message": "All imports verified: from quantforge.models import black_scholes",
+      "details": null
+    },
+    {
+      "file": "/home/driller/repo/quantforge/docs/en/api/python/index.md",
+      "line": 17,
+      "language": "python",
+      "success": true,
+      "message": "All imports verified: from quantforge.models import black_scholes, from quantforge.models import black76",
+      "details": null
+    },
+    {
+      "file": "/home/driller/repo/quantforge/docs/en/api/python/index.md",
+      "line": 45,
+      "language": "python",
+      "success": true,
+      "message": "All imports verified: from quantforge.models import black_scholes, from quantforge.models import black76",
+      "details": null
+    },
+    {
+      "file": "/home/driller/repo/quantforge/docs/en/api/python/index.md",
+      "line": 85,
+      "language": "python",
+      "success": true,
+      "message": "No quantforge imports to verify",
+      "details": null
+    },
+    {
+      "file": "/home/driller/repo/quantforge/docs/en/api/python/index.md",
+      "line": 155,
+      "language": "python",
+      "success": true,
+      "message": "No quantforge imports to verify",
+      "details": null
+    },
+    {
+      "file": "/home/driller/repo/quantforge/docs/en/api/python/index.md",
+      "line": 168,
+      "language": "python",
+      "success": true,
+      "message": "No quantforge imports to verify",
+      "details": null
+    },
+    {
+      "file": "/home/driller/repo/quantforge/docs/en/api/python/index.md",
+      "line": 194,
+      "language": "python",
+      "success": true,
+      "message": "No quantforge imports to verify",
+      "details": null
+    },
+    {
+      "file": "/home/driller/repo/quantforge/docs/en/api/python/index.md",
+      "line": 222,
+      "language": "python",
+      "success": true,
+      "message": "No quantforge imports to verify",
+      "details": null
+    },
+    {
+      "file": "/home/driller/repo/quantforge/docs/en/api/python/black76.md",
+      "line": 14,
+      "language": "python",
+      "success": true,
+      "message": "All imports verified: from quantforge.models import black76",
+      "details": null
+    },
+    {
+      "file": "/home/driller/repo/quantforge/docs/en/api/python/black76.md",
+      "line": 28,
+      "language": "python",
+      "success": true,
+      "message": "No quantforge imports to verify",
+      "details": null
+    },
+    {
+      "file": "/home/driller/repo/quantforge/docs/en/api/python/black76.md",
+      "line": 52,
+      "language": "python",
+      "success": true,
+      "message": "No quantforge imports to verify",
+      "details": null
+    },
+    {
+      "file": "/home/driller/repo/quantforge/docs/en/api/python/implied_vol.md",
+      "line": 16,
+      "language": "python",
+      "success": true,
+      "message": "All imports verified: from quantforge.models import black_scholes",
+      "details": null
+    },
+    {
+      "file": "/home/driller/repo/quantforge/docs/en/api/python/implied_vol.md",
+      "line": 37,
+      "language": "python",
+      "success": true,
+      "message": "All imports verified: from quantforge.models import black76",
+      "details": null
+    },
+    {
+      "file": "/home/driller/repo/quantforge/docs/en/api/python/implied_vol.md",
+      "line": 58,
+      "language": "python",
+      "success": true,
+      "message": "All imports verified: from quantforge.models import merton",
+      "details": null
+    },
+    {
+      "file": "/home/driller/repo/quantforge/docs/en/api/python/implied_vol.md",
+      "line": 80,
+      "language": "python",
+      "success": true,
+      "message": "All imports verified: from quantforge.models import american",
+      "details": null
+    },
+    {
+      "file": "/home/driller/repo/quantforge/docs/en/api/python/implied_vol.md",
+      "line": 102,
+      "language": "python",
+      "success": true,
+      "message": "All imports verified: from quantforge.models import black_scholes",
+      "details": null
+    },
+    {
+      "file": "/home/driller/repo/quantforge/docs/en/api/python/implied_vol.md",
+      "line": 182,
+      "language": "python",
+      "success": true,
+      "message": "No quantforge imports to verify",
+      "details": null
+    },
+    {
+      "file": "/home/driller/repo/quantforge/docs/en/api/python/implied_vol.md",
+      "line": 201,
+      "language": "python",
+      "success": true,
+      "message": "All imports verified: from quantforge.models import black_scholes, from quantforge.models import black76",
+      "details": null
+    },
+    {
+      "file": "/home/driller/repo/quantforge/docs/en/api/python/implied_vol.md",
+      "line": 260,
+      "language": "python",
+      "success": true,
+      "message": "All imports verified: from quantforge.models import black_scholes",
+      "details": null
+    },
+    {
+      "file": "/home/driller/repo/quantforge/docs/en/api/python/merton.md",
+      "line": 16,
+      "language": "python",
+      "success": true,
+      "message": "All imports verified: from quantforge.models import merton",
+      "details": null
+    },
+    {
+      "file": "/home/driller/repo/quantforge/docs/en/api/python/merton.md",
+      "line": 32,
+      "language": "python",
+      "success": true,
+      "message": "No quantforge imports to verify",
+      "details": null
+    },
+    {
+      "file": "/home/driller/repo/quantforge/docs/en/api/python/merton.md",
+      "line": 59,
+      "language": "python",
+      "success": true,
+      "message": "No quantforge imports to verify",
+      "details": null
+    },
+    {
+      "file": "/home/driller/repo/quantforge/docs/en/api/python/american.md",
+      "line": 14,
+      "language": "python",
+      "success": true,
+      "message": "All imports verified: from quantforge.models import american",
+      "details": null
+    },
+    {
+      "file": "/home/driller/repo/quantforge/docs/en/api/python/american.md",
+      "line": 28,
+      "language": "python",
+      "success": true,
+      "message": "No quantforge imports to verify",
+      "details": null
+    },
+    {
+      "file": "/home/driller/repo/quantforge/docs/en/api/python/american.md",
+      "line": 56,
+      "language": "python",
+      "success": true,
+      "message": "No quantforge imports to verify",
+      "details": null
+    },
+    {
+      "file": "/home/driller/repo/quantforge/docs/en/api/python/pricing.md",
+      "line": 10,
+      "language": "python",
+      "success": true,
+      "message": "No quantforge imports to verify",
+      "details": null
+    },
+    {
+      "file": "/home/driller/repo/quantforge/docs/en/api/python/greeks.md",
+      "line": 15,
+      "language": "python",
+      "success": true,
+      "message": "No quantforge imports to verify",
+      "details": null
+    },
+    {
+      "file": "/home/driller/repo/quantforge/docs/en/api/python/greeks.md",
+      "line": 29,
+      "language": "python",
+      "success": true,
+      "message": "No quantforge imports to verify",
+      "details": null
+    },
+    {
+      "file": "/home/driller/repo/quantforge/docs/en/api/python/greeks.md",
+      "line": 49,
+      "language": "python",
+      "success": true,
+      "message": "No quantforge imports to verify",
+      "details": null
+    },
+    {
+      "file": "/home/driller/repo/quantforge/docs/en/api/python/batch_processing.md",
+      "line": 26,
+      "language": "python",
+      "success": true,
+      "message": "All imports verified: from quantforge.models import black_scholes",
+      "details": null
+    },
+    {
+      "file": "/home/driller/repo/quantforge/docs/en/api/python/batch_processing.md",
+      "line": 49,
+      "language": "python",
+      "success": true,
+      "message": "No quantforge imports to verify",
+      "details": null
+    },
+    {
+      "file": "/home/driller/repo/quantforge/docs/en/api/python/batch_processing.md",
+      "line": 67,
+      "language": "python",
+      "success": true,
+      "message": "No quantforge imports to verify",
+      "details": null
+    },
+    {
+      "file": "/home/driller/repo/quantforge/docs/en/api/python/batch_processing.md",
+      "line": 81,
+      "language": "python",
+      "success": true,
+      "message": "No quantforge imports to verify",
+      "details": null
+    },
+    {
+      "file": "/home/driller/repo/quantforge/docs/en/api/python/batch_processing.md",
+      "line": 100,
+      "language": "python",
+      "success": true,
+      "message": "No quantforge imports to verify",
+      "details": null
+    },
+    {
+      "file": "/home/driller/repo/quantforge/docs/en/api/python/batch_processing.md",
+      "line": 122,
+      "language": "python",
+      "success": true,
+      "message": "No quantforge imports to verify",
+      "details": null
+    },
+    {
+      "file": "/home/driller/repo/quantforge/docs/en/api/python/batch_processing.md",
+      "line": 140,
+      "language": "python",
+      "success": true,
+      "message": "No quantforge imports to verify",
+      "details": null
+    },
+    {
+      "file": "/home/driller/repo/quantforge/docs/en/api/python/batch_processing.md",
+      "line": 146,
+      "language": "python",
+      "success": true,
+      "message": "No quantforge imports to verify",
+      "details": null
+    },
+    {
+      "file": "/home/driller/repo/quantforge/docs/en/api/python/batch_processing.md",
+      "line": 152,
+      "language": "python",
+      "success": true,
+      "message": "No quantforge imports to verify",
+      "details": null
+    },
+    {
+      "file": "/home/driller/repo/quantforge/docs/en/api/python/batch_processing.md",
+      "line": 162,
+      "language": "python",
+      "success": true,
+      "message": "No quantforge imports to verify",
+      "details": null
+    },
+    {
+      "file": "/home/driller/repo/quantforge/docs/en/api/python/batch_processing.md",
+      "line": 179,
+      "language": "python",
+      "success": true,
+      "message": "No quantforge imports to verify",
+      "details": null
+    },
+    {
+      "file": "/home/driller/repo/quantforge/docs/en/api/python/batch_processing.md",
+      "line": 185,
+      "language": "python",
+      "success": true,
+      "message": "No quantforge imports to verify",
+      "details": null
+    },
+    {
+      "file": "/home/driller/repo/quantforge/docs/en/api/python/batch_processing.md",
+      "line": 191,
+      "language": "python",
+      "success": true,
+      "message": "No quantforge imports to verify",
+      "details": null
+    },
+    {
+      "file": "/home/driller/repo/quantforge/docs/en/api/python/batch_processing.md",
+      "line": 204,
+      "language": "python",
+      "success": true,
+      "message": "No quantforge imports to verify",
+      "details": null
+    },
+    {
+      "file": "/home/driller/repo/quantforge/docs/en/api/python/batch_processing.md",
+      "line": 210,
+      "language": "python",
+      "success": true,
+      "message": "No quantforge imports to verify",
+      "details": null
+    },
+    {
+      "file": "/home/driller/repo/quantforge/docs/en/api/python/batch_processing.md",
+      "line": 216,
+      "language": "python",
+      "success": true,
+      "message": "No quantforge imports to verify",
+      "details": null
+    },
+    {
+      "file": "/home/driller/repo/quantforge/docs/en/api/python/batch_processing.md",
+      "line": 222,
+      "language": "python",
+      "success": true,
+      "message": "No quantforge imports to verify",
+      "details": null
+    },
+    {
+      "file": "/home/driller/repo/quantforge/docs/en/api/python/batch_processing.md",
+      "line": 234,
+      "language": "python",
+      "success": true,
+      "message": "No quantforge imports to verify",
+      "details": null
+    },
+    {
+      "file": "/home/driller/repo/quantforge/docs/en/api/python/batch_processing.md",
+      "line": 245,
+      "language": "python",
+      "success": true,
+      "message": "All imports verified: from quantforge.models import black_scholes",
+      "details": null
+    },
+    {
+      "file": "/home/driller/repo/quantforge/docs/en/api/python/batch_processing.md",
+      "line": 263,
+      "language": "python",
+      "success": true,
+      "message": "No quantforge imports to verify",
+      "details": null
+    },
+    {
+      "file": "/home/driller/repo/quantforge/docs/en/api/python/black_scholes.md",
+      "line": 18,
+      "language": "python",
+      "success": true,
+      "message": "No quantforge imports to verify",
+      "details": null
+    }
+  ]
+}

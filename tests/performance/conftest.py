@@ -76,8 +76,8 @@ class BenchmarkRecorder:
             memory_gb = round(psutil.virtual_memory().total / (1024**3), 1)
             cpu_count = psutil.cpu_count(logical=False)
         except ImportError:
-            memory_gb = "unknown"
-            cpu_count = "unknown"
+            memory_gb = 0.0
+            cpu_count = 0
 
         return {
             "platform": platform.system(),

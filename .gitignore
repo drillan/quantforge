@@ -250,10 +250,8 @@ scratch/
 *.old/
 *_backup/
 
-# Progress tracking
-tracker/data.yaml        # 詳細データ（頻繁更新）
-tracker/*.tmp           # 一時ファイル
-tracker/*.bak          # バックアップファイル
+# Progress tracking (experimental)
+tracker/                # 実験的な進捗追跡システム全体を除外
 
 # Legacy progress files (to be removed)
 progress_report.md

@@ -30,7 +30,9 @@ def test_benchmark_recording_works():
 def test_report_generator_imports():
     """Verify report generator can be imported."""
     try:
-        from generate_benchmark_report import BenchmarkReportGenerator
+        from tests.performance.generate_benchmark_report import (
+            BenchmarkReportGenerator,
+        )
 
         generator = BenchmarkReportGenerator()
         assert generator.results_dir.name == "benchmark_results"

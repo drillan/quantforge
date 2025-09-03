@@ -32,18 +32,17 @@ pub fn pyany_to_arrow(_py: Python, value: &Bound<'_, PyAny>) -> PyResult<PyArray
             use arrow::compute::cast;
 
             let casted = cast(array_ref, &arrow::datatypes::DataType::Float64).map_err(|e| {
-                PyValueError::new_err(format!("Failed to cast array to Float64: {}", e))
+                PyValueError::new_err(format!("Failed to cast array to Float64: {e}"))
             })?;
-            let array_ref = Arc::from(casted);
+            let array_ref = casted;
             return Ok(PyArray::from_array_ref(array_ref));
         }
 
         // For other types, try to cast
         use arrow::compute::cast;
-        let casted = cast(array_ref, &arrow::datatypes::DataType::Float64).map_err(|e| {
-            PyValueError::new_err(format!("Failed to cast array to Float64: {}", e))
-        })?;
-        let array_ref = Arc::from(casted);
+        let casted = cast(array_ref, &arrow::datatypes::DataType::Float64)
+            .map_err(|e| PyValueError::new_err(format!("Failed to cast array to Float64: {e}")))?;
+        let array_ref = casted;
         return Ok(PyArray::from_array_ref(array_ref));
     }
 

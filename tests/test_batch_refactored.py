@@ -5,7 +5,8 @@ from typing import Any
 import numpy as np
 import pytest
 from quantforge import black76, black_scholes, merton
-from test_base import BaseBatchTest
+
+from tests.test_base import BaseBatchTest
 
 
 class TestBlackScholesBatchRefactored(BaseBatchTest):

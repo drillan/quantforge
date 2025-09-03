@@ -1,8 +1,9 @@
 """Test Black-Scholes Python API bindings."""
 
 import numpy as np
+import quantforge
 
-from python.quantforge import models
+models = quantforge
 
 
 class TestBlackScholesAPI:

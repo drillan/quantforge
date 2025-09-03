@@ -2,9 +2,10 @@
 
 import numpy as np
 import pytest
-from conftest import PRACTICAL_TOLERANCE, THEORETICAL_TOLERANCE
 from quantforge import black_scholes
 from scipy import stats
+
+from tests.conftest import PRACTICAL_TOLERANCE, THEORETICAL_TOLERANCE
 
 
 @pytest.mark.integration
@@ -128,7 +129,11 @@ class TestBlackScholesIntegration:
         sample_indices = np.random.choice(n, 100, replace=False)
         for idx in sample_indices:
             single_price = black_scholes.call_price(spots[idx], k, t, r, sigma)
-            assert abs(batch_prices[idx] - single_price) < PRACTICAL_TOLERANCE, f"バッチと単一の不一致: {idx}"
+            # Convert Arrow scalar to Python float if needed
+            batch_val = batch_prices[idx]
+            if hasattr(batch_val, "as_py"):
+                batch_val = batch_val.as_py()
+            assert abs(float(batch_val) - single_price) < PRACTICAL_TOLERANCE, f"バッチと単一の不一致: {idx}"
 
     def test_large_scale_batch(self) -> None:
         """大規模バッチ処理のテスト."""
@@ -142,12 +147,19 @@ class TestBlackScholesIntegration:
         prices = black_scholes.call_price_batch(spots, k, t, r, sigma)
 
         assert len(prices) == n, "バッチサイズが不正"
-        assert np.all(prices >= 0), "負の価格が存在"
-        assert np.all(np.isfinite(prices)), "無限大またはNaNが存在"
+
+        # Convert Arrow result to numpy if needed
+        if hasattr(prices, "to_numpy"):
+            prices_np = prices.to_numpy()
+        else:
+            prices_np = np.array([float(p.as_py()) if hasattr(p, "as_py") else float(p) for p in prices])
+
+        assert np.all(prices_np >= 0), "負の価格が存在"
+        assert np.all(np.isfinite(prices_np)), "無限大またはNaNが存在"
 
         # 統計的性質の確認
-        mean_price = np.mean(prices)
-        std_price = np.std(prices)
+        mean_price = np.mean(prices_np)
+        std_price = np.std(prices_np)
         assert 15 < mean_price < 20, f"平均価格が異常: {mean_price}"  # erf実装での正確な値: ~17
         assert std_price > 0, "価格の分散がゼロ"
 
