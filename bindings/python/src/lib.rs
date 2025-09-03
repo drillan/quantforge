@@ -6,6 +6,7 @@ use pyo3::prelude::*;
 
 mod error;
 mod models;
+mod utils;
 
 use models::*;
 

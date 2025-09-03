@@ -7,7 +7,7 @@ use std::sync::Arc;
 
 use super::formulas::{black_scholes_call_scalar, black_scholes_d1_d2, black_scholes_put_scalar};
 use super::{get_scalar_or_array_value, validate_broadcast_compatibility};
-use crate::constants::get_parallel_threshold;
+use crate::constants::{get_parallel_threshold, PUT_DELTA_ADJUSTMENT, THETA_DENOMINATOR_FACTOR};
 
 /// Black-Scholes model implementation using Arrow arrays
 pub struct BlackScholes;
@@ -278,7 +278,11 @@ impl BlackScholes {
         let mut builder = Float64Builder::with_capacity(d1.len());
         for i in 0..d1.len() {
             let n_d1 = norm_cdf(d1.value(i));
-            let delta = if is_call { n_d1 } else { n_d1 - 1.0 };
+            let delta = if is_call {
+                n_d1
+            } else {
+                n_d1 - PUT_DELTA_ADJUSTMENT
+            };
             builder.append_value(delta);
         }
         Ok(Arc::new(builder.finish()))
@@ -356,7 +360,7 @@ impl BlackScholes {
             let sigma = get_scalar_or_array_value(sigmas, i);
 
             let phi_d1 = norm_pdf(d1.value(i));
-            let common_term = -(s * phi_d1 * sigma) / (2.0 * t.sqrt());
+            let common_term = -(s * phi_d1 * sigma) / (THETA_DENOMINATOR_FACTOR * t.sqrt());
 
             let theta = if is_call {
                 let n_d2 = norm_cdf(d2.value(i));

@@ -105,11 +105,11 @@ class IntegrationBenchmark:
         start = time.perf_counter()
 
         # デルタ集計
-        total_delta = np.sum(call_greeks["delta"]) + np.sum(put_greeks["delta"])
+        np.sum(call_greeks["delta"]) + np.sum(put_greeks["delta"])
         # ガンマ集計
-        total_gamma = np.sum(call_greeks["gamma"]) + np.sum(put_greeks["gamma"])
+        np.sum(call_greeks["gamma"]) + np.sum(put_greeks["gamma"])
         # ベガ集計
-        total_vega = np.sum(call_greeks["vega"]) + np.sum(put_greeks["vega"])
+        np.sum(call_greeks["vega"]) + np.sum(put_greeks["vega"])
 
         end = time.perf_counter()
         results["aggregation_time"] = end - start
@@ -186,7 +186,7 @@ class IntegrationBenchmark:
                         price=market_prices[i, j], s=spot, k=k, t=t, r=0.05, is_call=True
                     )
                     iv_surface[i, j] = iv
-                except:
+                except Exception:
                     iv_surface[i, j] = np.nan
 
         end = time.perf_counter()

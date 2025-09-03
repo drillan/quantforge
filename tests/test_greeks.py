@@ -58,7 +58,8 @@ class TestGreeksSingleCalculation:
         vega = greeks["vega"]
         # Vegaは常に正
         assert vega > 0.0
-        assert abs(vega - 0.3752403469169379) < NUMERICAL_TOLERANCE
+        # Vegaは1%のボラティリティ変化に対する価格変化（BASIS_POINT_MULTIPLIER適用）
+        assert abs(vega - 37.52403469169379) < NUMERICAL_TOLERANCE
 
     def test_theta_call(self) -> None:
         """コールオプションのTheta計算テスト"""
@@ -98,9 +99,11 @@ class TestAllGreeks:
 
         assert abs(greeks["delta"] - 0.6368306517096883) < NUMERICAL_TOLERANCE
         assert abs(greeks["gamma"] - 0.018762017345846895) < NUMERICAL_TOLERANCE
-        assert abs(greeks["vega"] - 0.3752403469169379) < NUMERICAL_TOLERANCE
-        assert abs(greeks["theta"] - (-0.017582796228917447)) < 2e-5  # Thetaの精度制約
-        assert abs(greeks["rho"] - 0.5323131061766925) < 2e-5  # Rhoの精度制約
+        assert abs(greeks["vega"] - 37.52403469169379) < NUMERICAL_TOLERANCE
+        # Thetaは年率で返される（1日あたりは365で割る）
+        assert abs(greeks["theta"] - (-6.414027546438197)) < 2e-3  # Thetaの精度制約
+        # Rhoは1%の金利変化に対する価格変化（BASIS_POINT_MULTIPLIER適用）
+        assert abs(greeks["rho"] - 53.232481545376345) < 2e-3  # Rhoの精度制約
 
     def test_all_greeks_put(self) -> None:
         """プットオプションの全グリークス"""
@@ -108,9 +111,11 @@ class TestAllGreeks:
 
         assert abs(greeks["delta"] - (-0.36316934829031174)) < NUMERICAL_TOLERANCE
         assert abs(greeks["gamma"] - 0.018762017345846895) < NUMERICAL_TOLERANCE
-        assert abs(greeks["vega"] - 0.3752403469169379) < NUMERICAL_TOLERANCE
-        assert abs(greeks["theta"] - (-0.011661530511418097)) < 0.01  # Thetaの計算誤差が大きいため
-        assert abs(greeks["rho"] - (-0.4249474915266148)) < 0.01  # Rhoの計算誤差が大きいため
+        assert abs(greeks["vega"] - 37.52403469169379) < NUMERICAL_TOLERANCE
+        # Thetaは年率で返される（1日あたりは365で割る）
+        assert abs(greeks["theta"] - (-1.657880423934626)) < 0.01  # Thetaの計算誤差が大きいため
+        # Rhoは1%の金利変化に対する価格変化（BASIS_POINT_MULTIPLIER適用）
+        assert abs(greeks["rho"] - (-41.89046090469506)) < 0.01  # Rhoの計算誤差が大きいため
 
 
 class TestGreeksEdgeCases:
@@ -195,4 +200,5 @@ class TestGreeksPutCallParity:
         greeks_call = black_scholes.greeks(100.0, 100.0, 1.0, 0.05, 0.2, is_call=True)
         greeks_put = black_scholes.greeks(100.0, 100.0, 1.0, 0.05, 0.2, is_call=False)
 
-        assert abs(greeks_call["vega"] - greeks_put["vega"]) < NUMERICAL_TOLERANCE
+        # Vegaは値が大きいため、適切な許容値を使用
+        assert abs(greeks_call["vega"] - greeks_put["vega"]) < 1e-5

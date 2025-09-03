@@ -5,7 +5,7 @@ import math
 import numpy as np
 import pytest
 from conftest import PRACTICAL_TOLERANCE
-from quantforge import black_scholes
+from quantforge.models import black_scholes
 
 
 @pytest.mark.unit

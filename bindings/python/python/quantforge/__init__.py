@@ -1,11 +1,8 @@
-"""
-QuantForge: High-performance option pricing library
-"""
-
-# Import the native module
-# Import Python wrappers with broadcasting support
-from . import black_scholes
+"""QuantForge: Arrow-native option pricing library"""
 from .quantforge import __version__
+from .quantforge import black_scholes
+from .quantforge import black76
+from .quantforge import merton
+from .quantforge import american
 
-# Define public API
-__all__ = ["__version__", "black_scholes"]
+__all__ = ["__version__", "black_scholes", "black76", "merton", "american"]

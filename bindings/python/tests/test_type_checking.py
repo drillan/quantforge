@@ -205,12 +205,12 @@ class TestMypyCompliance:
         # These are examples of what mypy's reveal_type would show
         # In actual mypy runs, these would print the inferred types
 
-        price = black_scholes.call_price(100, 100, 1, 0.05, 0.2)
+        black_scholes.call_price(100, 100, 1, 0.05, 0.2)
         # reveal_type(price)  # Would show: float
 
         arr = np.array([100.0])
-        prices = black_scholes.call_price_batch(arr, 100, 1, 0.05, 0.2)
+        black_scholes.call_price_batch(arr, 100, 1, 0.05, 0.2)
         # reveal_type(prices)  # Would show: NDArray[float64]
 
-        greeks = black_scholes.greeks(100, 100, 1, 0.05, 0.2)
+        black_scholes.greeks(100, 100, 1, 0.05, 0.2)
         # reveal_type(greeks)  # Would show: Dict[str, float]

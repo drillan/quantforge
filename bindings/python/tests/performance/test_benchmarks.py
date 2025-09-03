@@ -88,7 +88,7 @@ class TestPerformance:
         snapshot1 = tracemalloc.take_snapshot()
 
         # Process batch
-        prices = models.black_scholes.call_price_batch(spots, 100, 1, 0.05, 0.2)
+        models.black_scholes.call_price_batch(spots, 100, 1, 0.05, 0.2)
 
         snapshot2 = tracemalloc.take_snapshot()
 

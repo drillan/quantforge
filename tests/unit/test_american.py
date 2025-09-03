@@ -2,11 +2,7 @@
 
 import math
 
-import quantforge as qf
-
-# Direct access to modules
-american = qf.american
-merton = qf.merton
+from quantforge.models import american, merton
 
 # Test tolerances
 THEORETICAL_TOLERANCE = 1e-3

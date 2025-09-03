@@ -48,6 +48,21 @@ def extract_pytest_results(file_path):
     return None
 
 
+def check_mypy_status():
+    """Check MyPy status from results file."""
+    if not os.path.exists("mypy_results.txt"):
+        return "⚠️ Type Issues"
+    if os.path.getsize("mypy_results.txt") == 0:
+        return "⚠️ Type Issues"
+
+    with open("mypy_results.txt") as f:
+        content = f.read()
+        if "Success" in content:
+            return "✅ Type Safe"
+
+    return "⚠️ Type Issues"
+
+
 def get_benchmark_summary():
     """Extract benchmark summary if available."""
     bench_file = "benchmark_results.txt"
@@ -96,7 +111,10 @@ def generate_report():
 
 - **Total Tests Passed**: {total_passed}
 - **Total Tests Failed**: {total_failed}
-- **Success Rate**: {(total_passed / (total_passed + total_failed) * 100) if (total_passed + total_failed) > 0 else 0:.1f}%
+- **Success Rate**: {(
+    (total_passed / (total_passed + total_failed) * 100)
+    if (total_passed + total_failed) > 0 else 0
+):.1f}%
 - **Benchmarks**: {report["benchmarks"]}
 
 ## Test Results by Category
@@ -156,8 +174,11 @@ def generate_report():
 ## Code Quality
 
 ### Python
-- **Ruff**: {"✅ Clean" if os.path.exists("ruff_results.txt") and os.path.getsize("ruff_results.txt") < 100 else "⚠️ Issues Found"}
-- **MyPy**: {"✅ Type Safe" if os.path.exists("mypy_results.txt") and "Success" in open("mypy_results.txt").read() else "⚠️ Type Issues"}
+- **Ruff**: {(
+    "✅ Clean" if os.path.exists("ruff_results.txt") and
+    os.path.getsize("ruff_results.txt") < 100 else "⚠️ Issues Found"
+)}
+- **MyPy**: {check_mypy_status()}
 
 ### Rust
 - **Format**: {"✅ Formatted" if os.path.exists("rust_format_results.txt") else "⚠️ Check Required"}

@@ -17,14 +17,16 @@ use quantforge_core::compute::formulas::{
 use quantforge_core::compute::{Black76, BlackScholes};
 use std::sync::Arc;
 
+use crate::utils::pyany_to_arrow;
+
 /// Black-Scholes call price calculation using Arrow arrays
 ///
 /// Parameters:
-/// - spots: Arrow array of spot prices
-/// - strikes: Arrow array of strike prices  
-/// - times: Arrow array of times to maturity
-/// - rates: Arrow array of risk-free rates
-/// - sigmas: Arrow array of volatilities
+/// - spots: Spot prices (float or Arrow array)
+/// - strikes: Strike prices (float or Arrow array)  
+/// - times: Times to maturity (float or Arrow array)
+/// - rates: Risk-free rates (float or Arrow array)
+/// - sigmas: Volatilities (float or Arrow array)
 ///
 /// Returns Arrow array of call prices
 #[pyfunction]
@@ -32,18 +34,25 @@ use std::sync::Arc;
 #[pyo3(signature = (spots, strikes, times, rates, sigmas))]
 pub fn arrow_call_price(
     py: Python,
-    spots: PyArray,
-    strikes: PyArray,
-    times: PyArray,
-    rates: PyArray,
-    sigmas: PyArray,
+    spots: &Bound<'_, PyAny>,
+    strikes: &Bound<'_, PyAny>,
+    times: &Bound<'_, PyAny>,
+    rates: &Bound<'_, PyAny>,
+    sigmas: &Bound<'_, PyAny>,
 ) -> PyArrowResult<PyObject> {
+    // Convert PyAny to Arrow arrays (scalars become length-1 arrays)
+    let spots_pyarray = pyany_to_arrow(py, spots)?;
+    let strikes_pyarray = pyany_to_arrow(py, strikes)?;
+    let times_pyarray = pyany_to_arrow(py, times)?;
+    let rates_pyarray = pyany_to_arrow(py, rates)?;
+    let sigmas_pyarray = pyany_to_arrow(py, sigmas)?;
+
     // Extract Arrow arrays from PyArray wrappers
-    let spots_array = spots.as_ref();
-    let strikes_array = strikes.as_ref();
-    let times_array = times.as_ref();
-    let rates_array = rates.as_ref();
-    let sigmas_array = sigmas.as_ref();
+    let spots_array = spots_pyarray.as_ref();
+    let strikes_array = strikes_pyarray.as_ref();
+    let times_array = times_pyarray.as_ref();
+    let rates_array = rates_pyarray.as_ref();
+    let sigmas_array = sigmas_pyarray.as_ref();
 
     // Downcast to Float64Array
     let spots_f64 = spots_array
@@ -91,11 +100,11 @@ pub fn arrow_call_price(
 /// Black-Scholes put price calculation using Arrow arrays
 ///
 /// Parameters:
-/// - spots: Arrow array of spot prices
-/// - strikes: Arrow array of strike prices
-/// - times: Arrow array of times to maturity
-/// - rates: Arrow array of risk-free rates
-/// - sigmas: Arrow array of volatilities
+/// - spots: Spot prices (float or Arrow array)
+/// - strikes: Strike prices (float or Arrow array)
+/// - times: Times to maturity (float or Arrow array)
+/// - rates: Risk-free rates (float or Arrow array)
+/// - sigmas: Volatilities (float or Arrow array)
 ///
 /// Returns Arrow array of put prices
 #[pyfunction]
@@ -103,18 +112,25 @@ pub fn arrow_call_price(
 #[pyo3(signature = (spots, strikes, times, rates, sigmas))]
 pub fn arrow_put_price(
     py: Python,
-    spots: PyArray,
-    strikes: PyArray,
-    times: PyArray,
-    rates: PyArray,
-    sigmas: PyArray,
+    spots: &Bound<'_, PyAny>,
+    strikes: &Bound<'_, PyAny>,
+    times: &Bound<'_, PyAny>,
+    rates: &Bound<'_, PyAny>,
+    sigmas: &Bound<'_, PyAny>,
 ) -> PyArrowResult<PyObject> {
+    // Convert PyAny to Arrow arrays (scalars become length-1 arrays)
+    let spots_pyarray = pyany_to_arrow(py, spots)?;
+    let strikes_pyarray = pyany_to_arrow(py, strikes)?;
+    let times_pyarray = pyany_to_arrow(py, times)?;
+    let rates_pyarray = pyany_to_arrow(py, rates)?;
+    let sigmas_pyarray = pyany_to_arrow(py, sigmas)?;
+
     // Extract Arrow arrays from PyArray wrappers
-    let spots_array = spots.as_ref();
-    let strikes_array = strikes.as_ref();
-    let times_array = times.as_ref();
-    let rates_array = rates.as_ref();
-    let sigmas_array = sigmas.as_ref();
+    let spots_array = spots_pyarray.as_ref();
+    let strikes_array = strikes_pyarray.as_ref();
+    let times_array = times_pyarray.as_ref();
+    let rates_array = rates_pyarray.as_ref();
+    let sigmas_array = sigmas_pyarray.as_ref();
 
     // Downcast to Float64Array
     let spots_f64 = spots_array
@@ -162,11 +178,11 @@ pub fn arrow_put_price(
 /// Black-Scholes Greeks calculation using Arrow arrays
 ///
 /// Parameters:
-/// - spots: Arrow array of spot prices
-/// - strikes: Arrow array of strike prices
-/// - times: Arrow array of times to maturity
-/// - rates: Arrow array of risk-free rates
-/// - sigmas: Arrow array of volatilities
+/// - spots: Spot prices (float or Arrow array)
+/// - strikes: Strike prices (float or Arrow array)
+/// - times: Times to maturity (float or Arrow array)
+/// - rates: Risk-free rates (float or Arrow array)
+/// - sigmas: Volatilities (float or Arrow array)
 /// - is_call: Boolean flag for call (true) or put (false) option
 ///
 /// Returns Dict[str, Arrow array] of Greeks
@@ -175,19 +191,26 @@ pub fn arrow_put_price(
 #[pyo3(signature = (spots, strikes, times, rates, sigmas, is_call))]
 pub fn arrow_greeks(
     py: Python,
-    spots: PyArray,
-    strikes: PyArray,
-    times: PyArray,
-    rates: PyArray,
-    sigmas: PyArray,
+    spots: &Bound<'_, PyAny>,
+    strikes: &Bound<'_, PyAny>,
+    times: &Bound<'_, PyAny>,
+    rates: &Bound<'_, PyAny>,
+    sigmas: &Bound<'_, PyAny>,
     is_call: bool,
 ) -> PyArrowResult<PyObject> {
+    // Convert PyAny to Arrow arrays (scalars become length-1 arrays)
+    let spots_pyarray = pyany_to_arrow(py, spots)?;
+    let strikes_pyarray = pyany_to_arrow(py, strikes)?;
+    let times_pyarray = pyany_to_arrow(py, times)?;
+    let rates_pyarray = pyany_to_arrow(py, rates)?;
+    let sigmas_pyarray = pyany_to_arrow(py, sigmas)?;
+
     // Extract Arrow arrays from PyArray wrappers
-    let spots_array = spots.as_ref();
-    let strikes_array = strikes.as_ref();
-    let times_array = times.as_ref();
-    let rates_array = rates.as_ref();
-    let sigmas_array = sigmas.as_ref();
+    let spots_array = spots_pyarray.as_ref();
+    let strikes_array = strikes_pyarray.as_ref();
+    let times_array = times_pyarray.as_ref();
+    let rates_array = rates_pyarray.as_ref();
+    let sigmas_array = sigmas_pyarray.as_ref();
 
     // Downcast to Float64Array
     let spots_f64 = spots_array
@@ -278,11 +301,11 @@ pub fn arrow_greeks(
 /// Black76 call price calculation using Arrow arrays
 ///
 /// Parameters:
-/// - forwards: Arrow array of forward prices
-/// - strikes: Arrow array of strike prices
-/// - times: Arrow array of times to maturity
-/// - rates: Arrow array of risk-free rates
-/// - sigmas: Arrow array of volatilities
+/// - forwards: Forward prices (float or Arrow array)
+/// - strikes: Strike prices (float or Arrow array)
+/// - times: Times to maturity (float or Arrow array)
+/// - rates: Risk-free rates (float or Arrow array)
+/// - sigmas: Volatilities (float or Arrow array)
 ///
 /// Returns Arrow array of call prices
 #[pyfunction]
@@ -290,34 +313,41 @@ pub fn arrow_greeks(
 #[pyo3(signature = (forwards, strikes, times, rates, sigmas))]
 pub fn arrow76_call_price(
     py: Python,
-    forwards: PyArray,
-    strikes: PyArray,
-    times: PyArray,
-    rates: PyArray,
-    sigmas: PyArray,
+    forwards: &Bound<'_, PyAny>,
+    strikes: &Bound<'_, PyAny>,
+    times: &Bound<'_, PyAny>,
+    rates: &Bound<'_, PyAny>,
+    sigmas: &Bound<'_, PyAny>,
 ) -> PyArrowResult<PyObject> {
+    // Convert PyAny to Arrow arrays (scalars become length-1 arrays)
+    let forwards_pyarray = pyany_to_arrow(py, forwards)?;
+    let strikes_pyarray = pyany_to_arrow(py, strikes)?;
+    let times_pyarray = pyany_to_arrow(py, times)?;
+    let rates_pyarray = pyany_to_arrow(py, rates)?;
+    let sigmas_pyarray = pyany_to_arrow(py, sigmas)?;
+
     // Extract and downcast arrays
-    let forwards_f64 = forwards
+    let forwards_f64 = forwards_pyarray
         .as_ref()
         .as_any()
         .downcast_ref::<Float64Array>()
         .ok_or_else(|| ArrowError::CastError("forwards must be Float64Array".into()))?;
-    let strikes_f64 = strikes
+    let strikes_f64 = strikes_pyarray
         .as_ref()
         .as_any()
         .downcast_ref::<Float64Array>()
         .ok_or_else(|| ArrowError::CastError("strikes must be Float64Array".into()))?;
-    let times_f64 = times
+    let times_f64 = times_pyarray
         .as_ref()
         .as_any()
         .downcast_ref::<Float64Array>()
         .ok_or_else(|| ArrowError::CastError("times must be Float64Array".into()))?;
-    let rates_f64 = rates
+    let rates_f64 = rates_pyarray
         .as_ref()
         .as_any()
         .downcast_ref::<Float64Array>()
         .ok_or_else(|| ArrowError::CastError("rates must be Float64Array".into()))?;
-    let sigmas_f64 = sigmas
+    let sigmas_f64 = sigmas_pyarray
         .as_ref()
         .as_any()
         .downcast_ref::<Float64Array>()
@@ -345,34 +375,41 @@ pub fn arrow76_call_price(
 #[pyo3(signature = (forwards, strikes, times, rates, sigmas))]
 pub fn arrow76_put_price(
     py: Python,
-    forwards: PyArray,
-    strikes: PyArray,
-    times: PyArray,
-    rates: PyArray,
-    sigmas: PyArray,
+    forwards: &Bound<'_, PyAny>,
+    strikes: &Bound<'_, PyAny>,
+    times: &Bound<'_, PyAny>,
+    rates: &Bound<'_, PyAny>,
+    sigmas: &Bound<'_, PyAny>,
 ) -> PyArrowResult<PyObject> {
+    // Convert PyAny to Arrow arrays (scalars become length-1 arrays)
+    let forwards_pyarray = pyany_to_arrow(py, forwards)?;
+    let strikes_pyarray = pyany_to_arrow(py, strikes)?;
+    let times_pyarray = pyany_to_arrow(py, times)?;
+    let rates_pyarray = pyany_to_arrow(py, rates)?;
+    let sigmas_pyarray = pyany_to_arrow(py, sigmas)?;
+
     // Extract and downcast arrays
-    let forwards_f64 = forwards
+    let forwards_f64 = forwards_pyarray
         .as_ref()
         .as_any()
         .downcast_ref::<Float64Array>()
         .ok_or_else(|| ArrowError::CastError("forwards must be Float64Array".into()))?;
-    let strikes_f64 = strikes
+    let strikes_f64 = strikes_pyarray
         .as_ref()
         .as_any()
         .downcast_ref::<Float64Array>()
         .ok_or_else(|| ArrowError::CastError("strikes must be Float64Array".into()))?;
-    let times_f64 = times
+    let times_f64 = times_pyarray
         .as_ref()
         .as_any()
         .downcast_ref::<Float64Array>()
         .ok_or_else(|| ArrowError::CastError("times must be Float64Array".into()))?;
-    let rates_f64 = rates
+    let rates_f64 = rates_pyarray
         .as_ref()
         .as_any()
         .downcast_ref::<Float64Array>()
         .ok_or_else(|| ArrowError::CastError("rates must be Float64Array".into()))?;
-    let sigmas_f64 = sigmas
+    let sigmas_f64 = sigmas_pyarray
         .as_ref()
         .as_any()
         .downcast_ref::<Float64Array>()
@@ -400,35 +437,42 @@ pub fn arrow76_put_price(
 #[pyo3(signature = (forwards, strikes, times, rates, sigmas, is_call))]
 pub fn arrow76_greeks(
     py: Python,
-    forwards: PyArray,
-    strikes: PyArray,
-    times: PyArray,
-    rates: PyArray,
-    sigmas: PyArray,
+    forwards: &Bound<'_, PyAny>,
+    strikes: &Bound<'_, PyAny>,
+    times: &Bound<'_, PyAny>,
+    rates: &Bound<'_, PyAny>,
+    sigmas: &Bound<'_, PyAny>,
     is_call: bool,
 ) -> PyArrowResult<PyObject> {
+    // Convert PyAny to Arrow arrays (scalars become length-1 arrays)
+    let forwards_pyarray = pyany_to_arrow(py, forwards)?;
+    let strikes_pyarray = pyany_to_arrow(py, strikes)?;
+    let times_pyarray = pyany_to_arrow(py, times)?;
+    let rates_pyarray = pyany_to_arrow(py, rates)?;
+    let sigmas_pyarray = pyany_to_arrow(py, sigmas)?;
+
     // Extract and downcast arrays
-    let forwards_f64 = forwards
+    let forwards_f64 = forwards_pyarray
         .as_ref()
         .as_any()
         .downcast_ref::<Float64Array>()
         .ok_or_else(|| ArrowError::CastError("forwards must be Float64Array".into()))?;
-    let strikes_f64 = strikes
+    let strikes_f64 = strikes_pyarray
         .as_ref()
         .as_any()
         .downcast_ref::<Float64Array>()
         .ok_or_else(|| ArrowError::CastError("strikes must be Float64Array".into()))?;
-    let times_f64 = times
+    let times_f64 = times_pyarray
         .as_ref()
         .as_any()
         .downcast_ref::<Float64Array>()
         .ok_or_else(|| ArrowError::CastError("times must be Float64Array".into()))?;
-    let rates_f64 = rates
+    let rates_f64 = rates_pyarray
         .as_ref()
         .as_any()
         .downcast_ref::<Float64Array>()
         .ok_or_else(|| ArrowError::CastError("rates must be Float64Array".into()))?;
-    let sigmas_f64 = sigmas
+    let sigmas_f64 = sigmas_pyarray
         .as_ref()
         .as_any()
         .downcast_ref::<Float64Array>()
@@ -740,11 +784,11 @@ pub fn implied_volatility(
 #[pyfunction]
 pub fn call_price_batch(
     py: Python,
-    spots: PyArray,
-    strikes: PyArray,
-    times: PyArray,
-    rates: PyArray,
-    sigmas: PyArray,
+    spots: &Bound<'_, PyAny>,
+    strikes: &Bound<'_, PyAny>,
+    times: &Bound<'_, PyAny>,
+    rates: &Bound<'_, PyAny>,
+    sigmas: &Bound<'_, PyAny>,
 ) -> PyArrowResult<PyObject> {
     // Direct call to arrow function
     arrow_call_price(py, spots, strikes, times, rates, sigmas)
@@ -754,11 +798,11 @@ pub fn call_price_batch(
 #[pyfunction]
 pub fn put_price_batch(
     py: Python,
-    spots: PyArray,
-    strikes: PyArray,
-    times: PyArray,
-    rates: PyArray,
-    sigmas: PyArray,
+    spots: &Bound<'_, PyAny>,
+    strikes: &Bound<'_, PyAny>,
+    times: &Bound<'_, PyAny>,
+    rates: &Bound<'_, PyAny>,
+    sigmas: &Bound<'_, PyAny>,
 ) -> PyArrowResult<PyObject> {
     // Direct call to arrow function
     arrow_put_price(py, spots, strikes, times, rates, sigmas)
@@ -769,11 +813,11 @@ pub fn put_price_batch(
 #[pyo3(signature = (spots, strikes, times, rates, sigmas, is_call=true))]
 pub fn greeks_batch(
     py: Python,
-    spots: PyArray,
-    strikes: PyArray,
-    times: PyArray,
-    rates: PyArray,
-    sigmas: PyArray,
+    spots: &Bound<'_, PyAny>,
+    strikes: &Bound<'_, PyAny>,
+    times: &Bound<'_, PyAny>,
+    rates: &Bound<'_, PyAny>,
+    sigmas: &Bound<'_, PyAny>,
     is_call: bool,
 ) -> PyArrowResult<PyObject> {
     // Direct call to arrow function
@@ -805,11 +849,11 @@ pub fn implied_volatility_batch(
 #[pyo3(name = "call_price_batch_no_validation")]
 pub fn call_price_batch_no_validation(
     py: Python,
-    spots: PyArray,
-    strikes: PyArray,
-    times: PyArray,
-    rates: PyArray,
-    sigmas: PyArray,
+    spots: &Bound<'_, PyAny>,
+    strikes: &Bound<'_, PyAny>,
+    times: &Bound<'_, PyAny>,
+    rates: &Bound<'_, PyAny>,
+    sigmas: &Bound<'_, PyAny>,
 ) -> PyArrowResult<PyObject> {
     // Directly call the arrow function without any validation
     // This is the same as arrow_call_price but with a different name
@@ -821,11 +865,11 @@ pub fn call_price_batch_no_validation(
 #[pyo3(name = "put_price_batch_no_validation")]
 pub fn put_price_batch_no_validation(
     py: Python,
-    spots: PyArray,
-    strikes: PyArray,
-    times: PyArray,
-    rates: PyArray,
-    sigmas: PyArray,
+    spots: &Bound<'_, PyAny>,
+    strikes: &Bound<'_, PyAny>,
+    times: &Bound<'_, PyAny>,
+    rates: &Bound<'_, PyAny>,
+    sigmas: &Bound<'_, PyAny>,
 ) -> PyArrowResult<PyObject> {
     // Directly call the arrow function without any validation
     arrow_put_price(py, spots, strikes, times, rates, sigmas)

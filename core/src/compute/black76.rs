@@ -7,7 +7,7 @@ use std::sync::Arc;
 
 use super::formulas::{black76_call_scalar, black76_d1_d2, black76_put_scalar};
 use super::{get_scalar_or_array_value, validate_broadcast_compatibility};
-use crate::constants::get_parallel_threshold;
+use crate::constants::{get_parallel_threshold, PUT_DELTA_ADJUSTMENT, THETA_DENOMINATOR_FACTOR};
 use crate::math::distributions::norm_cdf;
 
 /// Black76 model implementation using Arrow arrays
@@ -154,7 +154,7 @@ impl Black76 {
             let delta = if is_call {
                 (-r * t).exp() * norm_cdf(d1)
             } else {
-                (-r * t).exp() * (norm_cdf(d1) - 1.0)
+                (-r * t).exp() * (norm_cdf(d1) - PUT_DELTA_ADJUSTMENT)
             };
 
             builder.append_value(delta);
@@ -248,7 +248,8 @@ impl Black76 {
             let sqrt_t = t.sqrt();
 
             let discount = (-r * t).exp();
-            let common_term = -discount * f * norm_pdf(d1) * sigma / (2.0 * sqrt_t);
+            let common_term =
+                -discount * f * norm_pdf(d1) * sigma / (THETA_DENOMINATOR_FACTOR * sqrt_t);
 
             let theta = if is_call {
                 common_term + r * discount * (f * norm_cdf(d1) - k * norm_cdf(d2))

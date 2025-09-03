@@ -5,7 +5,7 @@ import math
 import numpy as np
 import pytest
 from conftest import THEORETICAL_TOLERANCE
-from quantforge import merton
+from quantforge.models import merton
 
 
 class TestMertonCallPrice:

@@ -11,6 +11,8 @@ requires-python = ">=3.12"
 dependencies = [
     "numpy>=1.20",
     "psutil>=7.0.0",
+    "pyarrow>=10.0.0",
+    "arro3-core>=0.4.0",
 ]
 classifiers = [
     "Development Status :: 3 - Alpha",
@@ -112,9 +114,9 @@ benchmarks = ["*.json", "*.md", "results/*.json", "results/*.jsonl", "results/*.
 
 [tool.maturin]
 features = ["pyo3/extension-module"]
-python-source = "python"
 module-name = "quantforge.quantforge"
 manifest-path = "bindings/python/Cargo.toml"
+python-source = "bindings/python/python"
 
 [tool.pytest.ini_options]
 minversion = "8.0"
@@ -148,6 +150,7 @@ warn_unused_ignores = true
 warn_unreachable = true
 strict_equality = true
 check_untyped_defs = true
+mypy_path = "bindings/python/stubs"
 exclude = [
     "playground/",  # 一時的な検証スクリプトは除外
     "scratch/",  # テンポラリファイルは除外

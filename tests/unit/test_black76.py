@@ -5,7 +5,7 @@ import math
 import numpy as np
 import pytest
 from conftest import THEORETICAL_TOLERANCE
-from quantforge import black76
+from quantforge.models import black76
 
 
 class TestBlack76CallPrice:

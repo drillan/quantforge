@@ -1,5 +1,6 @@
 """Memory safety and leak detection tests"""
 
+import contextlib
 import gc
 import sys
 import tracemalloc
@@ -167,11 +168,9 @@ class TestMemorySafety:
         snapshot1 = tracemalloc.take_snapshot()
 
         for _ in range(100):
-            try:
+            with contextlib.suppress(Exception):
                 # This should raise an error (negative time)
                 _ = black_scholes.call_price_batch(np.array([100.0]), 100, -1.0, 0.05, 0.2)
-            except:
-                pass
 
         gc.collect()
         snapshot2 = tracemalloc.take_snapshot()

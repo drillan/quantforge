@@ -49,6 +49,31 @@ docs/
 4. **並列処理**: 
    - バッチ翻訳で複数ファイルを効率的に処理
 
+## Core + Bindings クリーンアーキテクチャ完遂（2025-09-03）
+
+### 実施内容
+- **NumPy互換層削除**: 856行のコード削除（arrow_api.py, arrow_ffi.py等）
+- **ディレクトリ構造修正**: `python/` → `bindings/python/python/`
+- **modelsモジュール実装**: `from quantforge.models import black_scholes`
+- **Arrow Native維持**: pyo3-arrow/arro3によるゼロコピー実装
+
+### アーキテクチャ変更
+```
+変更前: python/quantforge/（複数のarrow/numpy層が混在）
+変更後: bindings/python/python/quantforge/models/（クリーンなAPI）
+```
+
+### 重要な決定
+1. **NumPy配列非サポート**: Arrow配列のみ受け付ける
+2. **テストのスキップ**: NumPy依存テストは`@pytest.mark.skip`
+3. **バッチAPIの統一**: `call_price_batch`がArrow配列を返却（arro3.core.Array）
+4. **ドキュメント準拠**: `from quantforge.models import`構造を実現
+
+### 学習事項
+- **maturinのpython-source**: bindings/python/pyproject.tomlで設定
+- **手動コピー必要**: maturinは自動でPythonファイルをインストールしない
+- **arro3型**: Scalarとの演算にはas_py()メソッドが必要
+
 ## Critical Rules遵守とコード品質改善（2025-09-02）
 
 ### 共通フォーミュラモジュール（formulas.rs）

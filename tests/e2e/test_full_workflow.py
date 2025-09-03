@@ -1,6 +1,5 @@
 """End-to-end tests for complete workflows."""
 
-
 import numpy as np
 import pytest
 
@@ -57,7 +56,7 @@ class TestE2EWorkflows:
 
         # Compare different models
         bs_call = quantforge.black_scholes.call_price(**params)
-        b76_call = quantforge.black76.call_price(f=100, k=100, t=1, r=0.05, sigma=0.2)
+        quantforge.black76.call_price(f=100, k=100, t=1, r=0.05, sigma=0.2)
         merton_call = quantforge.merton.call_price(**params, q=0.0)
 
         # Should be close but not identical (Black76 uses forward price)
