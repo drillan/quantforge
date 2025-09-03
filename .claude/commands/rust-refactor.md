@@ -2,6 +2,19 @@
 
 あなたはRust + PyO3プロジェクトのリファクタリングを担当し、以下の手順に従ってコードの重複削除と品質改善を実行する。
 
+## ⚠️ QuantForge固有の制約事項
+
+### 絶対禁止事項
+- **SIMD最適化の提案・実装は完全禁止**
+  - 2025-08-27にSIMD実装を完全削除（210行）
+  - 詳細: `.claude/antipatterns/simd-optimization-trap.md`
+  - AVX2、AVX-512、NEON、SimdElement等の用語を使用しない
+  
+### プロジェクトの現状
+- 並列処理: Rayonライブラリのみ使用
+- 並列化閾値: 10,000要素（実測値）
+- 最適化: コンパイラの自動最適化に依存
+
 ## 🤖 自動実行原則
 
 **重要**: コード重複とアンチパターンを検出したら、ユーザーの確認を待たずに以下を自動実行する：
@@ -15,7 +28,7 @@
 あなたはRustコードベースを以下の観点から分析し、積極的にリファクタリングを実施します：
 - コード重複の排除（similarity-rs閾値80%以上）
 - 汎用トレイト/ジェネリクスによる統一化
-- SIMD/並列化の機会を見逃さない
+- Rayonによる並列化の機会を活用
 - PyO3バインディングのゼロコピー最適化
 - エラーハンドリングの一貫性確保
 
@@ -28,7 +41,9 @@
 similarity-rs --version || cargo install similarity-rs
 
 # 現在のコード重複状況を分析
-similarity-rs --threshold 0.80 --skip-test src/
+# 闾値はプロジェクトポリシー（変更時は.envまたは設定ファイルで管理）
+SIMILARITY_THRESHOLD=0.80  # 標準闾値
+similarity-rs --threshold ${SIMILARITY_THRESHOLD} --skip-test src/
 
 # Rustツールチェーンの確認
 cargo clippy --version
@@ -67,9 +82,9 @@ fn algorithm_v2() { } // 新実装を追加
 #[inline(always)]
 pub fn compute<T: Float>(data: &[T]) -> Vec<T> 
 where
-    T: Send + Sync + SimdElement,
+    T: Send + Sync,
 {
-    // 完全な実装（SIMD、並列化、エラーハンドリング含む）
+    // 完全な実装（Rayon並列化、エラーハンドリング含む）
 }
 ```
 
@@ -86,46 +101,39 @@ pub trait ComputeStrategy {
     
     fn select_strategy(&self, size: usize) -> ExecutionMode {
         match size {
-            0..=1000 => ExecutionMode::Sequential,
-            1001..=10000 => ExecutionMode::Simd,
-            10001..=100000 => ExecutionMode::SimdParallel(4),
-            _ => ExecutionMode::SimdParallel(num_cpus::get()),
+            0..=10_000 => ExecutionMode::Sequential,  // QuantForge実測値
+            10_001..=100_000 => ExecutionMode::Parallel(4),
+            _ => ExecutionMode::Parallel(num_cpus::get()),
         }
     }
 }
 
 pub enum ExecutionMode {
     Sequential,
-    Simd,
-    SimdParallel(usize),
+    Parallel(usize),  // Rayonによる並列処理（スレッド数）
 }
 ```
 
-#### SIMD最適化の汎用パターン
+#### Rayonによる並列化パターン
 ```rust
-// プラットフォーム非依存のSIMD実装
+// Rayonを使用した効率的な並列処理
 #[inline(always)]
-pub fn apply_vectorized<T, F>(data: &[T], operation: F) -> Vec<T>
+pub fn apply_parallel<T, F>(data: &[T], operation: F) -> Vec<T>
 where
-    T: SimdElement,
-    F: Fn(T) -> T + Send + Sync,
+    T: Send + Sync,
+    F: Fn(&T) -> T + Send + Sync,
 {
-    #[cfg(all(target_arch = "x86_64", target_feature = "avx2"))]
-    {
-        apply_avx2(data, operation)
-    }
+    use rayon::prelude::*;
     
-    #[cfg(all(target_arch = "aarch64", target_feature = "neon"))]
-    {
-        apply_neon(data, operation)
-    }
+    // QuantForgeの実測に基づく閾値
+    const PARALLEL_THRESHOLD: usize = 10_000;
     
-    #[cfg(not(any(
-        all(target_arch = "x86_64", target_feature = "avx2"),
-        all(target_arch = "aarch64", target_feature = "neon")
-    )))]
-    {
-        apply_scalar(data, operation)
+    if data.len() < PARALLEL_THRESHOLD {
+        // 逐次処理
+        data.iter().map(operation).collect()
+    } else {
+        // 並列処理
+        data.par_iter().map(operation).collect()
     }
 }
 ```
@@ -168,14 +176,14 @@ pub fn process_array<'py>(
 
 // インプレース処理の汎用パターン
 fn process_in_place(input: &[f64], output: &mut [f64]) {
-    // Rayon + SIMDのハイブリッド処理
+    // Rayonによる効率的な並列処理
     use rayon::prelude::*;
     
     input.par_chunks(1024)
         .zip(output.par_chunks_mut(1024))
         .for_each(|(inp, out)| {
-            // チャンクごとのSIMD処理
-            vectorized_operation(inp, out);
+            // チャンクごとの処理
+            process_chunk(inp, out);
         });
 }
 ```
@@ -274,7 +282,7 @@ pub trait ComputeEngine: Send + Sync {
 pub trait OptimizationHints {
     fn prefers_contiguous_memory(&self) -> bool { true }
     fn optimal_chunk_size(&self) -> usize { 1024 }
-    fn supports_simd(&self) -> bool { true }
+    fn supports_parallel(&self) -> bool { true }  // Rayon並列化
     fn cache_line_size(&self) -> usize { 64 }
 }
 ```
@@ -286,8 +294,10 @@ pub trait OptimizationHints {
 #### 1. 定期的な重複検出
 ```bash
 # 基本的な重複チェック
+# 闾値は環境変数または設定ファイルで管理
+SIMILARITY_THRESHOLD=${SIMILARITY_THRESHOLD:-0.80}
 similarity-rs \
-  --threshold 0.80 \
+  --threshold ${SIMILARITY_THRESHOLD} \
   --min-lines 5 \
   --skip-test \
   --exclude target \
@@ -295,8 +305,9 @@ similarity-rs \
   src/
 
 # 実験的機能を含む詳細チェック
+DETAIL_THRESHOLD=${DETAIL_THRESHOLD:-0.75}
 similarity-rs \
-  --threshold 0.75 \
+  --threshold ${DETAIL_THRESHOLD} \
   --experimental-types \
   --experimental-overlap \
   --print \
@@ -321,8 +332,10 @@ jobs:
       
       - name: Check Code Duplication
         run: |
+          # CI用の厳格な闾値（設定ファイルで管理）
+          CI_THRESHOLD=${CI_THRESHOLD:-0.85}
           similarity-rs \
-            --threshold 0.85 \
+            --threshold ${CI_THRESHOLD} \
             --skip-test \
             --fail-on-duplicates \
             src/
@@ -331,7 +344,7 @@ jobs:
         if: failure()
         run: |
           similarity-rs \
-            --threshold 0.85 \
+            --threshold ${CI_THRESHOLD} \
             --print \
             src/ > duplication-report.md
           
@@ -466,8 +479,7 @@ criterion_main!(benches);
 
 ### 実装中
 - [ ] 汎用トレイトの実装または利用
-- [ ] SIMD最適化の考慮
-- [ ] 並列化戦略の選択
+- [ ] Rayon並列化戦略の選択
 - [ ] ゼロコピー実装の検討
 - [ ] エラーハンドリングの統一
 
@@ -480,7 +492,7 @@ criterion_main!(benches);
 
 ## ⚠️ 一般的な制約事項
 
-- **数値精度**: プロジェクトごとに定義（一般的に相対誤差 < 1e-3）
+- **数値精度**: プロジェクトごとに定義（QuantForgeではPRACTICAL_TOLERANCEを使用）
 - **Python互換性**: 3.8以上推奨
 - **NumPy統合**: ゼロコピーを基本とする
 - **並列安全性**: Send + Sync trait実装
@@ -498,7 +510,8 @@ criterion_main!(benches);
 
 ```bash
 # Step 1: 現状分析
-similarity-rs --threshold 0.80 src/ > before.md
+SIMILARITY_THRESHOLD=${SIMILARITY_THRESHOLD:-0.80}
+similarity-rs --threshold ${SIMILARITY_THRESHOLD} src/ > before.md
 
 # Step 2: リファクタリング実施
 # - 共通パターンの抽出
@@ -506,7 +519,7 @@ similarity-rs --threshold 0.80 src/ > before.md
 # - マクロによる定型処理の削減
 
 # Step 3: 効果測定
-similarity-rs --threshold 0.80 src/ > after.md
+similarity-rs --threshold ${SIMILARITY_THRESHOLD} src/ > after.md
 diff before.md after.md
 
 # Step 4: パフォーマンス確認

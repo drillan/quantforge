@@ -2,6 +2,23 @@
 
 あなたはPython + PyO3プロジェクトのリファクタリングを担当し、以下の手順に従ってコードの重複削除と品質改善を実行する。
 
+## ⚠️ QuantForge固有の制約事項
+
+### 除外ディレクトリ
+以下のディレクトリは品質チェックから除外（pyproject.tomlで設定済み）：
+- `playground/` - 一時的な検証スクリプト
+- `scratch/` - テンポラリファイル
+- `draft/` - ドラフトファイル
+- `plans/` - 計画文書
+- `docs/` - Sphinx設定ファイル
+- `translations/` - 翻訳比較スクリプト
+
+### Critical Rules遵守
+- **C011-3**: ハードコード禁止ポリシー
+  - 定数は`tests/conftest.py`で管理（PRACTICAL_TOLERANCE等）
+  - 環境変数または設定ファイルで閾値管理
+- **C004/C014**: 段階的実装・妥協実装の禁止
+
 ## 🤖 自動実行原則
 
 **重要**: コード重複とアンチパターンを検出したら、ユーザーの確認を待たずに以下を自動実行する：
@@ -28,7 +45,9 @@
 similarity-py --version || echo "similarity-pyがインストールされていません"
 
 # 現在のコード重複状況を分析
-similarity-py --threshold 0.80 --min-lines 5 src/ quantforge/
+# 閾値はプロジェクトポリシーに従う（変更時は設定ファイルで管理）
+SIMILARITY_THRESHOLD=0.80  # .envまたはpyproject.tomlで定義
+similarity-py --threshold ${SIMILARITY_THRESHOLD:-0.80} --min-lines 5 bindings/python/python/quantforge/
 
 # 既存ツールの確認
 uv run ruff --version    # フォーマッター兼リンター
@@ -332,14 +351,14 @@ class OptimizationHints(Protocol):
 similarity-py \
   --threshold 0.80 \
   --min-lines 5 \
-  src/ quantforge/
+  bindings/python/python/quantforge/
 
 # 詳細チェック（実験的機能含む）
 similarity-py \
   --threshold 0.75 \
   --experimental-overlap \
   --print \
-  src/ quantforge/ > similarity-report.md
+  bindings/python/python/quantforge/ > similarity-report.md
 ```
 
 #### リファクタリング判断基準
@@ -474,7 +493,9 @@ class TestIntegration:
         # Rust実装（PyO3経由）
         # rust_result = compute_rust(data)
         
-        # assert_allclose(py_result, rust_result, rtol=1e-3)
+        # 実務精度はtests/conftest.pyで定義
+        # from tests.conftest import PRACTICAL_TOLERANCE
+        # assert_allclose(py_result, rust_result, rtol=PRACTICAL_TOLERANCE)
 ```
 
 ### ゴールデンマスターテスト
@@ -507,7 +528,7 @@ class TestGoldenMaster:
             result = compute(input_data)
             np.testing.assert_allclose(
                 result, expected, 
-                rtol=1e-3,
+                rtol=PRACTICAL_TOLERANCE,  # tests/conftest.pyで定義
                 err_msg=f"Failed for input: {input_data}"
             )
 ```
@@ -537,8 +558,8 @@ class TestGoldenMaster:
 
 ## ⚠️ 一般的な制約事項
 
-- **数値精度**: 相対誤差 < 1e-3（金融計算では1e-3）
-- **Python互換性**: 3.9以上（型ヒントのため）
+- **数値精度**: 相対誤差 < PRACTICAL_TOLERANCE（tests/conftest.pyで定義）
+- **Python互換性**: 3.12以上（PyO3 abi3-py312）
 - **NumPy統合**: ゼロコピーを基本とする
 - **スレッド安全性**: GILの考慮
 - **メモリ効率**: 入力データの2倍以内
@@ -555,7 +576,8 @@ class TestGoldenMaster:
 
 ```bash
 # Step 1: 現状分析
-similarity-py --threshold 0.80 src/ quantforge/ > before.md
+SIMILARITY_THRESHOLD=${SIMILARITY_THRESHOLD:-0.80}
+similarity-py --threshold $SIMILARITY_THRESHOLD bindings/python/python/quantforge/ > before.md
 
 # Step 2: 品質チェック
 uv run ruff check .
@@ -572,7 +594,8 @@ uv run ruff check .
 uv run mypy .
 
 # Step 5: 効果測定
-similarity-py --threshold 0.80 src/ quantforge/ > after.md
+SIMILARITY_THRESHOLD=${SIMILARITY_THRESHOLD:-0.80}
+similarity-py --threshold $SIMILARITY_THRESHOLD bindings/python/python/quantforge/ > after.md
 diff before.md after.md
 
 # Step 6: テスト実行

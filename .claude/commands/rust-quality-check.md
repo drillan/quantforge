@@ -2,6 +2,20 @@
 
 あなたはQuantForgeプロジェクトのRust品質管理を担当し、以下の手順に従って包括的な品質チェックを実行する。
 
+## ⚠️ 重要な制約事項
+
+### 絶対禁止事項
+- **SIMD最適化の提案・実装は完全禁止**
+  - 2025-08-27にSIMD実装を完全削除（210行）
+  - 詳細: `.claude/antipatterns/simd-optimization-trap.md`
+  - AVX2、AVX-512、NEON等の用語を使用しない
+  - 「ベクトル化」「SIMD」などの提案は即座に却下
+
+### プロジェクトの現状
+- 並列処理: Rayonライブラリで実装済み
+- 最適化: コンパイラの自動最適化に依存
+- プラットフォーム: 標準的なRust実装のみ使用
+
 ## 🤖 自動実行原則
 
 **重要**: すべてのエラーと警告をゼロにするまで、ユーザーの確認を待たずに自動的に修正を続行する。
@@ -19,7 +33,7 @@ Rustコードの品質を以下の観点から検証し、問題を特定・修�
 - 型安全性とライフタイム正確性
 - パフォーマンス最適化
 - PyO3バインディングの整合性
-- 数値計算の高精度保証（エラー率 < 1e-3）
+- 数値計算の高精度保証（エラー率 < PRACTICAL_TOLERANCE）
 
 ## 📋 前提条件の確認
 
@@ -154,13 +168,17 @@ cargo tarpaulin --out Html --output-dir coverage
 
 **数値精度テストの特別扱い**:
 ```rust
+use crate::constants::PRACTICAL_TOLERANCE;
+
 #[test]
 fn test_numerical_accuracy() {
-    let expected = 10.450583572185565;
-    let actual = bs_call_price(100.0, 100.0, 1.0, 0.05, 0.2);
+    // 標準テストケース（tests/で定義された定数を使用）
+    let (s, k, t, r, sigma) = (100.0, 100.0, 1.0, 0.05, 0.2);
+    let expected = 10.450583572185565;  // Golden Master値
+    let actual = bs_call_price(s, k, t, r, sigma);
     
-    // 高精度要求: 相対誤差 < 1e-3
-    assert!((actual - expected).abs() / expected < 1e-3,
+    // 高精度要求: 相対誤差 < PRACTICAL_TOLERANCE
+    assert!((actual - expected).abs() / expected < PRACTICAL_TOLERANCE,
             "精度エラー: expected={}, actual={}, error={}",
             expected, actual, (actual - expected).abs());
 }
@@ -177,8 +195,12 @@ uv run python -c "
 import quantforge
 print('✓ Import successful')
 # 基本動作テスト
-result = quantforge.bs_call_price(100.0, 100.0, 1.0, 0.05, 0.2)
-assert abs(result - 10.450583572185565) < 1e-3
+# 標準テストケースパラメータ（tests/conftest.pyで管理すべき）
+s, k, t, r, sigma = 100.0, 100.0, 1.0, 0.05, 0.2
+expected_price = 10.450583572185565  # Golden Master値
+result = quantforge.bs_call_price(s, k, t, r, sigma)
+# PRACTICAL_TOLERANCEは本来tests/conftest.pyからインポートすべき
+assert abs(result - expected_price) < 0.001  # PRACTICAL_TOLERANCE相当
 print(f'✓ BS call price: {result}')
 "
 
@@ -233,26 +255,7 @@ cargo flamegraph --bench benchmark -- --bench
 - メモリアロケーション: 最小限
 ```
 
-### ステップ7: SIMD最適化検証
-
-```bash
-# アセンブリ出力確認
-cargo rustc --release -- --emit asm
-
-# SIMD命令の使用確認
-cargo asm quantforge::models::black_scholes::bs_call_price_batch | grep -E "(vmov|vadd|vmul|vfma)"
-
-# ターゲット別ビルド
-RUSTFLAGS="-C target-cpu=native" cargo build --release
-
-# AVX2有効化
-RUSTFLAGS="-C target-feature=+avx2" cargo build --release
-
-# ベンチマークでSIMD効果測定
-cargo bench --features simd
-```
-
-### ステップ8: セキュリティ監査
+### ステップ7: セキュリティ監査
 
 ```bash
 # cargo-auditインストール（初回のみ）
@@ -297,7 +300,7 @@ cargo deny check
 4. **テストエラー**
    - アサーション失敗 → 期待値を実際の値に更新
    - パニック → unwrap()をexpect()やmatch式に変更
-   - 精度エラー → 許容誤差を調整（ただし1e-3未満を維持）
+   - 精度エラー → 許容誤差を調整（ただしPRACTICAL_TOLERANCE未満を維持）
 
 5. **PyO3エラー**
    - 型変換失敗 → FromPyObject/IntoPy実装
@@ -313,7 +316,7 @@ cargo deny check
 - [ ] cargo doc: 警告0件
 - [ ] maturin develop: ビルド成功
 - [ ] pytest: Python統合テスト成功
-- [ ] 数値精度: エラー率 < 1e-3
+- [ ] 数値精度: エラー率 < PRACTICAL_TOLERANCE (core/src/constants.rsで定義)
 
 ### 推奨基準（品質目標）
 - [ ] clippy::pedantic: 警告最小限
@@ -326,7 +329,7 @@ cargo deny check
 - [ ] Black-Scholes単一: < 10ns
 - [ ] バッチ100万件: < 20ms
 - [ ] メモリ使用: O(1)または最小限
-- [ ] SIMD効率: 理論値の80%以上
+- [ ] 並列処理効率: CPUコア数に応じたスケーラビリティ
 
 ## 🔧 トラブルシューティング
 
@@ -499,10 +502,10 @@ echo "✅ 全チェック完了！"
    - 精度要求: エラー率 < 1e-3
    - 数値安定性を最優先
 
-2. **SIMD最適化**:
-   - 条件: バッチサイズ > 1000で自動有効化
-   - フォールバック: スカラー実装必須
-   - 精度: SIMD/スカラー間で完全一致
+2. **並列処理（Rayon）**:
+   - 実装: Rayonライブラリによる自動並列化
+   - 注意: SIMD最適化は使用しない（削除済み）
+   - 精度: 並列/逐次処理間で完全一致
 
 3. **PyO3バインディング**:
    - ゼロコピー実装推奨

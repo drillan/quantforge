@@ -135,7 +135,6 @@ src/           # Rustコア実装
 
 python/        # Pythonラッパー
 tests/         # テストスイート（unit, integration, property）
-benchmarks/    # パフォーマンス測定
 playground/    # 実験用（Git管理外、品質チェック対象外）
 examples/      # 公式サンプル（品質チェック必須）
 ```

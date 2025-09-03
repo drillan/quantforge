@@ -317,7 +317,7 @@ echo "✅ 全チェック完了！"
    - 参考実装のため品質基準適用外
 
 2. **Rust/PyO3関連**:
-   - `python/quantforge/`配下のPythonバインディング
+   - `bindings/python/python/quantforge/`配下のPythonバインディング
    - 型スタブファイル（.pyi）の整合性確認必須
 
 3. **パフォーマンス考慮**:
@@ -325,7 +325,9 @@ echo "✅ 全チェック完了！"
    - ゼロコピー実装のための型制約順守
 
 4. **テスト精度**:
-   - 数値計算の許容誤差: 1e-5
+   - 実務精度: PRACTICAL_TOLERANCE (tests/conftest.pyで定義)
+   - 理論精度: THEORETICAL_TOLERANCE (tests/conftest.pyで定義)
+   - 数値精度: NUMERICAL_TOLERANCE (tests/conftest.pyで定義)
    - ベンチマークテストの実行は別途
 
 ## 🔍 実行フロー

@@ -138,7 +138,7 @@ class PerformanceProfiler:
     """実行時性能プロファイラー"""
 
     def __init__(self, history_size: int = 100):
-        self.history = []
+        self.history: list[tuple[int, float]] = []
         self.history_size = history_size
         self.cost_per_element = 10e-9  # 初期値: 10ns
         self.parallel_overhead = 5e-6  # 初期値: 5μs

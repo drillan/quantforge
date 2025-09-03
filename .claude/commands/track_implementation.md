@@ -3,6 +3,7 @@
 ## タスク: QuantForge実装進捗の確認と更新
 
 このプロジェクトのドキュメント構造に対して、実装状況を確認し、進捗を記録してください。
+現在のCore + Bindingsアーキテクチャ構造に基づいて確認します。
 
 ## 出力先ファイル
 - **詳細データ**: `tracker/data.yaml`
@@ -11,14 +12,14 @@
 ### 確認手順
 
 1. **ドキュメントの見出し抽出**
-   - 対象ファイル: `docs/models/*.md`, `docs/api/**/*.md`, `docs/performance/*.md`
+   - 対象ファイル: `docs/ja/models/*.md`, `docs/ja/api/**/*.md`, `docs/en/models/*.md`, `docs/en/api/**/*.md`
    - 各Markdownファイルから見出し（#, ##, ###）を階層的に抽出
 
-2. **実装状況の検索と判定**
+2. **実装状況の検索と判定**（Core + Bindings構造）
    各見出し項目について、以下の場所で対応する実装を検索：
-   - Rustコード: `src/models/`, `src/math/`, `src/`
-   - Pythonバインディング: `python/quantforge/`
-   - テスト: `tests/`, `src/**/*.rs` の `#[test]`
+   - Rustコア: `core/src/models/`, `core/src/math/`, `core/src/`
+   - Pythonバインディング: `bindings/python/src/`, `bindings/python/python/quantforge/`
+   - テスト: `tests/`, `core/tests/`, `bindings/python/tests/`
 
 3. **ステータス判定基準**
    - `not_started`: 実装なし、TODOコメントのみ
@@ -48,73 +49,89 @@
   - #[cfg(target_feature = "avx2")]
 ```
 
-### 出力形式
+### 出力形式（data.yaml）
 
 ```yaml
-# ファイル: docs/models/black_scholes.md
-black_scholes:
+# ドキュメントファイルごとに階層的に管理
+docs/ja/models/black_scholes.md:
   - title: "Black-Scholesモデル"
     level: 1
     status: partial
     items:
       - title: "理論的背景"
         level: 2
-        status: documented_only
-        notes: "理論説明のみ"
-      
+        status: documented_only  # 理論説明のため実装不要
       - title: "解析解"
         level: 2
         status: partial
         items:
           - title: "ヨーロピアンコール"
             level: 3
-            status: implemented
-            location: "src/models/black_scholes.rs:11-17"
-            tests: "src/models/black_scholes.rs:44-55"
-          
+            status: tested
+            location: "core/src/models/black_scholes.rs:11-27"
+            tests: "tests/unit/test_black_scholes.py"
           - title: "ヨーロピアンプット"
             level: 3
-            status: not_started
-            notes: "TODO: プット実装"
-      
+            status: tested
+            location: "core/src/models/black_scholes.rs:28-37"
+            tests: "tests/unit/test_black_scholes.py"
       - title: "グリークス"
         level: 2
-        status: not_started
+        status: tested
         items:
           - title: "Delta (Δ)"
             level: 3
-            status: not_started
-          - title: "Gamma (Γ)"
-            level: 3
-            status: not_started
+            status: tested
+            location: "core/src/models/greeks.rs:60-85"
 ```
 
-### 進捗レポート生成
+### 進捗レポート生成（report.md）
 
 確認結果を以下の形式でレポート：
 
 ```markdown
-# QuantForge 実装進捗状況
+# QuantForge 実装進捗レポート
 
-最終更新: [日付]
+**最終更新**: 2025-09-03
 
-## 📊 全体進捗
-- 完了: X項目 (XX%)
-- 実装中: Y項目 (YY%)
-- 未着手: Z項目 (ZZ%)
+## 📊 全体統計
 
-## 📁 docs/models/black_scholes.md
-- Black-Scholesモデル: 🟡 (40%)
-  - 理論的背景: 📝
-  - 解析解: 🟡 (50%)
-    - ヨーロピアンコール: ✅ [src/models/black_scholes.rs:11]
-    - ヨーロピアンプット: ⭕
-  - グリークス: ⭕ (0%)
-    - Delta (Δ): ⭕
-    - Gamma (Γ): ⭕
-    - Vega (ν): ⭕
-    - Theta (Θ): ⭕
-    - Rho (ρ): ⭕
+| 指標 | 値 |
+|------|-----|
+| **総項目数** | X |
+| **テスト済み** | Y ✅ |
+| **実装済み** | Z 🟢 |
+| **部分実装** | A 🟡 |
+| **未着手** | B ⭕ |
+| **ドキュメントのみ** | C 📝 |
+| **完了率** | XX.X% |
+
+## 📦 モデル別進捗
+
+### Black-Scholes (90% 完了)
+- ✅ ヨーロピアンコール (`core/src/models/black_scholes.rs:11-27`)
+- ✅ ヨーロピアンプット (`core/src/models/black_scholes.rs:28-37`)
+- ✅ 全Greeks (`core/src/models/greeks.rs`)
+- 📝 理論的背景（ドキュメントのみ）
+
+### Black76 (100% 完了)
+- ✅ 先物オプション価格計算
+- ✅ Greeks計算
+- ✅ インプライドボラティリティ
+
+## ✨ 主要な実装済み機能
+
+### コアモデル
+- ✅ Black-Scholes（コール/プット価格、Greeks）
+- ✅ Black76（先物オプション）
+- ✅ Merton（配当付きモデル）
+- ✅ American（アメリカンオプション、Bjerksund-Stensland 2002）
+
+### アーキテクチャ
+- ✅ Core + Bindings 構造（言語非依存コア）
+- ✅ Arrow Native実装（ゼロコピー）
+- ✅ 完全配列サポート（Broadcasting対応）
+- ✅ 並列処理最適化（Rayon統合）
 ```
 
 ### ステータス記号
@@ -125,18 +142,29 @@ black_scholes:
 - ✅ : tested (テスト済み)
 - 📝 : documented_only (ドキュメントのみ)
 
-### 実行コマンド例
+### 実行方法
+
+このコマンドをAIアシスタント（Claude）で実行すると、自動的に：
+1. ドキュメント構造を解析
+2. 実装ファイルを検索
+3. `tracker/data.yaml` を更新
+4. `tracker/report.md` を生成
 
 ```bash
-# 1. 特定ドキュメントの進捗確認
-echo "docs/models/black_scholes.mdの実装進捗を確認してください" | claude
-
-# 2. 全体進捗の確認
-echo "docs/配下の全ドキュメントの実装進捗を確認してください" | claude
-
-# 3. 未実装項目のリストアップ
-echo "status: not_startedの項目をリストアップしてください" | claude
+# コマンド実行例
+echo "QuantForgeの実装進捗を確認し、tracker/配下のファイルを更新してください" | claude
 ```
+
+### 検証スクリプトとの連携
+
+1. **先に検証スクリプトを実行**
+   ```bash
+   python tracker/verify_documentation_code.py
+   ```
+   
+2. **検証結果を含めてレポート生成**
+   - `doc_verification_results.json` の内容も参照
+   - コード例の検証結果を統合
 
 ### 注意事項
 
