@@ -64,13 +64,19 @@ fn quantforge(m: &Bound<'_, PyModule>) -> PyResult<()> {
     black76_module.add_function(wrap_pyfunction!(black76_call_price, &black76_module)?)?;
     black76_module.add_function(wrap_pyfunction!(black76_put_price, &black76_module)?)?;
     black76_module.add_function(wrap_pyfunction!(black76_greeks, &black76_module)?)?;
-    black76_module.add_function(wrap_pyfunction!(black76_implied_volatility, &black76_module)?)?;
-    
+    black76_module.add_function(wrap_pyfunction!(
+        black76_implied_volatility,
+        &black76_module
+    )?)?;
+
     // Batch functions
     black76_module.add_function(wrap_pyfunction!(black76_call_price_batch, &black76_module)?)?;
     black76_module.add_function(wrap_pyfunction!(black76_put_price_batch, &black76_module)?)?;
     black76_module.add_function(wrap_pyfunction!(black76_greeks_batch, &black76_module)?)?;
-    black76_module.add_function(wrap_pyfunction!(black76_implied_volatility_batch, &black76_module)?)?;
+    black76_module.add_function(wrap_pyfunction!(
+        black76_implied_volatility_batch,
+        &black76_module
+    )?)?;
 
     m.add_submodule(&black76_module)?;
     sys_modules.set_item("quantforge.black76", &black76_module)?;
@@ -85,13 +91,16 @@ fn quantforge(m: &Bound<'_, PyModule>) -> PyResult<()> {
     merton_module.add_function(wrap_pyfunction!(merton_put_price, &merton_module)?)?;
     merton_module.add_function(wrap_pyfunction!(merton_greeks, &merton_module)?)?;
     merton_module.add_function(wrap_pyfunction!(merton_implied_volatility, &merton_module)?)?;
-    
+
     // Batch functions
     merton_module.add_function(wrap_pyfunction!(merton_call_price_batch, &merton_module)?)?;
     merton_module.add_function(wrap_pyfunction!(merton_put_price_batch, &merton_module)?)?;
     // Greeks batch not yet implemented
     // merton_module.add_function(wrap_pyfunction!(merton_greeks_batch, &merton_module)?)?;
-    merton_module.add_function(wrap_pyfunction!(merton_implied_volatility_batch, &merton_module)?)?;
+    merton_module.add_function(wrap_pyfunction!(
+        merton_implied_volatility_batch,
+        &merton_module
+    )?)?;
 
     m.add_submodule(&merton_module)?;
     sys_modules.set_item("quantforge.merton", &merton_module)?;

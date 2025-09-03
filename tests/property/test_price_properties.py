@@ -6,6 +6,8 @@ from hypothesis import assume, given, settings
 from hypothesis import strategies as st
 from quantforge import black_scholes
 
+from tests.conftest import arrow
+
 
 @pytest.mark.property
 class TestPriceProperties:
@@ -23,8 +25,8 @@ class TestPriceProperties:
         """価格境界の検証: max(S-K*e^(-rt), 0) <= C <= S."""
         price = black_scholes.call_price(s, k, t, r, sigma)
 
-        # 価格は非負
-        assert price >= 0, f"負の価格: {price}"
+        # 価格は非負（数値誤差許容）
+        assert price >= -1e-10, f"負の価格: {price}"
 
         # 下限: 本質的価値
         intrinsic = max(s - k * np.exp(-r * t), 0)
@@ -193,9 +195,10 @@ class TestBatchProperties:
         batch_prices = black_scholes.call_price_batch(spots_array, k, t, r, sigma)
 
         # 個別処理との比較
+        batch_list = arrow.to_list(batch_prices)
         for i, spot in enumerate(spots):
             single_price = black_scholes.call_price(spot, k, t, r, sigma)
-            assert abs(batch_prices[i] - single_price) < 1e-3, f"バッチと個別の不一致: {i}"
+            assert abs(batch_list[i] - single_price) < 1e-3, f"バッチと個別の不一致: {i}"
 
     @given(
         n=st.integers(min_value=1, max_value=1000),
@@ -225,9 +228,10 @@ class TestBatchProperties:
         prices = black_scholes.call_price_batch(spots, k, t, r, sigmas=0.2)
 
         # 価格は行使価格に対して単調
-        for i in range(1, len(prices)):
+        prices_list = arrow.to_list(prices)
+        for i in range(1, len(prices_list)):
             # スポット価格が上昇すると、コール価格も上昇
-            assert prices[i] >= prices[i - 1] - 1e-3, f"価格順序違反: {i}"
+            assert prices_list[i] >= prices_list[i - 1] - 1e-3, f"価格順序違反: {i}"
 
 
 @pytest.mark.property

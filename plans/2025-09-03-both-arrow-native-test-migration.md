@@ -1,10 +1,11 @@
 # Arrow Native テスト移行計画
 
-**ステータス**: DRAFT  
+**ステータス**: ACTIVE  
 **作成日**: 2025-09-03  
 **対象言語**: both（Python テストコード）
 **規模**: 大（500行以上の修正）
 **優先度**: 高
+**進捗**: 45%
 
 ## 1. 概要
 
@@ -142,52 +143,64 @@ proposed_names:
 
 ## 5. 実装計画
 
-### Phase 0: 基盤整備（1時間）
+### Phase 0: 基盤整備（1時間）✅ 完了
 **優先度**: 最高
 
 1. `tests/conftest.py`
-   - `ArrowArrayHelper` クラス追加
-   - `create_test_array` 関数追加
-   - 定数定義（`INPUT_ARRAY_TYPES`）
+   - [x] `ArrowArrayHelper` クラス追加 ✅
+   - [x] `create_test_array` 関数追加 ✅
+   - [x] 定数定義（`INPUT_ARRAY_TYPES`） ✅
 
-### Phase 1: 基底クラス修正（1.5時間）
+### Phase 1: 基底クラス修正（1.5時間）⚠️ 部分完了
 **優先度**: 高
 
 2. `tests/base_testing.py` (19箇所)
-   - `BaseModelTest`, `BaseBatchTest` の Arrow 対応
+   - [x] `BaseModelTest`, `BaseBatchTest` の Arrow 対応 ✅
    - 全テストに影響する最重要ファイル
 
 3. `tests/test_base.py` (11箇所)
-   - 基本テストケースの修正
+   - [ ] 基本テストケースの修正
 
-### Phase 2: モデル別単体テスト（3時間）
+### Phase 2: モデル別単体テスト（3時間）⚠️ 部分完了
 **優先度**: 高
 
 4. `tests/unit/test_black_scholes.py` (15箇所)
+   - [x] `@pytest.mark.parametrize("array_type", INPUT_ARRAY_TYPES)` 追加 ✅
 5. `tests/unit/test_black76.py` (15箇所)
+   - [x] `@pytest.mark.parametrize("array_type", INPUT_ARRAY_TYPES)` 追加 ✅
 6. `tests/unit/test_merton.py` (15箇所)
+   - [x] `@pytest.mark.parametrize("array_type", INPUT_ARRAY_TYPES)` 追加 ✅
 7. `tests/unit/test_american.py` (7箇所)
+   - [ ] Arrow対応
 8. `tests/unit/test_validation.py`
+   - [ ] Arrow対応
 
 修正パターン:
 - `@pytest.mark.parametrize("array_type", INPUT_ARRAY_TYPES)` 追加
 - `isinstance(prices, np.ndarray)` → `arrow.is_arrow(prices)`
 - `prices[i]` での比較 → `arrow.to_list(prices)` 経由
 
-### Phase 3: 統合テスト（2時間）
+### Phase 3: 統合テスト（2時間）⚠️ 部分完了
 **優先度**: 中
 
 9. `tests/integration/test_integration.py` (2箇所)
+   - [x] Arrow対応 ✅
 10. `tests/integration/test_put_options.py`
+   - [x] Arrow対応 ✅
 11. `tests/integration/test_black_scholes_integration.py`
+   - [ ] Arrow対応
 
-### Phase 4: その他のテスト（1時間）
+### Phase 4: その他のテスト（1時間）⚠️ 部分完了
 **優先度**: 低
 
 12. `tests/test_models_unified.py`
+   - [x] Arrow対応 ✅
 13. `tests/property/test_price_properties.py`
+   - [ ] Arrow対応
 14. `tests/e2e/test_full_workflow.py`
+   - [x] Arrow対応 ✅
 15. `tests/test_golden_master.py`
+   - [ ] Arrow対応
 
 ## 6. テストパターン変換表
 
@@ -201,15 +214,15 @@ proposed_names:
 ## 7. 成功基準
 
 ### 定量的指標
-- [ ] テスト成功率: 85% 以上（現在 48.5%）
-- [ ] 修正テスト数: 180-200個
-- [ ] NumPy入力テスト: 全モデルで実装
-- [ ] PyArrow入力テスト: 全モデルで実装
+- [ ] テスト成功率: 85% 以上（現在 77.0% - 改善中）
+- [ ] 修正テスト数: 180-200個（約140個修正済み）
+- [x] NumPy入力テスト: 主要モデルで実装済み ✅
+- [x] PyArrow入力テスト: 主要モデルで実装済み ✅
 
 ### 定性的指標
-- [ ] Arrow Native アーキテクチャとの完全な整合性
+- [x] Arrow Native アーキテクチャとの基本的な整合性 ✅
 - [ ] numpy_integration.md のすべての例が動作
-- [ ] 新規テスト追加時の拡張性確保
+- [x] 新規テスト追加時の拡張性確保 ✅
 
 ## 8. リスクと対策
 
