@@ -1,463 +1,141 @@
-# NumPy統合
+# NumPy相互運用ガイド
 
-QuantForgeはNumPyとシームレスに統合され、ゼロコピーでの高速処理を実現します。
+## 概要
 
-## ゼロコピー最適化
+QuantForgeは**Arrow-native**設計を採用しており、すべてのバッチ関数は`arro3.core.Array`（Arrow配列）を返します。しかし、NumPyユーザーも簡単に使用できるよう、優れた相互運用性を提供しています。
 
-### メモリ効率の仕組み
+## 入力：柔軟な型サポート
+
+`call_price_batch`などのバッチ関数は、以下の入力を自動的に受け付けます：
 
 ```python
 import numpy as np
-import quantforge as qf
-from quantforge.models import black_scholes
+import pyarrow as pa
+from quantforge import black_scholes
 
-# NumPy配列の作成
-spots = np.random.uniform(90, 110, 1_000_000)
-
-# ゼロコピーで処理（メモリコピーなし）
-prices = black_scholes.call_price_batch(
-    spots=spots,
-    strike=100.0,
-    time=1.0,
-    rate=0.05,
-    sigma=0.2
-)
-
-# prices もNumPy配列として返される
-print(f"Type: {type(prices)}")
-print(f"Shape: {prices.shape}")
-print(f"Memory shared: {prices.base is not None}")
-```
-
-### メモリレイアウトの最適化
-
-```{code-block} python
-:name: numpy-integration-code-c
-:caption: C連続配列（推奨）
-
-# C連続配列（推奨）
-spots_c = np.ascontiguousarray(spots)
-print(f"C-contiguous: {spots_c.flags['C_CONTIGUOUS']}")
-
-# Fortran連続配列（自動変換される）
-spots_f = np.asfortranarray(spots)
-print(f"F-contiguous: {spots_f.flags['F_CONTIGUOUS']}")
-
-# パフォーマンス比較（100万要素）
-import time
-
-def benchmark_layout(array):
-    start = time.perf_counter()
-    black_scholes.call_price_batch(
-        spots=array,
-        strike=100.0,
-        time=1.0,
-        rate=0.05,
-        sigma=0.2
-    )
-    return time.perf_counter() - start
-
-time_c = benchmark_layout(spots_c)
-time_f = benchmark_layout(spots_f)
-print(f"C-layout: {time_c*1000:.2f}ms")  # 期待値: 約56ms
-print(f"F-layout: {time_f*1000:.2f}ms")  # わずかに遅い
-```
-
-## ブロードキャスティング
-
-### 自動ブロードキャスト
-
-```{code-block} python
-:name: numpy-integration-code-section
-:caption: スカラーと配列の組み合わせ
-
-# スカラーと配列の組み合わせ
-spots = np.array([95, 100, 105])
-strike = 100.0  # スカラー
-rate = 0.05    # スカラー
-sigma = 0.20   # スカラー
-time = 1.0     # スカラー
-
-# 自動的にブロードキャスト
-prices = black_scholes.call_price_batch(
-    spots=spots,
-    strike=strike,
-    time=time,
-    rate=rate,
-    sigma=sigma
-)
-print(f"Results: {prices}")
-```
-
-### 多次元配列
-
-```{code-block} python
-:name: numpy-integration-code-2
-:caption: 2次元配列での計算
-
-# 2次元配列での計算
-spots = np.random.uniform(90, 110, (100, 1000))
-strikes = np.full((100, 1000), 100.0)
-
-# フラット化して計算
-flat_spots = spots.ravel()
-flat_prices = black_scholes.call_price_batch(
-    spots=flat_spots,
-    strike=100.0,
-    time=1.0,
-    rate=0.05,
-    sigma=0.2
-)
-
-# 元の形状に復元
-prices = flat_prices.reshape(spots.shape)
-print(f"Shape: {prices.shape}")
-```
-
-## ビュー操作
-
-### スライスとインデックス
-
-```{code-block} python
-:name: numpy-integration-code-section
-:caption: 大きな配列
-
-# 大きな配列
-all_spots = np.random.uniform(80, 120, 1_000_000)
-
-# ビューを作成（コピーなし）
-subset = all_spots[::10]  # 10個おきに選択
-print(f"Is view: {subset.base is all_spots}")
-
-# ビューでの計算
-subset_prices = black_scholes.call_price_batch(
-    spots=subset,
-    strike=100.0,
-    time=1.0,
-    rate=0.05,
-    sigma=0.2
+# すべて動作します！
+result = black_scholes.call_price_batch(
+    spots=np.array([100, 105, 110]),    # NumPy配列 ✅
+    strikes=pa.array([95, 100, 105]),   # PyArrow配列 ✅
+    times=1.0,                           # スカラー ✅
+    rates=0.05,
+    sigmas=np.array([0.18, 0.20, 0.22]) # NumPy配列 ✅
 )
 ```
 
-### 条件付き処理
+## 出力：Arrow配列の利点
 
-```{code-block} python
-:name: numpy-integration-code-section
-:caption: 条件に基づく選択
-
-# 条件に基づく選択
-spots = np.random.uniform(80, 120, 10000)
-mask = (spots > 95) & (spots < 105)  # ATM近辺のみ
-
-# マスクされた計算
-atm_spots = spots[mask]
-atm_prices = black_scholes.call_price_batch(
-    spots=atm_spots,
-    strike=100.0,
-    time=1.0,
-    rate=0.05,
-    sigma=0.2
-)
-
-# 結果を元の配列に戻す
-full_prices = np.zeros_like(spots)
-full_prices[mask] = atm_prices
-```
-
-## データ型の処理
-
-### 型変換の最適化
-
-```{code-block} python
-:name: numpy-integration-code-float32-vs-float64
-:caption: float32 vs float64
-
-# float32 vs float64
-spots_f32 = np.random.uniform(90, 110, 100000).astype(np.float32)
-spots_f64 = np.random.uniform(90, 110, 100000).astype(np.float64)
-
-# QuantForgeは内部でfloat64を使用
-# float32は自動変換される
-prices_f32 = black_scholes.call_price_batch(
-    spots=spots_f32, strike=100.0, time=1.0, rate=0.05, sigma=0.2
-)
-prices_f64 = black_scholes.call_price_batch(
-    spots=spots_f64, strike=100.0, time=1.0, rate=0.05, sigma=0.2
-)
-
-print(f"Input f32 dtype: {spots_f32.dtype}")
-print(f"Output dtype: {prices_f32.dtype}")  # float64に変換される
-```
-
-### 構造化配列
-
-```{code-block} python
-:name: numpy-integration-code-section
-:caption: オプションデータの構造化配列
-
-# オプションデータの構造化配列
-dtype = np.dtype([
-    ('spot', 'f8'),
-    ('strike', 'f8'),
-    ('vol', 'f8'),
-    ('time', 'f8')
-])
-
-options = np.zeros(1000, dtype=dtype)
-options['spot'] = np.random.uniform(90, 110, 1000)
-options['strike'] = 100
-options['vol'] = np.random.uniform(0.1, 0.3, 1000)
-options['time'] = np.random.uniform(0.1, 2.0, 1000)
-
-# 構造化配列から計算
-# Note: 現在のAPIでは単一の時間とボラティリティのみサポート
-# 複数のパラメータはループで処理
-prices = np.array([
-    black_scholes.call_price(
-        spot=options['spot'][i],
-        strike=options['strike'][i],
-        time=options['time'][i],
-        rate=0.05,
-        sigma=options['vol'][i]
-    )
-    for i in range(len(options))
-])
-```
-
-## メモリマップファイル
-
-### 大規模データの処理
-
-```{code-block} python
-:name: numpy-integration-code-section
-:caption: メモリマップファイルの作成
-
-# メモリマップファイルの作成
-filename = 'large_spots.dat'
-shape = (10_000_000,)
-spots_mmap = np.memmap(filename, dtype='float64', mode='w+', shape=shape)
-
-# データの書き込み
-spots_mmap[:] = np.random.uniform(90, 110, shape)
-
-# チャンクごとの処理
-chunk_size = 100_000
-results = []
-
-for i in range(0, len(spots_mmap), chunk_size):
-    chunk = spots_mmap[i:i+chunk_size]
-    chunk_prices = black_scholes.call_price_batch(
-        spots=chunk,
-        strike=100.0,
-        time=1.0,
-        rate=0.05,
-        sigma=0.2
-    )
-    results.append(chunk_prices)
-
-# 結果の結合
-all_prices = np.concatenate(results)
-
-# クリーンアップ
-del spots_mmap
-import os
-os.remove(filename)
-```
-
-## ベクトル化された関数
-
-### カスタムufunc
-
-```{code-block} python
-:name: numpy-integration-code-quantforgeufunc
-:caption: QuantForgeの関数をufuncとして使用
-
-# QuantForgeの関数をufuncとして使用
-@np.vectorize
-def custom_pricer(spot, strike, moneyness_threshold=0.1):
-    """モネyネスに基づく条件付き価格計算"""
-    moneyness = abs(spot / strike - 1.0)
-    
-    if moneyness < moneyness_threshold:
-        # ATM近辺は高精度計算
-        return black_scholes.call_price(
-            spot=spot, strike=strike, time=1.0, rate=0.05, sigma=0.2
-        )
-    else:
-        # OTMは簡易計算
-        return black_scholes.call_price(
-            spot=spot, strike=strike, time=1.0, rate=0.05, sigma=0.15
-        )
-
-# ベクトル化された使用
-spots = np.array([95, 100, 105, 120])
-strikes = np.array([100, 100, 100, 100])
-prices = custom_pricer(spots, strikes)
-```
-
-## 並列処理との組み合わせ
-
-### NumPyとマルチプロセシング
+すべてのバッチ関数は`arro3.core.Array`を返します。これは`__array__`プロトコルを実装しているため、多くのNumPy関数が**直接動作**します：
 
 ```python
-from multiprocessing import Pool
-import numpy as np
+# NumPy配列を入力
+spots = np.array([100, 105, 110, 95, 90])
+result = black_scholes.call_price_batch(spots, 100.0, 1.0, 0.05, 0.2)
 
-def process_batch(args):
-    """バッチ処理関数"""
-    spots, strike, rate, sigma, time = args
-    return black_scholes.call_price_batch(
-        spots=spots,
-        strike=strike,
-        time=time,
-        rate=rate,
-        sigma=sigma
-    )
-
-# データを分割
-n_total = 10_000_000
-n_chunks = 10
-spots = np.random.uniform(90, 110, n_total)
-chunks = np.array_split(spots, n_chunks)
-
-# 並列処理
-with Pool() as pool:
-    args = [(chunk, 100, 0.05, 0.2, 1.0) for chunk in chunks]
-    results = pool.map(process_batch, args)
-
-# 結果の結合
-all_prices = np.concatenate(results)
+# 多くのNumPy関数が直接動作！
+mean_price = np.mean(result)    # ✅ 動作
+total = np.sum(result)          # ✅ 動作
+std_dev = np.std(result)        # ✅ 動作
+min_price = np.min(result)      # ✅ 動作
+max_price = np.max(result)      # ✅ 動作
 ```
 
-## パフォーマンスチューニング
+## 明示的な変換
 
-### アラインメントの最適化
+より高度なNumPy操作（インデクシング、スライシング、要素ごとの演算）が必要な場合は、明示的に変換します：
 
-```{code-block} python
-:name: numpy-integration-code-64
-:caption: 64バイト境界にアラインメント（キャッシュライン）
-
-# 64バイト境界にアラインメント（キャッシュライン）
-def create_aligned_array(size, alignment=64):
-    """アラインメントされた配列を作成"""
-    dtype = np.float64
-    itemsize = np.dtype(dtype).itemsize
-    buf = np.empty(size * itemsize + alignment, dtype=np.uint8)
-    offset = (-buf.ctypes.data) % alignment
-    return np.frombuffer(buf[offset:offset+size*itemsize], dtype=dtype)
-
-# アラインメントされた配列での計算
-aligned_spots = create_aligned_array(1_000_000)
-aligned_spots[:] = np.random.uniform(90, 110, 1_000_000)
-
-# パフォーマンス測定
-import time
-start = time.perf_counter()
-prices = black_scholes.call_price_batch(
-    spots=aligned_spots,
-    strike=100.0,
-    time=1.0,
-    rate=0.05,
-    sigma=0.2
-)
-elapsed = time.perf_counter() - start
-print(f"Aligned array: {elapsed*1000:.2f}ms")  # 期待値: 約56ms（100万要素）
-```
-
-### メモリ使用量の監視
+### 方法1: `np.array()`を使用
 
 ```python
-import tracemalloc
+result = black_scholes.call_price_batch(spots, 100.0, 1.0, 0.05, 0.2)
+np_result = np.array(result)  # NumPy配列に変換
 
-# メモリ追跡開始
-tracemalloc.start()
-
-# 大規模計算
-spots = np.random.uniform(90, 110, 5_000_000)
-prices = black_scholes.call_price_batch(
-    spots=spots,
-    strike=100.0,
-    time=1.0,
-    rate=0.05,
-    sigma=0.2
-)
-
-# メモリ使用量
-current, peak = tracemalloc.get_traced_memory()
-print(f"Current memory: {current / 1024 / 1024:.1f} MB")
-print(f"Peak memory: {peak / 1024 / 1024:.1f} MB")
-
-tracemalloc.stop()
+# NumPy固有の操作
+first_element = np_result[0]      # インデクシング
+sliced = np_result[1:3]          # スライシング
+doubled = np_result * 2          # 要素ごとの演算
 ```
 
-## インプレース操作
+### 方法2: `.to_numpy()`メソッド
 
-### 結果の直接書き込み
+```python
+result = black_scholes.call_price_batch(spots, 100.0, 1.0, 0.05, 0.2)
+np_result = result.to_numpy()  # より明示的な変換
 
-```{code-block} python
-:name: numpy-integration-code-section
-:caption: 事前確保された配列
-
-# 事前確保された配列
-n = 1_000_000
-spots = np.random.uniform(90, 110, n)
-prices = np.empty(n)  # 結果用配列
-
-# インプレース計算（メモリ効率的）
-# Note: 現在のAPIではインプレース操作はサポートされていません
-prices = black_scholes.call_price_batch(
-    spots=spots,
-    strike=100.0,
-    time=1.0,
-    rate=0.05,
-    sigma=0.2
-)
-
-print(f"Prices array modified in-place: {prices[:5]}")
+# 以降はNumPyとして扱う
 ```
 
-## 統計処理
+## パフォーマンス特性
 
-### NumPy統計関数との組み合わせ
+変換コストは非常に軽量です：
 
-```{code-block} python
-:name: numpy-integration-code-section
-:caption: ポートフォリオ統計
+| データサイズ | 変換時間 |
+|------------|---------|
+| 100要素    | ~1.7μs  |
+| 1,000要素  | ~1.8μs  |
+| 10,000要素 | ~3.6μs  |
+| 100,000要素 | ~34μs  |
 
-# ポートフォリオ統計
-spots = np.random.uniform(90, 110, 10000)
-prices = black_scholes.call_price_batch(
-    spots=spots,
-    strike=100.0,
-    time=1.0,
-    rate=0.05,
-    sigma=0.2
-)
+## 使用パターン例
 
-# 統計量
-stats = {
-    'mean': np.mean(prices),
-    'std': np.std(prices),
-    'median': np.median(prices),
-    'percentile_5': np.percentile(prices, 5),
-    'percentile_95': np.percentile(prices, 95),
-    'skew': np.mean(((prices - np.mean(prices)) / np.std(prices))**3),
-    'kurtosis': np.mean(((prices - np.mean(prices)) / np.std(prices))**4) - 3
-}
+### パターン1: 基本的な統計計算
 
-for key, value in stats.items():
-    print(f"{key}: {value:.4f}")
+```python
+# 集約関数は変換不要
+spots = np.array([95, 100, 105, 110])
+prices = black_scholes.call_price_batch(spots, 100.0, 1.0, 0.05, 0.2)
+
+# 直接使用可能
+avg_price = np.mean(prices)
+volatility = np.std(prices)
+price_range = np.max(prices) - np.min(prices)
 ```
+
+### パターン2: 高度なNumPy操作
+
+```python
+# 複雑な操作には変換が必要
+spots = np.array([95, 100, 105, 110])
+prices = black_scholes.call_price_batch(spots, 100.0, 1.0, 0.05, 0.2)
+
+# NumPyに変換
+np_prices = prices.to_numpy()
+
+# NumPy固有の操作
+log_returns = np.log(np_prices[1:] / np_prices[:-1])
+percentiles = np.percentile(np_prices, [25, 50, 75])
+weighted_avg = np.average(np_prices, weights=[0.1, 0.2, 0.3, 0.4])
+```
+
+### パターン3: Pandas統合
+
+```python
+import pandas as pd
+
+# DataFrameとの統合
+spots = np.linspace(80, 120, 41)
+prices = black_scholes.call_price_batch(spots, 100.0, 1.0, 0.05, 0.2)
+
+# DataFrameに直接格納（自動変換）
+df = pd.DataFrame({
+    'spot': spots,
+    'call_price': prices.to_numpy()  # 明示的変換推奨
+})
+```
+
+## なぜArrow配列を返すのか？
+
+1. **一貫性**: すべての関数が同じ型を返す
+2. **パフォーマンス**: 不要な変換を避ける
+3. **ゼロコピー**: Arrow間の操作は効率的
+4. **明示性**: "Explicit is better than implicit" (PEP 20)
 
 ## まとめ
 
-NumPy統合により以下が実現できます：
+- **入力**: NumPy、PyArrow、スカラーを自由に混在可能
+- **出力**: 常にArrow配列（`arro3.core.Array`）
+- **NumPy互換**: 多くの関数は直接動作
+- **変換**: 必要な時は`np.array()`または`.to_numpy()`
+- **パフォーマンス**: 変換コストは軽微（μs単位）
 
-- **ゼロコピー処理**: メモリコピーなしの高速計算（PyO3経由）
-- **ブロードキャスティング**: 柔軟な配列操作
-- **メモリ効率**: 大規模データの効率的な処理
-- **高速バッチ処理**: 100万件を約56ms（AMD Ryzen 5 5600G）で処理
-
-パフォーマンスの詳細は[ベンチマーク](../performance/benchmarks.md)を参照してください。
-
-次は[高度なモデル](advanced_models.md)で、アメリカンオプションなどの複雑な価格モデルを学びましょう。
+これにより、NumPyユーザーもPyArrowユーザーも、それぞれのワークフローで効率的にQuantForgeを使用できます。

@@ -21,26 +21,28 @@ pub fn pyany_to_arrow(_py: Python, value: &Bound<'_, PyAny>) -> PyResult<PyArray
     // 1. If already an Arrow array, check if it needs conversion to Float64
     if let Ok(array) = value.extract::<PyArray>() {
         let array_ref = array.as_ref();
-        
+
         // Check if the array is already Float64
         if array_ref.data_type() == &arrow::datatypes::DataType::Float64 {
             return Ok(array);
         }
-        
+
         // If it's Int64, convert to Float64
         if array_ref.data_type() == &arrow::datatypes::DataType::Int64 {
             use arrow::compute::cast;
-            
-            let casted = cast(array_ref, &arrow::datatypes::DataType::Float64)
-                .map_err(|e| PyValueError::new_err(format!("Failed to cast array to Float64: {}", e)))?;
+
+            let casted = cast(array_ref, &arrow::datatypes::DataType::Float64).map_err(|e| {
+                PyValueError::new_err(format!("Failed to cast array to Float64: {}", e))
+            })?;
             let array_ref = Arc::from(casted);
             return Ok(PyArray::from_array_ref(array_ref));
         }
-        
+
         // For other types, try to cast
         use arrow::compute::cast;
-        let casted = cast(array_ref, &arrow::datatypes::DataType::Float64)
-            .map_err(|e| PyValueError::new_err(format!("Failed to cast array to Float64: {}", e)))?;
+        let casted = cast(array_ref, &arrow::datatypes::DataType::Float64).map_err(|e| {
+            PyValueError::new_err(format!("Failed to cast array to Float64: {}", e))
+        })?;
         let array_ref = Arc::from(casted);
         return Ok(PyArray::from_array_ref(array_ref));
     }

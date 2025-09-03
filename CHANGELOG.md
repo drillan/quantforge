@@ -7,6 +7,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.10] - 2025-09-03
+
+### Added
+- **Broadcasting Support**: Mix scalars and arrays in all batch functions
+  - Automatic scalar-to-array conversion (length-1 arrays)
+  - Type casting from int64 to float64 arrays
+  - NumPy arrays automatically supported via pyo3-arrow's Buffer Protocol integration
+- **Flexible Input Handling**: Accept any Python type via `&Bound<'_, PyAny>`
+  - Support for PyArrow arrays, NumPy arrays, and Python scalars
+  - Zero-copy conversion when possible (Buffer Protocol)
+  - Unified `pyany_to_arrow` utility in `bindings/python/src/utils.rs`
+
+### Improved
+- **Code Quality**: Fixed Critical Rules violations (C011-3)
+  - Removed hardcoded values in Greeks calculations (PUT_DELTA_ADJUSTMENT, THETA_DENOMINATOR_FACTOR)
+  - All constants now properly defined in `core/src/constants.rs`
+- **Developer Experience**: NumPy users can now work naturally
+  - Input: Accept NumPy arrays directly without explicit conversion
+  - Output: Arrow arrays with `__array__` protocol support for NumPy functions
+  - Transparent interoperability while maintaining Arrow-native architecture
+
+### Technical Details
+- pyo3-arrow automatically handles NumPy via Buffer Protocol
+- arro3-core provides `__array__` protocol implementation
+- Zero-copy FFI maintained throughout the conversion pipeline
+- Broadcasting overhead: ~5μs for small arrays, negligible for large arrays (>1000 elements)
+
+### Documentation
+- Created comprehensive NumPy interoperability guide
+- Added broadcasting performance analysis
+- Documented return type consistency decision (always Arrow arrays)
+
 ## [0.0.9] - 2025-09-02
 
 ### Added
@@ -321,7 +353,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Cross-platform compatibility testing
 - Documentation framework with Sphinx
 
-[Unreleased]: https://github.com/drillan/quantforge/compare/v0.0.8...HEAD
+[Unreleased]: https://github.com/drillan/quantforge/compare/v0.0.10...HEAD
+[0.0.10]: https://github.com/drillan/quantforge/compare/v0.0.9...v0.0.10
+[0.0.9]: https://github.com/drillan/quantforge/compare/v0.0.8...v0.0.9
 [0.0.8]: https://github.com/drillan/quantforge/compare/v0.0.6...v0.0.8
 [0.0.6]: https://github.com/drillan/quantforge/compare/v0.0.5...v0.0.6
 [0.0.5]: https://github.com/drillan/quantforge/compare/v0.0.4...v0.0.5

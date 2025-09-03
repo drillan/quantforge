@@ -1,8 +1,5 @@
 """QuantForge: Arrow-native option pricing library"""
-from .quantforge import __version__
-from .quantforge import black_scholes
-from .quantforge import black76
-from .quantforge import merton
-from .quantforge import american
+
+from .quantforge import __version__, american, black76, black_scholes, merton
 
 __all__ = ["__version__", "black_scholes", "black76", "merton", "american"]
