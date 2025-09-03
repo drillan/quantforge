@@ -8,7 +8,7 @@ QuantForge provides high-performance batch processing capabilities for all optio
 
 - **Complete array support**: Accepts arrays for all parameters, handling not just single parameter variations
 - **Broadcasting**: Automatic expansion of scalar values and 1D arrays
-- **Zero-copy performance**: Direct processing of NumPy arrays without intermediate conversions
+- **Zero-copy performance**: Arrow-native design for direct array processing
 - **Parallel Execution**: Automatically parallelize large datasets using Rayon
 - **Consistent API**: A unified interface across all models
 
@@ -47,7 +47,7 @@ prices = black_scholes.call_price_batch(
 Calculate call option prices for multiple inputs.
 
 ```python
-call_price_batch(spots, strikes, times, rates, sigmas) -> np.ndarray
+call_price_batch(spots, strikes, times, rates, sigmas) -> arro3.core.Array
 ```
 
 **Parameters:**
@@ -58,28 +58,28 @@ call_price_batch(spots, strikes, times, rates, sigmas) -> np.ndarray
 - `sigmas`: volatility (scalar or array)
 
 **Return Value:**
-- NumPy array of call option prices
+- Arrow array (arro3.core.Array) of call option prices
 
 #### put_price_batch
 
 Calculate put option prices for multiple inputs.
 
 ```python
-put_price_batch(spots, strikes, times, rates, sigmas) -> np.ndarray
+put_price_batch(spots, strikes, times, rates, sigmas) -> arro3.core.Array
 ```
 
 **Parameters:**
 - Same as `call_price_batch`
 
 **Return Value:**
-- NumPy array of put option prices
+- Arrow array (arro3.core.Array) of put option prices
 
 #### implied_volatility_batch
 
 Calculates implied volatility from market prices.
 
 ```python
-implied_volatility_batch(prices, spots, strikes, times, rates, is_calls) -> np.ndarray
+implied_volatility_batch(prices, spots, strikes, times, rates, is_calls) -> arro3.core.Array
 ```
 
 **Parameters:**
@@ -91,14 +91,14 @@ implied_volatility_batch(prices, spots, strikes, times, rates, is_calls) -> np.n
 - `is_calls`: Optional type - True for calls, False for puts (scalar or array)
 
 **Return Value:**
-- NumPy array of implied volatility
+- Arrow array (arro3.core.Array) of implied volatility
 
 #### greeks_batch
 
 Calculate all Greeks for multiple inputs.
 
 ```python
-greeks_batch(spots, strikes, times, rates, sigmas, is_calls) -> Dict[str, np.ndarray]
+greeks_batch(spots, strikes, times, rates, sigmas, is_calls) -> Dict[str, arro3.core.Array]
 ```
 
 **Parameters:**
@@ -111,7 +111,7 @@ greeks_batch(spots, strikes, times, rates, sigmas, is_calls) -> Dict[str, np.nda
 
 **Return Value:**
 - Key: Dictionary containing keys 'delta', 'gamma', 'vega', 'theta', 'rho'
-- Each value is a NumPy array of the corresponding Greeks
+- Each value is an Arrow array (arro3.core.Array) of the corresponding Greeks
 
 ### Black76 Model
 
@@ -120,7 +120,7 @@ greeks_batch(spots, strikes, times, rates, sigmas, is_calls) -> Dict[str, np.nda
 Calculates the price of a call option on futures/forwards.
 
 ```python
-call_price_batch(forwards, strikes, times, rates, sigmas) -> np.ndarray
+call_price_batch(forwards, strikes, times, rates, sigmas) -> arro3.core.Array
 ```
 
 **Parameters:**
@@ -131,26 +131,26 @@ call_price_batch(forwards, strikes, times, rates, sigmas) -> np.ndarray
 - `sigmas`: volatility (scalar or array)
 
 **Return Value:**
-- NumPy array of call option prices
+- Arrow array (arro3.core.Array) of call option prices
 
 #### put_price_batch
 
 Calculates the price of a put option on futures/forwards.
 
 ```python
-put_price_batch(forwards, strikes, times, rates, sigmas) -> np.ndarray
+put_price_batch(forwards, strikes, times, rates, sigmas) -> arro3.core.Array
 ```
 
 #### implied_volatility_batch
 
 ```python
-implied_volatility_batch(prices, forwards, strikes, times, rates, is_calls) -> np.ndarray
+implied_volatility_batch(prices, forwards, strikes, times, rates, is_calls) -> arro3.core.Array
 ```
 
 #### greeks_batch
 
 ```python
-greeks_batch(forwards, strikes, times, rates, sigmas, is_calls) -> Dict[str, np.ndarray]
+greeks_batch(forwards, strikes, times, rates, sigmas, is_calls) -> Dict[str, arro3.core.Array]
 ```
 
 ### Merton Model (Dividend Adjustment)
@@ -160,7 +160,7 @@ greeks_batch(forwards, strikes, times, rates, sigmas, is_calls) -> Dict[str, np.
 Calculate the price of a call option with a serial dividend yield.
 
 ```python
-call_price_batch(spots, strikes, times, rates, dividend_yields, sigmas) -> np.ndarray
+call_price_batch(spots, strikes, times, rates, dividend_yields, sigmas) -> arro3.core.Array
 ```
 
 **Parameters:**
@@ -172,24 +172,24 @@ call_price_batch(spots, strikes, times, rates, dividend_yields, sigmas) -> np.nd
 - `sigmas`: volatility (scalar or array)
 
 **Return Value:**
-- NumPy array of call option prices
+- Arrow array (arro3.core.Array) of call option prices
 
 #### put_price_batch
 
 ```python
-put_price_batch(spots, strikes, times, rates, dividend_yields, sigmas) -> np.ndarray
+put_price_batch(spots, strikes, times, rates, dividend_yields, sigmas) -> arro3.core.Array
 ```
 
 #### implied_volatility_batch
 
 ```python
-implied_volatility_batch(prices, spots, strikes, times, rates, dividend_yields, is_calls) -> np.ndarray
+implied_volatility_batch(prices, spots, strikes, times, rates, dividend_yields, is_calls) -> arro3.core.Array
 ```
 
 #### greeks_batch
 
 ```python
-greeks_batch(spots, strikes, times, rates, dividend_yields, sigmas, is_calls) -> Dict[str, np.ndarray]
+greeks_batch(spots, strikes, times, rates, dividend_yields, sigmas, is_calls) -> Dict[str, arro3.core.Array]
 ```
 
 **Return Value:**
@@ -202,41 +202,41 @@ greeks_batch(spots, strikes, times, rates, dividend_yields, sigmas, is_calls) ->
 Calculates the price of an American call option using the Barone-Adesi-Whaley approximation.
 
 ```python
-call_price_batch(spots, strikes, times, rates, dividend_yields, sigmas) -> np.ndarray
+call_price_batch(spots, strikes, times, rates, dividend_yields, sigmas) -> arro3.core.Array
 ```
 
 #### put_price_batch
 
 ```python
-put_price_batch(spots, strikes, times, rates, dividend_yields, sigmas) -> np.ndarray
+put_price_batch(spots, strikes, times, rates, dividend_yields, sigmas) -> arro3.core.Array
 ```
 
 #### implied_volatility_batch
 
 ```python
-implied_volatility_batch(prices, spots, strikes, times, rates, dividend_yields, is_calls) -> np.ndarray
+implied_volatility_batch(prices, spots, strikes, times, rates, dividend_yields, is_calls) -> arro3.core.Array
 ```
 
 #### greeks_batch
 
 ```python
-greeks_batch(spots, strikes, times, rates, dividend_yields, sigmas, is_calls) -> Dict[str, np.ndarray]
+greeks_batch(spots, strikes, times, rates, dividend_yields, sigmas, is_calls) -> Dict[str, arro3.core.Array]
 ```
 
 **Return Value:**
 - dictionary with keys 'delta', 'gamma', 'vega', 'theta', 'rho', 'dividend_rho'
-- Each value is a NumPy array of the corresponding Greeks
+- Each value is an Arrow array (arro3.core.Array) of the corresponding Greeks
 
 #### exercise_boundary_batch
 
 Calculates the optimal exercise boundary for American options.
 
 ```python
-exercise_boundary_batch(spots, strikes, times, rates, dividend_yields, sigmas, is_calls) -> np.ndarray
+exercise_boundary_batch(spots, strikes, times, rates, dividend_yields, sigmas, is_calls) -> arro3.core.Array
 ```
 
 **Return Value:**
-- NumPy array of optimal exercise prices
+- Arrow array (arro3.core.Array) of optimal exercise prices
 
 ## Examples
 
@@ -449,8 +449,8 @@ New API:
 
 # New - Returns dictionary of arrays
 greeks_dict = black_scholes.greeks_batch(...)
-print(greeks_dict['delta'])  # NumPy array of all deltas
-print(greeks_dict['gamma'])  # NumPy array of all gammas
+print(greeks_dict['delta'])  # Arrow array of all deltas
+print(greeks_dict['gamma'])  # Arrow array of all gammas
 ```
 
 ## Related Information

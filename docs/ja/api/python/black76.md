@@ -26,23 +26,36 @@ put_price = black76.put_price(75.50, 80.00, 0.25, 0.05, 0.3)
 ### バッチ処理
 
 ```python
-import numpy as np
+import pyarrow as pa
+import numpy as np  # NumPyとの互換性
 
 # 完全配列サポートとBroadcasting
-forwards = np.array([70, 75, 80, 85])
-strikes = np.array([65, 70, 75, 80])  # 配列も可能
-times = 0.5  # スカラーは自動拡張
-rates = 0.05
-sigmas = np.array([0.20, 0.25, 0.30, 0.35])
+# PyArrow使用（推奨 - Arrow-native）
+forwards = pa.array([70, 75, 80, 85])
+strikes = pa.array([65, 70, 75, 80])  # 配列も可能
+sigmas = pa.array([0.20, 0.25, 0.30, 0.35])
+
+# NumPy配列も使用可能（互換性）
+# forwards = np.array([70, 75, 80, 85])
 
 # パラメータ: forwards, strikes, times, rates, sigmas
-call_prices = black76.call_price_batch(forwards, strikes, times, rates, sigmas)
-put_prices = black76.put_price_batch(forwards, strikes, times, rates, sigmas)
+call_prices = black76.call_price_batch(
+    forwards, 
+    strikes, 
+    0.5,      # times - スカラーは自動拡張
+    0.05,     # rates
+    sigmas
+)  # 返り値: arro3.core.Array
+
+put_prices = black76.put_price_batch(forwards, strikes, 0.5, 0.05, sigmas)
 
 # Greeksバッチ計算（辞書形式）
-greeks = black76.greeks_batch(forwards, strikes, times, rates, sigmas, is_calls=True)
-print(greeks['delta'])  # NumPy配列
-print(greeks['vega'])   # NumPy配列
+greeks = black76.greeks_batch(forwards, strikes, 0.5, 0.05, sigmas, is_calls=True)
+# greeks['delta']とgreeks['vega']はarro3.core.Array
+
+# NumPy操作が必要な場合は変換
+print(np.array(greeks['delta']))  # NumPy配列に変換
+print(np.array(greeks['vega']))   # NumPy配列に変換
 ```
 
 詳細は[Batch Processing API](batch_processing.md)を参照してください。
@@ -93,11 +106,11 @@ print(f"Implied Volatility: {iv:.4f}")
 
 | パラメータ | 型 | 説明 |
 |-----------|-----|------|
-| `fs` | np.ndarray | 複数のフォワード価格 |
-| `k` | float | 権利行使価格（共通） |
-| `t` | float | 満期までの時間（共通） |
-| `r` | float | 無リスク金利（共通） |
-| `sigma` | float | ボラティリティ（共通） |
+| `forwards` | pa.array \| np.ndarray \| list | 複数のフォワード価格（Arrow/NumPy配列） |
+| `strikes` | float \| pa.array \| np.ndarray | 権利行使価格（スカラーまたは配列） |
+| `times` | float \| pa.array \| np.ndarray | 満期までの時間（スカラーまたは配列） |
+| `rates` | float \| pa.array \| np.ndarray | 無リスク金利（スカラーまたは配列） |
+| `sigmas` | float \| pa.array \| np.ndarray | ボラティリティ（スカラーまたは配列） |
 
 ## 価格式（参考）
 

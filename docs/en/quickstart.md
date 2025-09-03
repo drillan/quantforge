@@ -70,27 +70,40 @@ print(f"Rho: {greeks.rho:.4f}")
 QuantForge's true value lies in its ability to process massive datasets at high speed:
 
 ```python
-import numpy as np
+import pyarrow as pa
+import numpy as np  # for random number generation
 import time
 from quantforge.models import black_scholes
 
 # 1 million option data points
 n = 1_000_000
-spots = np.random.uniform(90, 110, n)
 
-# High-speed batch processing
+# Using PyArrow (recommended - Arrow-native design)
+spots = pa.array(np.random.uniform(90, 110, n))
+
+# High-speed batch processing (zero-copy FFI)
 start = time.perf_counter()
 prices = black_scholes.call_price_batch(
-    spots=spots,
+    spots=spots,  # Arrow array
     k=100.0,
     t=1.0,
     r=0.05,
     sigma=0.2
-)
+)  # Returns: arro3.core.Array
 elapsed = (time.perf_counter() - start) * 1000
 
 print(f"Calculation time: {elapsed:.1f}ms")
 print(f"Per option: {elapsed/n*1000:.1f}ns")
+
+# NumPy arrays also supported (for compatibility)
+spots_np = np.random.uniform(90, 110, n)
+prices_np_input = black_scholes.call_price_batch(
+    spots=spots_np,  # NumPy arrays accepted
+    k=100.0,
+    t=1.0,
+    r=0.05,
+    sigma=0.2
+)  # Returns the same Arrow array
 ```
 
 ## implied volatility

@@ -10,7 +10,7 @@ It maintains Python's ease of use while providing high-speed computational perfo
 - Up to 40x faster processing compared to pure Python implementations (measured on AMD Ryzen 5 5600G)
 - Numerical error < 1e-15 (double precision)
 - Simple Python API
-- Supports Black-Scholes, American, Asian, and Spread options
+- Supports Black-Scholes, Black76, Merton, and American options
 - Efficient Parallel Computation Using Rayon
 - Zero-copy Operations on NumPy Arrays
 :::

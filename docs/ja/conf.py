@@ -19,7 +19,7 @@ cargo_toml_path = root_dir / "Cargo.toml"
 
 with open(cargo_toml_path, "rb") as f:
     cargo_data = tomllib.load(f)
-    version = release = cargo_data["package"]["version"]
+    version = release = cargo_data["workspace"]["package"]["version"]
 
 # -- Project URLs ------------------------------------------------------------
 html_context = {

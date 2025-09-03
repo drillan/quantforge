@@ -26,27 +26,41 @@ put_price = american.put_price(100.0, 105.0, 1.0, 0.05, 0.03, 0.2)
 ### バッチ処理
 
 ```python
-import numpy as np
+import pyarrow as pa
+import numpy as np  # NumPyとの互換性
 
 # 完全配列サポートとBroadcasting
-spots = np.array([95, 100, 105, 110])
-strikes = 100.0  # スカラーは自動拡張
-times = np.array([0.5, 1.0, 1.5, 2.0])
-rates = 0.05
-dividend_yields = 0.03
-sigmas = np.array([0.18, 0.20, 0.22, 0.24])
+# PyArrow使用（推奨 - Arrow-native）
+spots = pa.array([95, 100, 105, 110])
+times = pa.array([0.5, 1.0, 1.5, 2.0])
+sigmas = pa.array([0.18, 0.20, 0.22, 0.24])
+
+# NumPy配列も使用可能（互換性）
+# spots = np.array([95, 100, 105, 110])
 
 # パラメータ: spots, strikes, times, rates, dividend_yields, sigmas
-call_prices = american.call_price_batch(spots, strikes, times, rates, dividend_yields, sigmas)
-put_prices = american.put_price_batch(spots, strikes, times, rates, dividend_yields, sigmas)
+call_prices = american.call_price_batch(
+    spots, 
+    100.0,    # strikes - スカラーは自動拡張
+    times, 
+    0.05,     # rates
+    0.03,     # dividend_yields
+    sigmas
+)  # 返り値: arro3.core.Array
+
+put_prices = american.put_price_batch(spots, 100.0, times, 0.05, 0.03, sigmas)
 
 # Greeksバッチ計算（辞書形式）
-greeks = american.greeks_batch(spots, strikes, times, rates, dividend_yields, sigmas, is_calls=False)
-print(greeks['delta'])  # NumPy配列
-print(greeks['gamma'])  # NumPy配列
+greeks = american.greeks_batch(spots, 100.0, times, 0.05, 0.03, sigmas, is_calls=False)
+# greeks['delta']とgreeks['gamma']はarro3.core.Array
+
+# NumPy操作が必要な場合は変換
+print(np.array(greeks['delta']))  # NumPy配列に変換
+print(np.array(greeks['gamma']))  # NumPy配列に変換
 
 # 早期行使境界のバッチ計算
-boundaries = american.exercise_boundary_batch(spots, strikes, times, rates, dividend_yields, sigmas, is_calls=False)
+boundaries = american.exercise_boundary_batch(spots, 100.0, times, 0.05, 0.03, sigmas, is_calls=False)
+# boundariesもarro3.core.Arrayを返す
 ```
 
 詳細は[Batch Processing API](batch_processing.md)を参照してください。
@@ -110,12 +124,12 @@ print(f"Exercise boundary: {boundary:.2f}")
 
 | パラメータ | 型 | 説明 |
 |-----------|-----|------|
-| `spots` | np.ndarray | 複数のスポット価格 |
-| `k` | float | 権利行使価格（共通） |
-| `t` | float | 満期までの時間（共通） |
-| `r` | float | 無リスク金利（共通） |
-| `q` | float | 配当利回り（共通） |
-| `sigma` | float | ボラティリティ（共通） |
+| `spots` | pa.array \| np.ndarray \| list | 複数のスポット価格（Arrow/NumPy配列） |
+| `strikes` | float \| pa.array \| np.ndarray | 権利行使価格（スカラーまたは配列） |
+| `times` | float \| pa.array \| np.ndarray | 満期までの時間（スカラーまたは配列） |
+| `rates` | float \| pa.array \| np.ndarray | 無リスク金利（スカラーまたは配列） |
+| `dividend_yields` | float \| pa.array \| np.ndarray | 配当利回り（スカラーまたは配列） |
+| `sigmas` | float \| pa.array \| np.ndarray | ボラティリティ（スカラーまたは配列） |
 
 ## 価格式（参考）
 

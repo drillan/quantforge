@@ -148,20 +148,20 @@ print(f"Implied Volatility: {iv:.4f}")
   - type
   - Description
 * - `spots`
-  - np.ndarray
-  - Multiple Spot Prices
-* - `k`
-  - float
-  - Exercise Price (Common)
-* - `t`
-  - float
-  - Time to Maturity (Common)
-* - `r`
-  - float
-  - Risk-free rate (common)
-* - `sigma`
-  - float
-  - Volatility (Common)
+  - pa.array | np.ndarray | list
+  - Multiple Spot Prices (Arrow/NumPy arrays)
+* - `strikes`
+  - float | pa.array | np.ndarray
+  - Exercise Price (scalar or array)
+* - `times`
+  - float | pa.array | np.ndarray
+  - Time to Maturity (scalar or array)
+* - `rates`
+  - float | pa.array | np.ndarray
+  - Risk-free rate (scalar or array)
+* - `sigmas`
+  - float | pa.array | np.ndarray
+  - Volatility (scalar or array)
 ```
 
 (api-black-scholes-formulas)=

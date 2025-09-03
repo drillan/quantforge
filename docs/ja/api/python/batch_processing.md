@@ -8,7 +8,7 @@ QuantForgeはすべてのオプション価格モデルに対して高性能な�
 
 - **完全な配列サポート**: すべてのパラメータが配列を受け入れ、単一パラメータの変化だけでなく対応
 - **ブロードキャスティング**: スカラー値と長さ1の配列の自動拡張
-- **ゼロコピーパフォーマンス**: 中間変換なしの直接NumPy配列処理
+- **ゼロコピーパフォーマンス**: Arrow-native設計による直接配列処理
 - **並列実行**: Rayonを使用した大規模データセットの自動並列化
 - **一貫したAPI**: すべてのモデルで統一されたインターフェース
 
@@ -47,7 +47,7 @@ prices = black_scholes.call_price_batch(
 複数の入力に対するコールオプション価格を計算。
 
 ```python
-call_price_batch(spots, strikes, times, rates, sigmas) -> np.ndarray
+call_price_batch(spots, strikes, times, rates, sigmas) -> arro3.core.Array
 ```
 
 **パラメータ:**
@@ -58,28 +58,28 @@ call_price_batch(spots, strikes, times, rates, sigmas) -> np.ndarray
 - `sigmas`: ボラティリティ（スカラーまたは配列）
 
 **戻り値:**
-- コールオプション価格のNumPy配列
+- コールオプション価格のArrow配列（arro3.core.Array）
 
 #### put_price_batch
 
 複数の入力に対するプットオプション価格を計算。
 
 ```python
-put_price_batch(spots, strikes, times, rates, sigmas) -> np.ndarray
+put_price_batch(spots, strikes, times, rates, sigmas) -> arro3.core.Array
 ```
 
 **パラメータ:**
 - `call_price_batch`と同じ
 
 **戻り値:**
-- プットオプション価格のNumPy配列
+- プットオプション価格のArrow配列（arro3.core.Array）
 
 #### implied_volatility_batch
 
 市場価格からインプライドボラティリティを計算。
 
 ```python
-implied_volatility_batch(prices, spots, strikes, times, rates, is_calls) -> np.ndarray
+implied_volatility_batch(prices, spots, strikes, times, rates, is_calls) -> arro3.core.Array
 ```
 
 **パラメータ:**
@@ -91,14 +91,14 @@ implied_volatility_batch(prices, spots, strikes, times, rates, is_calls) -> np.n
 - `is_calls`: オプションタイプ - Trueでコール、Falseでプット（スカラーまたは配列）
 
 **戻り値:**
-- インプライドボラティリティのNumPy配列
+- インプライドボラティリティのArrow配列（arro3.core.Array）
 
 #### greeks_batch
 
 複数の入力に対するすべてのグリークスを計算。
 
 ```python
-greeks_batch(spots, strikes, times, rates, sigmas, is_calls) -> Dict[str, np.ndarray]
+greeks_batch(spots, strikes, times, rates, sigmas, is_calls) -> Dict[str, arro3.core.Array]
 ```
 
 **パラメータ:**
@@ -111,7 +111,7 @@ greeks_batch(spots, strikes, times, rates, sigmas, is_calls) -> Dict[str, np.nda
 
 **戻り値:**
 - キー: 'delta', 'gamma', 'vega', 'theta', 'rho'を持つ辞書
-- 各値は対応するグリークスのNumPy配列
+- 各値は対応するグリークスのArrow配列（arro3.core.Array）
 
 ### Black76モデル
 
@@ -120,7 +120,7 @@ greeks_batch(spots, strikes, times, rates, sigmas, is_calls) -> Dict[str, np.nda
 先物/フォワードに対するコールオプション価格を計算。
 
 ```python
-call_price_batch(forwards, strikes, times, rates, sigmas) -> np.ndarray
+call_price_batch(forwards, strikes, times, rates, sigmas) -> arro3.core.Array
 ```
 
 **パラメータ:**
@@ -131,26 +131,26 @@ call_price_batch(forwards, strikes, times, rates, sigmas) -> np.ndarray
 - `sigmas`: ボラティリティ（スカラーまたは配列）
 
 **戻り値:**
-- コールオプション価格のNumPy配列
+- コールオプション価格のArrow配列（arro3.core.Array）
 
 #### put_price_batch
 
 先物/フォワードに対するプットオプション価格を計算。
 
 ```python
-put_price_batch(forwards, strikes, times, rates, sigmas) -> np.ndarray
+put_price_batch(forwards, strikes, times, rates, sigmas) -> arro3.core.Array
 ```
 
 #### implied_volatility_batch
 
 ```python
-implied_volatility_batch(prices, forwards, strikes, times, rates, is_calls) -> np.ndarray
+implied_volatility_batch(prices, forwards, strikes, times, rates, is_calls) -> arro3.core.Array
 ```
 
 #### greeks_batch
 
 ```python
-greeks_batch(forwards, strikes, times, rates, sigmas, is_calls) -> Dict[str, np.ndarray]
+greeks_batch(forwards, strikes, times, rates, sigmas, is_calls) -> Dict[str, arro3.core.Array]
 ```
 
 ### Mertonモデル（配当調整）
@@ -160,7 +160,7 @@ greeks_batch(forwards, strikes, times, rates, sigmas, is_calls) -> Dict[str, np.
 連続配当利回りを持つコールオプション価格を計算。
 
 ```python
-call_price_batch(spots, strikes, times, rates, dividend_yields, sigmas) -> np.ndarray
+call_price_batch(spots, strikes, times, rates, dividend_yields, sigmas) -> arro3.core.Array
 ```
 
 **パラメータ:**
@@ -172,28 +172,29 @@ call_price_batch(spots, strikes, times, rates, dividend_yields, sigmas) -> np.nd
 - `sigmas`: ボラティリティ（スカラーまたは配列）
 
 **戻り値:**
-- コールオプション価格のNumPy配列
+- コールオプション価格のArrow配列（arro3.core.Array）
 
 #### put_price_batch
 
 ```python
-put_price_batch(spots, strikes, times, rates, dividend_yields, sigmas) -> np.ndarray
+put_price_batch(spots, strikes, times, rates, dividend_yields, sigmas) -> arro3.core.Array
 ```
 
 #### implied_volatility_batch
 
 ```python
-implied_volatility_batch(prices, spots, strikes, times, rates, dividend_yields, is_calls) -> np.ndarray
+implied_volatility_batch(prices, spots, strikes, times, rates, dividend_yields, is_calls) -> arro3.core.Array
 ```
 
 #### greeks_batch
 
 ```python
-greeks_batch(spots, strikes, times, rates, dividend_yields, sigmas, is_calls) -> Dict[str, np.ndarray]
+greeks_batch(spots, strikes, times, rates, dividend_yields, sigmas, is_calls) -> Dict[str, arro3.core.Array]
 ```
 
 **戻り値:**
 - キー: 'delta', 'gamma', 'vega', 'theta', 'rho', 'dividend_rho'を持つ辞書
+- 各値は対応するグリークスのArrow配列（arro3.core.Array）
 
 ### アメリカンモデル
 
@@ -202,41 +203,42 @@ greeks_batch(spots, strikes, times, rates, dividend_yields, sigmas, is_calls) ->
 Barone-Adesi-Whaley近似を使用したアメリカンコールオプション価格を計算。
 
 ```python
-call_price_batch(spots, strikes, times, rates, dividend_yields, sigmas) -> np.ndarray
+call_price_batch(spots, strikes, times, rates, dividend_yields, sigmas) -> arro3.core.Array
 ```
 
 #### put_price_batch
 
 ```python
-put_price_batch(spots, strikes, times, rates, dividend_yields, sigmas) -> np.ndarray
+put_price_batch(spots, strikes, times, rates, dividend_yields, sigmas) -> arro3.core.Array
 ```
 
 #### implied_volatility_batch
 
 ```python
-implied_volatility_batch(prices, spots, strikes, times, rates, dividend_yields, is_calls) -> np.ndarray
+implied_volatility_batch(prices, spots, strikes, times, rates, dividend_yields, is_calls) -> arro3.core.Array
 ```
 
 #### greeks_batch
 
 ```python
-greeks_batch(spots, strikes, times, rates, dividend_yields, sigmas, is_calls) -> Dict[str, np.ndarray]
+greeks_batch(spots, strikes, times, rates, dividend_yields, sigmas, is_calls) -> Dict[str, arro3.core.Array]
 ```
 
 **戻り値:**
 - キー: 'delta', 'gamma', 'vega', 'theta', 'rho', 'dividend_rho'を持つ辞書
-- 各値は対応するグリークスのNumPy配列
+- 各値は対応するグリークスのArrow配列（arro3.core.Array）
+- 各値は対応するグリークスのArrow配列（arro3.core.Array）
 
 #### exercise_boundary_batch
 
 アメリカンオプションの最適行使境界を計算。
 
 ```python
-exercise_boundary_batch(spots, strikes, times, rates, dividend_yields, sigmas, is_calls) -> np.ndarray
+exercise_boundary_batch(spots, strikes, times, rates, dividend_yields, sigmas, is_calls) -> arro3.core.Array
 ```
 
 **戻り値:**
-- 最適行使価格のNumPy配列
+- 最適行使価格のArrow配列（arro3.core.Array）
 
 ## 使用例
 
@@ -393,64 +395,6 @@ ivs = black_scholes.implied_volatility_batch(
     is_calls=True
 )
 # 負の価格のためivs[2]はNaNになる
-```
-
-## 移行ガイド
-
-### 単一パラメータ変化から
-
-旧API（単一パラメータ変化）:
-```{code-block} python
-:name: batch-processing-code-spots
-:caption: 旧 - spotsのみが配列可能
-
-# 旧 - spotsのみが配列可能
-prices = black_scholes.call_price_batch(
-    spots=[95, 100, 105],  # 配列
-    k=100.0,                # スカラーのみ
-    t=1.0,                  # スカラーのみ
-    r=0.05,                 # スカラーのみ
-    sigma=0.2               # スカラーのみ
-)
-```
-
-新API（完全配列サポート）:
-```{code-block} python
-:name: batch-processing-new-api
-:caption: 新 - すべてのパラメータが配列可能
-
-# 新 - すべてのパラメータが配列可能
-prices = black_scholes.call_price_batch(
-    spots=[95, 100, 105],   # 配列
-    strikes=100.0,          # スカラーまたは配列
-    times=1.0,              # スカラーまたは配列
-    rates=0.05,             # スカラーまたは配列
-    sigmas=0.2              # スカラーまたは配列
-)
-```
-
-### List[PyGreeks]からDictへ
-
-旧API:
-```{code-block} python
-:name: batch-processing-code-greek
-:caption: 旧 - Greekオブジェクトのリストを返す
-
-# 旧 - Greekオブジェクトのリストを返す
-greeks_list = black_scholes.greeks_batch(...)
-for greek in greeks_list:
-    print(greek.delta, greek.gamma)
-```
-
-新API:
-```{code-block} python
-:name: batch-processing-dict-output
-:caption: 新 - 配列の辞書を返す
-
-# 新 - 配列の辞書を返す
-greeks_dict = black_scholes.greeks_batch(...)
-print(greeks_dict['delta'])  # すべてのデルタのNumPy配列
-print(greeks_dict['gamma'])  # すべてのガンマのNumPy配列
 ```
 
 ## 関連情報

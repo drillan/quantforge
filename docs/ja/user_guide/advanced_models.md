@@ -1,75 +1,71 @@
----
-future_feature: true
----
-
 # 高度なモデル
 
-:::{warning}
-このページで説明されている機能は現在開発中です。
-現在利用可能なのは[Black-Scholesモデル](../models/black_scholes.md)のみです。
-実装予定時期についてはプロジェクトの開発計画をご確認ください。
-:::
+QuantForgeは、基本的なBlack-Scholesモデルに加えて、以下の高度なオプション価格モデルを提供しています。
 
-QuantForgeは、Black-Scholesを超えた高度なオプション価格モデルを将来提供予定です。
+## 実装済みモデル
 
-## アメリカンオプション
+### Black-Scholesモデル
+ヨーロピアンオプションの標準的な価格計算モデル。詳細は[Black-Scholesモデル](../api/python/black_scholes.md)を参照。
 
-### Bjerksund-Stensland 2002モデル
+### Black76モデル
+先物オプションの価格計算モデル。詳細は[Black76モデル](../api/python/black76.md)を参照。
+
+### Mertonモデル
+配当を考慮したヨーロピアンオプションの価格計算モデル。詳細は[Mertonモデル](../api/python/merton.md)を参照。
+
+### アメリカンオプション
+
+Barone-Adesi-Whaley近似を使用した早期行使可能なオプションの価格計算。
 
 ```python
-import numpy as np
-# 将来実装予定のAPI
-# from quantforge.models import american, black_scholes
+from quantforge.models import american, black_scholes
 
 # アメリカンコールオプション
-# american_call = american.call_price(
-#     spot=100,
-#     strike=95,
-#     time=1.0,
-#     rate=0.05,
-#     sigma=0.25,
-#     dividend=0.02  # 配当利回り
-# )
+american_call = american.call_price(
+    s=100.0,    # スポット価格
+    k=95.0,     # 権利行使価格
+    t=1.0,      # 満期までの時間（年）
+    r=0.05,     # 無リスク金利
+    sigma=0.25  # ボラティリティ
+)
 
 # ヨーロピアンとの比較
-# european_call = black_scholes.call_price_with_dividend(
-#     spot=100,
-#     strike=95,
-#     time=1.0,
-#     rate=0.05,
-#     sigma=0.25,
-#     dividend=0.02
-# )
+european_call = black_scholes.call_price(
+    s=100.0,
+    k=95.0,
+    t=1.0,
+    r=0.05,
+    sigma=0.25
+)
 
-# early_exercise_premium = american_call - european_call
-# print(f"American Call: ${american_call:.2f}")
-# print(f"European Call: ${european_call:.2f}")
-# print(f"Early Exercise Premium: ${early_exercise_premium:.2f}")
+early_exercise_premium = american_call - european_call
+print(f"American Call: ${american_call:.2f}")
+print(f"European Call: ${european_call:.2f}")
+print(f"Early Exercise Premium: ${early_exercise_premium:.2f}")
 ```
 
-### アメリカンプットオプション
+#### アメリカンプットオプション
 
-```{code-block} python
-:name: advanced-models-code-section
-:caption: アメリカンプット（早期行使がより重要）
+プットオプションの場合、早期行使の価値がより重要になることがあります：
 
-# アメリカンプット（早期行使がより重要）
-# 将来実装予定
-# american_put = american.put_price(
-#     spot=100,
-#     strike=105,
-#     time=1.0,
-#     rate=0.05,
-#     sigma=0.25
-# )
+```python
+# アメリカンプット
+american_put = american.put_price(
+    s=100.0,
+    k=105.0,
+    t=1.0,
+    r=0.05,
+    sigma=0.25
+)
 
-# european_put = black_scholes.put_price(
-#     spot=100,
-#     strike=105,
-#     time=1.0,
-#     rate=0.05,
-#     sigma=0.25
-# )
+# ヨーロピアンプット
+european_put = black_scholes.put_price(
+    s=100.0,
+    k=105.0,
+    t=1.0,
+    r=0.05,
+    sigma=0.25
+)
 
 premium = american_put - european_put
 print(f"American Put: ${american_put:.2f}")
@@ -77,389 +73,84 @@ print(f"European Put: ${european_put:.2f}")
 print(f"Early Exercise Premium: ${premium:.2f} ({premium/european_put*100:.1f}%)")
 ```
 
-### 早期行使境界
+詳細は[アメリカンオプションAPI](../api/python/american.md)を参照。
 
-```{code-block} python
-:name: advanced-models-code-section
-:caption: 早期行使境界の計算
+## モデル選択ガイド
 
-# 早期行使境界の計算
-def early_exercise_boundary(strike, rate, vol, time_points):
-    """各時点での早期行使境界価格"""
-    boundaries = []
-    for t in time_points:
-        if t > 0:
-            boundary = qf.american_exercise_boundary(
-                strike=strike,
-                rate=rate,
-                vol=vol,
-                time=t,
-                option_type="put"
+| モデル | 用途 | 特徴 |
+|--------|------|------|
+| Black-Scholes | 株式のヨーロピアンオプション | 最も基本的、高速 |
+| Black76 | 先物・商品オプション | 先物価格ベース |
+| Merton | 配当付き株式オプション | 連続配当を考慮 |
+| American | 早期行使可能なオプション | BAW近似使用 |
+
+## パフォーマンス比較
+
+実測値（AMD Ryzen 5 5600G）：
+
+| モデル | 単一計算 | 100万件バッチ |
+|--------|----------|---------------|
+| Black-Scholes | 1.4 μs | 55.6 ms |
+| Black76 | 計測予定 | 計測予定 |
+| Merton | 計測予定 | 計測予定 |
+| American | 計測予定 | 計測予定 |
+
+## 使用例：ポートフォリオ評価
+
+複数のオプションポジションを一括評価する例：
+
+```python
+import pyarrow as pa
+from quantforge.models import black_scholes, american
+
+# ポートフォリオデータ
+positions = [
+    {"model": "bs", "is_call": True, "s": 100, "k": 105, "quantity": 100},
+    {"model": "bs", "is_call": False, "s": 100, "k": 95, "quantity": -50},
+    {"model": "am", "is_call": True, "s": 110, "k": 105, "quantity": 75},
+]
+
+total_value = 0
+for pos in positions:
+    if pos["model"] == "bs":
+        if pos["is_call"]:
+            price = black_scholes.call_price(
+                s=pos["s"], k=pos["k"], t=0.25, r=0.05, sigma=0.2
             )
-            boundaries.append(boundary)
         else:
-            boundaries.append(strike)  # 満期時は行使価格
+            price = black_scholes.put_price(
+                s=pos["s"], k=pos["k"], t=0.25, r=0.05, sigma=0.2
+            )
+    elif pos["model"] == "am":
+        if pos["is_call"]:
+            price = american.call_price(
+                s=pos["s"], k=pos["k"], t=0.25, r=0.05, sigma=0.2
+            )
+        else:
+            price = american.put_price(
+                s=pos["s"], k=pos["k"], t=0.25, r=0.05, sigma=0.2
+            )
     
-    return np.array(boundaries)
-
-# 時間グリッド
-times = np.linspace(0, 1, 50)
-boundaries = early_exercise_boundary(100, 0.05, 0.25, times)
-
-# 可視化
-import matplotlib.pyplot as plt
-plt.figure(figsize=(10, 6))
-plt.plot(times, boundaries)
-plt.axhline(y=100, color='r', linestyle='--', label='Strike')
-plt.xlabel('Time to Maturity')
-plt.ylabel('Early Exercise Boundary')
-plt.title('American Put Early Exercise Boundary')
-plt.legend()
-plt.grid(True, alpha=0.3)
-plt.show()
-```
-
-## アジアンオプション
-
-### 算術平均アジアンオプション
-
-```{code-block} python
-:name: advanced-models-code-section
-:caption: 算術平均価格オプション
-
-# 算術平均価格オプション
-asian_call = qf.asian_arithmetic_call(
-    spot=100,
-    strike=100,
-    rate=0.05,
-    vol=0.2,
-    time=1.0,
-    averaging_start=0.0,  # 平均開始時点
-    n_fixings=252  # 観測回数（日次）
-)
-
-# 対応するヨーロピアンとの比較
-european = qf.black_scholes_call(100, 100, 0.05, 0.2, 1.0)
-print(f"Asian Call: ${asian_call:.2f}")
-print(f"European Call: ${european:.2f}")
-print(f"Asian Discount: ${european - asian_call:.2f}")
-```
-
-### 幾何平均アジアンオプション
-
-```{code-block} python
-:name: advanced-models-code-section
-:caption: 幾何平均（解析解あり）
-
-# 幾何平均（解析解あり）
-asian_geometric = qf.asian_geometric_call(
-    spot=100,
-    strike=100,
-    rate=0.05,
-    vol=0.2,
-    time=1.0
-)
-
-print(f"Geometric Asian: ${asian_geometric:.2f}")
-```
-
-### 既観測価格を考慮
-
-```{code-block} python
-:name: advanced-models-code-section
-:caption: 部分的に観測済みのアジアンオプション
-
-# 部分的に観測済みのアジアンオプション
-observed_prices = [98, 102, 101, 99, 103]  # 既に観測された価格
-remaining_time = 0.5  # 残り期間
-
-adjusted_asian = qf.asian_call_partial(
-    spot=103,  # 現在価格
-    strike=100,
-    rate=0.05,
-    vol=0.2,
-    remaining_time=remaining_time,
-    observed_average=np.mean(observed_prices),
-    n_observed=len(observed_prices),
-    n_total=252  # 総観測回数
-)
-
-print(f"Partial Asian Call: ${adjusted_asian:.2f}")
-```
-
-## スプレッドオプション
-
-### Kirk近似によるスプレッドオプション
-
-```{code-block} python
-:name: advanced-models-code-2
-:caption: 2資産間のスプレッドオプション
-
-# 2資産間のスプレッドオプション
-spread_call = qf.spread_option_kirk(
-    spot1=100,    # 資産1の現在価格
-    spot2=95,     # 資産2の現在価格
-    strike=5,     # スプレッドの行使価格
-    rate=0.05,
-    vol1=0.25,    # 資産1のボラティリティ
-    vol2=0.30,    # 資産2のボラティリティ
-    correlation=0.7,  # 相関係数
-    time=1.0
-)
-
-print(f"Spread Option: ${spread_call:.2f}")
-```
-
-### マルコフ・スプレッドオプション
-
-```{code-block} python
-:name: advanced-models-code-section
-:caption: より精密なマルコフモデル
-
-# より精密なマルコフモデル
-spread_markov = qf.spread_option_markov(
-    spot1=100,
-    spot2=95,
-    strike=5,
-    rate=0.05,
-    vol1=0.25,
-    vol2=0.30,
-    correlation=0.7,
-    time=1.0,
-    n_steps=100  # 時間ステップ数
-)
-
-print(f"Markov Spread: ${spread_markov:.2f}")
-```
-
-## バリアオプション
-
-### ノックイン/ノックアウトオプション
-
-```{code-block} python
-:name: advanced-models-code-section
-:caption: アップアンドアウト・コールオプション
-
-# アップアンドアウト・コールオプション
-barrier_call = qf.barrier_call(
-    spot=100,
-    strike=105,
-    barrier=120,  # バリアレベル
-    rate=0.05,
-    vol=0.25,
-    time=1.0,
-    barrier_type="up_and_out",
-    rebate=0  # リベート（バリアヒット時の支払い）
-)
-
-vanilla_call = qf.black_scholes_call(100, 105, 0.05, 0.25, 1.0)
-print(f"Barrier Call: ${barrier_call:.2f}")
-print(f"Vanilla Call: ${vanilla_call:.2f}")
-print(f"Barrier Discount: ${vanilla_call - barrier_call:.2f}")
-```
-
-### ダブルバリアオプション
-
-```{code-block} python
-:name: advanced-models-code-section
-:caption: ダブルバリア（上下両方）
-
-# ダブルバリア（上下両方）
-double_barrier = qf.double_barrier_call(
-    spot=100,
-    strike=100,
-    lower_barrier=80,
-    upper_barrier=120,
-    rate=0.05,
-    vol=0.25,
-    time=1.0
-)
-
-print(f"Double Barrier Call: ${double_barrier:.2f}")
-```
-
-## ルックバックオプション
-
-### 固定行使価格ルックバック
-
-```{code-block} python
-:name: advanced-models-code-section
-:caption: 期間中の最大値に基づくコール
-
-# 期間中の最大値に基づくコール
-lookback_call = qf.lookback_call_fixed(
-    spot=100,
-    strike=95,
-    rate=0.05,
-    vol=0.25,
-    time=1.0
-)
-
-print(f"Fixed Strike Lookback Call: ${lookback_call:.2f}")
-```
-
-### 変動行使価格ルックバック
-
-```{code-block} python
-:name: advanced-models-code-section
-:caption: 最適な行使価格を選択
-
-# 最適な行使価格を選択
-lookback_floating = qf.lookback_call_floating(
-    spot=100,
-    min_observed=95,  # これまでの最小値
-    rate=0.05,
-    vol=0.25,
-    time=1.0
-)
-
-print(f"Floating Strike Lookback: ${lookback_floating:.2f}")
-```
-
-## デジタル（バイナリー）オプション
-
-### キャッシュオアナッシング
-
-```{code-block} python
-:name: advanced-models-code-itm
-:caption: デジタルコール（満期時にITMなら固定額支払い）
-
-# デジタルコール（満期時にITMなら固定額支払い）
-digital_call = qf.digital_call(
-    spot=100,
-    strike=105,
-    rate=0.05,
-    vol=0.25,
-    time=1.0,
-    cash_amount=10  # 支払額
-)
-
-# 確率計算
-prob_itm = qf.probability_itm(
-    spot=100,
-    strike=105,
-    rate=0.05,
-    vol=0.25,
-    time=1.0,
-    option_type="call"
-)
-
-print(f"Digital Call Value: ${digital_call:.2f}")
-print(f"Probability of ITM: {prob_itm:.1%}")
-```
-
-### アセットオアナッシング
-
-```{code-block} python
-:name: advanced-models-code-section
-:caption: 資産払いデジタルオプション
-
-# 資産払いデジタルオプション
-asset_or_nothing = qf.asset_or_nothing_call(
-    spot=100,
-    strike=105,
-    rate=0.05,
-    vol=0.25,
-    time=1.0
-)
-
-print(f"Asset-or-Nothing Call: ${asset_or_nothing:.2f}")
-```
-
-## 複合オプション戦略
-
-### ストラドル
-
-```{code-block} python
-:name: advanced-models-code-straddle_value
-:caption: straddle_value
-
-def straddle_value(spot, strike, rate, vol, time):
-    """ストラドル（同一行使価格のコール+プット）"""
-    call = qf.black_scholes_call(spot, strike, rate, vol, time)
-    put = qf.black_scholes_put(spot, strike, rate, vol, time)
-    return call + put
-
-# ストラドルのペイオフ
-spots = np.linspace(80, 120, 100)
-straddle_values = [straddle_value(s, 100, 0.05, 0.25, 0.25) for s in spots]
-
-plt.figure(figsize=(10, 6))
-plt.plot(spots, straddle_values, label='Straddle Value')
-plt.axvline(x=100, color='r', linestyle='--', alpha=0.5, label='Strike')
-plt.xlabel('Spot Price')
-plt.ylabel('Strategy Value')
-plt.title('Straddle Payoff')
-plt.legend()
-plt.grid(True, alpha=0.3)
-plt.show()
-```
-
-### バタフライスプレッド
-
-```{code-block} python
-:name: advanced-models-code-butterfly_spread
-:caption: butterfly_spread
-
-def butterfly_spread(spot, k1, k2, k3, rate, vol, time):
-    """バタフライスプレッド"""
-    c1 = qf.black_scholes_call(spot, k1, rate, vol, time)
-    c2 = qf.black_scholes_call(spot, k2, rate, vol, time)
-    c3 = qf.black_scholes_call(spot, k3, rate, vol, time)
-    return c1 - 2*c2 + c3
-
-# バタフライの価値
-spots = np.linspace(85, 115, 100)
-butterfly = [butterfly_spread(s, 95, 100, 105, 0.05, 0.25, 0.25) for s in spots]
-
-plt.figure(figsize=(10, 6))
-plt.plot(spots, butterfly)
-plt.axvline(x=95, color='r', linestyle='--', alpha=0.3)
-plt.axvline(x=100, color='r', linestyle='--', alpha=0.3)
-plt.axvline(x=105, color='r', linestyle='--', alpha=0.3)
-plt.xlabel('Spot Price')
-plt.ylabel('Butterfly Value')
-plt.title('Butterfly Spread')
-plt.grid(True, alpha=0.3)
-plt.show()
-```
-
-## モデル比較
-
-### 各モデルのパフォーマンス比較
-
-```{code-block} python
-:name: advanced-models-code-section
-:caption: 異なるモデルの計算時間比較
-
-# 異なるモデルの計算時間比較
-import time
-
-n = 100000
-spots = np.random.uniform(90, 110, n)
-
-models = {
-    'Black-Scholes': lambda s: qf.black_scholes_call(s, 100, 0.05, 0.2, 1.0),
-    'American': lambda s: qf.american_call(s, 100, 0.05, 0.2, 1.0),
-    'Asian': lambda s: qf.asian_arithmetic_call(s, 100, 0.05, 0.2, 1.0),
-    'Barrier': lambda s: qf.barrier_call(s, 100, 120, 0.05, 0.2, 1.0, "up_and_out"),
-}
-
-for name, func in models.items():
-    start = time.perf_counter()
-    prices = [func(s) for s in spots[:1000]]  # サンプル計算
-    elapsed = time.perf_counter() - start
-    print(f"{name:15s}: {elapsed*1000:.2f}ms for 1000 options")
+    position_value = price * pos["quantity"]
+    total_value += position_value
+    print(f"Position: {pos['model'].upper()} {'Call' if pos['is_call'] else 'Put'} K={pos['k']}: ${position_value:.2f}")
+
+print(f"Total Portfolio Value: ${total_value:.2f}")
 ```
 
 ## まとめ
 
-高度なモデルにより以下が可能になります：
+QuantForgeは以下の実装済みモデルを提供しています：
 
-- **アメリカンオプション**: 早期行使権の評価
-- **アジアンオプション**: パス依存型オプション
-- **スプレッドオプション**: 複数資産の相対価値
-- **バリアオプション**: 条件付きペイオフ
-- **複合戦略**: 実務で使用される戦略の評価
+- **Black-Scholes**: 標準的なヨーロピアンオプション
+- **Black76**: 先物オプション
+- **Merton**: 配当付きオプション
+- **American**: 早期行使可能なオプション（BAW近似）
 
-次は[実践例](examples.md)で、実際のユースケースを見ていきましょう。
+すべてのモデルで以下の機能が利用可能：
+- 高速な単一計算
+- Arrow-nativeバッチ処理
+- 完全なグリークス計算
+- インプライドボラティリティ逆算
+
+詳細な使用方法は各モデルのAPIドキュメントを参照してください。

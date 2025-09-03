@@ -113,12 +113,12 @@ print(f"Exercise boundary: {boundary:.2f}")
 
 | Parameters | type | Description |
 |-----------|-----|------|
-| `spots` | np.ndarray | Multiple Spot Prices |
-| `k` | float | Exercise Price (Common) |
-| `t` | float | Time to Maturity (Common) |
-| `r` | float | Risk-free rate (common) |
-| `q` | float | Dividend Yield (Common) |
-| `sigma` | float | Volatility (Common) |
+| `spots` | pa.array \| np.ndarray \| list | Multiple Spot Prices (Arrow/NumPy arrays) |
+| `strikes` | float \| pa.array \| np.ndarray | Exercise Price (scalar or array) |
+| `times` | float \| pa.array \| np.ndarray | Time to Maturity (scalar or array) |
+| `rates` | float \| pa.array \| np.ndarray | Risk-free rate (scalar or array) |
+| `dividend_yields` | float \| pa.array \| np.ndarray | Dividend Yield (scalar or array) |
+| `sigmas` | float \| pa.array \| np.ndarray | Volatility (scalar or array) |
 
 ## Price Formula (Reference)
 

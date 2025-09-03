@@ -43,8 +43,8 @@ QuantForge achieves acceleration through the following technologies:
 :class: tip
 
 1. **Parallel Processing**: Efficient parallel computation using Rayon (effective for large datasets)
-2. **SIMD Optimization**: Utilizing CPU vector instructions
-3. **Zero-copy**: Direct processing of NumPy arrays (via PyO3)
+2. **Arrow-native Design**: Zero-copy FFI for fast data exchange
+3. **Memory Efficiency**: Column-oriented storage for efficient processing
 4. **Cache Optimization**: Memory access pattern optimization
 ```
 
@@ -53,32 +53,58 @@ QuantForge achieves acceleration through the following technologies:
 ### Simple Price Calculation
 
 ```python
-import quantforge as qf
+from quantforge.models import black_scholes
 
 # Single option price
-price = qf.black_scholes_call(100, 110, 0.05, 0.2, 1.0)
+price = black_scholes.call_price(
+    s=100.0,   # spot price
+    k=110.0,   # strike price
+    t=1.0,     # time to maturity
+    r=0.05,    # risk-free rate
+    sigma=0.2  # volatility
+)
 ```
 
 ### Batch Processing
 
 ```python
 import numpy as np
+from quantforge.models import black_scholes
 
-# Batch calculate 1 million options
+# Batch calculate 1 million options  
+# ~56ms on AMD Ryzen 5 5600G (CUI mode)
 spots = np.random.uniform(90, 110, 1_000_000)
-prices = qf.calculate(spots, strike=100, rate=0.05, vol=0.2, time=1.0)
+prices = black_scholes.call_price_batch(
+    spots=spots,
+    strikes=100.0,
+    times=1.0,
+    rates=0.05,
+    sigmas=0.2
+)
 ```
 
 ### Portfolio Evaluation
 
 ```python
 # Multiple option positions
-portfolio = [
-    {"type": "call", "spot": 100, "strike": 105, "quantity": 100},
-    {"type": "put", "spot": 100, "strike": 95, "quantity": -50},
+from quantforge.models import black_scholes
+
+positions = [
+    {"is_call": True, "s": 100, "k": 105, "quantity": 100},
+    {"is_call": False, "s": 100, "k": 95, "quantity": -50},
 ]
 
-total_value = qf.evaluate_portfolio(portfolio, rate=0.05, vol=0.2, time=0.25)
+total_value = 0
+for pos in positions:
+    if pos["is_call"]:
+        price = black_scholes.call_price(
+            s=pos["s"], k=pos["k"], t=0.25, r=0.05, sigma=0.2
+        )
+    else:
+        price = black_scholes.put_price(
+            s=pos["s"], k=pos["k"], t=0.25, r=0.05, sigma=0.2
+        )
+    total_value += price * pos["quantity"]
 ```
 
 ## Recommended Workflow

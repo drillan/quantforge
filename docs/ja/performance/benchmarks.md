@@ -116,7 +116,7 @@ QuantForgeの詳細なパフォーマンス測定結果です。
 #### NumPy+SciPy（ベクトル化）
 - NumPyのブロードキャスティングで全要素同時計算
 - C言語レベルでのループ実行（Pythonオーバーヘッド回避）
-- SIMDインストラクションの自動利用
+- Intel MKLによる最適化（利用可能な場合）
 - キャッシュ効率的なメモリアクセス
 
 #### QuantForge（Rust並列処理）
@@ -188,7 +188,7 @@ cd benchmarks
 
 ### データ分析
 ```{code-block} bash
-:name: benchmarks-code-section
+:name: benchmarks-analysis-section
 :caption: 履歴分析
 
 # 履歴分析
@@ -261,7 +261,7 @@ uv run python analyze.py  # results/performance_history.png を生成
 - 測定値は環境によって変動します
 - 実測値ベース（理論値ではありません）
 - FFIオーバーヘッドを含む現実的な性能
-- SIMD最適化は現在無効化中
+- コンパイラの自動ベクトル化に依存
 :::
 
 ## 関連ドキュメント

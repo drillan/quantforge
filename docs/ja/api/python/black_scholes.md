@@ -41,23 +41,36 @@ put_price = black_scholes.put_price(100.0, 105.0, 1.0, 0.05, 0.2)
 :caption: バッチ処理の例
 :linenos:
 
-import numpy as np
+import pyarrow as pa
+import numpy as np  # NumPyとの互換性
 
 # すべてのパラメータが配列を受け付ける（Broadcasting対応）
-spots = np.array([95, 100, 105, 110])
-strikes = 100.0  # スカラーは自動的に配列サイズに拡張
-times = np.array([0.5, 1.0, 1.5, 2.0])
-rates = 0.05
-sigmas = np.array([0.18, 0.20, 0.22, 0.24])
+# PyArrow使用（推奨 - Arrow-native）
+spots = pa.array([95, 100, 105, 110])
+times = pa.array([0.5, 1.0, 1.5, 2.0])
+sigmas = pa.array([0.18, 0.20, 0.22, 0.24])
+
+# NumPy配列も使用可能（互換性）
+# spots = np.array([95, 100, 105, 110])
 
 # パラメータ: spots, strikes, times, rates, sigmas
-call_prices = black_scholes.call_price_batch(spots, strikes, times, rates, sigmas)
-put_prices = black_scholes.put_price_batch(spots, strikes, times, rates, sigmas)
+call_prices = black_scholes.call_price_batch(
+    spots, 
+    100.0,    # スカラーは自動的に配列サイズに拡張
+    times, 
+    0.05,     # rate
+    sigmas
+)  # 返り値: arro3.core.Array
+
+put_prices = black_scholes.put_price_batch(spots, 100.0, times, 0.05, sigmas)
 
 # Greeksバッチ計算（辞書形式で返却）
-greeks = black_scholes.greeks_batch(spots, strikes, times, rates, sigmas, is_calls=True)
-portfolio_delta = greeks['delta'].sum()  # NumPy配列の操作
-portfolio_vega = greeks['vega'].sum()
+greeks = black_scholes.greeks_batch(spots, 100.0, times, 0.05, sigmas, is_calls=True)
+# greeks['delta']はarro3.core.Array
+
+# NumPy操作が必要な場合は変換
+portfolio_delta = np.sum(np.array(greeks['delta']))
+portfolio_vega = np.sum(np.array(greeks['vega']))
 ```
 
 詳細は[Batch Processing API](batch_processing.md)を参照してください。
@@ -150,20 +163,20 @@ print(f"Implied Volatility: {iv:.4f}")
   - 型
   - 説明
 * - `spots`
-  - np.ndarray
-  - 複数のスポット価格
-* - `k`
-  - float
-  - 権利行使価格（共通）
-* - `t`
-  - float
-  - 満期までの時間（共通）
-* - `r`
-  - float
-  - 無リスク金利（共通）
-* - `sigma`
-  - float
-  - ボラティリティ（共通）
+  - pa.array | np.ndarray | list
+  - 複数のスポット価格（Arrow/NumPy配列）
+* - `strikes`
+  - float | pa.array | np.ndarray
+  - 権利行使価格（スカラーまたは配列）
+* - `times`
+  - float | pa.array | np.ndarray
+  - 満期までの時間（スカラーまたは配列）
+* - `rates`
+  - float | pa.array | np.ndarray
+  - 無リスク金利（スカラーまたは配列）
+* - `sigmas`
+  - float | pa.array | np.ndarray
+  - ボラティリティ（スカラーまたは配列）
 ```
 
 (api-black-scholes-formulas)=

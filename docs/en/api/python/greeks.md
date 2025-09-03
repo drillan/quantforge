@@ -24,15 +24,15 @@ For single-option calculations, the Greeks are returned as a `dict` with the fol
 
 ### Batch Greeks Calculation
 
-For batch computations, the Greeks are returned as a `Dict[str, np.ndarray]`, where each Greek is a NumPy array:
+For batch computations, the Greeks are returned as a `Dict[str, arro3.core.Array]`, where each Greek is an Arrow array:
 
 ```python
 {
-    'delta': np.ndarray,    # Array of delta values
-    'gamma': np.ndarray,    # Array of gamma values
-    'theta': np.ndarray,    # Array of theta values
-    'vega': np.ndarray,     # Array of vega values
-    'rho': np.ndarray       # Array of rho values
+    'delta': arro3.core.Array,    # Array of delta values
+    'gamma': arro3.core.Array,    # Array of gamma values
+    'theta': arro3.core.Array,    # Array of theta values
+    'vega': arro3.core.Array,     # Array of vega values
+    'rho': arro3.core.Array       # Array of rho values
 }
 ```
 
@@ -44,7 +44,7 @@ This format is consistent across all models:
 
 ## Memory Efficiency
 
-The batch format uses NumPy arrays for optimal memory efficiency:
+The batch format uses Arrow arrays for optimal memory efficiency:
 
 ```{code-block} python
 :name: greeks-code-structure-of-arrays-soa
@@ -122,8 +122,8 @@ greeks_batch = qf.black_scholes_greeks_batch(
 )
 
 # Access individual Greeks arrays
-deltas = greeks_batch['delta']  # np.ndarray with shape (n,)
-gammas = greeks_batch['gamma']  # np.ndarray with shape (n,)
+deltas = greeks_batch['delta']  # arro3.core.Array with shape (n,)
+gammas = greeks_batch['gamma']  # arro3.core.Array with shape (n,)
 
 # Statistical analysis
 print(f"Average delta: {np.mean(deltas):.4f}")
@@ -165,7 +165,7 @@ greeks_batch = qf.american_greeks_batch(
     steps=100
 )
 
-# Returns Dict[str, np.ndarray] - same as other models
+# Returns Dict[str, arro3.core.Array] - same as other models
 print(f"Delta range: [{greeks_batch['delta'].min():.4f}, {greeks_batch['delta'].max():.4f}]")
 ```
 
@@ -212,9 +212,9 @@ Calculated using the binary tree method. The `steps` parameter controls precisio
 ## Performance Considerations
 
 1. **Batch Processing**: Always prefer batch functions when calculating multiple options
-2. **Memory Layout**: Dict formats with NumPy arrays provide optimal cache locality
+2. **Memory Layout**: Dict formats with Arrow arrays provide optimal cache locality
 3. **Parallelization**: The Batch function automatically utilizes parallel processing for large inputs
-4. **Type consistency**: All batch functions return the same Dict[str, np.ndarray] format
+4. **Type consistency**: All batch functions return the same Dict[str, arro3.core.Array] format
 
 ## Error Handling
 

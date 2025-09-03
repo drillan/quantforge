@@ -68,27 +68,40 @@ print(f"Rho: {greeks.rho:.4f}")
 QuantForgeの真価は大量データの高速処理にあります：
 
 ```python
-import numpy as np
+import pyarrow as pa
+import numpy as np  # 乱数生成用
 import time
 from quantforge.models import black_scholes
 
 # 100万件のオプションデータ
 n = 1_000_000
-spots = np.random.uniform(90, 110, n)
 
-# 高速バッチ処理
+# PyArrowを使用（推奨 - Arrow-native設計）
+spots = pa.array(np.random.uniform(90, 110, n))
+
+# 高速バッチ処理（ゼロコピーFFI）
 start = time.perf_counter()
 prices = black_scholes.call_price_batch(
-    spots=spots,
+    spots=spots,  # Arrow配列
     k=100.0,
     t=1.0,
     r=0.05,
     sigma=0.2
-)
+)  # 返り値: arro3.core.Array
 elapsed = (time.perf_counter() - start) * 1000
 
 print(f"計算時間: {elapsed:.1f}ms")
 print(f"1オプションあたり: {elapsed/n*1000:.1f}ns")
+
+# NumPy配列も使用可能（互換性のため）
+spots_np = np.random.uniform(90, 110, n)
+prices_np_input = black_scholes.call_price_batch(
+    spots=spots_np,  # NumPy配列も受け付け可能
+    k=100.0,
+    t=1.0,
+    r=0.05,
+    sigma=0.2
+)  # 返り値は同じArrow配列
 ```
 
 ## インプライドボラティリティ

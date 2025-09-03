@@ -12,7 +12,7 @@ Pythonの使いやすさを保ちながら、高速な計算性能を提供し�
 - Pure Python実装比 最大40倍の処理速度（AMD Ryzen 5 5600G測定値）
 - 数値誤差 < 1e-15（倍精度演算）
 - シンプルなPython API
-- Black-Scholes、アメリカン、アジアン、スプレッドオプション対応
+- Black-Scholes、Black76、Merton、アメリカンオプション対応
 - Rayonによる効率的な並列計算
 - NumPy配列のゼロコピー処理
 :::
@@ -99,6 +99,7 @@ user_guide/index
 user_guide/basic_usage
 user_guide/advanced_models
 user_guide/numpy_integration
+user_guide/arrow_native_guide
 user_guide/examples
 ```
 
@@ -148,6 +149,7 @@ development/architecture
 development/contributing
 development/testing
 development/hardcode-prevention
+migration/numpy_to_arrow
 ```
 
 (index-indices)=

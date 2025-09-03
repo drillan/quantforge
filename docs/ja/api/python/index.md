@@ -108,13 +108,13 @@ print(f"Vega: {greeks.vega:.4f}")
 
 | パラメータ | 型 | 説明 |
 |-----------|-----|------|
-| spots | np.ndarray \| float | スポット価格の配列 |
-| strikes | np.ndarray \| float | ストライク価格の配列 |
-| times | np.ndarray \| float | 満期までの時間の配列 |
-| rates | np.ndarray \| float | 無リスク金利の配列 |
-| sigmas | np.ndarray \| float | ボラティリティの配列 |
+| spots | pa.array \| np.ndarray \| float | スポット価格の配列 |
+| strikes | pa.array \| np.ndarray \| float | ストライク価格の配列 |
+| times | pa.array \| np.ndarray \| float | 満期までの時間の配列 |
+| rates | pa.array \| np.ndarray \| float | 無リスク金利の配列 |
+| sigmas | pa.array \| np.ndarray \| float | ボラティリティの配列 |
 
-**戻り値**: `np.ndarray` - オプション価格の配列
+**戻り値**: `arro3.core.Array` - オプション価格のArrow配列
 
 **注意事項**：
 - バッチ版は NumPy のブロードキャスティングに対応
@@ -128,7 +128,7 @@ print(f"Vega: {greeks.vega:.4f}")
 
 **バッチ版** (`greeks_batch()`): 辞書形式
 - キー: `'delta'`, `'gamma'`, `'vega'`, `'theta'`, `'rho'`
-- 値: 各グリークスの `np.ndarray`
+- 値: 各グリークスの `arro3.core.Array`
 
 ### 使い分けガイド
 

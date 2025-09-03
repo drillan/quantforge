@@ -43,27 +43,39 @@ iv_b76 = black76.implied_volatility(5.5, 75, 75, 0.5, 0.05, True)
 ### Batch Calculation
 
 ```python
-import numpy as np
+import pyarrow as pa
+import numpy as np  # NumPy compatibility
 from quantforge.models import black_scholes, black76
 
 # Black-Scholes batch calculation (full array support + Broadcasting)
-spots = np.array([95, 100, 105, 110])
-strikes = 100.0  # Scalar automatically broadcasts to array size
-times = 1.0
-rates = 0.05
-sigmas = np.array([0.18, 0.20, 0.22, 0.24])
+# PyArrow usage (recommended - Arrow-native)
+spots = pa.array([95, 100, 105, 110])
+sigmas = pa.array([0.18, 0.20, 0.22, 0.24])
+
+# NumPy arrays also work (compatibility)
+# spots = np.array([95, 100, 105, 110])
 
 # All parameters accept arrays
-prices_bs = black_scholes.call_price_batch(spots, strikes, times, rates, sigmas)
+prices_bs = black_scholes.call_price_batch(
+    spots,
+    100.0,    # strikes - Scalar automatically broadcasts
+    1.0,      # times
+    0.05,     # rates
+    sigmas
+)  # Returns: arro3.core.Array
 
 # Greeks are returned as a dictionary
-greeks_bs = black_scholes.greeks_batch(spots, strikes, times, rates, sigmas, is_calls=True)
-print(greeks_bs['delta'])  # NumPy array
-print(greeks_bs['gamma'])  # NumPy array
+greeks_bs = black_scholes.greeks_batch(spots, 100.0, 1.0, 0.05, sigmas, is_calls=True)
+# Each element is arro3.core.Array
+
+# NumPy operations if needed, convert
+print(np.array(greeks_bs['delta']))  # Convert to NumPy array
+print(np.array(greeks_bs['gamma']))  # Convert to NumPy array
 
 # Black76 batch calculation
-forwards = np.array([70, 75, 80, 85])
+forwards = pa.array([70, 75, 80, 85])
 prices_b76 = black76.call_price_batch(forwards, 75.0, 0.5, 0.05, 0.25)
+# prices_b76 also returns arro3.core.Array
 ```
 
 For details, refer to the [Batch Processing API](batch_processing.md).
@@ -105,13 +117,13 @@ Function signatures for calculating multiple option prices at once:
 
 | Parameter | Type | Description |
 |-----------|------|-------------|
-| spots | np.ndarray \| float | Array of spot prices |
-| strikes | np.ndarray \| float | Array of strike prices |
-| times | np.ndarray \| float | Array of times to maturity |
-| rates | np.ndarray \| float | Array of risk-free rates |
-| sigmas | np.ndarray \| float | Array of volatilities |
+| spots | pa.array \| np.ndarray \| float | Array of spot prices |
+| strikes | pa.array \| np.ndarray \| float | Array of strike prices |
+| times | pa.array \| np.ndarray \| float | Array of times to maturity |
+| rates | pa.array \| np.ndarray \| float | Array of risk-free rates |
+| sigmas | pa.array \| np.ndarray \| float | Array of volatilities |
 
-**Returns**: `np.ndarray` - Array of option prices
+**Returns**: `arro3.core.Array` - Arrow array of option prices
 
 **Notes**:
 - Batch functions support NumPy broadcasting
@@ -125,7 +137,7 @@ Function signatures for calculating multiple option prices at once:
 
 **Batch version** (`greeks_batch()`): Dictionary format
 - Keys: `'delta'`, `'gamma'`, `'vega'`, `'theta'`, `'rho'`
-- Values: `np.ndarray` for each Greek
+- Values: `arro3.core.Array` for each Greek
 
 ### Usage Guidelines
 

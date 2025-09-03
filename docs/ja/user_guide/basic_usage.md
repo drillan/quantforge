@@ -72,31 +72,34 @@ print(f"  Rho:   {greeks.rho:.4f}")
 
 ## 複数オプションの同時計算
 
-### バッチ処理（NumPy配列）
+### バッチ処理（PyArrow推奨）
 
 ```python
-import numpy as np
+import pyarrow as pa
+import numpy as np  # 統計処理用
 from quantforge.models import black_scholes
 
-# 複数のスポット価格
-spots = np.array([95, 100, 105, 110])
+# PyArrowを使用（推奨 - Arrow-native設計）
+spots = pa.array([95, 100, 105, 110])
 
-# バッチ計算（高速）
+# バッチ計算（高速、ゼロコピーFFI）
 call_prices = black_scholes.call_price_batch(
     spots=spots,
     k=100.0,
     t=1.0,
     r=0.05,
     sigma=0.2
-)
+)  # 返り値: arro3.core.Array
 
+# NumPyも使用可能（互換性のため）
+spots_np = np.array([95, 100, 105, 110])
 put_prices = black_scholes.put_price_batch(
-    spots=spots,
+    spots=spots_np,  # NumPy配列も受け付け可能
     k=100.0,
     t=1.0,
     r=0.05,
     sigma=0.2
-)
+)  # 返り値: arro3.core.Array（同じ）
 
 for i, (spot, call, put) in enumerate(zip(spots, call_prices, put_prices)):
     print(f"Spot {spot}: Call=${call:.2f}, Put=${put:.2f}")

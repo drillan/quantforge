@@ -24,15 +24,15 @@ QuantForgeのすべてのグリークス関数は、一貫性と使いやすさ�
 
 ### バッチグリークス計算
 
-バッチ計算の場合、グリークスは `Dict[str, np.ndarray]` として返され、各グリークスはNumPy配列になります：
+バッチ計算の場合、グリークスは `Dict[str, arro3.core.Array]` として返され、各グリークスはArrow配列になります：
 
 ```python
 {
-    'delta': np.ndarray,    # デルタ値の配列
-    'gamma': np.ndarray,    # ガンマ値の配列
-    'theta': np.ndarray,    # シータ値の配列
-    'vega': np.ndarray,     # ベガ値の配列
-    'rho': np.ndarray       # ロー値の配列
+    'delta': arro3.core.Array,    # デルタ値の配列
+    'gamma': arro3.core.Array,    # ガンマ値の配列
+    'theta': arro3.core.Array,    # シータ値の配列
+    'vega': arro3.core.Array,     # ベガ値の配列
+    'rho': arro3.core.Array       # ロー値の配列
 }
 ```
 
@@ -44,7 +44,7 @@ QuantForgeのすべてのグリークス関数は、一貫性と使いやすさ�
 
 ## メモリ効率
 
-バッチ形式は最適なメモリ効率のためにNumPy配列を使用します：
+バッチ形式は最適なメモリ効率のためにArrow配列を使用します：
 
 ```{code-block} python
 :name: greeks-code-structure-of-arrays-soa
@@ -52,8 +52,8 @@ QuantForgeのすべてのグリークス関数は、一貫性と使いやすさ�
 
 # Structure of Arrays (SoA) - メモリ効率的
 greeks_dict = {
-    'delta': np.array([0.5, 0.6, 0.7]),    # 連続メモリ
-    'gamma': np.array([0.02, 0.03, 0.04]),
+    'delta': pa.array([0.5, 0.6, 0.7]),    # 連続メモリ
+    'gamma': pa.array([0.02, 0.03, 0.04]),
     # ... その他のグリークス
 }
 
@@ -100,17 +100,18 @@ print(f"Rho: {greeks['rho']:.4f}")
 :caption: バッチグリークス計算
 :linenos:
 
-import numpy as np
+import pyarrow as pa
+import numpy as np  # 乱数生成用
 import quantforge as qf
 
-# バッチ入力の準備
+# バッチ入力の準備 - PyArrowを使用（推奨）
 n = 1000
-spots = np.random.uniform(90, 110, n)
-strikes = np.full(n, 100.0)
-times = np.random.uniform(0.1, 2.0, n)
-rates = np.full(n, 0.05)
-volatilities = np.random.uniform(0.15, 0.35, n)
-is_calls = np.ones(n, dtype=bool)
+spots = pa.array(np.random.uniform(90, 110, n))
+strikes = pa.array([100.0] * n)
+times = pa.array(np.random.uniform(0.1, 2.0, n))
+rates = pa.array([0.05] * n)
+volatilities = pa.array(np.random.uniform(0.15, 0.35, n))
+is_calls = pa.array([True] * n)
 
 # すべてのオプションのグリークスを一度に計算
 greeks_batch = qf.black_scholes_greeks_batch(
@@ -123,12 +124,14 @@ greeks_batch = qf.black_scholes_greeks_batch(
 )
 
 # 個々のグリークス配列へのアクセス
-deltas = greeks_batch['delta']  # 形状 (n,) のnp.ndarray
-gammas = greeks_batch['gamma']  # 形状 (n,) のnp.ndarray
+deltas = greeks_batch['delta']  # 形状 (n,) のarro3.core.Array
+gammas = greeks_batch['gamma']  # 形状 (n,) のarro3.core.Array
 
-# 統計分析
-print(f"平均デルタ: {np.mean(deltas):.4f}")
-print(f"最大ガンマ: {np.max(gammas):.4f}")
+# 統計分析（必要に応じてNumPyに変換）
+deltas_np = np.array(deltas)
+gammas_np = np.array(gammas)
+print(f"平均デルタ: {np.mean(deltas_np):.4f}")
+print(f"最大ガンマ: {np.max(gammas_np):.4f}")
 ```
 
 ### アメリカンオプションのグリークス
@@ -166,7 +169,7 @@ greeks_batch = qf.american_greeks_batch(
     steps=100
 )
 
-# Dict[str, np.ndarray]を返す - 他のモデルと同じ
+# Dict[str, arro3.core.Array]を返す - 他のモデルと同じ
 print(f"デルタ範囲: [{greeks_batch['delta'].min():.4f}, {greeks_batch['delta'].max():.4f}]")
 ```
 
@@ -213,9 +216,9 @@ greeks = qf.merton_greeks(
 ## パフォーマンスに関する考慮事項
 
 1. **バッチ処理**: 複数のオプションを計算する場合は常にバッチ関数を優先
-2. **メモリレイアウト**: NumPy配列を持つDict形式は最適なキャッシュ局所性を提供
+2. **メモリレイアウト**: Arrow配列を持つDict形式は最適なキャッシュ局所性を提供
 3. **並列化**: バッチ関数は大規模入力に対して自動的に並列処理を使用
-4. **型の一貫性**: すべてのバッチ関数は同じDict[str, np.ndarray]形式を返す
+4. **型の一貫性**: すべてのバッチ関数は同じDict[str, arro3.core.Array]形式を返す
 
 ## エラーハンドリング
 
