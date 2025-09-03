@@ -8,6 +8,7 @@ import pytest
 # Import the main module
 import quantforge
 from quantforge.models import black76
+
 from tests.conftest import arrow
 
 

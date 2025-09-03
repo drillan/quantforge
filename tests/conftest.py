@@ -8,7 +8,10 @@ Rust側のsrc/constants.rsと同期して管理されています。
     assert abs(actual - expected) < PRACTICAL_TOLERANCE
 """
 
-from typing import Final
+from typing import Any, Final
+
+import numpy as np
+import pyarrow as pa
 
 # ===== 精度レベル定義 =====
 # Rustのsrc/constants.rsと同期
@@ -47,96 +50,80 @@ EPSILON: Final[float] = PRACTICAL_TOLERANCE
 # ===== Arrow Native Support =====
 # Arrow配列とNumPy配列の統一的な操作をサポート
 
-from typing import Any, List, Union
 try:
     import arro3.core
+
     ARROW_AVAILABLE = True
 except ImportError:
     ARROW_AVAILABLE = False
 
-import pyarrow as pa
-import numpy as np
-
 
 class ArrowArrayHelper:
     """Arrow配列とNumPy配列の統一的な操作を提供"""
-    
+
     @staticmethod
     def is_arrow(obj: Any) -> bool:
         """オブジェクトがArrow配列かチェック"""
         if not ARROW_AVAILABLE:
             return False
         return isinstance(obj, arro3.core.Array)
-    
+
     @staticmethod
-    def to_list(arr: Any) -> List[float]:
+    def to_list(arr: Any) -> list[Any]:
         """配列をPythonリストに変換"""
         if ArrowArrayHelper.is_arrow(arr):
-            return arr.to_pylist()
-        elif hasattr(arr, 'tolist'):  # NumPy array
-            return arr.tolist()
+            return arr.to_pylist()  # type: ignore[no-any-return]
+        elif hasattr(arr, "tolist"):  # NumPy array
+            return arr.tolist()  # type: ignore[no-any-return]
         else:
             return list(arr)
-    
+
     @staticmethod
     def get_value(arr: Any, index: int) -> float:
         """配列から値を取得"""
         if ArrowArrayHelper.is_arrow(arr):
             scalar = arr[index]
-            if hasattr(scalar, 'as_py'):
-                return scalar.as_py()
+            if hasattr(scalar, "as_py"):
+                return scalar.as_py()  # type: ignore[no-any-return]
             return float(scalar)
         else:
             return float(arr[index])
-    
+
     @staticmethod
     def assert_type(result: Any) -> None:
         """結果がArrow配列であることを確認"""
-        assert ArrowArrayHelper.is_arrow(result), \
-            f"Expected arro3.core.Array, got {type(result)}"
-    
+        assert ArrowArrayHelper.is_arrow(result), f"Expected arro3.core.Array, got {type(result)}"
+
     @staticmethod
-    def assert_allclose(
-        actual: Any, 
-        expected: Any, 
-        rtol: float = PRACTICAL_TOLERANCE,
-        err_msg: str = ""
-    ) -> None:
+    def assert_allclose(actual: Any, expected: Any, rtol: float = PRACTICAL_TOLERANCE, err_msg: str = "") -> None:
         """値の近似チェック"""
         actual_list = ArrowArrayHelper.to_list(actual)
-        if hasattr(expected, '__iter__') and not isinstance(expected, str):
+        if hasattr(expected, "__iter__") and not isinstance(expected, str):
             expected_list = ArrowArrayHelper.to_list(expected)
         else:
             expected_list = [expected] * len(actual_list)
-        
-        assert len(actual_list) == len(expected_list), \
-            f"Length mismatch: {len(actual_list)} != {len(expected_list)}"
-        
-        for i, (a, e) in enumerate(zip(actual_list, expected_list)):
+
+        assert len(actual_list) == len(expected_list), f"Length mismatch: {len(actual_list)} != {len(expected_list)}"
+
+        for i, (a, e) in enumerate(zip(actual_list, expected_list, strict=False)):
             if not (np.isnan(a) and np.isnan(e)):  # NaN同士は等しいとみなす
-                assert abs(a - e) <= rtol * max(abs(e), 1.0), \
+                assert abs(a - e) <= rtol * max(abs(e), 1.0), (
                     f"Value mismatch at index {i}: {a} != {e} (rtol={rtol}){' - ' + err_msg if err_msg else ''}"
-    
+                )
+
     @staticmethod
-    def assert_comparison(
-        arr: Any,
-        op: str,
-        value: float = 0.0
-    ) -> None:
+    def assert_comparison(arr: Any, op: str, value: float = 0.0) -> None:
         """配列要素の比較操作を確認"""
         values = ArrowArrayHelper.to_list(arr)
-        
+
         if op == "all_positive":
             assert all(v >= 0 for v in values), "負の値が含まれています"
         elif op == "increasing":
-            assert all(values[i] < values[i+1] for i in range(len(values)-1)), \
-                "単調増加でありません"
+            assert all(values[i] < values[i + 1] for i in range(len(values) - 1)), "単調増加でありません"
         elif op == "decreasing":
-            assert all(values[i] > values[i+1] for i in range(len(values)-1)), \
-                "単調減少でありません"
+            assert all(values[i] > values[i + 1] for i in range(len(values) - 1)), "単調減少でありません"
         elif op == "all_finite":
-            assert all(np.isfinite(v) for v in values), \
-                "無限大またはNaNが含まれています"
+            assert all(np.isfinite(v) for v in values), "無限大またはNaNが含まれています"
 
 
 # 短縮エイリアス
@@ -146,23 +133,24 @@ arrow = ArrowArrayHelper()
 
 INPUT_ARRAY_TYPES = ["numpy", "pyarrow"]
 
-def create_test_array(values: Union[List[float], float], array_type: str) -> Any:
+
+def create_test_array(values: list[float] | float, array_type: str) -> Any:
     """テスト用配列を指定された型で作成
-    
+
     Args:
         values: 値のリストまたは単一値
         array_type: "numpy" または "pyarrow"
-    
+
     Returns:
         指定された型の配列
     """
     # 単一値の場合はリストに変換
-    if isinstance(values, (int, float)):
+    if isinstance(values, int | float):
         values = [values]
-    
+
     if array_type == "numpy":
         return np.array(values, dtype=np.float64)
     elif array_type == "pyarrow":
-        return pa.array(values, type=pa.float64())
+        return pa.array(values, type=pa.float64())  # type: ignore[attr-defined, call-arg]
     else:
         raise ValueError(f"Unknown array type: {array_type}")

@@ -5,7 +5,7 @@ across test files while maintaining full test coverage.
 """
 
 from abc import ABC
-from typing import Any, Protocol, TypeVar, Union
+from typing import Any, Protocol, TypeVar
 
 import numpy as np
 import pytest
@@ -16,8 +16,6 @@ from tests.conftest import (
     PRACTICAL_TOLERANCE,
     THEORETICAL_TOLERANCE,
     arrow,
-    create_test_array,
-    INPUT_ARRAY_TYPES,
 )
 
 # Type definitions
@@ -27,13 +25,14 @@ TestArrays = dict[str, ArrayLike]
 
 def to_numpy_array(arr: Any) -> NDArray[np.float64]:
     """Convert any array-like object to NumPy array.
-    
+
     Handles arro3 Arrow arrays that are returned from batch functions.
     For compatibility, use arrow.to_list() then convert to numpy.
     """
     if arrow.is_arrow(arr):
         return np.array(arrow.to_list(arr), dtype=np.float64)
     return np.asarray(arr, dtype=np.float64)
+
 
 # Standard test data constants
 DEFAULT_SPOT = 100.0
@@ -129,13 +128,10 @@ class BaseModelTest(ABC):
 
     def get_batch_params(
         self, n: int = SMALL_BATCH_SIZE, broadcasting: bool = False, **overrides: Any
-    ) -> dict[str, ArrayLike]:
+    ) -> dict[str, Any]:
         """Generate parameters for batch testing."""
         # Map singular to plural for batch APIs
-        if self.use_forward_price:
-            price_key = "forwards"  # Black76 uses 'forwards'
-        else:
-            price_key = "spots"  # Black-Scholes/Merton use 'spots'
+        price_key = "forwards" if self.use_forward_price else "spots"
 
         if broadcasting:
             # Create arrays with different shapes for broadcasting test
@@ -383,9 +379,7 @@ class BaseModelTest(ABC):
 
         for greek in expected_greeks:
             assert greek in greeks, f"Missing Greek: {greek}"
-            assert isinstance(greeks[greek], int | float), (
-                f"Greek {greek} should be numeric, got {type(greeks[greek])}"
-            )
+            assert isinstance(greeks[greek], int | float), f"Greek {greek} should be numeric, got {type(greeks[greek])}"
             assert np.isfinite(greeks[greek]), f"Greek {greek} must be finite"
 
     def test_greeks_batch(self) -> None:
@@ -457,9 +451,9 @@ class BaseModelTest(ABC):
     def test_implied_volatility_batch(self) -> None:
         """Test batch implied volatility calculation."""
         # Check if batch IV is implemented
-        if not hasattr(self.model, 'implied_volatility_batch'):
+        if not hasattr(self.model, "implied_volatility_batch"):
             pytest.skip("Batch implied volatility not available")
-            
+
         params = self.get_batch_params(n=SMALL_BATCH_SIZE)
 
         # Calculate prices
@@ -471,17 +465,16 @@ class BaseModelTest(ABC):
             # Note: API uses positional args with different names than batch price functions
             price_key = "forwards" if self.use_forward_price else "spots"
             ivs = self.model.implied_volatility_batch(
-                prices,
-                params[price_key],
-                params["strikes"],
-                params["times"],
-                params["rates"],
-                True  # is_call
+                prices=prices,
+                spots=params[price_key],
+                strikes=params["strikes"],
+                times=params["times"],
+                rates=params["rates"],
+                is_calls=True,  # is_call
             )
             ivs = to_numpy_array(ivs)
         except NotImplementedError:
             pytest.skip("Batch implied volatility not yet implemented")
-            return
 
         assert len(ivs) == SMALL_BATCH_SIZE
         assert np.all(ivs > 0), "All IVs must be positive"
@@ -601,8 +594,8 @@ class BaseModelTest(ABC):
         price_param = params.get("f" if self.use_forward_price else "s")
         strike = params["k"]
 
-        assert 0 < call_price < price_param * 10
-        assert 0 < put_price < strike * 10
+        assert 0 < call_price < (price_param * 10 if price_param else 1000)
+        assert 0 < put_price < (strike * 10 if strike else 1000)
 
     def test_negative_rates(self) -> None:
         """Test behavior with negative interest rates."""
@@ -705,7 +698,7 @@ class BaseBatchTest(BaseModelTest):
 T = TypeVar("T", bound=BaseModelTest)
 
 
-def run_comprehensive_tests(test_class: type[T], model: ModelProtocol) -> None:
+def run_comprehensive_tests[T: BaseModelTest](test_class: type[T], model: ModelProtocol) -> None:
     """Run all tests for a given model through its test class.
 
     This utility function can be used to ensure all standard tests

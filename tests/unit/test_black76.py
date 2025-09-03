@@ -7,10 +7,10 @@ import pytest
 from quantforge.models import black76
 
 from tests.conftest import (
+    INPUT_ARRAY_TYPES,
     THEORETICAL_TOLERANCE,
     arrow,
     create_test_array,
-    INPUT_ARRAY_TYPES,
 )
 
 

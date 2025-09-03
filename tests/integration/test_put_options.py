@@ -9,7 +9,7 @@ from quantforge import black_scholes  # type: ignore[import-untyped]
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from conftest import PRACTICAL_TOLERANCE, arrow, create_test_array, INPUT_ARRAY_TYPES
+from conftest import INPUT_ARRAY_TYPES, PRACTICAL_TOLERANCE, arrow, create_test_array
 
 
 def test_put_single_calculation() -> None:
@@ -35,7 +35,7 @@ def test_put_batch_calculation(array_type: str) -> None:
 
     assert len(prices) == 3
     arrow.assert_type(prices)  # Arrow配列であることを確認
-    
+
     # ITM > ATM > OTM
     prices_list = arrow.to_list(prices)
     assert prices_list[0] > prices_list[1] > prices_list[2]
@@ -67,7 +67,7 @@ def test_put_large_batch_performance(array_type: str) -> None:
 
     assert len(prices) == n
     arrow.assert_type(prices)  # Arrow配列であることを確認
-    
+
     # 全て非負かつ上限以下
     arrow.assert_comparison(prices, "all_positive")
     prices_list = arrow.to_list(prices)

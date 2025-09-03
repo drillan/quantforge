@@ -7,10 +7,10 @@ import pytest
 from quantforge.models import merton
 
 from tests.conftest import (
+    INPUT_ARRAY_TYPES,
     THEORETICAL_TOLERANCE,
     arrow,
     create_test_array,
-    INPUT_ARRAY_TYPES,
 )
 
 
@@ -232,7 +232,7 @@ class TestMertonBatch:
 
         call_batch = merton.call_price_batch(spots, strikes, times, rates, divs, sigmas)
         put_batch = merton.put_price_batch(spots, strikes, times, rates, divs, sigmas)
-        
+
         arrow.assert_type(call_batch)
         arrow.assert_type(put_batch)
         call_batch_list = arrow.to_list(call_batch)
@@ -394,7 +394,7 @@ class TestMertonImpliedVolatility:
         divs = create_test_array([0.02, 0.02, 0.02], array_type)
         # For batch processing with boolean, use scalar True (will broadcast)
         ivs = merton.implied_volatility_batch(prices, spots, strikes, times, rates, divs, True)
-        
+
         arrow.assert_type(ivs)
         ivs_list = arrow.to_list(ivs)
         assert len(ivs_list) == 3

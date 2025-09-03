@@ -5,19 +5,17 @@ test_batch_refactored.py, test_models_api.py, test_models_api_refactored.py)
 with a single, maintainable test suite.
 """
 
-
 import numpy as np
 import pytest
 from quantforge import black76, black_scholes, merton
 
 from tests.base_testing import BaseBatchTest, to_numpy_array
-from tests.conftest import arrow, create_test_array, INPUT_ARRAY_TYPES
 
 
 class TestBlackScholes(BaseBatchTest):
     """Comprehensive tests for Black-Scholes model."""
 
-    model = black_scholes
+    model = black_scholes  # type: ignore[assignment]
     use_forward_price = False
     has_dividend = False
 
@@ -25,7 +23,7 @@ class TestBlackScholes(BaseBatchTest):
 class TestBlack76(BaseBatchTest):
     """Comprehensive tests for Black76 model."""
 
-    model = black76
+    model = black76  # type: ignore[assignment]
     use_forward_price = True
     has_dividend = False
 
@@ -33,7 +31,7 @@ class TestBlack76(BaseBatchTest):
 class TestMerton(BaseBatchTest):
     """Comprehensive tests for Merton model (Black-Scholes with dividends)."""
 
-    model = merton
+    model = merton  # type: ignore[assignment]
     use_forward_price = False
     has_dividend = True
 
@@ -235,7 +233,7 @@ class TestGreeksAdvanced:
 
         # Batch Greeks
         batch_greeks = black_scholes.greeks_batch(
-            spots=spots, strikes=strikes, times=times, rates=rates, sigmas=sigmas, is_call=True
+            spots=spots, strikes=strikes, times=times, rates=rates, sigmas=sigmas, is_calls=True
         )
 
         # Compare with individual calculations
@@ -246,9 +244,7 @@ class TestGreeksAdvanced:
 
             for greek_name in ["delta", "gamma", "vega", "theta", "rho"]:
                 batch_value = to_numpy_array(batch_greeks[greek_name])[i]
-                assert abs(batch_value - single_greeks[greek_name]) < 1e-10, (
-                    f"Greek {greek_name} mismatch at index {i}"
-                )
+                assert abs(batch_value - single_greeks[greek_name]) < 1e-10, f"Greek {greek_name} mismatch at index {i}"
 
 
 class TestImpliedVolatilityAdvanced:
@@ -270,7 +266,7 @@ class TestImpliedVolatilityAdvanced:
 
         # Recover IVs
         recovered_ivs = black_scholes.implied_volatility_batch(
-            prices=prices, spots=spot, strikes=strikes, times=time, rates=rate, is_call=True
+            prices=prices, spots=spot, strikes=strikes, times=time, rates=rate, is_calls=True
         )
         recovered_ivs = to_numpy_array(recovered_ivs)
 

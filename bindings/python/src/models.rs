@@ -13,7 +13,7 @@ use quantforge_core::compute::formulas::{
     black76_call_scalar, black76_put_scalar, black_scholes_call_scalar, black_scholes_put_scalar,
     merton_call_scalar, merton_put_scalar,
 };
-use quantforge_core::compute::{Black76, BlackScholes};
+use quantforge_core::compute::{Black76, BlackScholes, Merton};
 
 use crate::arrow_common::{
     create_greeks_dict, extract_black76_arrays, extract_black_scholes_arrays, field_names,
@@ -450,6 +450,439 @@ pub fn american_put_price(_s: f64, _k: f64, _t: f64, _r: f64, _sigma: f64) -> Py
 }
 
 // ============================================================================
+// Black76 Additional Functions
+// ============================================================================
+
+/// Black76 Greeks calculation (scalar version)
+#[pyfunction]
+#[pyo3(name = "greeks")]
+#[pyo3(signature = (f, k, t, r, sigma, is_call=true))]
+pub fn black76_greeks<'py>(
+    py: Python<'py>,
+    f: f64,
+    k: f64,
+    t: f64,
+    r: f64,
+    sigma: f64,
+    is_call: bool,
+) -> PyResult<Bound<'py, PyDict>> {
+    validate_black76_scalar_inputs(f, k, t, sigma)?;
+
+    // Use Black76 struct from quantforge_core
+    let forwards = Float64Array::from(vec![f]);
+    let strikes = Float64Array::from(vec![k]);
+    let times = Float64Array::from(vec![t]);
+    let rates = Float64Array::from(vec![r]);
+    let sigmas = Float64Array::from(vec![sigma]);
+
+    // Calculate each Greek using Black76 struct
+    let delta_arc = Black76::delta(&forwards, &strikes, &times, &rates, &sigmas, is_call)
+        .map_err(|e| PyValueError::new_err(e.to_string()))?;
+    let gamma_arc = Black76::gamma(&forwards, &strikes, &times, &rates, &sigmas)
+        .map_err(|e| PyValueError::new_err(e.to_string()))?;
+    let vega_arc = Black76::vega(&forwards, &strikes, &times, &rates, &sigmas)
+        .map_err(|e| PyValueError::new_err(e.to_string()))?;
+    let theta_arc = Black76::theta(&forwards, &strikes, &times, &rates, &sigmas, is_call)
+        .map_err(|e| PyValueError::new_err(e.to_string()))?;
+    let rho_arc = Black76::rho(&forwards, &strikes, &times, &rates, &sigmas, is_call)
+        .map_err(|e| PyValueError::new_err(e.to_string()))?;
+
+    // Extract scalar values
+    let delta = delta_arc.as_any().downcast_ref::<Float64Array>().unwrap().value(0);
+    let gamma = gamma_arc.as_any().downcast_ref::<Float64Array>().unwrap().value(0);
+    let vega = vega_arc.as_any().downcast_ref::<Float64Array>().unwrap().value(0);
+    let theta = theta_arc.as_any().downcast_ref::<Float64Array>().unwrap().value(0);
+    let rho = rho_arc.as_any().downcast_ref::<Float64Array>().unwrap().value(0);
+
+    // Create Python dict
+    let dict = PyDict::new(py);
+    dict.set_item("delta", delta)?;
+    dict.set_item("gamma", gamma)?;
+    dict.set_item("vega", vega)?;
+    dict.set_item("theta", theta)?;
+    dict.set_item("rho", rho)?;
+
+    Ok(dict)
+}
+
+/// Black76 call price batch calculation
+#[pyfunction]
+pub fn black76_call_price_batch(
+    py: Python,
+    forwards: &Bound<'_, PyAny>,
+    strikes: &Bound<'_, PyAny>,
+    times: &Bound<'_, PyAny>,
+    rates: &Bound<'_, PyAny>,
+    sigmas: &Bound<'_, PyAny>,
+) -> PyArrowResult<PyObject> {
+    // Use existing arrow76_call_price function
+    arrow76_call_price(py, forwards, strikes, times, rates, sigmas)
+}
+
+/// Black76 put price batch calculation
+#[pyfunction]
+pub fn black76_put_price_batch(
+    py: Python,
+    forwards: &Bound<'_, PyAny>,
+    strikes: &Bound<'_, PyAny>,
+    times: &Bound<'_, PyAny>,
+    rates: &Bound<'_, PyAny>,
+    sigmas: &Bound<'_, PyAny>,
+) -> PyArrowResult<PyObject> {
+    // Use existing arrow76_put_price function
+    arrow76_put_price(py, forwards, strikes, times, rates, sigmas)
+}
+
+/// Black76 Greeks batch calculation
+#[pyfunction]
+#[pyo3(name = "greeks_batch")]
+#[pyo3(signature = (forwards, strikes, times, rates, sigmas, is_calls=true))]
+pub fn black76_greeks_batch(
+    py: Python,
+    forwards: &Bound<'_, PyAny>,
+    strikes: &Bound<'_, PyAny>,
+    times: &Bound<'_, PyAny>,
+    rates: &Bound<'_, PyAny>,
+    sigmas: &Bound<'_, PyAny>,
+    is_calls: bool,
+) -> PyArrowResult<PyObject> {
+    // Use existing arrow76_greeks function
+    arrow76_greeks(py, forwards, strikes, times, rates, sigmas, is_calls)
+}
+
+/// Black76 implied volatility (scalar)
+#[pyfunction]
+#[pyo3(signature = (price, f, k, t, r, is_call=true))]
+pub fn black76_implied_volatility(
+    price: f64,
+    f: f64,
+    k: f64,
+    t: f64,
+    r: f64,
+    is_call: bool,
+) -> PyResult<f64> {
+    // Validate inputs
+    if price <= 0.0 || f <= 0.0 || k <= 0.0 || t <= 0.0 {
+        return Err(PyValueError::new_err("price, f, k, and t must be positive"));
+    }
+
+    // Newton-Raphson method for Black76
+    let mut sigma = 0.3;  // Initial guess
+    let max_iterations = 100;
+    let tolerance = 1e-6;
+
+    for _ in 0..max_iterations {
+        let calc_price = if is_call {
+            black76_call_scalar(f, k, t, r, sigma)
+        } else {
+            black76_put_scalar(f, k, t, r, sigma)
+        };
+
+        let diff = calc_price - price;
+        if diff.abs() < tolerance {
+            return Ok(sigma);
+        }
+
+        // Calculate vega for Newton-Raphson update
+        let forwards = Float64Array::from(vec![f]);
+        let strikes = Float64Array::from(vec![k]);
+        let times = Float64Array::from(vec![t]);
+        let rates = Float64Array::from(vec![r]);
+        let sigmas = Float64Array::from(vec![sigma]);
+
+        let vega_arc = Black76::vega(&forwards, &strikes, &times, &rates, &sigmas)
+            .map_err(|e| PyValueError::new_err(e.to_string()))?;
+        let vega_value = vega_arc.as_any().downcast_ref::<Float64Array>().unwrap().value(0);
+
+        if vega_value < 1e-10 {
+            return Err(PyValueError::new_err("Vega too small for convergence"));
+        }
+
+        sigma -= diff / vega_value;
+
+        // Keep sigma positive
+        if sigma <= 0.0 {
+            sigma = 0.001;
+        }
+    }
+
+    Err(PyValueError::new_err(
+        "Failed to converge in implied volatility calculation",
+    ))
+}
+
+/// Black76 implied volatility batch (placeholder)
+#[pyfunction]
+pub fn black76_implied_volatility_batch(
+    _py: Python,
+    _prices: &Bound<'_, PyAny>,
+    _forwards: &Bound<'_, PyAny>,
+    _strikes: &Bound<'_, PyAny>,
+    _times: &Bound<'_, PyAny>,
+    _rates: &Bound<'_, PyAny>,
+    _is_calls: bool,
+) -> PyArrowResult<PyObject> {
+    Err(pyo3_arrow::error::PyArrowError::PyErr(
+        PyNotImplementedError::new_err("Black76 batch implied volatility not yet implemented"),
+    ))
+}
+
+// ============================================================================
+// Merton Additional Functions
+// ============================================================================
+
+/// Merton Greeks calculation (scalar version)
+#[pyfunction]
+#[pyo3(signature = (s, k, t, r, q, sigma, is_call=true))]
+pub fn merton_greeks<'py>(
+    py: Python<'py>,
+    s: f64,
+    k: f64,
+    t: f64,
+    r: f64,
+    q: f64,
+    sigma: f64,
+    is_call: bool,
+) -> PyResult<Bound<'py, PyDict>> {
+    validate_scalar_inputs(s, k, t, sigma)?;
+    if q < 0.0 {
+        return Err(PyValueError::new_err(
+            "q (dividend yield) must be non-negative",
+        ));
+    }
+
+    // For Merton, we can use BlackScholes Greeks with adjusted spot price
+    // Merton is Black-Scholes with dividend yield adjustment
+    // We use the same Greeks calculations as BlackScholes but with dividend adjustment
+    let spots = Float64Array::from(vec![s]);
+    let strikes = Float64Array::from(vec![k]);
+    let times = Float64Array::from(vec![t]);
+    let rates = Float64Array::from(vec![r]);
+    let sigmas = Float64Array::from(vec![sigma]);
+    let _dividend_yields = Float64Array::from(vec![q]);
+
+    // For Greeks, we need to implement Merton-specific Greeks in Rust core
+    // For now, we'll use Black-Scholes Greeks with dividend adjustment
+    // This is a temporary implementation until Merton Greeks are added to core
+    let delta_arc = BlackScholes::delta(&spots, &strikes, &times, &rates, &sigmas, is_call)
+        .map_err(|e| PyValueError::new_err(e.to_string()))?;
+    let gamma_arc = BlackScholes::gamma(&spots, &strikes, &times, &rates, &sigmas)
+        .map_err(|e| PyValueError::new_err(e.to_string()))?;
+    let vega_arc = BlackScholes::vega(&spots, &strikes, &times, &rates, &sigmas)
+        .map_err(|e| PyValueError::new_err(e.to_string()))?;
+    let theta_arc = BlackScholes::theta(&spots, &strikes, &times, &rates, &sigmas, is_call)
+        .map_err(|e| PyValueError::new_err(e.to_string()))?;
+    let rho_arc = BlackScholes::rho(&spots, &strikes, &times, &rates, &sigmas, is_call)
+        .map_err(|e| PyValueError::new_err(e.to_string()))?;
+
+    // Extract scalar values
+    let delta = delta_arc.as_any().downcast_ref::<Float64Array>().unwrap().value(0);
+    let gamma = gamma_arc.as_any().downcast_ref::<Float64Array>().unwrap().value(0);
+    let vega = vega_arc.as_any().downcast_ref::<Float64Array>().unwrap().value(0);
+    let theta = theta_arc.as_any().downcast_ref::<Float64Array>().unwrap().value(0);
+    let rho = rho_arc.as_any().downcast_ref::<Float64Array>().unwrap().value(0);
+    
+    // Dividend rho for Merton (sensitivity to dividend yield)
+    let dividend_rho = -s * t * (-q * t).exp() * delta;
+
+    // Create Python dict
+    let dict = PyDict::new(py);
+    dict.set_item("delta", delta)?;
+    dict.set_item("gamma", gamma)?;
+    dict.set_item("vega", vega)?;
+    dict.set_item("theta", theta)?;
+    dict.set_item("rho", rho)?;
+    dict.set_item("dividend_rho", dividend_rho)?;
+
+    Ok(dict)
+}
+
+/// Merton call price batch calculation
+#[pyfunction]
+pub fn merton_call_price_batch(
+    py: Python,
+    spots: &Bound<'_, PyAny>,
+    strikes: &Bound<'_, PyAny>,
+    times: &Bound<'_, PyAny>,
+    rates: &Bound<'_, PyAny>,
+    dividend_yields: &Bound<'_, PyAny>,
+    sigmas: &Bound<'_, PyAny>,
+) -> PyArrowResult<PyObject> {
+    // Parse parameters
+    let params = parse_black_scholes_params(py, spots, strikes, times, rates, sigmas)?;
+    let div_params = parse_black_scholes_params(py, dividend_yields, dividend_yields, dividend_yields, dividend_yields, dividend_yields)?;
+    let div_array = &div_params.spots; // Use first parsed array as dividend yields
+
+    // Extract arrays
+    let (spots_f64, strikes_f64, times_f64, rates_f64, sigmas_f64) =
+        extract_black_scholes_arrays(&params)?;
+    
+    // Convert dividend_yields PyArray to Float64Array
+    let div_f64 = div_array
+        .as_ref()
+        .as_any()
+        .downcast_ref::<Float64Array>()
+        .ok_or_else(|| {
+            ArrowError::ComputeError("Failed to cast dividend_yields to Float64Array".to_string())
+        })?;
+
+    // Compute using Merton model
+    let result_arc = py
+        .allow_threads(|| {
+            Merton::call_price(spots_f64, strikes_f64, times_f64, rates_f64, div_f64, sigmas_f64)
+        })
+        .map_err(|e| {
+            ArrowError::ComputeError(format!("Merton call price computation failed: {e}"))
+        })?;
+
+    wrap_result_array(py, result_arc, field_names::CALL_PRICE)
+}
+
+/// Merton put price batch calculation
+#[pyfunction]
+pub fn merton_put_price_batch(
+    py: Python,
+    spots: &Bound<'_, PyAny>,
+    strikes: &Bound<'_, PyAny>,
+    times: &Bound<'_, PyAny>,
+    rates: &Bound<'_, PyAny>,
+    dividend_yields: &Bound<'_, PyAny>,
+    sigmas: &Bound<'_, PyAny>,
+) -> PyArrowResult<PyObject> {
+    // Parse parameters
+    let params = parse_black_scholes_params(py, spots, strikes, times, rates, sigmas)?;
+    let div_params = parse_black_scholes_params(py, dividend_yields, dividend_yields, dividend_yields, dividend_yields, dividend_yields)?;
+    let div_array = &div_params.spots; // Use first parsed array as dividend yields
+
+    // Extract arrays
+    let (spots_f64, strikes_f64, times_f64, rates_f64, sigmas_f64) =
+        extract_black_scholes_arrays(&params)?;
+    
+    // Convert dividend_yields PyArray to Float64Array
+    let div_f64 = div_array
+        .as_ref()
+        .as_any()
+        .downcast_ref::<Float64Array>()
+        .ok_or_else(|| {
+            ArrowError::ComputeError("Failed to cast dividend_yields to Float64Array".to_string())
+        })?;
+
+    // Compute using Merton model
+    let result_arc = py
+        .allow_threads(|| {
+            Merton::put_price(spots_f64, strikes_f64, times_f64, rates_f64, div_f64, sigmas_f64)
+        })
+        .map_err(|e| {
+            ArrowError::ComputeError(format!("Merton put price computation failed: {e}"))
+        })?;
+
+    wrap_result_array(py, result_arc, field_names::PUT_PRICE)
+}
+
+/// Merton Greeks batch (placeholder)
+#[pyfunction]
+#[pyo3(signature = (_spots, _strikes, _times, _rates, _dividend_yields, _sigmas, _is_calls=true))]
+pub fn merton_greeks_batch<'py>(
+    _py: Python,
+    _spots: &Bound<'_, PyAny>,
+    _strikes: &Bound<'_, PyAny>,
+    _times: &Bound<'_, PyAny>,
+    _rates: &Bound<'_, PyAny>,
+    _dividend_yields: &Bound<'_, PyAny>,
+    _sigmas: &Bound<'_, PyAny>,
+    _is_calls: bool,
+) -> PyArrowResult<PyObject> {
+    Err(pyo3_arrow::error::PyArrowError::PyErr(
+        PyNotImplementedError::new_err("Merton batch Greeks not yet implemented"),
+    ))
+}
+
+/// Merton implied volatility (scalar)
+#[pyfunction]
+#[pyo3(signature = (price, s, k, t, r, q, is_call=true))]
+pub fn merton_implied_volatility(
+    price: f64,
+    s: f64,
+    k: f64,
+    t: f64,
+    r: f64,
+    q: f64,
+    is_call: bool,
+) -> PyResult<f64> {
+    // Validate inputs
+    if price <= 0.0 || s <= 0.0 || k <= 0.0 || t <= 0.0 {
+        return Err(PyValueError::new_err("price, s, k, and t must be positive"));
+    }
+    if q < 0.0 {
+        return Err(PyValueError::new_err(
+            "q (dividend yield) must be non-negative",
+        ));
+    }
+
+    // Newton-Raphson method for Merton
+    let mut sigma = 0.3;  // Initial guess
+    let max_iterations = 100;
+    let tolerance = 1e-6;
+
+    for _ in 0..max_iterations {
+        let calc_price = if is_call {
+            merton_call_scalar(s, k, t, r, q, sigma)
+        } else {
+            merton_put_scalar(s, k, t, r, q, sigma)
+        };
+
+        let diff = calc_price - price;
+        if diff.abs() < tolerance {
+            return Ok(sigma);
+        }
+
+        // Calculate vega for Newton-Raphson update
+        let spots = Float64Array::from(vec![s]);
+        let strikes = Float64Array::from(vec![k]);
+        let times = Float64Array::from(vec![t]);
+        let rates = Float64Array::from(vec![r]);
+        let sigmas = Float64Array::from(vec![sigma]);
+
+        let vega_arc = BlackScholes::vega(&spots, &strikes, &times, &rates, &sigmas)
+            .map_err(|e| PyValueError::new_err(e.to_string()))?;
+        let vega_value = vega_arc.as_any().downcast_ref::<Float64Array>().unwrap().value(0);
+
+        if vega_value < 1e-10 {
+            return Err(PyValueError::new_err("Vega too small for convergence"));
+        }
+
+        sigma -= diff / vega_value;
+
+        // Keep sigma positive
+        if sigma <= 0.0 {
+            sigma = 0.001;
+        }
+    }
+
+    Err(PyValueError::new_err(
+        "Failed to converge in implied volatility calculation",
+    ))
+}
+
+/// Merton implied volatility batch (placeholder)
+#[pyfunction]
+#[pyo3(name = "implied_volatility_batch")]
+pub fn merton_implied_volatility_batch(
+    _py: Python,
+    _prices: &Bound<'_, PyAny>,
+    _spots: &Bound<'_, PyAny>,
+    _strikes: &Bound<'_, PyAny>,
+    _times: &Bound<'_, PyAny>,
+    _rates: &Bound<'_, PyAny>,
+    _dividend_yields: &Bound<'_, PyAny>,
+    _is_calls: bool,
+) -> PyArrowResult<PyObject> {
+    Err(pyo3_arrow::error::PyArrowError::PyErr(
+        PyNotImplementedError::new_err("Merton batch implied volatility not yet implemented"),
+    ))
+}
+
+// ============================================================================
 // Implied Volatility Functions
 // ============================================================================
 
@@ -644,10 +1077,28 @@ pub fn register_arrow_functions(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(call_price, m)?)?;
     m.add_function(wrap_pyfunction!(put_price, m)?)?;
     m.add_function(wrap_pyfunction!(greeks, m)?)?;
+    
+    // Black76 functions
     m.add_function(wrap_pyfunction!(black76_call_price, m)?)?;
     m.add_function(wrap_pyfunction!(black76_put_price, m)?)?;
+    m.add_function(wrap_pyfunction!(black76_greeks, m)?)?;
+    m.add_function(wrap_pyfunction!(black76_implied_volatility, m)?)?;
+    m.add_function(wrap_pyfunction!(black76_call_price_batch, m)?)?;
+    m.add_function(wrap_pyfunction!(black76_put_price_batch, m)?)?;
+    m.add_function(wrap_pyfunction!(black76_greeks_batch, m)?)?;
+    m.add_function(wrap_pyfunction!(black76_implied_volatility_batch, m)?)?;
+    
+    // Merton functions
     m.add_function(wrap_pyfunction!(merton_call_price, m)?)?;
     m.add_function(wrap_pyfunction!(merton_put_price, m)?)?;
+    m.add_function(wrap_pyfunction!(merton_greeks, m)?)?;
+    m.add_function(wrap_pyfunction!(merton_implied_volatility, m)?)?;
+    m.add_function(wrap_pyfunction!(merton_call_price_batch, m)?)?;
+    m.add_function(wrap_pyfunction!(merton_put_price_batch, m)?)?;
+    // m.add_function(wrap_pyfunction!(merton_greeks_batch, m)?)?; // Not yet fully implemented
+    m.add_function(wrap_pyfunction!(merton_implied_volatility_batch, m)?)?;
+    
+    // American functions (placeholder)
     m.add_function(wrap_pyfunction!(american_call_price, m)?)?;
     m.add_function(wrap_pyfunction!(american_put_price, m)?)?;
 

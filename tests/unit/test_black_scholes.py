@@ -7,10 +7,10 @@ import pytest
 from quantforge.models import black_scholes
 
 from tests.conftest import (
+    INPUT_ARRAY_TYPES,
     THEORETICAL_TOLERANCE,
     arrow,
     create_test_array,
-    INPUT_ARRAY_TYPES,
 )
 
 
@@ -202,7 +202,7 @@ class TestBlackScholesBatch:
         sigmas = create_test_array([0.2] * n, array_type)
         call_batch = black_scholes.call_price_batch(spots, strikes, times, rates, sigmas)
         put_batch = black_scholes.put_price_batch(spots, strikes, times, rates, sigmas)
-        
+
         arrow.assert_type(call_batch)
         arrow.assert_type(put_batch)
 
