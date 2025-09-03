@@ -123,7 +123,9 @@ class TestBatchCalculation:
             qf.black_scholes.call_price_batch, spots=spots, strikes=strikes, times=times, rates=rates, sigmas=sigmas
         )
         assert len(result) == size
-        assert np.all(result > 0), "All option prices should be positive"
+        # Convert Arrow array to numpy for testing
+        result_np = result.to_numpy() if hasattr(result, "to_numpy") else result
+        assert np.all(result_np > 0), "All option prices should be positive"
 
     @pytest.mark.parametrize("size", [100, 1000, 10000])
     def test_pure_python_batch(self, benchmark, size):

@@ -180,7 +180,7 @@ class TestNormCDFEdgeCases:
         assert price_small_vol < 1.0, "小ボラティリティで価格が大きすぎる"
 
         # 最大許容ボラティリティ
-        v_large = 10.0
+        v_large = 5.0  # Maximum allowed volatility
         price_large_vol = black_scholes.call_price(s, k, t, r, v_large)
         # ボラティリティが大きいとき、価格は本質的価値に近づく
         intrinsic = max(s - k, 0)

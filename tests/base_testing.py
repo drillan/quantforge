@@ -384,10 +384,20 @@ class BaseModelTest(ABC):
 
     def test_greeks_batch(self) -> None:
         """Test batch Greeks calculation."""
-        params = self.get_batch_params(n=SMALL_BATCH_SIZE)
-        params["is_call"] = True  # Greeks batch uses singular
+        # Check if greeks_batch exists (Merton uses merton_greeks_batch)
+        if not hasattr(self.model, "greeks_batch"):
+            # Try alternative name for Merton
+            if hasattr(self.model, "merton_greeks_batch"):
+                greeks_batch_func = self.model.merton_greeks_batch
+            else:
+                pytest.skip("Greeks batch not available for this model")
+        else:
+            greeks_batch_func = self.model.greeks_batch
 
-        greeks = self.model.greeks_batch(**params)
+        params = self.get_batch_params(n=SMALL_BATCH_SIZE)
+        params["is_calls"] = True  # Greeks batch uses plural
+
+        greeks = greeks_batch_func(**params)
 
         expected_greeks = ["delta", "gamma", "vega", "theta", "rho"]
         if self.has_dividend:
@@ -454,6 +464,8 @@ class BaseModelTest(ABC):
         if not hasattr(self.model, "implied_volatility_batch"):
             pytest.skip("Batch implied volatility not available")
 
+        iv_batch_func = self.model.implied_volatility_batch
+
         params = self.get_batch_params(n=SMALL_BATCH_SIZE)
 
         # Calculate prices
@@ -464,14 +476,15 @@ class BaseModelTest(ABC):
         try:
             # Note: API uses positional args with different names than batch price functions
             price_key = "forwards" if self.use_forward_price else "spots"
-            ivs = self.model.implied_volatility_batch(
-                prices=prices,
-                spots=params[price_key],
-                strikes=params["strikes"],
-                times=params["times"],
-                rates=params["rates"],
-                is_calls=True,  # is_call
-            )
+            iv_params = {
+                "prices": prices,
+                price_key: params[price_key],  # Use the correct price parameter name
+                "strikes": params["strikes"],
+                "times": params["times"],
+                "rates": params["rates"],
+                "is_calls": True,
+            }
+            ivs = iv_batch_func(**iv_params)
             ivs = to_numpy_array(ivs)
         except NotImplementedError:
             pytest.skip("Batch implied volatility not yet implemented")
@@ -506,9 +519,10 @@ class BaseModelTest(ABC):
         call_intrinsic = max(0, price_param - strike)
         put_intrinsic = max(0, strike - price_param)
 
-        # With minimum allowed time (0.001), allow larger tolerance
-        assert abs(call_price - call_intrinsic) < 0.1
-        assert abs(put_price - put_intrinsic) < 0.1
+        # With minimum allowed time (0.001), there's still time value for ATM options
+        # For ATM options with sigma=0.2 and t=0.001, time value is about 0.25
+        assert abs(call_price - call_intrinsic) < 0.3
+        assert abs(put_price - put_intrinsic) < 0.3
 
     def test_zero_volatility(self) -> None:
         """Test behavior with zero volatility."""
@@ -633,7 +647,7 @@ class BaseBatchTest(BaseModelTest):
 
     def test_mixed_broadcasting(self) -> None:
         """Test complex broadcasting scenarios."""
-        price_key = self.get_price_param_name() + "s"
+        price_key = "forwards" if self.use_forward_price else "spots"
 
         # Different array sizes to test broadcasting
         params = {

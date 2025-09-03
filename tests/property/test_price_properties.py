@@ -325,7 +325,7 @@ class TestNumericalStability:
                 black_scholes.call_price(s, k, t, r, sigma)
             return
 
-        if sigma < 0.005 or sigma > 10:
+        if sigma < 0.005 or sigma > 5:
             with pytest.raises(ValueError):
                 black_scholes.call_price(s, k, t, r, sigma)
             return

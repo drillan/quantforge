@@ -8,6 +8,7 @@ pub mod black_scholes;
 pub mod formulas;
 pub mod greeks;
 pub mod merton;
+pub mod traits;
 
 // Re-export for convenience
 pub use american::American;

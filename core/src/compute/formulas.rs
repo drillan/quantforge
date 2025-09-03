@@ -3,7 +3,7 @@
 //! Black-Scholes、Black76などのモデルで共通使用される計算ロジックを集約。
 //! コード重複を排除し、保守性と一貫性を向上。
 
-use crate::constants::{HALF, VOL_SQUARED_HALF};
+use super::traits::{Black76D1D2, BlackScholesD1D2, D1D2Calculator, MertonD1D2};
 use crate::math::distributions::{norm_cdf, norm_pdf};
 
 /// Black-Scholes d1, d2パラメータ計算
@@ -21,10 +21,8 @@ use crate::math::distributions::{norm_cdf, norm_pdf};
 /// (d1, d2) のタプル
 #[inline(always)]
 pub fn black_scholes_d1_d2(s: f64, k: f64, t: f64, r: f64, sigma: f64) -> (f64, f64) {
-    let sqrt_t = t.sqrt();
-    let d1 = ((s / k).ln() + (r + sigma * sigma / VOL_SQUARED_HALF) * t) / (sigma * sqrt_t);
-    let d2 = d1 - sigma * sqrt_t;
-    (d1, d2)
+    let params = BlackScholesD1D2 { s, k, t, r, sigma };
+    params.calculate_d1_d2()
 }
 
 /// Black76 d1, d2パラメータ計算
@@ -41,10 +39,8 @@ pub fn black_scholes_d1_d2(s: f64, k: f64, t: f64, r: f64, sigma: f64) -> (f64, 
 /// (d1, d2) のタプル
 #[inline(always)]
 pub fn black76_d1_d2(f: f64, k: f64, t: f64, sigma: f64) -> (f64, f64) {
-    let sqrt_t = t.sqrt();
-    let d1 = ((f / k).ln() + (sigma * sigma * HALF) * t) / (sigma * sqrt_t);
-    let d2 = d1 - sigma * sqrt_t;
-    (d1, d2)
+    let params = Black76D1D2 { f, k, t, sigma };
+    params.calculate_d1_d2()
 }
 
 /// Black-Scholesコールオプション価格（スカラー版）
@@ -141,10 +137,15 @@ pub fn black76_put_scalar(f: f64, k: f64, t: f64, r: f64, sigma: f64) -> f64 {
 /// (d1, d2)のタプル
 #[inline(always)]
 pub fn merton_d1_d2(s: f64, k: f64, t: f64, r: f64, q: f64, sigma: f64) -> (f64, f64) {
-    let sqrt_t = t.sqrt();
-    let d1 = ((s / k).ln() + (r - q + sigma * sigma / VOL_SQUARED_HALF) * t) / (sigma * sqrt_t);
-    let d2 = d1 - sigma * sqrt_t;
-    (d1, d2)
+    let params = MertonD1D2 {
+        s,
+        k,
+        t,
+        r,
+        q,
+        sigma,
+    };
+    params.calculate_d1_d2()
 }
 
 /// Merton配当付きBlack-Scholesコールオプション価格（スカラー版）

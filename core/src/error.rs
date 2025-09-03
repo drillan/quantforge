@@ -54,26 +54,30 @@ impl ValidationBuilder {
         Self { errors: Vec::new() }
     }
 
-    pub fn check_positive(mut self, value: f64, name: &str) -> Self {
+    /// 汎用的な検証メソッド
+    #[inline(always)]
+    fn check_with_condition(
+        mut self,
+        value: f64,
+        name: &str,
+        condition: impl FnOnce(f64) -> bool,
+        error_msg: &str,
+    ) -> Self {
         if !value.is_finite() {
             self.errors
                 .push(format!("{name} must be finite, got {value}"));
-        } else if value <= 0.0 {
-            self.errors
-                .push(format!("{name} must be positive, got {value}"));
+        } else if !condition(value) {
+            self.errors.push(format!("{name} {error_msg}, got {value}"));
         }
         self
     }
 
-    pub fn check_non_negative(mut self, value: f64, name: &str) -> Self {
-        if !value.is_finite() {
-            self.errors
-                .push(format!("{name} must be finite, got {value}"));
-        } else if value < 0.0 {
-            self.errors
-                .push(format!("{name} must be non-negative, got {value}"));
-        }
-        self
+    pub fn check_positive(self, value: f64, name: &str) -> Self {
+        self.check_with_condition(value, name, |v| v > 0.0, "must be positive")
+    }
+
+    pub fn check_non_negative(self, value: f64, name: &str) -> Self {
+        self.check_with_condition(value, name, |v| v >= 0.0, "must be non-negative")
     }
 
     pub fn check_finite(mut self, value: f64, name: &str) -> Self {
@@ -84,13 +88,13 @@ impl ValidationBuilder {
         self
     }
 
-    pub fn check_range(mut self, value: f64, min: f64, max: f64, name: &str) -> Self {
-        if value < min || value > max {
-            self.errors.push(format!(
-                "{name} must be between {min} and {max}, got {value}"
-            ));
-        }
-        self
+    pub fn check_range(self, value: f64, min: f64, max: f64, name: &str) -> Self {
+        self.check_with_condition(
+            value,
+            name,
+            |v| v >= min && v <= max,
+            &format!("must be between {min} and {max}"),
+        )
     }
 
     pub fn build(self) -> QuantForgeResult<()> {

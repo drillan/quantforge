@@ -345,7 +345,7 @@ class TestMertonGreeks:
         divs = create_test_array([0.02, 0.02, 0.02], array_type)
         sigmas = create_test_array([0.2, 0.2, 0.2], array_type)
         # For batch processing with boolean, use scalar True (will broadcast)
-        greeks_dict = merton.greeks_batch(spots, strikes, times, rates, divs, sigmas, True)
+        greeks_dict = merton.merton_greeks_batch(spots, strikes, times, rates, divs, sigmas, True)  # type: ignore[attr-defined]
 
         assert "delta" in greeks_dict
         delta_list = arrow.to_list(greeks_dict["delta"])

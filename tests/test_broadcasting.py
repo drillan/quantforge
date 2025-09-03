@@ -131,7 +131,7 @@ class TestBroadcasting:
 
     def test_invalid_type_error(self):
         """Test that invalid types raise appropriate errors."""
-        with pytest.raises(ValueError, match="Expected float or arrow array"):
+        with pytest.raises(ValueError, match="Expected float, numpy array, or arrow array"):
             bs.call_price_batch(
                 spots="invalid",  # String is not valid
                 strikes=105.0,

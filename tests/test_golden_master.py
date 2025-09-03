@@ -240,10 +240,12 @@ class TestGoldenMaster:
         batch_results = black_scholes.call_price_batch(spots, k, t, r, sigmas=v)
 
         # 個別処理と比較
+        # Convert Arrow array to numpy for comparison
+        batch_np = batch_results.to_numpy() if hasattr(batch_results, "to_numpy") else batch_results
         for i, spot in enumerate(spots):
             single_result = black_scholes.call_price(spot, k, t, r, sigma=v)
-            assert abs(batch_results[i] - single_result) < 1e-3, (
-                f"Batch and single results differ at index {i}: {batch_results[i]} vs {single_result}"
+            assert abs(batch_np[i] - single_result) < 1e-3, (
+                f"Batch and single results differ at index {i}: {batch_np[i]} vs {single_result}"
             )
 
 
