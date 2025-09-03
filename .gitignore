@@ -251,7 +251,7 @@ scratch/
 *_backup/
 
 # Progress tracking (experimental)
-tracker/                # 実験的な進捗追跡システム全体を除外
+tracker/
 
 # Legacy progress files (to be removed)
 progress_report.md
