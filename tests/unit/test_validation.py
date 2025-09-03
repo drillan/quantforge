@@ -6,7 +6,7 @@ import numpy as np
 import pytest
 from quantforge.models import black_scholes
 
-from tests.conftest import PRACTICAL_TOLERANCE
+from tests.conftest import PRACTICAL_TOLERANCE, arrow
 
 
 @pytest.mark.unit
@@ -223,11 +223,13 @@ class TestBatchValidation:
 
         # バッチ処理
         batch_results = black_scholes.call_price_batch(spots, k, t, r, sigma)
+        arrow.assert_type(batch_results)
+        batch_results_list = arrow.to_list(batch_results)
 
         # 個別処理との比較
         for i, spot in enumerate(spots):
             single_result = black_scholes.call_price(spot, k, t, r, sigma)
-            assert abs(batch_results[i] - single_result) < PRACTICAL_TOLERANCE, f"バッチと個別の不一致: {i}"
+            assert abs(batch_results_list[i] - single_result) < PRACTICAL_TOLERANCE, f"バッチと個別の不一致: {i}"
 
     def test_large_batch(self) -> None:
         """大規模バッチの処理."""
@@ -239,15 +241,17 @@ class TestBatchValidation:
         sigma = 0.2
 
         results = black_scholes.call_price_batch(spots, k, t, r, sigma)
+        arrow.assert_type(results)
+        results_array = np.array(arrow.to_list(results))
 
-        assert len(results) == n, "バッチサイズが不正"
-        assert np.all(results >= 0), "負の価格が存在"
-        assert np.all(np.isfinite(results)), "無限大またはNaNが存在"
+        assert len(results_array) == n, "バッチサイズが不正"
+        assert np.all(results_array >= 0), "負の価格が存在"
+        assert np.all(np.isfinite(results_array)), "無限大またはNaNが存在"
 
         # 価格の妥当性チェック
         intrinsic_values = np.maximum(spots - k * np.exp(-r * t), 0)
-        assert np.all(results >= intrinsic_values - PRACTICAL_TOLERANCE), "本質的価値を下回る価格"
-        assert np.all(results <= spots), "スポット価格を超える価格"
+        assert np.all(results_array >= intrinsic_values - PRACTICAL_TOLERANCE), "本質的価値を下回る価格"
+        assert np.all(results_array <= spots), "スポット価格を超える価格"
 
 
 @pytest.mark.unit

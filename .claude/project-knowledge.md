@@ -99,6 +99,43 @@ pub const NORM_CDF_UPPER_BOUND: f64 = 8.0;
    - `black_scholes_d1_d2()` と `black76_d1_d2()` を formulas.rs に集約
    - 各モジュールからインライン計算を完全排除
 
+## Arrow Native テスト移行（2025-09-03）
+
+### 実施内容
+- **ArrowArrayHelper実装**: Arrow配列とNumPy配列の統一的操作
+- **両データ型テスト**: NumPyとPyArrow両方の入力をパラメータ化テストで検証
+- **テスト成功率改善**: 48.5% → 約52%（初期実装で257/497成功）
+
+### ArrowArrayHelperの設計
+```python
+class ArrowArrayHelper:
+    @staticmethod
+    def is_arrow(obj) -> bool  # Arrow配列判定
+    @staticmethod
+    def to_list(arr) -> List[float]  # リストへ変換
+    @staticmethod
+    def get_value(arr, index) -> float  # 値取得
+    @staticmethod
+    def assert_type(result)  # Arrow型アサート
+    @staticmethod
+    def assert_allclose(actual, expected, rtol)  # 近似値比較
+```
+
+### テストパターンの変換
+1. **型チェック**: `isinstance(prices, np.ndarray)` → `arrow.assert_type(prices)`
+2. **要素比較**: `prices[0] < prices[1]` → `arrow.to_list(prices)[0] < arrow.to_list(prices)[1]`
+3. **パラメータ化**: `@pytest.mark.parametrize("array_type", ["numpy", "pyarrow"])`
+
+### 学習事項
+- **arro3.core.Array特性**: 
+  - `len()` 可能、インデックスは Scalar を返却
+  - Scalar間の直接比較不可、`.as_py()` で変換必要
+  - NumPy集約関数は `__array__` プロトコル経由で直接動作
+- **テストの互換性**: 
+  - 入力はNumPy/PyArrow両対応
+  - 出力は常にarro3.core.Array
+  - create_test_array()でデータ型を抽象化
+
 2. **パフォーマンス結果**（vs NumPy）:
    - 100要素: 7.75倍高速 (9.7μs vs 75.2μs)
    - 1,000要素: 3.41倍高速 (33.9μs vs 115.3μs)

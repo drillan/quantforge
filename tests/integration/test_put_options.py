@@ -9,7 +9,7 @@ from quantforge import black_scholes  # type: ignore[import-untyped]
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from conftest import PRACTICAL_TOLERANCE
+from conftest import PRACTICAL_TOLERANCE, arrow, create_test_array, INPUT_ARRAY_TYPES
 
 
 def test_put_single_calculation() -> None:
@@ -27,13 +27,18 @@ def test_put_single_calculation() -> None:
     assert otm_price < price  # OTMはATMより低い
 
 
-def test_put_batch_calculation() -> None:
-    """バッチプット価格計算のテスト"""
-    spots = np.array([90.0, 100.0, 110.0])
+@pytest.mark.parametrize("array_type", INPUT_ARRAY_TYPES)
+def test_put_batch_calculation(array_type: str) -> None:
+    """バッチプット価格計算のテスト（NumPyとPyArrow両方）"""
+    spots = create_test_array([90.0, 100.0, 110.0], array_type)
     prices = black_scholes.put_price_batch(spots, 100.0, 1.0, 0.05, 0.2)
 
     assert len(prices) == 3
-    assert prices[0] > prices[1] > prices[2]  # ITM > ATM > OTM
+    arrow.assert_type(prices)  # Arrow配列であることを確認
+    
+    # ITM > ATM > OTM
+    prices_list = arrow.to_list(prices)
+    assert prices_list[0] > prices_list[1] > prices_list[2]
 
 
 def test_put_call_parity() -> None:
@@ -50,17 +55,24 @@ def test_put_call_parity() -> None:
     assert abs(parity_lhs - parity_rhs) < 1e-7  # 数値精度レベルで一致
 
 
-def test_put_large_batch_performance() -> None:
-    """大規模バッチのパフォーマンステスト"""
+@pytest.mark.parametrize("array_type", INPUT_ARRAY_TYPES)
+def test_put_large_batch_performance(array_type: str) -> None:
+    """大規模バッチのパフォーマンステスト（NumPyとPyArrow両方）"""
     n = 100000
-    spots = np.random.uniform(50, 150, n)
+    spots_np = np.random.uniform(50, 150, n)
+    spots = create_test_array(spots_np.tolist(), array_type)
 
     # エラーなく実行できることを確認
     prices = black_scholes.put_price_batch(spots, 100.0, 1.0, 0.05, 0.2)
 
     assert len(prices) == n
-    assert np.all(prices >= 0)  # 全て非負
-    assert np.all(prices <= 100.0 * np.exp(-0.05))  # 上限以下
+    arrow.assert_type(prices)  # Arrow配列であることを確認
+    
+    # 全て非負かつ上限以下
+    arrow.assert_comparison(prices, "all_positive")
+    prices_list = arrow.to_list(prices)
+    upper_bound = 100.0 * np.exp(-0.05)
+    assert all(p <= upper_bound for p in prices_list)
 
 
 def test_put_edge_cases() -> None:

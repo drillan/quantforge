@@ -8,6 +8,9 @@ from quantforge.models import black76
 
 from tests.conftest import (
     THEORETICAL_TOLERANCE,
+    arrow,
+    create_test_array,
+    INPUT_ARRAY_TYPES,
 )
 
 
@@ -124,51 +127,61 @@ class TestBlack76PutPrice:
 class TestBlack76Batch:
     """Test Black76 batch processing for futures options."""
 
-    def test_call_price_batch_single(self) -> None:
+    @pytest.mark.parametrize("array_type", INPUT_ARRAY_TYPES)
+    def test_call_price_batch_single(self, array_type: str) -> None:
         """Test batch processing with single element."""
-        forwards = np.array([100.0])
-        strikes = np.array([100.0])
-        times = np.array([1.0])
-        rates = np.array([0.05])
-        sigmas = np.array([0.2])
+        forwards = create_test_array([100.0], array_type)
+        strikes = create_test_array([100.0], array_type)
+        times = create_test_array([1.0], array_type)
+        rates = create_test_array([0.05], array_type)
+        sigmas = create_test_array([0.2], array_type)
         prices = black76.call_price_batch(forwards, strikes, times, rates, sigmas)
         assert len(prices) == 1
+        arrow.assert_type(prices)
         single_price = black76.call_price(f=100.0, k=100.0, t=1.0, r=0.05, sigma=0.2)
-        assert abs(prices[0] - single_price) < THEORETICAL_TOLERANCE
+        assert abs(arrow.get_value(prices, 0) - single_price) < THEORETICAL_TOLERANCE
 
-    def test_call_price_batch_multiple(self) -> None:
+    @pytest.mark.parametrize("array_type", INPUT_ARRAY_TYPES)
+    def test_call_price_batch_multiple(self, array_type: str) -> None:
         """Test batch processing with multiple forwards."""
-        forwards = np.array([90.0, 100.0, 110.0])
-        strikes = np.array([100.0, 100.0, 100.0])
-        times = np.array([1.0, 1.0, 1.0])
-        rates = np.array([0.05, 0.05, 0.05])
-        sigmas = np.array([0.2, 0.2, 0.2])
+        forwards = create_test_array([90.0, 100.0, 110.0], array_type)
+        strikes = create_test_array([100.0, 100.0, 100.0], array_type)
+        times = create_test_array([1.0, 1.0, 1.0], array_type)
+        rates = create_test_array([0.05, 0.05, 0.05], array_type)
+        sigmas = create_test_array([0.2, 0.2, 0.2], array_type)
         prices = black76.call_price_batch(forwards, strikes, times, rates, sigmas)
         assert len(prices) == 3
-        assert prices[0] < prices[1] < prices[2]  # Monotonic in forward
+        arrow.assert_type(prices)
+        prices_list = arrow.to_list(prices)
+        assert prices_list[0] < prices_list[1] < prices_list[2]  # Monotonic in forward
 
-    def test_put_price_batch_single(self) -> None:
+    @pytest.mark.parametrize("array_type", INPUT_ARRAY_TYPES)
+    def test_put_price_batch_single(self, array_type: str) -> None:
         """Test put batch processing with single element."""
-        forwards = np.array([100.0])
-        strikes = np.array([100.0])
-        times = np.array([1.0])
-        rates = np.array([0.05])
-        sigmas = np.array([0.2])
+        forwards = create_test_array([100.0], array_type)
+        strikes = create_test_array([100.0], array_type)
+        times = create_test_array([1.0], array_type)
+        rates = create_test_array([0.05], array_type)
+        sigmas = create_test_array([0.2], array_type)
         prices = black76.put_price_batch(forwards, strikes, times, rates, sigmas)
         assert len(prices) == 1
+        arrow.assert_type(prices)
         single_price = black76.put_price(f=100.0, k=100.0, t=1.0, r=0.05, sigma=0.2)
-        assert abs(prices[0] - single_price) < THEORETICAL_TOLERANCE
+        assert abs(arrow.get_value(prices, 0) - single_price) < THEORETICAL_TOLERANCE
 
-    def test_put_price_batch_multiple(self) -> None:
+    @pytest.mark.parametrize("array_type", INPUT_ARRAY_TYPES)
+    def test_put_price_batch_multiple(self, array_type: str) -> None:
         """Test put batch processing with multiple forwards."""
-        forwards = np.array([90.0, 100.0, 110.0])
-        strikes = np.array([100.0, 100.0, 100.0])
-        times = np.array([1.0, 1.0, 1.0])
-        rates = np.array([0.05, 0.05, 0.05])
-        sigmas = np.array([0.2, 0.2, 0.2])
+        forwards = create_test_array([90.0, 100.0, 110.0], array_type)
+        strikes = create_test_array([100.0, 100.0, 100.0], array_type)
+        times = create_test_array([1.0, 1.0, 1.0], array_type)
+        rates = create_test_array([0.05, 0.05, 0.05], array_type)
+        sigmas = create_test_array([0.2], array_type) * 3
         prices = black76.put_price_batch(forwards, strikes, times, rates, sigmas)
         assert len(prices) == 3
-        assert prices[0] > prices[1] > prices[2]  # Monotonic decreasing in forward
+        arrow.assert_type(prices)
+        prices_list = arrow.to_list(prices)
+        assert prices_list[0] > prices_list[1] > prices_list[2]  # Monotonic decreasing in forward
 
     def test_batch_consistency(self) -> None:
         """Test batch results match individual calculations."""

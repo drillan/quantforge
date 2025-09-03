@@ -7,6 +7,8 @@ import pytest
 
 # Import the main module
 import quantforge
+from quantforge.models import black76
+from tests.conftest import arrow
 
 
 class TestE2EWorkflows:
@@ -49,13 +51,10 @@ class TestE2EWorkflows:
         spots = np.linspace(90, 110, 21)
         prices = quantforge.black_scholes.call_price_batch(spots, strike, time, rate, vol)
 
-        assert len(prices) == 21
-        # Convert Arrow result to numpy if needed
-        if hasattr(prices, "to_numpy"):
-            prices_np = prices.to_numpy()
-        else:
-            prices_np = np.array([float(p.as_py()) if hasattr(p, "as_py") else float(p) for p in prices])
-        assert all(p >= 0 for p in prices_np)
+        arrow.assert_type(prices)
+        prices_list = arrow.to_list(prices)
+        assert len(prices_list) == 21
+        assert all(p >= 0 for p in prices_list)
 
     def test_cross_model_workflow(self):
         """Test workflow across different models."""
@@ -63,11 +62,12 @@ class TestE2EWorkflows:
 
         # Compare different models
         bs_call = quantforge.black_scholes.call_price(**params)
-        quantforge.black76.call_price(f=100, k=100, t=1, r=0.05, sigma=0.2)
+        black76_call = black76.call_price(f=100, k=100, t=1, r=0.05, sigma=0.2)
         merton_call = quantforge.merton.call_price(**params, q=0.0)
 
         # Should be close but not identical (Black76 uses forward price)
         assert abs(bs_call - merton_call) < 1e-10  # Same when q=0
+        assert abs(bs_call - black76_call) < 0.5  # Different due to forward price
 
     def test_data_pipeline(self):
         """Test data processing pipeline."""
@@ -87,17 +87,18 @@ class TestE2EWorkflows:
         greeks = quantforge.black_scholes.greeks_batch(**market_data)  # type: ignore[arg-type]
 
         # Validate results
-        assert len(prices) == 100
-        # Convert Arrow result to numpy if needed
-        if hasattr(prices, "to_numpy"):
-            prices_np = prices.to_numpy()
-        else:
-            prices_np = np.array([float(p.as_py()) if hasattr(p, "as_py") else float(p) for p in prices])
-        assert all(p >= 0 for p in prices_np)
+        arrow.assert_type(prices)
+        prices_list = arrow.to_list(prices)
+        assert len(prices_list) == 100
+        assert all(p >= 0 for p in prices_list)
 
         # Greeks should be dict of arrays
         assert isinstance(greeks, dict)
-        assert all(len(greeks[k]) == 100 for k in greeks)
+        # Check each greek
+        for greek_name in greeks:
+            arrow.assert_type(greeks[greek_name])
+            greek_list = arrow.to_list(greeks[greek_name])
+            assert len(greek_list) == 100
         # Convert Arrow results to numpy if needed
         delta_vals = greeks["delta"]
         if hasattr(delta_vals, "to_numpy"):

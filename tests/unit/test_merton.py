@@ -8,6 +8,9 @@ from quantforge.models import merton
 
 from tests.conftest import (
     THEORETICAL_TOLERANCE,
+    arrow,
+    create_test_array,
+    INPUT_ARRAY_TYPES,
 )
 
 
@@ -153,102 +156,129 @@ class TestMertonPutPrice:
 class TestMertonBatch:
     """Test Merton batch processing with dividends."""
 
-    def test_call_price_batch_single(self) -> None:
+    @pytest.mark.parametrize("array_type", INPUT_ARRAY_TYPES)
+    def test_call_price_batch_single(self, array_type: str) -> None:
         """Test batch processing with single element."""
-        spots = np.array([100.0])
-        strikes = np.array([100.0])
-        times = np.array([1.0])
-        rates = np.array([0.05])
-        divs = np.array([0.02])
-        sigmas = np.array([0.2])
+        spots = create_test_array([100.0], array_type)
+        strikes = create_test_array([100.0], array_type)
+        times = create_test_array([1.0], array_type)
+        rates = create_test_array([0.05], array_type)
+        divs = create_test_array([0.02], array_type)
+        sigmas = create_test_array([0.2], array_type)
         prices = merton.call_price_batch(spots, strikes, times, rates, divs, sigmas)
-        assert len(prices) == 1
+        arrow.assert_type(prices)
+        prices_list = arrow.to_list(prices)
+        assert len(prices_list) == 1
         single_price = merton.call_price(s=100.0, k=100.0, t=1.0, r=0.05, q=0.02, sigma=0.2)
-        assert abs(prices[0] - single_price) < THEORETICAL_TOLERANCE
+        assert abs(prices_list[0] - single_price) < THEORETICAL_TOLERANCE
 
-    def test_call_price_batch_multiple(self) -> None:
+    @pytest.mark.parametrize("array_type", INPUT_ARRAY_TYPES)
+    def test_call_price_batch_multiple(self, array_type: str) -> None:
         """Test batch processing with multiple spots."""
-        spots = np.array([90.0, 100.0, 110.0])
-        strikes = np.array([100.0, 100.0, 100.0])
-        times = np.array([1.0, 1.0, 1.0])
-        rates = np.array([0.05, 0.05, 0.05])
-        divs = np.array([0.02, 0.02, 0.02])
-        sigmas = np.array([0.2, 0.2, 0.2])
+        spots = create_test_array([90.0, 100.0, 110.0], array_type)
+        strikes = create_test_array([100.0, 100.0, 100.0], array_type)
+        times = create_test_array([1.0, 1.0, 1.0], array_type)
+        rates = create_test_array([0.05, 0.05, 0.05], array_type)
+        divs = create_test_array([0.02, 0.02, 0.02], array_type)
+        sigmas = create_test_array([0.2, 0.2, 0.2], array_type)
         prices = merton.call_price_batch(spots, strikes, times, rates, divs, sigmas)
-        assert len(prices) == 3
-        assert prices[0] < prices[1] < prices[2]
+        arrow.assert_type(prices)
+        prices_list = arrow.to_list(prices)
+        assert len(prices_list) == 3
+        assert prices_list[0] < prices_list[1] < prices_list[2]
 
-    def test_put_price_batch_single(self) -> None:
+    @pytest.mark.parametrize("array_type", INPUT_ARRAY_TYPES)
+    def test_put_price_batch_single(self, array_type: str) -> None:
         """Test put batch processing with single element."""
-        spots = np.array([100.0])
-        strikes = np.array([100.0])
-        times = np.array([1.0])
-        rates = np.array([0.05])
-        divs = np.array([0.02])
-        sigmas = np.array([0.2])
+        spots = create_test_array([100.0], array_type)
+        strikes = create_test_array([100.0], array_type)
+        times = create_test_array([1.0], array_type)
+        rates = create_test_array([0.05], array_type)
+        divs = create_test_array([0.02], array_type)
+        sigmas = create_test_array([0.2], array_type)
         prices = merton.put_price_batch(spots, strikes, times, rates, divs, sigmas)
-        assert len(prices) == 1
+        arrow.assert_type(prices)
+        prices_list = arrow.to_list(prices)
+        assert len(prices_list) == 1
         single_price = merton.put_price(s=100.0, k=100.0, t=1.0, r=0.05, q=0.02, sigma=0.2)
-        assert abs(prices[0] - single_price) < THEORETICAL_TOLERANCE
+        assert abs(prices_list[0] - single_price) < THEORETICAL_TOLERANCE
 
-    def test_put_price_batch_multiple(self) -> None:
+    @pytest.mark.parametrize("array_type", INPUT_ARRAY_TYPES)
+    def test_put_price_batch_multiple(self, array_type: str) -> None:
         """Test put batch processing with multiple spots."""
-        spots = np.array([90.0, 100.0, 110.0])
-        strikes = np.array([100.0, 100.0, 100.0])
-        times = np.array([1.0, 1.0, 1.0])
-        rates = np.array([0.05, 0.05, 0.05])
-        divs = np.array([0.02, 0.02, 0.02])
-        sigmas = np.array([0.2, 0.2, 0.2])
+        spots = create_test_array([90.0, 100.0, 110.0], array_type)
+        strikes = create_test_array([100.0, 100.0, 100.0], array_type)
+        times = create_test_array([1.0, 1.0, 1.0], array_type)
+        rates = create_test_array([0.05, 0.05, 0.05], array_type)
+        divs = create_test_array([0.02, 0.02, 0.02], array_type)
+        sigmas = create_test_array([0.2, 0.2, 0.2], array_type)
         prices = merton.put_price_batch(spots, strikes, times, rates, divs, sigmas)
-        assert len(prices) == 3
-        assert prices[0] > prices[1] > prices[2]
+        arrow.assert_type(prices)
+        prices_list = arrow.to_list(prices)
+        assert len(prices_list) == 3
+        assert prices_list[0] > prices_list[1] > prices_list[2]
 
-    def test_batch_consistency(self) -> None:
+    @pytest.mark.parametrize("array_type", INPUT_ARRAY_TYPES)
+    def test_batch_consistency(self, array_type: str) -> None:
         """Test batch results match individual calculations."""
-        spots = np.linspace(80, 120, 10)
-        n = len(spots)
-        strikes = np.full(n, 100.0)
-        times = np.full(n, 1.0)
-        rates = np.full(n, 0.05)
-        divs = np.full(n, 0.02)
-        sigmas = np.full(n, 0.2)
+        spots_np = np.linspace(80, 120, 10)
+        n = len(spots_np)
+        spots = create_test_array(spots_np.tolist(), array_type)
+        strikes = create_test_array(np.full(n, 100.0).tolist(), array_type)
+        times = create_test_array(np.full(n, 1.0).tolist(), array_type)
+        rates = create_test_array(np.full(n, 0.05).tolist(), array_type)
+        divs = create_test_array(np.full(n, 0.02).tolist(), array_type)
+        sigmas = create_test_array(np.full(n, 0.2).tolist(), array_type)
 
         call_batch = merton.call_price_batch(spots, strikes, times, rates, divs, sigmas)
         put_batch = merton.put_price_batch(spots, strikes, times, rates, divs, sigmas)
+        
+        arrow.assert_type(call_batch)
+        arrow.assert_type(put_batch)
+        call_batch_list = arrow.to_list(call_batch)
+        put_batch_list = arrow.to_list(put_batch)
 
-        for i, spot in enumerate(spots):
+        for i, spot in enumerate(spots_np):
             call_single = merton.call_price(s=spot, k=100.0, t=1.0, r=0.05, q=0.02, sigma=0.2)
             put_single = merton.put_price(s=spot, k=100.0, t=1.0, r=0.05, q=0.02, sigma=0.2)
-            assert abs(call_batch[i] - call_single) < THEORETICAL_TOLERANCE
-            assert abs(put_batch[i] - put_single) < THEORETICAL_TOLERANCE
+            assert abs(call_batch_list[i] - call_single) < THEORETICAL_TOLERANCE
+            assert abs(put_batch_list[i] - put_single) < THEORETICAL_TOLERANCE
 
-    def test_batch_with_varying_dividends(self) -> None:
+    @pytest.mark.parametrize("array_type", INPUT_ARRAY_TYPES)
+    def test_batch_with_varying_dividends(self, array_type: str) -> None:
         """Test batch processing with varying dividend yields."""
-        spots = np.array([100.0, 100.0, 100.0])
-        strikes = np.array([100.0, 100.0, 100.0])
-        times = np.array([1.0, 1.0, 1.0])
-        rates = np.array([0.05, 0.05, 0.05])
-        divs = np.array([0.0, 0.02, 0.05])  # Varying dividends
-        sigmas = np.array([0.2, 0.2, 0.2])
+        spots = create_test_array([100.0, 100.0, 100.0], array_type)
+        strikes = create_test_array([100.0, 100.0, 100.0], array_type)
+        times = create_test_array([1.0, 1.0, 1.0], array_type)
+        rates = create_test_array([0.05, 0.05, 0.05], array_type)
+        divs = create_test_array([0.0, 0.02, 0.05], array_type)  # Varying dividends
+        sigmas = create_test_array([0.2, 0.2, 0.2], array_type)
 
         call_prices = merton.call_price_batch(spots, strikes, times, rates, divs, sigmas)
+        arrow.assert_type(call_prices)
+        call_prices_list = arrow.to_list(call_prices)
         # Higher dividend should reduce call value
-        assert call_prices[0] > call_prices[1] > call_prices[2]
+        assert call_prices_list[0] > call_prices_list[1] > call_prices_list[2]
 
         put_prices = merton.put_price_batch(spots, strikes, times, rates, divs, sigmas)
+        arrow.assert_type(put_prices)
+        put_prices_list = arrow.to_list(put_prices)
         # Higher dividend should increase put value
-        assert put_prices[0] < put_prices[1] < put_prices[2]
+        assert put_prices_list[0] < put_prices_list[1] < put_prices_list[2]
 
-    def test_empty_batch(self) -> None:
+    @pytest.mark.parametrize("array_type", INPUT_ARRAY_TYPES)
+    def test_empty_batch(self, array_type: str) -> None:
         """Test batch processing with empty array."""
-        spots = np.array([])
-        strikes = np.array([])
-        times = np.array([])
-        rates = np.array([])
-        divs = np.array([])
-        sigmas = np.array([])
+        spots = create_test_array([], array_type)
+        strikes = create_test_array([], array_type)
+        times = create_test_array([], array_type)
+        rates = create_test_array([], array_type)
+        divs = create_test_array([], array_type)
+        sigmas = create_test_array([], array_type)
         prices = merton.call_price_batch(spots, strikes, times, rates, divs, sigmas)
-        assert len(prices) == 0
+        arrow.assert_type(prices)
+        prices_list = arrow.to_list(prices)
+        assert len(prices_list) == 0
 
 
 class TestMertonGreeks:
@@ -305,21 +335,23 @@ class TestMertonGreeks:
         # Dividend reduces call delta
         assert greeks_with_div["delta"] < greeks_no_div["delta"]
 
-    def test_greeks_batch(self) -> None:
+    @pytest.mark.parametrize("array_type", INPUT_ARRAY_TYPES)
+    def test_greeks_batch(self, array_type: str) -> None:
         """Test batch Greeks calculation."""
-        spots = np.array([90.0, 100.0, 110.0])
-        strikes = np.array([100.0, 100.0, 100.0])
-        times = np.array([1.0, 1.0, 1.0])
-        rates = np.array([0.05, 0.05, 0.05])
-        divs = np.array([0.02, 0.02, 0.02])
-        sigmas = np.array([0.2, 0.2, 0.2])
+        spots = create_test_array([90.0, 100.0, 110.0], array_type)
+        strikes = create_test_array([100.0, 100.0, 100.0], array_type)
+        times = create_test_array([1.0, 1.0, 1.0], array_type)
+        rates = create_test_array([0.05, 0.05, 0.05], array_type)
+        divs = create_test_array([0.02, 0.02, 0.02], array_type)
+        sigmas = create_test_array([0.2, 0.2, 0.2], array_type)
         # For batch processing with boolean, use scalar True (will broadcast)
         greeks_dict = merton.greeks_batch(spots, strikes, times, rates, divs, sigmas, True)
 
         assert "delta" in greeks_dict
-        assert len(greeks_dict["delta"]) == 3
+        delta_list = arrow.to_list(greeks_dict["delta"])
+        assert len(delta_list) == 3
         # Delta should increase with spot for calls
-        assert greeks_dict["delta"][0] < greeks_dict["delta"][1] < greeks_dict["delta"][2]
+        assert delta_list[0] < delta_list[1] < delta_list[2]
 
     def test_greeks_invalid_inputs(self) -> None:
         """Test Greeks with invalid inputs."""
@@ -348,21 +380,25 @@ class TestMertonImpliedVolatility:
 
         assert abs(iv - true_sigma) < THEORETICAL_TOLERANCE
 
-    def test_implied_volatility_batch(self) -> None:
+    @pytest.mark.parametrize("array_type", INPUT_ARRAY_TYPES)
+    def test_implied_volatility_batch(self, array_type: str) -> None:
         """Test batch implied volatility calculation."""
         sigmas = np.array([0.2, 0.25, 0.3])
-        prices = np.array([merton.call_price(s=100.0, k=100.0, t=1.0, r=0.05, q=0.02, sigma=sig) for sig in sigmas])
+        prices_vals = [merton.call_price(s=100.0, k=100.0, t=1.0, r=0.05, q=0.02, sigma=sig) for sig in sigmas]
+        prices = create_test_array(prices_vals, array_type)
 
-        spots = np.array([100.0, 100.0, 100.0])
-        strikes = np.array([100.0, 100.0, 100.0])
-        times = np.array([1.0, 1.0, 1.0])
-        rates = np.array([0.05, 0.05, 0.05])
-        divs = np.array([0.02, 0.02, 0.02])
+        spots = create_test_array([100.0, 100.0, 100.0], array_type)
+        strikes = create_test_array([100.0, 100.0, 100.0], array_type)
+        times = create_test_array([1.0, 1.0, 1.0], array_type)
+        rates = create_test_array([0.05, 0.05, 0.05], array_type)
+        divs = create_test_array([0.02, 0.02, 0.02], array_type)
         # For batch processing with boolean, use scalar True (will broadcast)
         ivs = merton.implied_volatility_batch(prices, spots, strikes, times, rates, divs, True)
-
-        assert len(ivs) == 3
-        for _i, (iv, true_sigma) in enumerate(zip(ivs, sigmas, strict=False)):
+        
+        arrow.assert_type(ivs)
+        ivs_list = arrow.to_list(ivs)
+        assert len(ivs_list) == 3
+        for _i, (iv, true_sigma) in enumerate(zip(ivs_list, sigmas, strict=False)):
             assert abs(iv - true_sigma) < THEORETICAL_TOLERANCE
 
     def test_implied_volatility_invalid_price(self) -> None:

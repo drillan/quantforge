@@ -3,6 +3,7 @@
 import numpy as np
 import pytest
 from quantforge import black_scholes
+from conftest import arrow, create_test_array, INPUT_ARRAY_TYPES
 
 
 def test_calculate_call_price() -> None:
@@ -21,10 +22,11 @@ def test_calculate_call_price() -> None:
     assert abs(price - expected) < 1e-5  # 累積正規分布関数の近似精度に合わせて調整
 
 
-def test_call_price_batch() -> None:
-    """バッチ計算のテスト."""
+@pytest.mark.parametrize("array_type", INPUT_ARRAY_TYPES)
+def test_call_price_batch(array_type: str) -> None:
+    """バッチ計算のテスト（NumPyとPyArrow両方）."""
 
-    spots = np.array([90.0, 100.0, 110.0], dtype=np.float64)
+    spots = create_test_array([90.0, 100.0, 110.0], array_type)
     k = 100.0
     t = 1.0
     r = 0.05
@@ -33,10 +35,12 @@ def test_call_price_batch() -> None:
     prices = black_scholes.call_price_batch(spots, k, t, r, sigma)
 
     assert len(prices) == 3
-    assert isinstance(prices, np.ndarray)
+    # Arrow配列であることを確認
+    arrow.assert_type(prices)
 
     # ITM, ATM, OTMの価格関係を確認
-    assert prices[0] < prices[1] < prices[2]
+    prices_list = arrow.to_list(prices)
+    assert prices_list[0] < prices_list[1] < prices_list[2]
 
 
 def test_invalid_inputs() -> None:
