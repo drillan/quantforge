@@ -1,5 +1,32 @@
 # 計画変更履歴
 
+## 2025-09-02（Arrow Zero-Copy FFI Complete Migration & Quality Improvement）
+- `2025-09-02-rust-quality-improvement.md` → archive/ ✅
+  - v0.0.9: Arrow Zero-Copy FFI完全移行
+  - pyo3-arrow + arro3-core統合によるゼロコピー実現
+  - コード77%削減（350行→80行）
+  - パフォーマンス改善（245μs→100-150μs）
+- `2025-09-02-rust-arrow-zero-copy-ffi-complete.md` → archive/ ✅
+  - Arrow FFI完全実装（C Data Interface準拠）
+  - メモリコピーゼロ実現
+  - 全バッチAPIのArrow Native化
+- `2025-09-02-rust-arro3-core-complete-migration.md` → archive/ ✅
+  - arro3-core完全移行（軽量Arrow実装）
+  - 依存関係の簡素化
+- `2025-09-02-rust-critical-performance-optimization.md` → archive/ ✅
+  - クリティカルパフォーマンス最適化
+  - 並列化閾値調整による改善
+- `2025-09-02-rust-parallel-threshold-optimization.md` → archive/ ✅
+  - 並列処理閾値の最適化実験
+  - 実測に基づく閾値調整
+- `2025-09-02-both-comprehensive-quality-improvement.md` → archive/ ✅
+  - 包括的品質改善計画
+  - Critical Rules完全準拠
+- その他Arrow関連計画ファイル15件 → archive/ ✅
+  - Arrow Native API実装の各段階
+  - パフォーマンス分析と最適化
+  - ベンチマーク記録システム
+
 ## 2025-09-01（Apache Arrow Native Migration）
 - `2025-09-01-arrow-native-migration.md` → archive/ ✅
   - QuantForgeの完全なApache Arrow-native実装への移行

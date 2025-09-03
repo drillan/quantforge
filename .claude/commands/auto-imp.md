@@ -77,7 +77,7 @@ Phase 3: 実装作業
   → Refactoring自動実行
 
 Phase 4: 知見記録
-  → .claude/への自動記録 @.claude/commands/learnings.md
+  → .claude/への自動記録（@.claude/commands/learnings.md を参照）
   → パターン自動抽出
 ```
 
@@ -121,7 +121,7 @@ Co-Authored-By: Claude <noreply@anthropic.com>"
 
 **記録先自動判定**:
 
-@.claude/commands/learnings.md
+@.claude/commands/learnings.md を参照
 
 ## 🔄 統合自動実行コマンド
 

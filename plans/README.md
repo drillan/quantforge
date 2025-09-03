@@ -22,10 +22,10 @@
 ### 最近完了した計画
 | 計画名 | 完了日 | 成果 |
 |--------|--------|------|
+| [Arrow Zero-Copy FFI完全移行](archive/2025-09-02-rust-quality-improvement.md) | 2025-09-02 | v0.0.9: pyo3-arrow統合、コード77%削減、ゼロコピー実現 |
+| [包括的品質改善](archive/2025-09-02-both-comprehensive-quality-improvement.md) | 2025-09-02 | Critical Rules完全準拠、品質基準達成 |
 | [Apache Arrow Native移行](archive/2025-09-01-arrow-native-migration.md) | 2025-09-01 | Arrow-first実装、2.65倍高速化、コード70%削減 |
 | [Arrow実装コンテキスト](archive/2025-09-01-arrow-implementation-context.md) | 2025-09-01 | Phase 1-5完全実装、目標性能達成 |
-| [benchmarksパッケージ再構築](archive/2025-08-30-python-benchmarks-package-restructure.md) | 2025-08-30 | 完全なPythonパッケージ化、相対インポート依存排除 |
-| [README.md同期実装](archive/2025-08-28-readme-sync-implementation.md) | 2025-08-29 | プロジェクト現状の正確な反映（v0.0.2） |
 
 ## 📁 ディレクトリ構造
 
@@ -168,6 +168,20 @@ cp templates/python/implementation-plan.md 2025-MM-DD-python-feature-name.md
 | 大（>500行） | ✅ | ✅ | ✅ |
 
 ※「条件付き」= 閾値を超える重複や問題が検出された場合のみ適用
+
+## 📚 新たな知見の記録
+
+計画実行中に得られた新たな知見は、プロジェクトの知識ベースに適切に記録してください。
+
+**記録先の確認方法：**
+`.claude/commands/learnings.md` を参照してください。このファイルには：
+- 各種知見の記録先ファイル
+- 記録する内容の分類方法
+- 具体的な記録手順
+
+が記載されています。
+
+**重要**: `learnings.md`は設定ファイルです。知見はそこに記載された適切なファイルに記録してください。
 
 ## 🚀 Quick Links
 
