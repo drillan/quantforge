@@ -125,6 +125,28 @@ pub fn black76_put_scalar(f: f64, k: f64, t: f64, r: f64, sigma: f64) -> f64 {
     discount * (k * norm_cdf(-d2) - f * norm_cdf(-d1))
 }
 
+/// Merton配当付きBlack-Scholes d1, d2パラメータ計算
+///
+/// 連続配当利回りを考慮したd1, d2を計算。
+///
+/// # Arguments
+/// * `s` - スポット価格
+/// * `k` - 権利行使価格
+/// * `t` - 満期までの時間（年）
+/// * `r` - 無リスク金利
+/// * `q` - 配当利回り
+/// * `sigma` - ボラティリティ
+///
+/// # Returns
+/// (d1, d2)のタプル
+#[inline(always)]
+pub fn merton_d1_d2(s: f64, k: f64, t: f64, r: f64, q: f64, sigma: f64) -> (f64, f64) {
+    let sqrt_t = t.sqrt();
+    let d1 = ((s / k).ln() + (r - q + sigma * sigma / VOL_SQUARED_HALF) * t) / (sigma * sqrt_t);
+    let d2 = d1 - sigma * sqrt_t;
+    (d1, d2)
+}
+
 /// Merton配当付きBlack-Scholesコールオプション価格（スカラー版）
 ///
 /// 連続配当利回りを考慮したコールオプション価格を計算。
@@ -141,9 +163,7 @@ pub fn black76_put_scalar(f: f64, k: f64, t: f64, r: f64, sigma: f64) -> f64 {
 /// コールオプション価格
 #[inline(always)]
 pub fn merton_call_scalar(s: f64, k: f64, t: f64, r: f64, q: f64, sigma: f64) -> f64 {
-    let sqrt_t = t.sqrt();
-    let d1 = ((s / k).ln() + (r - q + sigma * sigma / VOL_SQUARED_HALF) * t) / (sigma * sqrt_t);
-    let d2 = d1 - sigma * sqrt_t;
+    let (d1, d2) = merton_d1_d2(s, k, t, r, q, sigma);
     s * (-q * t).exp() * norm_cdf(d1) - k * (-r * t).exp() * norm_cdf(d2)
 }
 
@@ -163,16 +183,14 @@ pub fn merton_call_scalar(s: f64, k: f64, t: f64, r: f64, q: f64, sigma: f64) ->
 /// プットオプション価格
 #[inline(always)]
 pub fn merton_put_scalar(s: f64, k: f64, t: f64, r: f64, q: f64, sigma: f64) -> f64 {
-    let sqrt_t = t.sqrt();
-    let d1 = ((s / k).ln() + (r - q + sigma * sigma / VOL_SQUARED_HALF) * t) / (sigma * sqrt_t);
-    let d2 = d1 - sigma * sqrt_t;
+    let (d1, d2) = merton_d1_d2(s, k, t, r, q, sigma);
     k * (-r * t).exp() * norm_cdf(-d2) - s * (-q * t).exp() * norm_cdf(-d1)
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::constants::PRACTICAL_TOLERANCE;
+    use crate::constants::{PRACTICAL_TOLERANCE, TEST_BS_PRICE_LOWER, TEST_BS_PRICE_UPPER};
 
     #[test]
     fn test_black_scholes_call_scalar() {
@@ -185,7 +203,10 @@ mod tests {
         let price = black_scholes_call_scalar(s, k, t, r, sigma);
 
         // ATMオプションの期待値（概算）
-        assert!(price > 8.0 && price < 12.0, "Price = {price}");
+        assert!(
+            price > TEST_BS_PRICE_LOWER && price < TEST_BS_PRICE_UPPER,
+            "Price = {price}"
+        );
     }
 
     #[test]

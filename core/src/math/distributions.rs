@@ -93,7 +93,7 @@ pub use norm_pdf_scalar as norm_pdf;
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::constants::NUMERICAL_TOLERANCE;
+    use crate::constants::{NUMERICAL_TOLERANCE, PRECISION_HIGHEST};
 
     #[test]
     fn test_norm_cdf_array() {
@@ -114,10 +114,10 @@ mod tests {
         let result_array = result.as_any().downcast_ref::<Float64Array>().unwrap();
 
         // φ(0) = 1/√(2π) ≈ 0.3989422804014327
-        assert!((result_array.value(0) - 0.3989422804014327).abs() < 1e-15);
+        assert!((result_array.value(0) - 0.3989422804014327).abs() < PRECISION_HIGHEST);
 
         // φ(1) = φ(-1) by symmetry
-        assert!((result_array.value(1) - result_array.value(2)).abs() < 1e-15);
+        assert!((result_array.value(1) - result_array.value(2)).abs() < PRECISION_HIGHEST);
     }
 
     #[test]
@@ -136,7 +136,7 @@ mod tests {
             let scalar_value = norm_cdf_scalar(x);
 
             assert!(
-                (array_value - scalar_value).abs() < 1e-15,
+                (array_value - scalar_value).abs() < PRECISION_HIGHEST,
                 "Mismatch for x={x}: array={array_value}, scalar={scalar_value}"
             );
         }

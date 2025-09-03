@@ -305,6 +305,7 @@ fn calculate_greeks_single(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::constants::ARROW_PRECISION_THRESHOLD;
 
     #[test]
     fn test_arrow_call_price_basic() {
@@ -317,7 +318,7 @@ mod tests {
         let result = arrow_call_price(&spots, &strikes, &times, &rates, &sigmas);
 
         // Expected value from Black-Scholes formula
-        assert!((result.value(0) - 8.021352235143176).abs() < 1e-10);
+        assert!((result.value(0) - 8.021352235143176).abs() < ARROW_PRECISION_THRESHOLD);
     }
 
     #[test]
@@ -334,7 +335,7 @@ mod tests {
         let actual = result.value(0);
         let expected = 7.9004418077181455;
         assert!(
-            (actual - expected).abs() < 1e-10,
+            (actual - expected).abs() < ARROW_PRECISION_THRESHOLD,
             "Put price mismatch: expected {expected}, got {actual}"
         );
     }
@@ -353,7 +354,7 @@ mod tests {
         assert_eq!(result.len(), size);
         // All results should be the same
         for i in 0..size {
-            assert!((result.value(i) - 8.021352235143176).abs() < 1e-10);
+            assert!((result.value(i) - 8.021352235143176).abs() < ARROW_PRECISION_THRESHOLD);
         }
     }
 }

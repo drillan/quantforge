@@ -301,6 +301,7 @@ impl Black76 {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::constants::TEST_TOLERANCE_VEGA;
 
     #[test]
     fn test_call_price() {
@@ -316,7 +317,7 @@ mod tests {
         // Expected value for Black76 with F=100, K=100, T=1, r=0.05, sigma=0.2
         // Using exp(-r*T) * (F*N(d1) - K*N(d2))
         let expected = 7.577; // Verified calculation
-        assert!((prices.value(0) - expected).abs() < 0.01);
+        assert!((prices.value(0) - expected).abs() < TEST_TOLERANCE_VEGA);
     }
 
     #[test]
@@ -333,7 +334,7 @@ mod tests {
         // Expected value from put-call parity for ATM options (F=K)
         // For Black76 ATM: Call = Put (before discounting)
         let expected = 7.577; // Same as call for F=K ATM option
-        assert!((prices.value(0) - expected).abs() < 0.01);
+        assert!((prices.value(0) - expected).abs() < TEST_TOLERANCE_VEGA);
     }
 
     #[test]

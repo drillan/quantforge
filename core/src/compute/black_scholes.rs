@@ -408,7 +408,7 @@ impl BlackScholes {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::constants::PRACTICAL_TOLERANCE;
+    use crate::constants::{PRACTICAL_TOLERANCE, TEST_TOLERANCE_VEGA};
 
     #[test]
     fn test_call_price() {
@@ -475,6 +475,6 @@ mod tests {
             .downcast_ref::<Float64Array>()
             .unwrap()
             .value(0);
-        assert!((vega_val - 37.524).abs() < 0.01);
+        assert!((vega_val - 37.524).abs() < TEST_TOLERANCE_VEGA);
     }
 }
