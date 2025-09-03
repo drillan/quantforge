@@ -196,7 +196,7 @@ class TestBlack76Batch:
 
         call_batch_list = arrow.to_list(call_batch)
         put_batch_list = arrow.to_list(put_batch)
-        
+
         for i, forward in enumerate(forwards):
             call_single = black76.call_price(f=forward, k=100.0, t=1.0, r=0.05, sigma=0.2)
             put_single = black76.put_price(f=forward, k=100.0, t=1.0, r=0.05, sigma=0.2)

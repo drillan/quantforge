@@ -34,12 +34,12 @@ impl Black76 {
     ) -> Result<ArrayRef, ArrowError> {
         // Validate arrays for broadcasting compatibility
         let len = validate_broadcast_compatibility(&[forwards, strikes, times, rates, sigmas])?;
-        
+
         // Handle empty arrays
         if len == 0 {
             return Ok(Arc::new(Float64Builder::new().finish()));
         }
-        
+
         let mut builder = Float64Builder::with_capacity(len);
 
         if len >= get_parallel_threshold() {
@@ -98,12 +98,12 @@ impl Black76 {
     ) -> Result<ArrayRef, ArrowError> {
         // Validate arrays for broadcasting compatibility
         let len = validate_broadcast_compatibility(&[forwards, strikes, times, rates, sigmas])?;
-        
+
         // Handle empty arrays
         if len == 0 {
             return Ok(Arc::new(Float64Builder::new().finish()));
         }
-        
+
         let mut builder = Float64Builder::with_capacity(len);
 
         if len >= get_parallel_threshold() {
@@ -152,12 +152,12 @@ impl Black76 {
         is_call: bool,
     ) -> Result<ArrayRef, ArrowError> {
         let len = validate_broadcast_compatibility(&[forwards, strikes, times, rates, sigmas])?;
-        
+
         // Handle empty arrays
         if len == 0 {
             return Ok(Arc::new(Float64Builder::new().finish()));
         }
-        
+
         let mut builder = Float64Builder::with_capacity(len);
 
         for i in 0..len {
@@ -190,12 +190,12 @@ impl Black76 {
         sigmas: &Float64Array,
     ) -> Result<ArrayRef, ArrowError> {
         let len = validate_broadcast_compatibility(&[forwards, strikes, times, rates, sigmas])?;
-        
+
         // Handle empty arrays
         if len == 0 {
             return Ok(Arc::new(Float64Builder::new().finish()));
         }
-        
+
         let mut builder = Float64Builder::with_capacity(len);
 
         use crate::math::distributions::norm_pdf;
@@ -226,12 +226,12 @@ impl Black76 {
         sigmas: &Float64Array,
     ) -> Result<ArrayRef, ArrowError> {
         let len = validate_broadcast_compatibility(&[forwards, strikes, times, rates, sigmas])?;
-        
+
         // Handle empty arrays
         if len == 0 {
             return Ok(Arc::new(Float64Builder::new().finish()));
         }
-        
+
         let mut builder = Float64Builder::with_capacity(len);
 
         use crate::math::distributions::norm_pdf;
@@ -263,12 +263,12 @@ impl Black76 {
         is_call: bool,
     ) -> Result<ArrayRef, ArrowError> {
         let len = validate_broadcast_compatibility(&[forwards, strikes, times, rates, sigmas])?;
-        
+
         // Handle empty arrays
         if len == 0 {
             return Ok(Arc::new(Float64Builder::new().finish()));
         }
-        
+
         let mut builder = Float64Builder::with_capacity(len);
 
         use crate::math::distributions::norm_pdf;
@@ -309,12 +309,12 @@ impl Black76 {
         is_call: bool,
     ) -> Result<ArrayRef, ArrowError> {
         let len = validate_broadcast_compatibility(&[forwards, strikes, times, rates, sigmas])?;
-        
+
         // Handle empty arrays
         if len == 0 {
             return Ok(Arc::new(Float64Builder::new().finish()));
         }
-        
+
         let mut builder = Float64Builder::with_capacity(len);
 
         for i in 0..len {

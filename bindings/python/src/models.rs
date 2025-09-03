@@ -5,9 +5,9 @@
 
 use arrow::array::Float64Array;
 use arrow::error::ArrowError;
-use pyo3::exceptions::{PyNotImplementedError, PyValueError};
+use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
-use pyo3::types::PyDict;
+use pyo3::types::{PyDict, PyList};
 use pyo3_arrow::error::PyArrowResult;
 use quantforge_core::compute::formulas::{
     black76_call_scalar, black76_put_scalar, black_scholes_call_scalar, black_scholes_put_scalar,
@@ -19,9 +19,8 @@ use crate::arrow_common::{
     create_greeks_dict, extract_black76_arrays, extract_black_scholes_arrays,
     extract_boolean_array, field_names, parse_black76_params, parse_black_scholes_params,
     parse_is_calls_param, parse_merton_params, validate_black76_arrays,
-    validate_black76_scalar_inputs_detailed,
-    validate_scalar_inputs_detailed,
-    validate_black_scholes_arrays_with_rates, wrap_result_array,
+    validate_black76_scalar_inputs_detailed, validate_black_scholes_arrays_with_rates,
+    validate_scalar_inputs_detailed, wrap_result_array,
 };
 
 /// Black-Scholes call price calculation using Arrow arrays
@@ -53,7 +52,13 @@ pub fn arrow_call_price(
         extract_black_scholes_arrays(&params)?;
 
     // Validate arrays
-    validate_black_scholes_arrays_with_rates(spots_f64, strikes_f64, times_f64, rates_f64, sigmas_f64)?;
+    validate_black_scholes_arrays_with_rates(
+        spots_f64,
+        strikes_f64,
+        times_f64,
+        rates_f64,
+        sigmas_f64,
+    )?;
 
     // Compute call prices using quantforge-core BlackScholes
     // Release GIL for computation
@@ -98,7 +103,13 @@ pub fn arrow_put_price(
         extract_black_scholes_arrays(&params)?;
 
     // Validate arrays
-    validate_black_scholes_arrays_with_rates(spots_f64, strikes_f64, times_f64, rates_f64, sigmas_f64)?;
+    validate_black_scholes_arrays_with_rates(
+        spots_f64,
+        strikes_f64,
+        times_f64,
+        rates_f64,
+        sigmas_f64,
+    )?;
 
     // Compute put prices using quantforge-core BlackScholes
     // Release GIL for computation
@@ -145,7 +156,13 @@ pub fn arrow_greeks(
         extract_black_scholes_arrays(&params)?;
 
     // Validate arrays
-    validate_black_scholes_arrays_with_rates(spots_f64, strikes_f64, times_f64, rates_f64, sigmas_f64)?;
+    validate_black_scholes_arrays_with_rates(
+        spots_f64,
+        strikes_f64,
+        times_f64,
+        rates_f64,
+        sigmas_f64,
+    )?;
 
     // Compute Greeks using quantforge-core BlackScholes (release GIL)
     let (delta_arc, gamma_arc, vega_arc, theta_arc, rho_arc) = py
@@ -435,10 +452,10 @@ pub fn black76_put_price(f: f64, k: f64, t: f64, r: f64, sigma: f64) -> PyResult
 pub fn merton_call_price(s: f64, k: f64, t: f64, r: f64, q: f64, sigma: f64) -> PyResult<f64> {
     validate_scalar_inputs_detailed(s, k, t, r, sigma)?;
     // Allow negative dividend (storage cost) within reasonable range
-    if q < -1.0 || q > 1.0 {
-        return Err(PyValueError::new_err(
-            format!("dividend_yield out of range [-1.0, 1.0] (got {q})")
-        ));
+    if !(-1.0..=1.0).contains(&q) {
+        return Err(PyValueError::new_err(format!(
+            "dividend_yield out of range [-1.0, 1.0] (got {q})"
+        )));
     }
     Ok(merton_call_scalar(s, k, t, r, q, sigma))
 }
@@ -448,28 +465,410 @@ pub fn merton_call_price(s: f64, k: f64, t: f64, r: f64, q: f64, sigma: f64) -> 
 pub fn merton_put_price(s: f64, k: f64, t: f64, r: f64, q: f64, sigma: f64) -> PyResult<f64> {
     validate_scalar_inputs_detailed(s, k, t, r, sigma)?;
     // Allow negative dividend (storage cost) within reasonable range
-    if q < -1.0 || q > 1.0 {
-        return Err(PyValueError::new_err(
-            format!("dividend_yield out of range [-1.0, 1.0] (got {q})")
-        ));
+    if !(-1.0..=1.0).contains(&q) {
+        return Err(PyValueError::new_err(format!(
+            "dividend_yield out of range [-1.0, 1.0] (got {q})"
+        )));
     }
     Ok(merton_put_scalar(s, k, t, r, q, sigma))
 }
 
-/// American call price (placeholder)
+/// American call price using BS2002 approximation
 #[pyfunction]
-pub fn american_call_price(_s: f64, _k: f64, _t: f64, _r: f64, _sigma: f64) -> PyResult<f64> {
-    Err(PyNotImplementedError::new_err(
-        "American options not yet implemented",
+#[pyo3(signature = (s, k, t, r, q, sigma))]
+pub fn american_call_price(s: f64, k: f64, t: f64, r: f64, q: f64, sigma: f64) -> PyResult<f64> {
+    validate_scalar_inputs_detailed(s, k, t, r, sigma)?;
+    // Allow negative dividend (storage cost) within reasonable range
+    if !(-1.0..=1.0).contains(&q) {
+        return Err(PyValueError::new_err(format!(
+            "dividend_yield out of range [-1.0, 1.0] (got {q})"
+        )));
+    }
+    Ok(quantforge_core::compute::american::american_call_scalar(
+        s, k, t, r, q, sigma,
     ))
 }
 
-/// American put price (placeholder)
+/// American put price using BS2002 approximation
 #[pyfunction]
-pub fn american_put_price(_s: f64, _k: f64, _t: f64, _r: f64, _sigma: f64) -> PyResult<f64> {
-    Err(PyNotImplementedError::new_err(
-        "American options not yet implemented",
+#[pyo3(signature = (s, k, t, r, q, sigma))]
+pub fn american_put_price(s: f64, k: f64, t: f64, r: f64, q: f64, sigma: f64) -> PyResult<f64> {
+    validate_scalar_inputs_detailed(s, k, t, r, sigma)?;
+    // Allow negative dividend (storage cost) within reasonable range
+    if !(-1.0..=1.0).contains(&q) {
+        return Err(PyValueError::new_err(format!(
+            "dividend_yield out of range [-1.0, 1.0] (got {q})"
+        )));
+    }
+    Ok(quantforge_core::compute::american::american_put_scalar(
+        s, k, t, r, q, sigma,
     ))
+}
+
+/// American option binomial tree pricing
+#[pyfunction]
+#[pyo3(signature = (s, k, t, r, q, sigma, n_steps=100, is_call=true))]
+#[allow(clippy::too_many_arguments)]
+pub fn american_binomial(
+    s: f64,
+    k: f64,
+    t: f64,
+    r: f64,
+    q: f64,
+    sigma: f64,
+    n_steps: usize,
+    is_call: bool,
+) -> PyResult<f64> {
+    validate_scalar_inputs_detailed(s, k, t, r, sigma)?;
+    // Allow negative dividend (storage cost) within reasonable range
+    if !(-1.0..=1.0).contains(&q) {
+        return Err(PyValueError::new_err(format!(
+            "dividend_yield out of range [-1.0, 1.0] (got {q})"
+        )));
+    }
+    if n_steps == 0 {
+        return Err(PyValueError::new_err("n_steps must be at least 1"));
+    }
+    Ok(quantforge_core::compute::american::american_binomial(
+        s, k, t, r, q, sigma, n_steps, is_call,
+    ))
+}
+
+/// American option Greeks calculation
+#[pyfunction]
+#[pyo3(signature = (s, k, t, r, q, sigma, is_call=true))]
+#[allow(clippy::too_many_arguments)]
+pub fn american_greeks(
+    py: Python,
+    s: f64,
+    k: f64,
+    t: f64,
+    r: f64,
+    q: f64,
+    sigma: f64,
+    is_call: bool,
+) -> PyResult<PyObject> {
+    validate_scalar_inputs_detailed(s, k, t, r, sigma)?;
+    if !(-1.0..=1.0).contains(&q) {
+        return Err(PyValueError::new_err(format!(
+            "dividend_yield out of range [-1.0, 1.0] (got {q})"
+        )));
+    }
+
+    let delta = if is_call {
+        quantforge_core::compute::american::american_call_delta(s, k, t, r, q, sigma)
+    } else {
+        quantforge_core::compute::american::american_put_delta(s, k, t, r, q, sigma)
+    };
+
+    let gamma = quantforge_core::compute::american::american_call_gamma(s, k, t, r, q, sigma);
+
+    let vega = if is_call {
+        quantforge_core::compute::american::american_call_vega(s, k, t, r, q, sigma)
+    } else {
+        quantforge_core::compute::american::american_put_vega(s, k, t, r, q, sigma)
+    };
+
+    let theta = if is_call {
+        quantforge_core::compute::american::american_call_theta(s, k, t, r, q, sigma)
+    } else {
+        quantforge_core::compute::american::american_put_theta(s, k, t, r, q, sigma)
+    };
+
+    let rho = if is_call {
+        quantforge_core::compute::american::american_call_rho(s, k, t, r, q, sigma)
+    } else {
+        quantforge_core::compute::american::american_put_rho(s, k, t, r, q, sigma)
+    };
+
+    let greeks_dict = PyDict::new(py);
+    greeks_dict.set_item("delta", delta)?;
+    greeks_dict.set_item("gamma", gamma)?;
+    greeks_dict.set_item("vega", vega)?;
+    greeks_dict.set_item("theta", theta)?;
+    greeks_dict.set_item("rho", rho)?;
+    greeks_dict.set_item("dividend_rho", 0.0)?; // Not implemented yet
+
+    Ok(greeks_dict.into())
+}
+
+/// American option implied volatility using Newton-Raphson
+#[pyfunction]
+#[pyo3(signature = (price, s, k, t, r, q, is_call=true, initial_guess=0.2, tolerance=1e-6, max_iterations=100))]
+#[allow(clippy::too_many_arguments)]
+pub fn american_implied_volatility(
+    price: f64,
+    s: f64,
+    k: f64,
+    t: f64,
+    r: f64,
+    q: f64,
+    is_call: bool,
+    initial_guess: f64,
+    tolerance: f64,
+    max_iterations: usize,
+) -> PyResult<f64> {
+    validate_scalar_inputs_detailed(s, k, t, r, 0.2)?; // Use dummy sigma for validation
+    if !(-1.0..=1.0).contains(&q) {
+        return Err(PyValueError::new_err(format!(
+            "dividend_yield out of range [-1.0, 1.0] (got {q})"
+        )));
+    }
+
+    // Simple Newton-Raphson for now (not optimal but works)
+    let mut sigma = initial_guess;
+
+    for _ in 0..max_iterations {
+        let calc_price = if is_call {
+            quantforge_core::compute::american::american_call_scalar(s, k, t, r, q, sigma)
+        } else {
+            quantforge_core::compute::american::american_put_scalar(s, k, t, r, q, sigma)
+        };
+
+        let vega = if is_call {
+            quantforge_core::compute::american::american_call_vega(s, k, t, r, q, sigma)
+        } else {
+            quantforge_core::compute::american::american_put_vega(s, k, t, r, q, sigma)
+        };
+
+        let diff = calc_price - price;
+        if diff.abs() < tolerance {
+            return Ok(sigma);
+        }
+
+        // Newton-Raphson update
+        sigma -= diff / (vega * 100.0); // vega is per 1% change
+
+        // Keep sigma in reasonable bounds
+        sigma = sigma.clamp(0.001, 5.0);
+    }
+
+    Err(PyValueError::new_err("Failed to converge"))
+}
+
+/// American call option price batch processing
+#[pyfunction]
+pub fn american_call_price_batch(
+    py: Python,
+    spots: &Bound<'_, PyAny>,
+    strikes: &Bound<'_, PyAny>,
+    times: &Bound<'_, PyAny>,
+    rates: &Bound<'_, PyAny>,
+    dividend_yields: &Bound<'_, PyAny>,
+    sigmas: &Bound<'_, PyAny>,
+) -> PyResult<PyObject> {
+    // For now, use simple Python list approach
+    // TODO: Implement proper Arrow batch processing
+    let spots_list = spots.extract::<Vec<f64>>()?;
+    let strikes_list = strikes.extract::<Vec<f64>>()?;
+    let times_list = times.extract::<Vec<f64>>()?;
+    let rates_list = rates.extract::<Vec<f64>>()?;
+    let divs_list = dividend_yields.extract::<Vec<f64>>()?;
+    let sigmas_list = sigmas.extract::<Vec<f64>>()?;
+
+    let len = spots_list.len();
+    let mut results = Vec::with_capacity(len);
+
+    for i in 0..len {
+        let price = quantforge_core::compute::american::american_call_scalar(
+            spots_list[i],
+            strikes_list[i],
+            times_list[i],
+            rates_list[i],
+            divs_list[i],
+            sigmas_list[i],
+        );
+        results.push(price);
+    }
+
+    Ok(PyList::new(py, results)?.into())
+}
+
+/// American put option price batch processing
+#[pyfunction]
+pub fn american_put_price_batch(
+    py: Python,
+    spots: &Bound<'_, PyAny>,
+    strikes: &Bound<'_, PyAny>,
+    times: &Bound<'_, PyAny>,
+    rates: &Bound<'_, PyAny>,
+    dividend_yields: &Bound<'_, PyAny>,
+    sigmas: &Bound<'_, PyAny>,
+) -> PyResult<PyObject> {
+    // For now, use simple Python list approach
+    // TODO: Implement proper Arrow batch processing
+    let spots_list = spots.extract::<Vec<f64>>()?;
+    let strikes_list = strikes.extract::<Vec<f64>>()?;
+    let times_list = times.extract::<Vec<f64>>()?;
+    let rates_list = rates.extract::<Vec<f64>>()?;
+    let divs_list = dividend_yields.extract::<Vec<f64>>()?;
+    let sigmas_list = sigmas.extract::<Vec<f64>>()?;
+
+    let len = spots_list.len();
+    let mut results = Vec::with_capacity(len);
+
+    for i in 0..len {
+        let price = quantforge_core::compute::american::american_put_scalar(
+            spots_list[i],
+            strikes_list[i],
+            times_list[i],
+            rates_list[i],
+            divs_list[i],
+            sigmas_list[i],
+        );
+        results.push(price);
+    }
+
+    Ok(PyList::new(py, results)?.into())
+}
+
+/// American option Greeks batch processing
+#[pyfunction]
+#[pyo3(signature = (spots, strikes, times, rates, dividend_yields, sigmas, is_call=true))]
+#[allow(clippy::too_many_arguments)]
+pub fn american_greeks_batch(
+    py: Python,
+    spots: &Bound<'_, PyAny>,
+    strikes: &Bound<'_, PyAny>,
+    times: &Bound<'_, PyAny>,
+    rates: &Bound<'_, PyAny>,
+    dividend_yields: &Bound<'_, PyAny>,
+    sigmas: &Bound<'_, PyAny>,
+    is_call: bool,
+) -> PyResult<PyObject> {
+    // For now, use simple Python list approach
+    let s_array = spots.extract::<Vec<f64>>()?;
+    let k_array = strikes.extract::<Vec<f64>>()?;
+    let t_array = times.extract::<Vec<f64>>()?;
+    let r_array = rates.extract::<Vec<f64>>()?;
+    let q_array = dividend_yields.extract::<Vec<f64>>()?;
+    let sigma_array = sigmas.extract::<Vec<f64>>()?;
+
+    let len = s_array.len();
+
+    let mut delta_vec = Vec::with_capacity(len);
+    let mut gamma_vec = Vec::with_capacity(len);
+    let mut vega_vec = Vec::with_capacity(len);
+    let mut theta_vec = Vec::with_capacity(len);
+    let mut rho_vec = Vec::with_capacity(len);
+
+    for i in 0..len {
+        let s = s_array[i];
+        let k = k_array[i];
+        let t = t_array[i];
+        let r = r_array[i];
+        let q = q_array[i];
+        let sigma = sigma_array[i];
+
+        let delta = if is_call {
+            quantforge_core::compute::american::american_call_delta(s, k, t, r, q, sigma)
+        } else {
+            quantforge_core::compute::american::american_put_delta(s, k, t, r, q, sigma)
+        };
+
+        let gamma = quantforge_core::compute::american::american_call_gamma(s, k, t, r, q, sigma);
+
+        let vega = if is_call {
+            quantforge_core::compute::american::american_call_vega(s, k, t, r, q, sigma)
+        } else {
+            quantforge_core::compute::american::american_put_vega(s, k, t, r, q, sigma)
+        };
+
+        let theta = if is_call {
+            quantforge_core::compute::american::american_call_theta(s, k, t, r, q, sigma)
+        } else {
+            quantforge_core::compute::american::american_put_theta(s, k, t, r, q, sigma)
+        };
+
+        let rho = if is_call {
+            quantforge_core::compute::american::american_call_rho(s, k, t, r, q, sigma)
+        } else {
+            quantforge_core::compute::american::american_put_rho(s, k, t, r, q, sigma)
+        };
+
+        delta_vec.push(delta);
+        gamma_vec.push(gamma);
+        vega_vec.push(vega);
+        theta_vec.push(theta);
+        rho_vec.push(rho);
+    }
+
+    // Create output dictionary
+    let greeks_dict = PyDict::new(py);
+    greeks_dict.set_item("delta", delta_vec)?;
+    greeks_dict.set_item("gamma", gamma_vec)?;
+    greeks_dict.set_item("vega", vega_vec)?;
+    greeks_dict.set_item("theta", theta_vec)?;
+    greeks_dict.set_item("rho", rho_vec)?;
+    greeks_dict.set_item("dividend_rho", vec![0.0; len])?;
+
+    Ok(greeks_dict.into())
+}
+
+/// American option implied volatility batch processing
+#[pyfunction]
+#[pyo3(signature = (option_prices, spots, strikes, times, rates, dividend_yields, is_call=true))]
+#[allow(clippy::too_many_arguments)]
+pub fn american_implied_volatility_batch(
+    py: Python,
+    option_prices: &Bound<'_, PyAny>,
+    spots: &Bound<'_, PyAny>,
+    strikes: &Bound<'_, PyAny>,
+    times: &Bound<'_, PyAny>,
+    rates: &Bound<'_, PyAny>,
+    dividend_yields: &Bound<'_, PyAny>,
+    is_call: bool,
+) -> PyResult<PyObject> {
+    let price_array = option_prices.extract::<Vec<f64>>()?;
+    let s_array = spots.extract::<Vec<f64>>()?;
+    let k_array = strikes.extract::<Vec<f64>>()?;
+    let t_array = times.extract::<Vec<f64>>()?;
+    let r_array = rates.extract::<Vec<f64>>()?;
+    let q_array = dividend_yields.extract::<Vec<f64>>()?;
+
+    let len = price_array.len();
+
+    let mut results = Vec::with_capacity(len);
+
+    for i in 0..len {
+        let price = price_array[i];
+        let s = s_array[i];
+        let k = k_array[i];
+        let t = t_array[i];
+        let r = r_array[i];
+        let q = q_array[i];
+
+        // Simple Newton-Raphson implied volatility
+        let mut sigma = 0.2; // Initial guess
+        let mut converged = false;
+
+        for _ in 0..100 {
+            let calc_price = if is_call {
+                quantforge_core::compute::american::american_call_scalar(s, k, t, r, q, sigma)
+            } else {
+                quantforge_core::compute::american::american_put_scalar(s, k, t, r, q, sigma)
+            };
+
+            let vega = if is_call {
+                quantforge_core::compute::american::american_call_vega(s, k, t, r, q, sigma)
+            } else {
+                quantforge_core::compute::american::american_put_vega(s, k, t, r, q, sigma)
+            };
+
+            let diff = calc_price - price;
+            if diff.abs() < 1e-6 {
+                converged = true;
+                break;
+            }
+
+            sigma -= diff / (vega * 100.0);
+            sigma = sigma.clamp(0.001, 5.0);
+        }
+
+        results.push(if converged { sigma } else { f64::NAN });
+    }
+
+    Ok(PyList::new(py, results)?.into())
 }
 
 // ============================================================================
@@ -739,10 +1138,10 @@ pub fn merton_greeks<'py>(
 ) -> PyResult<Bound<'py, PyDict>> {
     validate_scalar_inputs_detailed(s, k, t, r, sigma)?;
     // Allow negative dividend (storage cost) within reasonable range
-    if q < -1.0 || q > 1.0 {
-        return Err(PyValueError::new_err(
-            format!("dividend_yield out of range [-1.0, 1.0] (got {q})")
-        ));
+    if !(-1.0..=1.0).contains(&q) {
+        return Err(PyValueError::new_err(format!(
+            "dividend_yield out of range [-1.0, 1.0] (got {q})"
+        )));
     }
 
     // Use Merton-specific Greeks from core implementation
@@ -754,16 +1153,40 @@ pub fn merton_greeks<'py>(
     let dividend_yields = Float64Array::from(vec![q]);
 
     // Use Merton Greeks which properly account for dividends
-    let delta_arc = Merton::delta(&spots, &strikes, &times, &rates, &dividend_yields, &sigmas, is_call)
-        .map_err(|e| PyValueError::new_err(e.to_string()))?;
+    let delta_arc = Merton::delta(
+        &spots,
+        &strikes,
+        &times,
+        &rates,
+        &dividend_yields,
+        &sigmas,
+        is_call,
+    )
+    .map_err(|e| PyValueError::new_err(e.to_string()))?;
     let gamma_arc = Merton::gamma(&spots, &strikes, &times, &rates, &dividend_yields, &sigmas)
         .map_err(|e| PyValueError::new_err(e.to_string()))?;
     let vega_arc = Merton::vega(&spots, &strikes, &times, &rates, &dividend_yields, &sigmas)
         .map_err(|e| PyValueError::new_err(e.to_string()))?;
-    let theta_arc = Merton::theta(&spots, &strikes, &times, &rates, &dividend_yields, &sigmas, is_call)
-        .map_err(|e| PyValueError::new_err(e.to_string()))?;
-    let rho_arc = Merton::rho(&spots, &strikes, &times, &rates, &dividend_yields, &sigmas, is_call)
-        .map_err(|e| PyValueError::new_err(e.to_string()))?;
+    let theta_arc = Merton::theta(
+        &spots,
+        &strikes,
+        &times,
+        &rates,
+        &dividend_yields,
+        &sigmas,
+        is_call,
+    )
+    .map_err(|e| PyValueError::new_err(e.to_string()))?;
+    let rho_arc = Merton::rho(
+        &spots,
+        &strikes,
+        &times,
+        &rates,
+        &dividend_yields,
+        &sigmas,
+        is_call,
+    )
+    .map_err(|e| PyValueError::new_err(e.to_string()))?;
 
     // Extract scalar values
     let delta = delta_arc
@@ -793,9 +1216,17 @@ pub fn merton_greeks<'py>(
         .value(0);
 
     // Add dividend_rho from Merton model
-    let dividend_rho_arc = Merton::dividend_rho(&spots, &strikes, &times, &rates, &dividend_yields, &sigmas, is_call)
-        .map_err(|e| PyValueError::new_err(e.to_string()))?;
-    
+    let dividend_rho_arc = Merton::dividend_rho(
+        &spots,
+        &strikes,
+        &times,
+        &rates,
+        &dividend_yields,
+        &sigmas,
+        is_call,
+    )
+    .map_err(|e| PyValueError::new_err(e.to_string()))?;
+
     let dividend_rho = dividend_rho_arc
         .as_any()
         .downcast_ref::<Float64Array>()
@@ -841,21 +1272,51 @@ pub fn arrow_merton_call_price(
     let params = parse_merton_params(py, spots, strikes, times, rates, dividend_yields, sigmas)?;
 
     // Extract arrays
-    let spots_f64 = params.spots.as_ref().as_any().downcast_ref::<Float64Array>()
+    let spots_f64 = params
+        .spots
+        .as_ref()
+        .as_any()
+        .downcast_ref::<Float64Array>()
         .ok_or_else(|| ArrowError::CastError("spots must be Float64Array".to_string()))?;
-    let strikes_f64 = params.strikes.as_ref().as_any().downcast_ref::<Float64Array>()
+    let strikes_f64 = params
+        .strikes
+        .as_ref()
+        .as_any()
+        .downcast_ref::<Float64Array>()
         .ok_or_else(|| ArrowError::CastError("strikes must be Float64Array".to_string()))?;
-    let times_f64 = params.times.as_ref().as_any().downcast_ref::<Float64Array>()
+    let times_f64 = params
+        .times
+        .as_ref()
+        .as_any()
+        .downcast_ref::<Float64Array>()
         .ok_or_else(|| ArrowError::CastError("times must be Float64Array".to_string()))?;
-    let rates_f64 = params.rates.as_ref().as_any().downcast_ref::<Float64Array>()
+    let rates_f64 = params
+        .rates
+        .as_ref()
+        .as_any()
+        .downcast_ref::<Float64Array>()
         .ok_or_else(|| ArrowError::CastError("rates must be Float64Array".to_string()))?;
-    let dividend_yields_f64 = params.dividend_yields.as_ref().as_any().downcast_ref::<Float64Array>()
+    let dividend_yields_f64 = params
+        .dividend_yields
+        .as_ref()
+        .as_any()
+        .downcast_ref::<Float64Array>()
         .ok_or_else(|| ArrowError::CastError("dividend_yields must be Float64Array".to_string()))?;
-    let sigmas_f64 = params.sigmas.as_ref().as_any().downcast_ref::<Float64Array>()
+    let sigmas_f64 = params
+        .sigmas
+        .as_ref()
+        .as_any()
+        .downcast_ref::<Float64Array>()
         .ok_or_else(|| ArrowError::CastError("sigmas must be Float64Array".to_string()))?;
 
     // Validate arrays
-    validate_black_scholes_arrays_with_rates(spots_f64, strikes_f64, times_f64, rates_f64, sigmas_f64)?;
+    validate_black_scholes_arrays_with_rates(
+        spots_f64,
+        strikes_f64,
+        times_f64,
+        rates_f64,
+        sigmas_f64,
+    )?;
 
     // Compute using Merton model with GIL released
     let result_arc = py
@@ -918,21 +1379,51 @@ pub fn arrow_merton_put_price(
     let params = parse_merton_params(py, spots, strikes, times, rates, dividend_yields, sigmas)?;
 
     // Extract arrays
-    let spots_f64 = params.spots.as_ref().as_any().downcast_ref::<Float64Array>()
+    let spots_f64 = params
+        .spots
+        .as_ref()
+        .as_any()
+        .downcast_ref::<Float64Array>()
         .ok_or_else(|| ArrowError::CastError("spots must be Float64Array".to_string()))?;
-    let strikes_f64 = params.strikes.as_ref().as_any().downcast_ref::<Float64Array>()
+    let strikes_f64 = params
+        .strikes
+        .as_ref()
+        .as_any()
+        .downcast_ref::<Float64Array>()
         .ok_or_else(|| ArrowError::CastError("strikes must be Float64Array".to_string()))?;
-    let times_f64 = params.times.as_ref().as_any().downcast_ref::<Float64Array>()
+    let times_f64 = params
+        .times
+        .as_ref()
+        .as_any()
+        .downcast_ref::<Float64Array>()
         .ok_or_else(|| ArrowError::CastError("times must be Float64Array".to_string()))?;
-    let rates_f64 = params.rates.as_ref().as_any().downcast_ref::<Float64Array>()
+    let rates_f64 = params
+        .rates
+        .as_ref()
+        .as_any()
+        .downcast_ref::<Float64Array>()
         .ok_or_else(|| ArrowError::CastError("rates must be Float64Array".to_string()))?;
-    let dividend_yields_f64 = params.dividend_yields.as_ref().as_any().downcast_ref::<Float64Array>()
+    let dividend_yields_f64 = params
+        .dividend_yields
+        .as_ref()
+        .as_any()
+        .downcast_ref::<Float64Array>()
         .ok_or_else(|| ArrowError::CastError("dividend_yields must be Float64Array".to_string()))?;
-    let sigmas_f64 = params.sigmas.as_ref().as_any().downcast_ref::<Float64Array>()
+    let sigmas_f64 = params
+        .sigmas
+        .as_ref()
+        .as_any()
+        .downcast_ref::<Float64Array>()
         .ok_or_else(|| ArrowError::CastError("sigmas must be Float64Array".to_string()))?;
 
     // Validate arrays
-    validate_black_scholes_arrays_with_rates(spots_f64, strikes_f64, times_f64, rates_f64, sigmas_f64)?;
+    validate_black_scholes_arrays_with_rates(
+        spots_f64,
+        strikes_f64,
+        times_f64,
+        rates_f64,
+        sigmas_f64,
+    )?;
 
     // Compute using Merton model with GIL released
     let result_arc = py
@@ -998,21 +1489,51 @@ pub fn arrow_merton_greeks(
     let params = parse_merton_params(py, spots, strikes, times, rates, dividend_yields, sigmas)?;
 
     // Extract arrays
-    let spots_f64 = params.spots.as_ref().as_any().downcast_ref::<Float64Array>()
+    let spots_f64 = params
+        .spots
+        .as_ref()
+        .as_any()
+        .downcast_ref::<Float64Array>()
         .ok_or_else(|| ArrowError::CastError("spots must be Float64Array".to_string()))?;
-    let strikes_f64 = params.strikes.as_ref().as_any().downcast_ref::<Float64Array>()
+    let strikes_f64 = params
+        .strikes
+        .as_ref()
+        .as_any()
+        .downcast_ref::<Float64Array>()
         .ok_or_else(|| ArrowError::CastError("strikes must be Float64Array".to_string()))?;
-    let times_f64 = params.times.as_ref().as_any().downcast_ref::<Float64Array>()
+    let times_f64 = params
+        .times
+        .as_ref()
+        .as_any()
+        .downcast_ref::<Float64Array>()
         .ok_or_else(|| ArrowError::CastError("times must be Float64Array".to_string()))?;
-    let rates_f64 = params.rates.as_ref().as_any().downcast_ref::<Float64Array>()
+    let rates_f64 = params
+        .rates
+        .as_ref()
+        .as_any()
+        .downcast_ref::<Float64Array>()
         .ok_or_else(|| ArrowError::CastError("rates must be Float64Array".to_string()))?;
-    let dividend_yields_f64 = params.dividend_yields.as_ref().as_any().downcast_ref::<Float64Array>()
+    let dividend_yields_f64 = params
+        .dividend_yields
+        .as_ref()
+        .as_any()
+        .downcast_ref::<Float64Array>()
         .ok_or_else(|| ArrowError::CastError("dividend_yields must be Float64Array".to_string()))?;
-    let sigmas_f64 = params.sigmas.as_ref().as_any().downcast_ref::<Float64Array>()
+    let sigmas_f64 = params
+        .sigmas
+        .as_ref()
+        .as_any()
+        .downcast_ref::<Float64Array>()
         .ok_or_else(|| ArrowError::CastError("sigmas must be Float64Array".to_string()))?;
 
     // Validate arrays
-    validate_black_scholes_arrays_with_rates(spots_f64, strikes_f64, times_f64, rates_f64, sigmas_f64)?;
+    validate_black_scholes_arrays_with_rates(
+        spots_f64,
+        strikes_f64,
+        times_f64,
+        rates_f64,
+        sigmas_f64,
+    )?;
 
     // Compute Greeks using quantforge-core Merton (release GIL)
     let (delta_arc, gamma_arc, vega_arc, theta_arc, rho_arc, dividend_rho_arc) = py
@@ -1104,7 +1625,16 @@ pub fn merton_greeks_batch(
     is_calls: bool,
 ) -> PyArrowResult<PyObject> {
     // Use existing arrow_merton_greeks function
-    arrow_merton_greeks(py, spots, strikes, times, rates, dividend_yields, sigmas, is_calls)
+    arrow_merton_greeks(
+        py,
+        spots,
+        strikes,
+        times,
+        rates,
+        dividend_yields,
+        sigmas,
+        is_calls,
+    )
 }
 
 /// Merton implied volatility (scalar)
@@ -1124,10 +1654,10 @@ pub fn merton_implied_volatility(
         return Err(PyValueError::new_err("price, s, k, and t must be positive"));
     }
     // Allow negative dividend (storage cost) within reasonable range
-    if q < -1.0 || q > 1.0 {
-        return Err(PyValueError::new_err(
-            format!("dividend_yield out of range [-1.0, 1.0] (got {q})")
-        ));
+    if !(-1.0..=1.0).contains(&q) {
+        return Err(PyValueError::new_err(format!(
+            "dividend_yield out of range [-1.0, 1.0] (got {q})"
+        )));
     }
 
     // Newton-Raphson method for Merton
@@ -1525,7 +2055,7 @@ pub fn register_arrow_functions(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(arrow_merton_call_price, m)?)?;
     m.add_function(wrap_pyfunction!(arrow_merton_put_price, m)?)?;
     m.add_function(wrap_pyfunction!(arrow_merton_greeks, m)?)?;
-    
+
     // Merton scalar and batch functions
     m.add_function(wrap_pyfunction!(merton_call_price, m)?)?;
     m.add_function(wrap_pyfunction!(merton_put_price, m)?)?;

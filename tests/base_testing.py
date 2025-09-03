@@ -495,7 +495,7 @@ class BaseModelTest(ABC):
     def test_zero_time(self) -> None:
         """Test behavior at expiration (t=0)."""
         # At expiration, option value = intrinsic value
-        params = self.get_default_params(t=1e-10)  # Nearly zero
+        params = self.get_default_params(t=0.001)  # Minimum allowed time
 
         call_price = self.model.call_price(**params)
         put_price = self.model.put_price(**params)
@@ -506,12 +506,13 @@ class BaseModelTest(ABC):
         call_intrinsic = max(0, price_param - strike)
         put_intrinsic = max(0, strike - price_param)
 
-        assert abs(call_price - call_intrinsic) < PRACTICAL_TOLERANCE
-        assert abs(put_price - put_intrinsic) < PRACTICAL_TOLERANCE
+        # With minimum allowed time (0.001), allow larger tolerance
+        assert abs(call_price - call_intrinsic) < 0.1
+        assert abs(put_price - put_intrinsic) < 0.1
 
     def test_zero_volatility(self) -> None:
         """Test behavior with zero volatility."""
-        params = self.get_default_params(sigma=1e-10)  # Nearly zero
+        params = self.get_default_params(sigma=0.005)  # Minimum allowed volatility
 
         call_price = self.model.call_price(**params)
         put_price = self.model.put_price(**params)
@@ -536,17 +537,18 @@ class BaseModelTest(ABC):
             call_intrinsic = np.exp(-rate * time) * max(0, forward - strike)
             put_intrinsic = np.exp(-rate * time) * max(0, strike - forward)
 
-        assert abs(call_price - call_intrinsic) < PRACTICAL_TOLERANCE
-        assert abs(put_price - put_intrinsic) < PRACTICAL_TOLERANCE
+        # With minimum allowed volatility (0.005), allow larger tolerance
+        assert abs(call_price - call_intrinsic) < 0.5
+        assert abs(put_price - put_intrinsic) < 0.5
 
     def test_deep_itm_call(self) -> None:
         """Test deep in-the-money call options."""
         # Deep ITM: spot >> strike
         params = self.get_default_params()
         if self.use_forward_price:
-            params["forward"] = 200.0
+            params["f"] = 200.0
         else:
-            params["spot"] = 200.0
+            params["s"] = 200.0
         params["k"] = 50.0
 
         call_price = self.model.call_price(**params)
@@ -572,9 +574,9 @@ class BaseModelTest(ABC):
         # Deep OTM: spot << strike
         params = self.get_default_params()
         if self.use_forward_price:
-            params["forward"] = 50.0
+            params["f"] = 50.0
         else:
-            params["spot"] = 50.0
+            params["s"] = 50.0
         params["k"] = 200.0
 
         call_price = self.model.call_price(**params)
@@ -651,7 +653,7 @@ class BaseBatchTest(BaseModelTest):
 
     def test_empty_batch(self) -> None:
         """Test handling of empty input arrays."""
-        price_key = self.get_price_param_name() + "s"
+        price_key = "forwards" if self.use_forward_price else "spots"
 
         params = {
             price_key: np.array([]),

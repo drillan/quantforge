@@ -55,7 +55,7 @@ def test_invalid_inputs() -> None:
         black_scholes.call_price(100.0, 100.0, -1.0, 0.05, 0.2)
 
     # 負のボラティリティ
-    with pytest.raises(ValueError, match="sigma must be positive"):
+    with pytest.raises(ValueError, match="volatility must be positive"):
         black_scholes.call_price(100.0, 100.0, 1.0, 0.05, -0.2)
 
 

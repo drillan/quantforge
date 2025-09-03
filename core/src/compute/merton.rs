@@ -8,8 +8,8 @@ use std::sync::Arc;
 use super::formulas::{
     merton_call_scalar, merton_d1_d2, merton_delta_call_scalar, merton_delta_put_scalar,
     merton_dividend_rho_call_scalar, merton_dividend_rho_put_scalar, merton_gamma_scalar,
-    merton_put_scalar, merton_rho_call_scalar, merton_rho_put_scalar,
-    merton_theta_call_scalar, merton_theta_put_scalar, merton_vega_scalar,
+    merton_put_scalar, merton_rho_call_scalar, merton_rho_put_scalar, merton_theta_call_scalar,
+    merton_theta_put_scalar, merton_vega_scalar,
 };
 use super::{get_scalar_or_array_value, validate_broadcast_compatibility};
 use crate::constants::get_parallel_threshold;
@@ -47,12 +47,12 @@ impl Merton {
             dividend_yields,
             sigmas,
         ])?;
-        
+
         // Handle empty arrays
         if len == 0 {
             return Ok(Arc::new(Float64Builder::new().finish()));
         }
-        
+
         let mut builder = Float64Builder::with_capacity(len);
 
         if len >= get_parallel_threshold() {
@@ -122,12 +122,12 @@ impl Merton {
             dividend_yields,
             sigmas,
         ])?;
-        
+
         // Handle empty arrays
         if len == 0 {
             return Ok(Arc::new(Float64Builder::new().finish()));
         }
-        
+
         let mut builder = Float64Builder::with_capacity(len);
 
         if len >= get_parallel_threshold() {
@@ -399,12 +399,12 @@ impl Merton {
             dividend_yields,
             sigmas,
         ])?;
-        
+
         // Handle empty arrays
         if len == 0 {
             return Ok(Arc::new(Float64Builder::new().finish()));
         }
-        
+
         let mut builder = Float64Builder::with_capacity(len);
 
         if len >= get_parallel_threshold() {
@@ -475,12 +475,12 @@ impl Merton {
             dividend_yields,
             sigmas,
         ])?;
-        
+
         // Handle empty arrays
         if len == 0 {
             return Ok(Arc::new(Float64Builder::new().finish()));
         }
-        
+
         let mut builder = Float64Builder::with_capacity(len);
 
         if len >= get_parallel_threshold() {
@@ -542,12 +542,12 @@ impl Merton {
             dividend_yields,
             sigmas,
         ])?;
-        
+
         // Handle empty arrays
         if len == 0 {
             return Ok(Arc::new(Float64Builder::new().finish()));
         }
-        
+
         let mut builder = Float64Builder::with_capacity(len);
 
         if len >= get_parallel_threshold() {
@@ -611,12 +611,12 @@ impl Merton {
             dividend_yields,
             sigmas,
         ])?;
-        
+
         // Handle empty arrays
         if len == 0 {
             return Ok(Arc::new(Float64Builder::new().finish()));
         }
-        
+
         let mut builder = Float64Builder::with_capacity(len);
 
         if len >= get_parallel_threshold() {
@@ -689,12 +689,12 @@ impl Merton {
             dividend_yields,
             sigmas,
         ])?;
-        
+
         // Handle empty arrays
         if len == 0 {
             return Ok(Arc::new(Float64Builder::new().finish()));
         }
-        
+
         let mut builder = Float64Builder::with_capacity(len);
 
         if len >= get_parallel_threshold() {
@@ -767,12 +767,12 @@ impl Merton {
             dividend_yields,
             sigmas,
         ])?;
-        
+
         // Handle empty arrays
         if len == 0 {
             return Ok(Arc::new(Float64Builder::new().finish()));
         }
-        
+
         let mut builder = Float64Builder::with_capacity(len);
 
         if len >= get_parallel_threshold() {

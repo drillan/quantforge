@@ -328,7 +328,11 @@ pub fn create_merton_greeks_dict<'py>(
     result_dict.set_item(field_names::RHO, rho_array.to_arro3(py)?)?;
 
     // Dividend Rho (Merton-specific)
-    let dividend_rho_field = Arc::new(Field::new(field_names::DIVIDEND_RHO, DataType::Float64, false));
+    let dividend_rho_field = Arc::new(Field::new(
+        field_names::DIVIDEND_RHO,
+        DataType::Float64,
+        false,
+    ));
     let dividend_rho_array = PyArray::new(dividend_rho_arc, dividend_rho_field);
     result_dict.set_item(field_names::DIVIDEND_RHO, dividend_rho_array.to_arro3(py)?)?;
 
@@ -340,57 +344,75 @@ pub fn create_merton_greeks_dict<'py>(
 pub fn validate_scalar_inputs_detailed(s: f64, k: f64, t: f64, r: f64, sigma: f64) -> PyResult<()> {
     // Check for NaN and Inf first
     if s.is_nan() || !s.is_finite() {
-        return Err(PyValueError::new_err(format!("spot must be finite (got {s})"))); 
+        return Err(PyValueError::new_err(format!(
+            "spot must be finite (got {s})"
+        )));
     }
     if k.is_nan() || !k.is_finite() {
-        return Err(PyValueError::new_err(format!("strike must be finite (got {k})"))); 
+        return Err(PyValueError::new_err(format!(
+            "strike must be finite (got {k})"
+        )));
     }
     if t.is_nan() || !t.is_finite() {
-        return Err(PyValueError::new_err(format!("time must be finite (got {t})"))); 
+        return Err(PyValueError::new_err(format!(
+            "time must be finite (got {t})"
+        )));
     }
     if r.is_nan() || !r.is_finite() {
-        return Err(PyValueError::new_err(format!("rate must be finite (got {r})"))); 
+        return Err(PyValueError::new_err(format!(
+            "rate must be finite (got {r})"
+        )));
     }
     if sigma.is_nan() || !sigma.is_finite() {
-        return Err(PyValueError::new_err(format!("volatility must be finite (got {sigma})"))); 
+        return Err(PyValueError::new_err(format!(
+            "volatility must be finite (got {sigma})"
+        )));
     }
 
     // Check for positive values where required
     if s <= 0.0 {
-        return Err(PyValueError::new_err(format!("spot must be positive (got {s})"))); 
+        return Err(PyValueError::new_err(format!(
+            "spot must be positive (got {s})"
+        )));
     }
     if k <= 0.0 {
-        return Err(PyValueError::new_err(format!("strike must be positive (got {k})"))); 
+        return Err(PyValueError::new_err(format!(
+            "strike must be positive (got {k})"
+        )));
     }
     if t <= 0.0 {
-        return Err(PyValueError::new_err(format!("time must be positive (got {t})"))); 
+        return Err(PyValueError::new_err(format!(
+            "time must be positive (got {t})"
+        )));
     }
     if sigma <= 0.0 {
-        return Err(PyValueError::new_err(format!("volatility must be positive (got {sigma})"))); 
+        return Err(PyValueError::new_err(format!(
+            "volatility must be positive (got {sigma})"
+        )));
     }
 
     // Check valid ranges
-    if s < MIN_PRICE || s >= MAX_PRICE {
+    if !(MIN_PRICE..MAX_PRICE).contains(&s) {
         return Err(PyValueError::new_err(format!(
             "spot out of range [{MIN_PRICE}, {MAX_PRICE}) (got {s})"
         )));
     }
-    if k < MIN_PRICE || k >= MAX_PRICE {
+    if !(MIN_PRICE..MAX_PRICE).contains(&k) {
         return Err(PyValueError::new_err(format!(
             "strike out of range [{MIN_PRICE}, {MAX_PRICE}) (got {k})"
         )));
     }
-    if t < MIN_TIME || t > MAX_TIME {
+    if !(MIN_TIME..=MAX_TIME).contains(&t) {
         return Err(PyValueError::new_err(format!(
             "time out of range [{MIN_TIME}, {MAX_TIME}] (got {t})"
         )));
     }
-    if r < MIN_RATE || r > MAX_RATE {
+    if !(MIN_RATE..=MAX_RATE).contains(&r) {
         return Err(PyValueError::new_err(format!(
             "rate out of range [{MIN_RATE}, {MAX_RATE}] (got {r})"
         )));
     }
-    if sigma < MIN_VOLATILITY_PRACTICAL || sigma > MAX_VOLATILITY {
+    if !(MIN_VOLATILITY_PRACTICAL..=MAX_VOLATILITY).contains(&sigma) {
         return Err(PyValueError::new_err(format!(
             "volatility out of range [{MIN_VOLATILITY_PRACTICAL}, {MAX_VOLATILITY}] (got {sigma})"
         )));
@@ -401,60 +423,84 @@ pub fn validate_scalar_inputs_detailed(s: f64, k: f64, t: f64, r: f64, sigma: f6
 
 /// Validate Black76 scalar inputs with detailed error messages
 #[inline(always)]
-pub fn validate_black76_scalar_inputs_detailed(f: f64, k: f64, t: f64, r: f64, sigma: f64) -> PyResult<()> {
+pub fn validate_black76_scalar_inputs_detailed(
+    f: f64,
+    k: f64,
+    t: f64,
+    r: f64,
+    sigma: f64,
+) -> PyResult<()> {
     // Check for NaN and Inf first
     if f.is_nan() || !f.is_finite() {
-        return Err(PyValueError::new_err(format!("forward must be finite (got {f})"))); 
+        return Err(PyValueError::new_err(format!(
+            "forward must be finite (got {f})"
+        )));
     }
     if k.is_nan() || !k.is_finite() {
-        return Err(PyValueError::new_err(format!("strike must be finite (got {k})"))); 
+        return Err(PyValueError::new_err(format!(
+            "strike must be finite (got {k})"
+        )));
     }
     if t.is_nan() || !t.is_finite() {
-        return Err(PyValueError::new_err(format!("time must be finite (got {t})"))); 
+        return Err(PyValueError::new_err(format!(
+            "time must be finite (got {t})"
+        )));
     }
     if r.is_nan() || !r.is_finite() {
-        return Err(PyValueError::new_err(format!("rate must be finite (got {r})"))); 
+        return Err(PyValueError::new_err(format!(
+            "rate must be finite (got {r})"
+        )));
     }
     if sigma.is_nan() || !sigma.is_finite() {
-        return Err(PyValueError::new_err(format!("volatility must be finite (got {sigma})"))); 
+        return Err(PyValueError::new_err(format!(
+            "volatility must be finite (got {sigma})"
+        )));
     }
 
     // Check for positive values where required
     if f <= 0.0 {
-        return Err(PyValueError::new_err(format!("forward must be positive (got {f})"))); 
+        return Err(PyValueError::new_err(format!(
+            "forward must be positive (got {f})"
+        )));
     }
     if k <= 0.0 {
-        return Err(PyValueError::new_err(format!("strike must be positive (got {k})"))); 
+        return Err(PyValueError::new_err(format!(
+            "strike must be positive (got {k})"
+        )));
     }
     if t <= 0.0 {
-        return Err(PyValueError::new_err(format!("time must be positive (got {t})"))); 
+        return Err(PyValueError::new_err(format!(
+            "time must be positive (got {t})"
+        )));
     }
     if sigma <= 0.0 {
-        return Err(PyValueError::new_err(format!("volatility must be positive (got {sigma})"))); 
+        return Err(PyValueError::new_err(format!(
+            "volatility must be positive (got {sigma})"
+        )));
     }
 
     // Check valid ranges
-    if f < MIN_PRICE || f >= MAX_PRICE {
+    if !(MIN_PRICE..MAX_PRICE).contains(&f) {
         return Err(PyValueError::new_err(format!(
             "forward out of range [{MIN_PRICE}, {MAX_PRICE}) (got {f})"
         )));
     }
-    if k < MIN_PRICE || k >= MAX_PRICE {
+    if !(MIN_PRICE..MAX_PRICE).contains(&k) {
         return Err(PyValueError::new_err(format!(
             "strike out of range [{MIN_PRICE}, {MAX_PRICE}) (got {k})"
         )));
     }
-    if t < MIN_TIME || t > MAX_TIME {
+    if !(MIN_TIME..=MAX_TIME).contains(&t) {
         return Err(PyValueError::new_err(format!(
             "time out of range [{MIN_TIME}, {MAX_TIME}] (got {t})"
         )));
     }
-    if r < MIN_RATE || r > MAX_RATE {
+    if !(MIN_RATE..=MAX_RATE).contains(&r) {
         return Err(PyValueError::new_err(format!(
             "rate out of range [{MIN_RATE}, {MAX_RATE}] (got {r})"
         )));
     }
-    if sigma < MIN_VOLATILITY_PRACTICAL || sigma > MAX_VOLATILITY {
+    if !(MIN_VOLATILITY_PRACTICAL..=MAX_VOLATILITY).contains(&sigma) {
         return Err(PyValueError::new_err(format!(
             "volatility out of range [{MIN_VOLATILITY_PRACTICAL}, {MAX_VOLATILITY}] (got {sigma})"
         )));
@@ -547,7 +593,7 @@ pub fn validate_black_scholes_arrays_with_rates(
                 "rate must be finite (got {val} at index {i})"
             )));
         }
-        if val < MIN_RATE || val > MAX_RATE {
+        if !(MIN_RATE..=MAX_RATE).contains(&val) {
             return Err(ArrowError::ComputeError(format!(
                 "rate out of range [{MIN_RATE}, {MAX_RATE}] (got {val} at index {i})"
             )));

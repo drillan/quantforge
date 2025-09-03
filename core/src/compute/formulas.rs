@@ -238,9 +238,8 @@ pub fn merton_theta_call_scalar(s: f64, k: f64, t: f64, r: f64, q: f64, sigma: f
     let sqrt_t = t.sqrt();
     let exp_qt = (-q * t).exp();
     let exp_rt = (-r * t).exp();
-    
-    -(s * exp_qt * norm_pdf(d1) * sigma) / (2.0 * sqrt_t)
-        - r * k * exp_rt * norm_cdf(d2)
+
+    -(s * exp_qt * norm_pdf(d1) * sigma) / (2.0 * sqrt_t) - r * k * exp_rt * norm_cdf(d2)
         + q * s * exp_qt * norm_cdf(d1)
 }
 
@@ -253,9 +252,8 @@ pub fn merton_theta_put_scalar(s: f64, k: f64, t: f64, r: f64, q: f64, sigma: f6
     let sqrt_t = t.sqrt();
     let exp_qt = (-q * t).exp();
     let exp_rt = (-r * t).exp();
-    
-    -(s * exp_qt * norm_pdf(d1) * sigma) / (2.0 * sqrt_t)
-        + r * k * exp_rt * norm_cdf(-d2)
+
+    -(s * exp_qt * norm_pdf(d1) * sigma) / (2.0 * sqrt_t) + r * k * exp_rt * norm_cdf(-d2)
         - q * s * exp_qt * norm_cdf(-d1)
 }
 
