@@ -86,7 +86,7 @@ mod tests {
         assert_eq!(greeks.num_columns(), 5);
 
         // Check field names
-        let fields: Vec<String> = greeks.fields().iter().map(|f| f.name().clone()).collect();
+        let fields: Vec<&str> = greeks.fields().iter().map(|f| f.name().as_str()).collect();
 
         assert_eq!(fields, vec!["delta", "gamma", "vega", "theta", "rho"]);
     }

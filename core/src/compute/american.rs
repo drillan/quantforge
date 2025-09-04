@@ -12,8 +12,9 @@ use std::sync::Arc;
 use super::formulas::black_scholes_call_scalar;
 use super::{get_scalar_or_array_value, validate_broadcast_compatibility};
 use crate::constants::{
-    get_parallel_threshold, BS2002_BETA_MIN, BS2002_CONVERGENCE_TOL, BS2002_H_FACTOR,
-    EXERCISE_BOUNDARY_MAX_ITER, HALF,
+    get_parallel_threshold, BASIS_POINT_MULTIPLIER, BS2002_BETA_MIN, BS2002_CONVERGENCE_TOL,
+    BS2002_H_FACTOR, DAYS_PER_YEAR, EXERCISE_BOUNDARY_MAX_ITER, GREEK_PRICE_CHANGE_RATIO,
+    GREEK_RATE_CHANGE, GREEK_VOL_CHANGE, HALF, TIME_NEAR_EXPIRY_THRESHOLD,
 };
 use crate::math::distributions::norm_cdf;
 
@@ -136,12 +137,12 @@ pub fn american_call_scalar(s: f64, k: f64, t: f64, r: f64, q: f64, sigma: f64) 
     }
 
     // Special case: at expiry
-    if t < 1e-10 {
+    if t < TIME_NEAR_EXPIRY_THRESHOLD {
         return (s - k).max(0.0);
     }
 
     // Special case: zero volatility
-    if sigma < 1e-10 {
+    if sigma < TIME_NEAR_EXPIRY_THRESHOLD {
         // Deterministic case
         let future_value = s * ((r - q) * t).exp();
         let pv_strike = k * (-r * t).exp();
@@ -164,7 +165,7 @@ pub fn american_put_scalar(s: f64, k: f64, t: f64, r: f64, q: f64, sigma: f64) -
     }
 
     // Special case: at expiry
-    if t < 1e-10 {
+    if t < TIME_NEAR_EXPIRY_THRESHOLD {
         return (k - s).max(0.0);
     }
 
@@ -248,7 +249,7 @@ pub fn american_binomial(
 /// Calculate delta using finite difference
 #[inline(always)]
 pub fn american_call_delta(s: f64, k: f64, t: f64, r: f64, q: f64, sigma: f64) -> f64 {
-    let h = 0.01 * s; // 1% change
+    let h = GREEK_PRICE_CHANGE_RATIO * s;
     let price_up = american_call_scalar(s + h, k, t, r, q, sigma);
     let price_down = american_call_scalar(s - h, k, t, r, q, sigma);
     (price_up - price_down) / (2.0 * h)
@@ -257,7 +258,7 @@ pub fn american_call_delta(s: f64, k: f64, t: f64, r: f64, q: f64, sigma: f64) -
 /// Calculate delta for put
 #[inline(always)]
 pub fn american_put_delta(s: f64, k: f64, t: f64, r: f64, q: f64, sigma: f64) -> f64 {
-    let h = 0.01 * s; // 1% change
+    let h = GREEK_PRICE_CHANGE_RATIO * s;
     let price_up = american_put_scalar(s + h, k, t, r, q, sigma);
     let price_down = american_put_scalar(s - h, k, t, r, q, sigma);
     (price_up - price_down) / (2.0 * h)
@@ -266,7 +267,7 @@ pub fn american_put_delta(s: f64, k: f64, t: f64, r: f64, q: f64, sigma: f64) ->
 /// Calculate gamma using finite difference
 #[inline(always)]
 pub fn american_call_gamma(s: f64, k: f64, t: f64, r: f64, q: f64, sigma: f64) -> f64 {
-    let h = 0.01 * s; // 1% change
+    let h = GREEK_PRICE_CHANGE_RATIO * s;
     let price_up = american_call_scalar(s + h, k, t, r, q, sigma);
     let price_center = american_call_scalar(s, k, t, r, q, sigma);
     let price_down = american_call_scalar(s - h, k, t, r, q, sigma);
@@ -282,25 +283,25 @@ pub fn american_put_gamma(s: f64, k: f64, t: f64, r: f64, q: f64, sigma: f64) ->
 /// Calculate vega using finite difference
 #[inline(always)]
 pub fn american_call_vega(s: f64, k: f64, t: f64, r: f64, q: f64, sigma: f64) -> f64 {
-    let h = 0.01; // 1% volatility change
+    let h = GREEK_VOL_CHANGE;
     let price_up = american_call_scalar(s, k, t, r, q, sigma + h);
     let price_down = american_call_scalar(s, k, t, r, q, sigma - h);
-    (price_up - price_down) / (2.0 * h) / 100.0 // Convert to per 1% vega
+    (price_up - price_down) / (2.0 * h) / BASIS_POINT_MULTIPLIER
 }
 
 /// Calculate vega for put
 #[inline(always)]
 pub fn american_put_vega(s: f64, k: f64, t: f64, r: f64, q: f64, sigma: f64) -> f64 {
-    let h = 0.01; // 1% volatility change
+    let h = GREEK_VOL_CHANGE;
     let price_up = american_put_scalar(s, k, t, r, q, sigma + h);
     let price_down = american_put_scalar(s, k, t, r, q, sigma - h);
-    (price_up - price_down) / (2.0 * h) / 100.0 // Convert to per 1% vega
+    (price_up - price_down) / (2.0 * h) / BASIS_POINT_MULTIPLIER
 }
 
 /// Calculate theta using finite difference
 #[inline(always)]
 pub fn american_call_theta(s: f64, k: f64, t: f64, r: f64, q: f64, sigma: f64) -> f64 {
-    let h = 1.0 / 365.0; // One day in years
+    let h = 1.0 / DAYS_PER_YEAR;
     if t <= h {
         return 0.0; // Can't calculate theta near expiry
     }
@@ -313,7 +314,7 @@ pub fn american_call_theta(s: f64, k: f64, t: f64, r: f64, q: f64, sigma: f64) -
 /// Calculate theta for put
 #[inline(always)]
 pub fn american_put_theta(s: f64, k: f64, t: f64, r: f64, q: f64, sigma: f64) -> f64 {
-    let h = 1.0 / 365.0; // One day in years
+    let h = 1.0 / DAYS_PER_YEAR;
     if t <= h {
         return 0.0; // Can't calculate theta near expiry
     }
@@ -326,19 +327,19 @@ pub fn american_put_theta(s: f64, k: f64, t: f64, r: f64, q: f64, sigma: f64) ->
 /// Calculate rho using finite difference
 #[inline(always)]
 pub fn american_call_rho(s: f64, k: f64, t: f64, r: f64, q: f64, sigma: f64) -> f64 {
-    let h = 0.0001; // 1 basis point
+    let h = GREEK_RATE_CHANGE;
     let price_up = american_call_scalar(s, k, t, r + h, q, sigma);
     let price_down = american_call_scalar(s, k, t, r - h, q, sigma);
-    (price_up - price_down) / (2.0 * h) / 100.0 // Per 1% change
+    (price_up - price_down) / (2.0 * h) / BASIS_POINT_MULTIPLIER
 }
 
 /// Calculate rho for put
 #[inline(always)]
 pub fn american_put_rho(s: f64, k: f64, t: f64, r: f64, q: f64, sigma: f64) -> f64 {
-    let h = 0.0001; // 1 basis point
+    let h = GREEK_RATE_CHANGE;
     let price_up = american_put_scalar(s, k, t, r + h, q, sigma);
     let price_down = american_put_scalar(s, k, t, r - h, q, sigma);
-    (price_up - price_down) / (2.0 * h) / 100.0 // Per 1% change
+    (price_up - price_down) / (2.0 * h) / BASIS_POINT_MULTIPLIER
 }
 
 // ============================================================================

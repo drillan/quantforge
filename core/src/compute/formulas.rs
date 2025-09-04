@@ -240,7 +240,9 @@ pub fn merton_theta_call_scalar(s: f64, k: f64, t: f64, r: f64, q: f64, sigma: f
     let exp_qt = (-q * t).exp();
     let exp_rt = (-r * t).exp();
 
-    -(s * exp_qt * norm_pdf(d1) * sigma) / (2.0 * sqrt_t) - r * k * exp_rt * norm_cdf(d2)
+    use crate::constants::VOL_SQUARED_HALF;
+    -(s * exp_qt * norm_pdf(d1) * sigma) / (VOL_SQUARED_HALF * sqrt_t)
+        - r * k * exp_rt * norm_cdf(d2)
         + q * s * exp_qt * norm_cdf(d1)
 }
 
@@ -254,7 +256,9 @@ pub fn merton_theta_put_scalar(s: f64, k: f64, t: f64, r: f64, q: f64, sigma: f6
     let exp_qt = (-q * t).exp();
     let exp_rt = (-r * t).exp();
 
-    -(s * exp_qt * norm_pdf(d1) * sigma) / (2.0 * sqrt_t) + r * k * exp_rt * norm_cdf(-d2)
+    use crate::constants::VOL_SQUARED_HALF;
+    -(s * exp_qt * norm_pdf(d1) * sigma) / (VOL_SQUARED_HALF * sqrt_t)
+        + r * k * exp_rt * norm_cdf(-d2)
         - q * s * exp_qt * norm_cdf(-d1)
 }
 
@@ -297,15 +301,20 @@ pub fn merton_dividend_rho_put_scalar(s: f64, k: f64, t: f64, r: f64, q: f64, si
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::constants::{PRACTICAL_TOLERANCE, TEST_BS_PRICE_LOWER, TEST_BS_PRICE_UPPER};
+    use crate::constants::{
+        PRACTICAL_TOLERANCE, TEST_BLACK76_FORMULAS_PRICE_LOWER, TEST_BLACK76_FORMULAS_PRICE_UPPER,
+        TEST_BS_FORMULAS_PRICE_LOWER, TEST_BS_FORMULAS_PRICE_UPPER, TEST_BS_PRICE_LOWER,
+        TEST_BS_PRICE_UPPER, TEST_DIVIDEND_YIELD, TEST_RATE, TEST_SPOT, TEST_STRIKE, TEST_TIME,
+        TEST_VOLATILITY,
+    };
 
     #[test]
     fn test_black_scholes_call_scalar() {
-        let s = 100.0;
-        let k = 100.0;
-        let t = 1.0;
-        let r = 0.05;
-        let sigma = 0.2;
+        let s = TEST_SPOT;
+        let k = TEST_STRIKE;
+        let t = TEST_TIME;
+        let r = TEST_RATE;
+        let sigma = TEST_VOLATILITY;
 
         let price = black_scholes_call_scalar(s, k, t, r, sigma);
 
@@ -318,11 +327,11 @@ mod tests {
 
     #[test]
     fn test_black_scholes_put_scalar() {
-        let s = 100.0;
-        let k = 100.0;
-        let t = 1.0;
-        let r = 0.05;
-        let sigma = 0.2;
+        let s = TEST_SPOT;
+        let k = TEST_STRIKE;
+        let t = TEST_TIME;
+        let r = TEST_RATE;
+        let sigma = TEST_VOLATILITY;
 
         let call_price = black_scholes_call_scalar(s, k, t, r, sigma);
         let put_price = black_scholes_put_scalar(s, k, t, r, sigma);
@@ -346,7 +355,10 @@ mod tests {
         let price = black76_call_scalar(f, k, t, r, sigma);
 
         // ATM先物オプションの期待値（概算）
-        assert!(price > 7.0 && price < 11.0, "Price = {price}");
+        assert!(
+            price > TEST_BLACK76_FORMULAS_PRICE_LOWER && price < TEST_BLACK76_FORMULAS_PRICE_UPPER,
+            "Price = {price}"
+        );
     }
 
     #[test]
@@ -355,12 +367,15 @@ mod tests {
         let k = 100.0;
         let t = 1.0;
         let r = 0.05;
-        let q = 0.02; // 2%配当利回り
+        let q = TEST_DIVIDEND_YIELD;
         let sigma = 0.2;
 
         let price = merton_call_scalar(s, k, t, r, q, sigma);
 
         // 配当ありオプションの期待値
-        assert!(price > 6.0 && price < 10.0, "Price = {price}");
+        assert!(
+            price > TEST_BS_FORMULAS_PRICE_LOWER && price < TEST_BS_FORMULAS_PRICE_UPPER,
+            "Price = {price}"
+        );
     }
 }

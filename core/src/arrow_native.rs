@@ -7,20 +7,12 @@
 use arrow::array::Float64Array;
 use rayon::prelude::*;
 
-// Performance thresholds based on empirical measurements
-const PARALLEL_THRESHOLD: usize = 50_000; // Optimized from original 1,000
+// Use centralized configuration from constants
+use crate::constants::get_parallel_threshold;
 
 // Use existing math functions
+use crate::math::calculate_d1_d2 as calculate_d1_d2_common;
 use crate::math::distributions::norm_cdf;
-
-/// Calculate d1 and d2 for Black-Scholes formula
-#[inline]
-fn calculate_d1_d2(s: f64, k: f64, t: f64, r: f64, sigma: f64) -> (f64, f64) {
-    let sqrt_t = t.sqrt();
-    let d1 = (s.ln() - k.ln() + (r + sigma * sigma / 2.0) * t) / (sigma * sqrt_t);
-    let d2 = d1 - sigma * sqrt_t;
-    (d1, d2)
-}
 
 /// Calculate call option prices using Arrow arrays (zero-copy)
 ///
@@ -43,7 +35,8 @@ pub fn arrow_call_price(
     let len = spots.len();
 
     // Choose between parallel and sequential processing based on size
-    if len >= PARALLEL_THRESHOLD {
+    let threshold = get_parallel_threshold();
+    if len >= threshold {
         // Parallel processing for large arrays
         let results: Vec<f64> = (0..len)
             .into_par_iter()
@@ -57,7 +50,7 @@ pub fn arrow_call_price(
                 if t <= 0.0 || sigma <= 0.0 || s <= 0.0 || k <= 0.0 {
                     f64::NAN
                 } else {
-                    let (d1, d2) = calculate_d1_d2(s, k, t, r, sigma);
+                    let (d1, d2) = calculate_d1_d2_common(s, k, t, r, 0.0, sigma);
                     s * norm_cdf(d1) - k * (-r * t).exp() * norm_cdf(d2)
                 }
             })
@@ -78,7 +71,7 @@ pub fn arrow_call_price(
             let price = if t <= 0.0 || sigma <= 0.0 || s <= 0.0 || k <= 0.0 {
                 f64::NAN
             } else {
-                let (d1, d2) = calculate_d1_d2(s, k, t, r, sigma);
+                let (d1, d2) = calculate_d1_d2_common(s, k, t, r, 0.0, sigma);
                 s * norm_cdf(d1) - k * (-r * t).exp() * norm_cdf(d2)
             };
 
@@ -110,7 +103,8 @@ pub fn arrow_put_price(
     let len = spots.len();
 
     // Choose between parallel and sequential processing based on size
-    if len >= PARALLEL_THRESHOLD {
+    let threshold = get_parallel_threshold();
+    if len >= threshold {
         // Parallel processing for large arrays
         let results: Vec<f64> = (0..len)
             .into_par_iter()
@@ -124,7 +118,7 @@ pub fn arrow_put_price(
                 if t <= 0.0 || sigma <= 0.0 || s <= 0.0 || k <= 0.0 {
                     f64::NAN
                 } else {
-                    let (d1, d2) = calculate_d1_d2(s, k, t, r, sigma);
+                    let (d1, d2) = calculate_d1_d2_common(s, k, t, r, 0.0, sigma);
                     k * (-r * t).exp() * norm_cdf(-d2) - s * norm_cdf(-d1)
                 }
             })
@@ -145,7 +139,7 @@ pub fn arrow_put_price(
             let price = if t <= 0.0 || sigma <= 0.0 || s <= 0.0 || k <= 0.0 {
                 f64::NAN
             } else {
-                let (d1, d2) = calculate_d1_d2(s, k, t, r, sigma);
+                let (d1, d2) = calculate_d1_d2_common(s, k, t, r, 0.0, sigma);
                 k * (-r * t).exp() * norm_cdf(-d2) - s * norm_cdf(-d1)
             };
 
@@ -176,7 +170,8 @@ pub fn arrow_greeks(
     let len = spots.len();
 
     // Calculate all Greeks in parallel for large arrays
-    if len >= PARALLEL_THRESHOLD {
+    let threshold = get_parallel_threshold();
+    if len >= threshold {
         let greeks: Vec<(f64, f64, f64, f64, f64)> = (0..len)
             .into_par_iter()
             .map(|i| {
@@ -264,7 +259,7 @@ fn calculate_greeks_single(
     sigma: f64,
     is_call: bool,
 ) -> (f64, f64, f64, f64, f64) {
-    let (d1, d2) = calculate_d1_d2(s, k, t, r, sigma);
+    let (d1, d2) = calculate_d1_d2_common(s, k, t, r, 0.0, sigma);
     let sqrt_t = t.sqrt();
     let exp_rt = (-r * t).exp();
 

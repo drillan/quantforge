@@ -13,13 +13,13 @@ def to_numpy(arr):
     if isinstance(arr, np.ndarray):
         return arr
     # Handle Arrow arrays
-    if hasattr(arr, 'to_numpy'):
+    if hasattr(arr, "to_numpy"):
         return arr.to_numpy()
     # Handle arro3.core.Array
     try:
         # For arro3 arrays, convert each element
-        return np.array([float(x.as_py()) if hasattr(x, 'as_py') else float(x) for x in arr])
-    except:
+        return np.array([float(x.as_py()) if hasattr(x, "as_py") else float(x) for x in arr])
+    except (TypeError, AttributeError):
         # Last resort - try to convert directly
         return np.array(arr)
 

@@ -362,3 +362,61 @@ pub const MAX_PARALLELISM: usize = 32;
 /// CPUプリフェッチのための先読み距離。
 /// 現在処理中の要素からこの数だけ先のデータをプリフェッチ。
 pub const PREFETCH_DISTANCE: usize = 8;
+
+// ============================================================================
+// Greeks計算用定数
+// ============================================================================
+
+/// Greeksの有限差分計算用: 価格変化率
+/// Delta, Gammaの計算で使用する価格の変化割合
+pub const GREEK_PRICE_CHANGE_RATIO: f64 = 0.01; // 1%
+
+/// Greeksの有限差分計算用: ボラティリティ変化幅
+/// Vegaの計算で使用するボラティリティの変化幅
+pub const GREEK_VOL_CHANGE: f64 = 0.01; // 1%
+
+/// Greeksの有限差分計算用: 金利変化幅（ベーシスポイント）
+/// Rhoの計算で使用する金利の変化幅
+pub const GREEK_RATE_CHANGE: f64 = 0.0001; // 1 basis point
+
+/// 満期直前判定閾値
+/// この時間以下の場合、満期直前として特別処理
+pub const TIME_NEAR_EXPIRY_THRESHOLD: f64 = 1e-10;
+
+/// 配当利回りゼロ判定閾値
+/// アメリカンオプションで早期行使判定に使用
+pub const DIVIDEND_ZERO_THRESHOLD: f64 = 1e-10;
+
+/// ボラティリティゼロ判定閾値
+/// 決定論的価格計算への切り替え判定
+pub const VOLATILITY_ZERO_THRESHOLD: f64 = 1e-10;
+
+// ============================================================================
+// 標準テストケース定数
+// ============================================================================
+
+/// 標準テストケース: スポット価格
+pub const TEST_SPOT: f64 = 100.0;
+
+/// 標準テストケース: 権利行使価格
+pub const TEST_STRIKE: f64 = 100.0;
+
+/// 標準テストケース: 満期（年）
+pub const TEST_TIME: f64 = 1.0;
+
+/// 標準テストケース: 無リスク金利
+pub const TEST_RATE: f64 = 0.05;
+
+/// 標準テストケース: ボラティリティ
+pub const TEST_VOLATILITY: f64 = 0.2;
+
+/// 標準テストケース: 配当利回り
+pub const TEST_DIVIDEND_YIELD: f64 = 0.02;
+
+/// Black-Scholesテスト期待値範囲（formulas.rs用）
+pub const TEST_BS_FORMULAS_PRICE_LOWER: f64 = 6.0;
+pub const TEST_BS_FORMULAS_PRICE_UPPER: f64 = 10.0;
+
+/// Black76テスト期待値範囲（formulas.rs用）
+pub const TEST_BLACK76_FORMULAS_PRICE_LOWER: f64 = 7.0;
+pub const TEST_BLACK76_FORMULAS_PRICE_UPPER: f64 = 11.0;

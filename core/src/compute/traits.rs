@@ -4,6 +4,7 @@
 
 use crate::constants::PARALLEL_THRESHOLD_SMALL;
 use crate::error::QuantForgeResult;
+use crate::math::{calculate_black76_d1_d2, calculate_d1_d2};
 use rayon::prelude::*;
 
 /// オプション価格計算エンジンの共通トレイト
@@ -50,11 +51,7 @@ pub struct BlackScholesD1D2 {
 impl D1D2Calculator for BlackScholesD1D2 {
     #[inline(always)]
     fn calculate_d1_d2(&self) -> (f64, f64) {
-        let sqrt_t = self.t.sqrt();
-        let d1 = ((self.s / self.k).ln() + (self.r + self.sigma * self.sigma / 2.0) * self.t)
-            / (self.sigma * sqrt_t);
-        let d2 = d1 - self.sigma * sqrt_t;
-        (d1, d2)
+        calculate_d1_d2(self.s, self.k, self.t, self.r, 0.0, self.sigma)
     }
 }
 
@@ -69,11 +66,7 @@ pub struct Black76D1D2 {
 impl D1D2Calculator for Black76D1D2 {
     #[inline(always)]
     fn calculate_d1_d2(&self) -> (f64, f64) {
-        let sqrt_t = self.t.sqrt();
-        let d1 = ((self.f / self.k).ln() + (self.sigma * self.sigma * 0.5) * self.t)
-            / (self.sigma * sqrt_t);
-        let d2 = d1 - self.sigma * sqrt_t;
-        (d1, d2)
+        calculate_black76_d1_d2(self.f, self.k, self.t, self.sigma)
     }
 }
 
@@ -90,12 +83,7 @@ pub struct MertonD1D2 {
 impl D1D2Calculator for MertonD1D2 {
     #[inline(always)]
     fn calculate_d1_d2(&self) -> (f64, f64) {
-        let sqrt_t = self.t.sqrt();
-        let d1 = ((self.s / self.k).ln()
-            + (self.r - self.q + self.sigma * self.sigma / 2.0) * self.t)
-            / (self.sigma * sqrt_t);
-        let d2 = d1 - self.sigma * sqrt_t;
-        (d1, d2)
+        calculate_d1_d2(self.s, self.k, self.t, self.r, self.q, self.sigma)
     }
 }
 

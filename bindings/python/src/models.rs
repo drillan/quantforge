@@ -5,7 +5,7 @@
 
 use arrow::array::Float64Array;
 use arrow::error::ArrowError;
-use numpy::{PyArray1, PyArrayMethods, PyReadonlyArray1};
+use numpy::{PyArray1, PyArrayMethods};
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 use pyo3::types::{PyDict, PyList};
@@ -30,18 +30,18 @@ fn extract_as_vec(value: &Bound<'_, PyAny>) -> PyResult<Vec<f64>> {
     if let Ok(scalar) = value.extract::<f64>() {
         return Ok(vec![scalar]);
     }
-    
+
     // Try Vec<f64>
     if let Ok(vec) = value.extract::<Vec<f64>>() {
         return Ok(vec);
     }
-    
+
     // Try numpy array
     if let Ok(np_array) = value.downcast::<PyArray1<f64>>() {
         let readonly = np_array.readonly();
         return Ok(readonly.as_array().to_vec());
     }
-    
+
     // Last resort - try to extract as Python list
     if let Ok(list) = value.downcast::<PyList>() {
         let mut vec = Vec::with_capacity(list.len());
@@ -50,7 +50,7 @@ fn extract_as_vec(value: &Bound<'_, PyAny>) -> PyResult<Vec<f64>> {
         }
         return Ok(vec);
     }
-    
+
     Err(PyValueError::new_err(
         "Expected float, list of floats, or numpy array",
     ))
@@ -699,28 +699,58 @@ pub fn american_call_price_batch(
     let sigmas_vec = extract_as_vec(sigmas)?;
 
     // Determine output length (max of all input lengths)
-    let len = *[spots_vec.len(), strikes_vec.len(), times_vec.len(), 
-                rates_vec.len(), divs_vec.len(), sigmas_vec.len()]
-                .iter().max().unwrap();
+    let len = *[
+        spots_vec.len(),
+        strikes_vec.len(),
+        times_vec.len(),
+        rates_vec.len(),
+        divs_vec.len(),
+        sigmas_vec.len(),
+    ]
+    .iter()
+    .max()
+    .unwrap();
 
     let mut results = Vec::with_capacity(len);
 
     for i in 0..len {
-        let s = if spots_vec.len() == 1 { spots_vec[0] } else { spots_vec[i] };
-        let k = if strikes_vec.len() == 1 { strikes_vec[0] } else { strikes_vec[i] };
-        let t = if times_vec.len() == 1 { times_vec[0] } else { times_vec[i] };
-        let r = if rates_vec.len() == 1 { rates_vec[0] } else { rates_vec[i] };
-        let q = if divs_vec.len() == 1 { divs_vec[0] } else { divs_vec[i] };
-        let sigma = if sigmas_vec.len() == 1 { sigmas_vec[0] } else { sigmas_vec[i] };
-        
-        let price = quantforge_core::compute::american::american_call_scalar(
-            s, k, t, r, q, sigma
-        );
+        let s = if spots_vec.len() == 1 {
+            spots_vec[0]
+        } else {
+            spots_vec[i]
+        };
+        let k = if strikes_vec.len() == 1 {
+            strikes_vec[0]
+        } else {
+            strikes_vec[i]
+        };
+        let t = if times_vec.len() == 1 {
+            times_vec[0]
+        } else {
+            times_vec[i]
+        };
+        let r = if rates_vec.len() == 1 {
+            rates_vec[0]
+        } else {
+            rates_vec[i]
+        };
+        let q = if divs_vec.len() == 1 {
+            divs_vec[0]
+        } else {
+            divs_vec[i]
+        };
+        let sigma = if sigmas_vec.len() == 1 {
+            sigmas_vec[0]
+        } else {
+            sigmas_vec[i]
+        };
+
+        let price = quantforge_core::compute::american::american_call_scalar(s, k, t, r, q, sigma);
         results.push(price);
     }
 
     // Return as numpy array
-    use numpy::{PyArray1, ToPyArray};
+    use numpy::ToPyArray;
     Ok(results.to_pyarray(py).into())
 }
 
@@ -744,28 +774,58 @@ pub fn american_put_price_batch(
     let sigmas_vec = extract_as_vec(sigmas)?;
 
     // Determine output length (max of all input lengths)
-    let len = *[spots_vec.len(), strikes_vec.len(), times_vec.len(), 
-                rates_vec.len(), divs_vec.len(), sigmas_vec.len()]
-                .iter().max().unwrap();
+    let len = *[
+        spots_vec.len(),
+        strikes_vec.len(),
+        times_vec.len(),
+        rates_vec.len(),
+        divs_vec.len(),
+        sigmas_vec.len(),
+    ]
+    .iter()
+    .max()
+    .unwrap();
 
     let mut results = Vec::with_capacity(len);
 
     for i in 0..len {
-        let s = if spots_vec.len() == 1 { spots_vec[0] } else { spots_vec[i] };
-        let k = if strikes_vec.len() == 1 { strikes_vec[0] } else { strikes_vec[i] };
-        let t = if times_vec.len() == 1 { times_vec[0] } else { times_vec[i] };
-        let r = if rates_vec.len() == 1 { rates_vec[0] } else { rates_vec[i] };
-        let q = if divs_vec.len() == 1 { divs_vec[0] } else { divs_vec[i] };
-        let sigma = if sigmas_vec.len() == 1 { sigmas_vec[0] } else { sigmas_vec[i] };
-        
-        let price = quantforge_core::compute::american::american_put_scalar(
-            s, k, t, r, q, sigma
-        );
+        let s = if spots_vec.len() == 1 {
+            spots_vec[0]
+        } else {
+            spots_vec[i]
+        };
+        let k = if strikes_vec.len() == 1 {
+            strikes_vec[0]
+        } else {
+            strikes_vec[i]
+        };
+        let t = if times_vec.len() == 1 {
+            times_vec[0]
+        } else {
+            times_vec[i]
+        };
+        let r = if rates_vec.len() == 1 {
+            rates_vec[0]
+        } else {
+            rates_vec[i]
+        };
+        let q = if divs_vec.len() == 1 {
+            divs_vec[0]
+        } else {
+            divs_vec[i]
+        };
+        let sigma = if sigmas_vec.len() == 1 {
+            sigmas_vec[0]
+        } else {
+            sigmas_vec[i]
+        };
+
+        let price = quantforge_core::compute::american::american_put_scalar(s, k, t, r, q, sigma);
         results.push(price);
     }
 
     // Return as numpy array
-    use numpy::{PyArray1, ToPyArray};
+    use numpy::ToPyArray;
     Ok(results.to_pyarray(py).into())
 }
 
@@ -781,7 +841,7 @@ pub fn american_greeks_batch(
     rates: &Bound<'_, PyAny>,
     dividend_yields: &Bound<'_, PyAny>,
     sigmas: &Bound<'_, PyAny>,
-    is_calls: bool,  // Changed from is_call to is_calls for consistency
+    is_calls: bool, // Changed from is_call to is_calls for consistency
 ) -> PyResult<PyObject> {
     // Handle scalar or array inputs
     let s_array = extract_as_vec(spots)?;
@@ -792,9 +852,17 @@ pub fn american_greeks_batch(
     let sigma_array = extract_as_vec(sigmas)?;
 
     // Determine output length (max of all input lengths)
-    let len = *[s_array.len(), k_array.len(), t_array.len(), 
-                r_array.len(), q_array.len(), sigma_array.len()]
-                .iter().max().unwrap();
+    let len = *[
+        s_array.len(),
+        k_array.len(),
+        t_array.len(),
+        r_array.len(),
+        q_array.len(),
+        sigma_array.len(),
+    ]
+    .iter()
+    .max()
+    .unwrap();
 
     let mut delta_vec = Vec::with_capacity(len);
     let mut gamma_vec = Vec::with_capacity(len);
@@ -803,12 +871,36 @@ pub fn american_greeks_batch(
     let mut rho_vec = Vec::with_capacity(len);
 
     for i in 0..len {
-        let s = if s_array.len() == 1 { s_array[0] } else { s_array[i] };
-        let k = if k_array.len() == 1 { k_array[0] } else { k_array[i] };
-        let t = if t_array.len() == 1 { t_array[0] } else { t_array[i] };
-        let r = if r_array.len() == 1 { r_array[0] } else { r_array[i] };
-        let q = if q_array.len() == 1 { q_array[0] } else { q_array[i] };
-        let sigma = if sigma_array.len() == 1 { sigma_array[0] } else { sigma_array[i] };
+        let s = if s_array.len() == 1 {
+            s_array[0]
+        } else {
+            s_array[i]
+        };
+        let k = if k_array.len() == 1 {
+            k_array[0]
+        } else {
+            k_array[i]
+        };
+        let t = if t_array.len() == 1 {
+            t_array[0]
+        } else {
+            t_array[i]
+        };
+        let r = if r_array.len() == 1 {
+            r_array[0]
+        } else {
+            r_array[i]
+        };
+        let q = if q_array.len() == 1 {
+            q_array[0]
+        } else {
+            q_array[i]
+        };
+        let sigma = if sigma_array.len() == 1 {
+            sigma_array[0]
+        } else {
+            sigma_array[i]
+        };
 
         let delta = if is_calls {
             quantforge_core::compute::american::american_call_delta(s, k, t, r, q, sigma)
@@ -868,7 +960,7 @@ pub fn american_implied_volatility_batch(
     times: &Bound<'_, PyAny>,
     rates: &Bound<'_, PyAny>,
     dividend_yields: &Bound<'_, PyAny>,
-    is_calls: bool,  // Changed to is_calls for consistency
+    is_calls: bool, // Changed to is_calls for consistency
 ) -> PyResult<PyObject> {
     // Handle scalar or array inputs
     let price_array = extract_as_vec(prices)?;
@@ -879,19 +971,51 @@ pub fn american_implied_volatility_batch(
     let q_array = extract_as_vec(dividend_yields)?;
 
     // Determine output length (max of all input lengths)
-    let len = *[price_array.len(), s_array.len(), k_array.len(), 
-                t_array.len(), r_array.len(), q_array.len()]
-                .iter().max().unwrap();
+    let len = *[
+        price_array.len(),
+        s_array.len(),
+        k_array.len(),
+        t_array.len(),
+        r_array.len(),
+        q_array.len(),
+    ]
+    .iter()
+    .max()
+    .unwrap();
 
     let mut results = Vec::with_capacity(len);
 
     for i in 0..len {
-        let price = if price_array.len() == 1 { price_array[0] } else { price_array[i] };
-        let s = if s_array.len() == 1 { s_array[0] } else { s_array[i] };
-        let k = if k_array.len() == 1 { k_array[0] } else { k_array[i] };
-        let t = if t_array.len() == 1 { t_array[0] } else { t_array[i] };
-        let r = if r_array.len() == 1 { r_array[0] } else { r_array[i] };
-        let q = if q_array.len() == 1 { q_array[0] } else { q_array[i] };
+        let price = if price_array.len() == 1 {
+            price_array[0]
+        } else {
+            price_array[i]
+        };
+        let s = if s_array.len() == 1 {
+            s_array[0]
+        } else {
+            s_array[i]
+        };
+        let k = if k_array.len() == 1 {
+            k_array[0]
+        } else {
+            k_array[i]
+        };
+        let t = if t_array.len() == 1 {
+            t_array[0]
+        } else {
+            t_array[i]
+        };
+        let r = if r_array.len() == 1 {
+            r_array[0]
+        } else {
+            r_array[i]
+        };
+        let q = if q_array.len() == 1 {
+            q_array[0]
+        } else {
+            q_array[i]
+        };
 
         // Simple Newton-Raphson implied volatility
         let mut sigma = 0.2; // Initial guess
