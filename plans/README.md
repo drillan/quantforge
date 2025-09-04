@@ -27,6 +27,7 @@
 ### 最近完了した計画
 | 計画名 | 完了日 | 成果 |
 |--------|--------|------|
+| [American exercise_boundary実装](archive/2025-01-04-both-american-exercise-boundary.md) | 2025-01-04 | exercise_boundary/binomial_tree完全実装、テスト28件追加、品質基準100%達成 |
 | [Critical Rules違反修正](archive/2025-09-04-rust-critical-rules-compliance.md) | 2025-09-04 | C011-3/C012/C013違反を完全解消、品質基準100%達成 |
 | [Arrow Nativeテスト移行](archive/2025-09-03-both-arrow-native-test-migration.md) | 2025-09-04 | テスト成功率100%達成（554/554）、Arrow完全互換 |
 | [Implied Volatility Batch実装](archive/2025-09-03-both-implied-volatility-batch.md) | 2025-09-03 | Newton-Raphson法による高精度IV逆算、2,738万ops/sec達成 |

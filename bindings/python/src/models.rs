@@ -960,6 +960,102 @@ pub fn american_greeks_batch(
     Ok(greeks_dict.into())
 }
 
+/// American option exercise boundary (single calculation)
+#[pyfunction]
+#[pyo3(name = "exercise_boundary")]
+#[pyo3(signature = (k, t, r, q, sigma, is_call=true))]
+pub fn american_exercise_boundary(
+    k: f64,
+    t: f64,
+    r: f64,
+    q: f64,
+    sigma: f64,
+    is_call: bool,
+) -> PyResult<f64> {
+    // Validate inputs
+    if k <= 0.0 || t < 0.0 || sigma < 0.0 {
+        return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(
+            "k must be positive; t and sigma must be non-negative",
+        ));
+    }
+
+    Ok(quantforge_core::compute::american::exercise_boundary_scalar(k, t, r, q, sigma, is_call))
+}
+
+/// American option exercise boundary batch processing
+#[pyfunction]
+#[pyo3(name = "exercise_boundary_batch")]
+#[pyo3(signature = (strikes, times, rates, dividend_yields, sigmas, is_calls=true))]
+pub fn american_exercise_boundary_batch(
+    py: Python,
+    strikes: &Bound<'_, PyAny>,
+    times: &Bound<'_, PyAny>,
+    rates: &Bound<'_, PyAny>,
+    dividend_yields: &Bound<'_, PyAny>,
+    sigmas: &Bound<'_, PyAny>,
+    is_calls: bool,
+) -> PyArrowResult<PyObject> {
+    use crate::utils::pyany_to_arrow;
+    use arrow::array::Float64Array;
+    use quantforge_core::compute::american::American;
+
+    // Convert Python inputs to Arrow arrays
+    let strikes_array = pyany_to_arrow(py, strikes)?;
+    let times_array = pyany_to_arrow(py, times)?;
+    let rates_array = pyany_to_arrow(py, rates)?;
+    let dividend_yields_array = pyany_to_arrow(py, dividend_yields)?;
+    let sigmas_array = pyany_to_arrow(py, sigmas)?;
+
+    // Downcast to Float64Arrays
+    let strikes_f64 = strikes_array
+        .as_ref()
+        .as_any()
+        .downcast_ref::<Float64Array>()
+        .ok_or_else(|| PyErr::new::<pyo3::exceptions::PyTypeError, _>("strikes must be numeric"))?;
+    let times_f64 = times_array
+        .as_ref()
+        .as_any()
+        .downcast_ref::<Float64Array>()
+        .ok_or_else(|| PyErr::new::<pyo3::exceptions::PyTypeError, _>("times must be numeric"))?;
+    let rates_f64 = rates_array
+        .as_ref()
+        .as_any()
+        .downcast_ref::<Float64Array>()
+        .ok_or_else(|| PyErr::new::<pyo3::exceptions::PyTypeError, _>("rates must be numeric"))?;
+    let dividend_yields_f64 = dividend_yields_array
+        .as_ref()
+        .as_any()
+        .downcast_ref::<Float64Array>()
+        .ok_or_else(|| {
+            PyErr::new::<pyo3::exceptions::PyTypeError, _>("dividend_yields must be numeric")
+        })?;
+    let sigmas_f64 = sigmas_array
+        .as_ref()
+        .as_any()
+        .downcast_ref::<Float64Array>()
+        .ok_or_else(|| PyErr::new::<pyo3::exceptions::PyTypeError, _>("sigmas must be numeric"))?;
+
+    // Calculate exercise boundaries
+    let result = American::exercise_boundary(
+        strikes_f64,
+        times_f64,
+        rates_f64,
+        dividend_yields_f64,
+        sigmas_f64,
+        is_calls,
+    )?;
+
+    // Convert result to arro3
+    use arrow::datatypes::{DataType, Field};
+    use pyo3_arrow::PyArray;
+    use std::sync::Arc;
+
+    let field = Arc::new(Field::new("boundary", DataType::Float64, false));
+    let py_array = PyArray::new(result, field);
+    let arro3_result = py_array.to_arro3(py)?;
+    Ok(arro3_result.into())
+}
+
 /// American option implied volatility batch processing
 #[pyfunction]
 #[pyo3(name = "implied_volatility_batch")]

@@ -9,6 +9,7 @@ use arrow::array::{ArrayRef, Float64Array};
 use arrow::error::ArrowError;
 use std::sync::Arc;
 
+use super::american_simple::{calculate_critical_price_call, calculate_critical_price_put};
 use super::formulas::black_scholes_call_scalar;
 use super::{get_scalar_or_array_value, validate_broadcast_compatibility};
 use crate::constants::{
@@ -340,6 +341,43 @@ pub fn american_put_rho(s: f64, k: f64, t: f64, r: f64, q: f64, sigma: f64) -> f
     let price_up = american_put_scalar(s, k, t, r + h, q, sigma);
     let price_down = american_put_scalar(s, k, t, r - h, q, sigma);
     (price_up - price_down) / (2.0 * h) / BASIS_POINT_MULTIPLIER
+}
+
+// ============================================================================
+// EXERCISE BOUNDARY CALCULATION
+// ============================================================================
+
+/// Calculate the early exercise boundary for American options
+/// This is the critical stock price above which (for calls) or below which (for puts)
+/// it is optimal to exercise the option immediately
+#[inline(always)]
+pub fn exercise_boundary_scalar(k: f64, t: f64, r: f64, q: f64, sigma: f64, is_call: bool) -> f64 {
+    // Validation
+    if k <= 0.0 || t < 0.0 || sigma < 0.0 {
+        panic!("Invalid parameters: k must be positive; t, sigma must be non-negative");
+    }
+
+    // Special case: at expiry, the boundary is the strike
+    if t < TIME_NEAR_EXPIRY_THRESHOLD {
+        return k;
+    }
+
+    // Special case: zero volatility
+    if sigma < TIME_NEAR_EXPIRY_THRESHOLD {
+        return k; // In deterministic case, boundary = strike
+    }
+
+    // Use BAW approximation for stable calculation
+    if is_call {
+        // For calls without dividends, there's never early exercise (boundary = infinity)
+        if q <= 0.0 {
+            return f64::INFINITY;
+        }
+        calculate_critical_price_call(k, t, r, q, sigma)
+    } else {
+        // For puts, early exercise is always possible
+        calculate_critical_price_put(k, t, r, q, sigma)
+    }
 }
 
 // ============================================================================
@@ -689,5 +727,158 @@ impl American {
         }
 
         Ok(Arc::new(builder.finish()))
+    }
+
+    /// Calculate exercise boundary for American options
+    pub fn exercise_boundary(
+        strikes: &Float64Array,
+        times: &Float64Array,
+        rates: &Float64Array,
+        dividend_yields: &Float64Array,
+        sigmas: &Float64Array,
+        is_call: bool,
+    ) -> Result<ArrayRef, ArrowError> {
+        // Validate arrays for broadcasting compatibility (note: no spots array here)
+        let len =
+            validate_broadcast_compatibility(&[strikes, times, rates, dividend_yields, sigmas])?;
+
+        // Handle empty arrays
+        if len == 0 {
+            return Ok(Arc::new(Float64Builder::new().finish()));
+        }
+
+        let mut builder = Float64Builder::with_capacity(len);
+
+        if len >= get_parallel_threshold() {
+            // Parallel processing for large arrays
+            use rayon::prelude::*;
+
+            let results: Vec<f64> = (0..len)
+                .into_par_iter()
+                .map(|i| {
+                    let k = get_scalar_or_array_value(strikes, i);
+                    let t = get_scalar_or_array_value(times, i);
+                    let r = get_scalar_or_array_value(rates, i);
+                    let q = get_scalar_or_array_value(dividend_yields, i);
+                    let sigma = get_scalar_or_array_value(sigmas, i);
+
+                    exercise_boundary_scalar(k, t, r, q, sigma, is_call)
+                })
+                .collect();
+
+            builder.append_slice(&results);
+        } else {
+            // Sequential processing for small arrays
+            for i in 0..len {
+                let k = get_scalar_or_array_value(strikes, i);
+                let t = get_scalar_or_array_value(times, i);
+                let r = get_scalar_or_array_value(rates, i);
+                let q = get_scalar_or_array_value(dividend_yields, i);
+                let sigma = get_scalar_or_array_value(sigmas, i);
+
+                let boundary = exercise_boundary_scalar(k, t, r, q, sigma, is_call);
+                builder.append_value(boundary);
+            }
+        }
+
+        Ok(Arc::new(builder.finish()))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_exercise_boundary_call() {
+        // ATM call with dividends
+        let k = 100.0;
+        let t = 1.0;
+        let r = 0.05;
+        let q = 0.03;
+        let sigma = 0.2;
+
+        let boundary = exercise_boundary_scalar(k, t, r, q, sigma, true);
+
+        // For calls, the boundary should be above the strike
+        assert!(boundary > k);
+        assert!(boundary.is_finite());
+    }
+
+    #[test]
+    fn test_exercise_boundary_put() {
+        // ATM put
+        let k = 100.0;
+        let t = 1.0;
+        let r = 0.05;
+        let q = 0.03;
+        let sigma = 0.2;
+
+        let boundary = exercise_boundary_scalar(k, t, r, q, sigma, false);
+
+        // For puts, the boundary should be below the strike
+        assert!(boundary < k);
+        assert!(boundary > 0.0);
+    }
+
+    #[test]
+    fn test_exercise_boundary_no_dividends() {
+        // Call with no dividends - should never exercise early
+        let k = 100.0;
+        let t = 1.0;
+        let r = 0.05;
+        let q = 0.0; // No dividends
+        let sigma = 0.2;
+
+        let boundary = exercise_boundary_scalar(k, t, r, q, sigma, true);
+
+        // Should return infinity (never optimal to exercise)
+        assert_eq!(boundary, f64::INFINITY);
+    }
+
+    #[test]
+    fn test_exercise_boundary_near_expiry() {
+        // Near expiry, boundary should converge to strike
+        let k = 100.0;
+        let t = 0.001; // Very close to expiry
+        let r = 0.05;
+        let q = 0.03;
+        let sigma = 0.2;
+
+        let call_boundary = exercise_boundary_scalar(k, t, r, q, sigma, true);
+        let put_boundary = exercise_boundary_scalar(k, t, r, q, sigma, false);
+
+        // Near expiry, the boundaries should be reasonably close to strike
+        // For very small time values, the boundary calculation may diverge
+        assert!(call_boundary >= k); // Call boundary >= strike
+        assert!(call_boundary.is_finite()); // Should not be NaN or infinite
+        assert!(put_boundary <= k); // Put boundary <= strike
+        assert!(put_boundary > 0.0); // Put boundary should be positive
+    }
+
+    #[test]
+    fn test_exercise_boundary_batch() {
+        use arrow::array::Float64Array;
+
+        let strikes = Float64Array::from(vec![95.0, 100.0, 105.0]);
+        let times = Float64Array::from(vec![0.5, 1.0, 1.5]);
+        let rates = Float64Array::from(vec![0.05]);
+        let dividend_yields = Float64Array::from(vec![0.03]);
+        let sigmas = Float64Array::from(vec![0.2]);
+
+        let result =
+            American::exercise_boundary(&strikes, &times, &rates, &dividend_yields, &sigmas, true)
+                .unwrap();
+
+        let boundaries = result.as_any().downcast_ref::<Float64Array>().unwrap();
+
+        assert_eq!(boundaries.len(), 3);
+
+        // All boundaries should be above their respective strikes
+        for i in 0..3 {
+            let boundary = boundaries.value(i);
+            let strike = strikes.value(i);
+            assert!(boundary > strike);
+        }
     }
 }

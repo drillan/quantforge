@@ -119,6 +119,10 @@ fn quantforge(m: &Bound<'_, PyModule>) -> PyResult<()> {
         &american_module
     )?)?;
     american_module.add_function(wrap_pyfunction!(american_binomial, &american_module)?)?;
+    american_module.add_function(wrap_pyfunction!(
+        american_exercise_boundary,
+        &american_module
+    )?)?;
 
     // Batch functions
     american_module.add_function(wrap_pyfunction!(
@@ -132,6 +136,10 @@ fn quantforge(m: &Bound<'_, PyModule>) -> PyResult<()> {
     american_module.add_function(wrap_pyfunction!(american_greeks_batch, &american_module)?)?;
     american_module.add_function(wrap_pyfunction!(
         american_implied_volatility_batch,
+        &american_module
+    )?)?;
+    american_module.add_function(wrap_pyfunction!(
+        american_exercise_boundary_batch,
         &american_module
     )?)?;
 

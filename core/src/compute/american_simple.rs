@@ -84,7 +84,7 @@ fn calculate_q2(r: f64, q: f64, sigma: f64) -> f64 {
 }
 
 /// Calculate critical price for American call (simplified)
-fn calculate_critical_price_call(k: f64, t: f64, r: f64, q: f64, sigma: f64) -> f64 {
+pub(super) fn calculate_critical_price_call(k: f64, t: f64, r: f64, q: f64, sigma: f64) -> f64 {
     // Simplified approximation - should use iterative method for accuracy
     let q2 = calculate_q2(r, q, sigma);
     let _n = 2.0 * r / (sigma * sigma);
@@ -106,7 +106,7 @@ fn calculate_critical_price_call(k: f64, t: f64, r: f64, q: f64, sigma: f64) -> 
 }
 
 /// Calculate critical price for American put (simplified)
-fn calculate_critical_price_put(k: f64, t: f64, r: f64, q: f64, sigma: f64) -> f64 {
+pub(super) fn calculate_critical_price_put(k: f64, t: f64, r: f64, q: f64, sigma: f64) -> f64 {
     // Simplified approximation
     let q1 = calculate_q1(r, q, sigma);
     let _n = 2.0 * r / (sigma * sigma);

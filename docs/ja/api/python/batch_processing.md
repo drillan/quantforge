@@ -200,7 +200,7 @@ greeks_batch(spots, strikes, times, rates, dividend_yields, sigmas, is_calls) ->
 
 #### call_price_batch
 
-Barone-Adesi-Whaley近似を使用したアメリカンコールオプション価格を計算。
+Bjerksund-Stensland (2002) モデルを使用したアメリカンコールオプション価格を計算。
 
 ```python
 call_price_batch(spots, strikes, times, rates, dividend_yields, sigmas) -> arro3.core.Array
@@ -226,7 +226,6 @@ greeks_batch(spots, strikes, times, rates, dividend_yields, sigmas, is_calls) ->
 
 **戻り値:**
 - キー: 'delta', 'gamma', 'vega', 'theta', 'rho', 'dividend_rho'を持つ辞書
-- 各値は対応するグリークスのArrow配列（arro3.core.Array）
 - 各値は対応するグリークスのArrow配列（arro3.core.Array）
 
 #### exercise_boundary_batch

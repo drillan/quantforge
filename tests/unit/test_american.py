@@ -239,3 +239,140 @@ class TestAmericanImpliedVolatility:
 
         assert len(ivs) == 3
         assert all(abs(iv - target_vol) < 1e-3 for iv in ivs)
+
+
+class TestAmericanExerciseBoundary:
+    """Test American option exercise boundary calculation."""
+
+    def test_exercise_boundary_call(self) -> None:
+        """Test exercise boundary for American call option."""
+        boundary = american.exercise_boundary(k=100.0, t=1.0, r=0.05, q=0.03, sigma=0.2, is_call=True)  # type: ignore[attr-defined]
+
+        # Call boundary should be above strike when there are dividends
+        assert boundary > 100.0
+        assert boundary < float("inf")
+
+    def test_exercise_boundary_put(self) -> None:
+        """Test exercise boundary for American put option."""
+        boundary = american.exercise_boundary(k=100.0, t=1.0, r=0.05, q=0.03, sigma=0.2, is_call=False)  # type: ignore[attr-defined]
+
+        # Put boundary should be below strike
+        assert boundary < 100.0
+        assert boundary > 0.0
+
+    def test_exercise_boundary_no_dividends(self) -> None:
+        """Test exercise boundary for call with no dividends."""
+        boundary = american.exercise_boundary(k=100.0, t=1.0, r=0.05, q=0.0, sigma=0.2, is_call=True)  # type: ignore[attr-defined]
+
+        # Without dividends, American call should never be exercised early
+        assert boundary == float("inf")
+
+    def test_exercise_boundary_near_expiry(self) -> None:
+        """Test exercise boundary near expiry."""
+        # Very close to expiry
+        call_boundary = american.exercise_boundary(k=100.0, t=0.001, r=0.05, q=0.03, sigma=0.2, is_call=True)  # type: ignore[attr-defined]
+        put_boundary = american.exercise_boundary(k=100.0, t=0.001, r=0.05, q=0.03, sigma=0.2, is_call=False)  # type: ignore[attr-defined]
+
+        # Near expiry, boundaries should be reasonable
+        # Call boundary should be >= strike (with dividends can be > strike)
+        assert call_boundary >= 100.0
+        assert call_boundary != float("inf")  # Should be finite
+        # Put boundary should be <= strike
+        assert put_boundary <= 100.0
+        assert put_boundary > 0.0  # Should be positive
+
+    def test_exercise_boundary_batch(self) -> None:
+        """Test batch exercise boundary calculation."""
+        import numpy as np
+
+        strikes = np.array([95.0, 100.0, 105.0])
+        times = np.array([0.5, 1.0, 1.5])
+        boundaries = american.exercise_boundary_batch(  # type: ignore[attr-defined]
+            strikes=strikes, times=times, rates=0.05, dividend_yields=0.03, sigmas=0.2, is_calls=True
+        )
+
+        # Convert to numpy array for easier testing
+        boundaries_array = np.array(boundaries)
+
+        assert len(boundaries_array) == 3
+        # All call boundaries should be above their strikes (with dividends)
+        for i in range(3):
+            assert boundaries_array[i] > strikes[i]
+
+    def test_exercise_boundary_consistency(self) -> None:
+        """Test that exercise boundary is consistent with pricing."""
+        k = 100.0
+        t = 1.0
+        r = 0.05
+        q = 0.03
+        sigma = 0.2
+
+        # Get the exercise boundary
+        boundary = american.exercise_boundary(k, t, r, q, sigma, is_call=False)  # type: ignore[attr-defined]
+
+        # Price at the boundary should be close to intrinsic value
+        put_price = american.put_price(s=boundary, k=k, t=t, r=r, q=q, sigma=sigma)
+        intrinsic = k - boundary
+
+        # At the boundary, the option value should be very close to intrinsic
+        assert abs(put_price - intrinsic) < 0.1
+
+
+class TestAmericanBinomial:
+    """Test American option binomial tree calculation."""
+
+    def test_binomial_call(self) -> None:
+        """Test binomial tree for American call option."""
+        price = american.binomial_tree(s=100.0, k=100.0, t=1.0, r=0.05, q=0.03, sigma=0.2, n_steps=100, is_call=True)  # type: ignore[attr-defined]
+
+        # Should be positive and less than spot
+        assert price > 0
+        assert price < 100.0
+
+        # Should be at least as valuable as European (within reasonable tolerance for binomial approximation)
+        # Note: Binomial with 100 steps may have some approximation error
+        euro_price = merton.call_price(s=100.0, k=100.0, t=1.0, r=0.05, q=0.03, sigma=0.2)
+        assert price >= euro_price * 0.995  # Allow 0.5% error for binomial approximation
+
+    def test_binomial_put(self) -> None:
+        """Test binomial tree for American put option."""
+        price = american.binomial_tree(s=100.0, k=100.0, t=1.0, r=0.05, q=0.03, sigma=0.2, n_steps=100, is_call=False)  # type: ignore[attr-defined]
+
+        # Should be positive and less than strike
+        assert price > 0
+        assert price < 100.0
+
+        # Should be at least as valuable as European (within reasonable tolerance for binomial approximation)
+        # Note: Binomial with 100 steps may have some approximation error
+        euro_price = merton.put_price(s=100.0, k=100.0, t=1.0, r=0.05, q=0.03, sigma=0.2)
+        assert price >= euro_price * 0.995  # Allow 0.5% error for binomial approximation
+
+    def test_binomial_convergence(self) -> None:
+        """Test that binomial price converges with more steps."""
+        # Calculate with different step counts
+        price_50 = american.binomial_tree(s=100.0, k=100.0, t=1.0, r=0.05, q=0.03, sigma=0.2, n_steps=50, is_call=True)  # type: ignore[attr-defined]
+        price_100 = american.binomial_tree(  # type: ignore[attr-defined]
+            s=100.0, k=100.0, t=1.0, r=0.05, q=0.03, sigma=0.2, n_steps=100, is_call=True
+        )
+        price_200 = american.binomial_tree(  # type: ignore[attr-defined]
+            s=100.0, k=100.0, t=1.0, r=0.05, q=0.03, sigma=0.2, n_steps=200, is_call=True
+        )
+
+        # Higher step counts should converge
+        diff_1 = abs(price_100 - price_50)
+        diff_2 = abs(price_200 - price_100)
+
+        # Convergence: differences should decrease
+        assert diff_2 < diff_1
+
+    def test_binomial_vs_analytical(self) -> None:
+        """Test binomial approximation vs analytical approximation."""
+        # Use many steps for accuracy
+        binomial_price = american.binomial_tree(  # type: ignore[attr-defined]
+            s=100.0, k=100.0, t=1.0, r=0.05, q=0.03, sigma=0.2, n_steps=500, is_call=True
+        )
+        analytical_price = american.call_price(s=100.0, k=100.0, t=1.0, r=0.05, q=0.03, sigma=0.2)
+
+        # Should be close but not necessarily identical
+        # BAW approximation and binomial may differ more with dividends
+        assert abs(binomial_price - analytical_price) < 1.5
