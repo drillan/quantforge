@@ -113,6 +113,14 @@ fn quantforge(m: &Bound<'_, PyModule>) -> PyResult<()> {
     // Scalar functions
     american_module.add_function(wrap_pyfunction!(american_call_price, &american_module)?)?;
     american_module.add_function(wrap_pyfunction!(american_put_price, &american_module)?)?;
+    american_module.add_function(wrap_pyfunction!(
+        american_call_price_adaptive,
+        &american_module
+    )?)?;
+    american_module.add_function(wrap_pyfunction!(
+        american_put_price_adaptive,
+        &american_module
+    )?)?;
     american_module.add_function(wrap_pyfunction!(american_greeks, &american_module)?)?;
     american_module.add_function(wrap_pyfunction!(
         american_implied_volatility,

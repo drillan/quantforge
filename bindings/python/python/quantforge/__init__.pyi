@@ -136,6 +136,10 @@ class american:
     @staticmethod
     def put_price(s: float, k: float, t: float, r: float, q: float, sigma: float, n_steps: int = 100) -> float: ...
     @staticmethod
+    def call_price_adaptive(s: float, k: float, t: float, r: float, q: float, sigma: float) -> float: ...
+    @staticmethod
+    def put_price_adaptive(s: float, k: float, t: float, r: float, q: float, sigma: float) -> float: ...
+    @staticmethod
     def call_price_batch(
         spots: FloatOrArray,
         strikes: FloatOrArray,

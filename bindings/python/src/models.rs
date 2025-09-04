@@ -544,6 +544,52 @@ pub fn american_put_price(s: f64, k: f64, t: f64, r: f64, q: f64, sigma: f64) ->
     ))
 }
 
+/// American call price using adaptive BAW approximation (experimental)
+/// Uses dynamic dampening factor based on moneyness and time to maturity
+#[pyfunction]
+#[pyo3(name = "call_price_adaptive")]
+#[pyo3(signature = (s, k, t, r, q, sigma))]
+pub fn american_call_price_adaptive(
+    s: f64,
+    k: f64,
+    t: f64,
+    r: f64,
+    q: f64,
+    sigma: f64,
+) -> PyResult<f64> {
+    validate_scalar_inputs_detailed(s, k, t, r, sigma)?;
+    // Allow negative dividend (storage cost) within reasonable range
+    if !(-1.0..=1.0).contains(&q) {
+        return Err(PyValueError::new_err(format!(
+            "dividend_yield out of range [-1.0, 1.0] (got {q})"
+        )));
+    }
+    Ok(quantforge_core::compute::american::american_call_scalar_adaptive(s, k, t, r, q, sigma))
+}
+
+/// American put price using adaptive BAW approximation (experimental)
+/// Uses dynamic dampening factor based on moneyness and time to maturity
+#[pyfunction]
+#[pyo3(name = "put_price_adaptive")]
+#[pyo3(signature = (s, k, t, r, q, sigma))]
+pub fn american_put_price_adaptive(
+    s: f64,
+    k: f64,
+    t: f64,
+    r: f64,
+    q: f64,
+    sigma: f64,
+) -> PyResult<f64> {
+    validate_scalar_inputs_detailed(s, k, t, r, sigma)?;
+    // Allow negative dividend (storage cost) within reasonable range
+    if !(-1.0..=1.0).contains(&q) {
+        return Err(PyValueError::new_err(format!(
+            "dividend_yield out of range [-1.0, 1.0] (got {q})"
+        )));
+    }
+    Ok(quantforge_core::compute::american::american_put_scalar_adaptive(s, k, t, r, q, sigma))
+}
+
 /// American option binomial tree pricing
 #[pyfunction]
 #[pyo3(name = "binomial_tree")]

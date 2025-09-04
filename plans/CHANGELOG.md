@@ -1,6 +1,6 @@
 # 計画変更履歴
 
-## 2025-01-26（American Option Accuracy Fix & Golden Master Redesign）
+## 2025-01-26（American Option Complete Implementation & Golden Master Redesign）
 - `2025-01-26-python-golden-master-redesign.md` → archive/ ✅
   - ゴールデンマスターテスト完全刷新
   - GBS_2025.py依存を完全削除、YAML駆動設計
@@ -20,6 +20,13 @@
   - 217%誤差の根本的バグのため削除決定
   - 教訓をdocs/internal/bs2002_implementation_lessons.mdに文書化
   - Critical Rule C013（破壊的リファクタリング）適用
+
+- `2025-01-26-rust-american-adaptive-integration.md` → archive/ ✅
+  - American Adaptive実装の統合完了
+  - 実験的adaptive pricing methodをオプション機能として追加
+  - Python API: call_price_adaptive, put_price_adaptive追加
+  - 既存APIの完全な後方互換性維持
+  - ベンチマーク実装: 標準BAWと同等の精度、94%のパフォーマンス維持
 
 ## 2025-09-04（Arrow Native Test Migration Complete）
 - `2025-09-03-both-arrow-native-test-migration.md` → archive/ ✅

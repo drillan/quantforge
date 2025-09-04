@@ -180,5 +180,3 @@ class TestModelComparison:
             result = benchmark(qf.american.call_price, s, k, t, r, q, sigma)
 
         assert result > 0, f"Option price should be positive for {model}"
-
-

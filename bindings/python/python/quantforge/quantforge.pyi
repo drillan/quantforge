@@ -259,6 +259,44 @@ class american:
         ...
 
     @staticmethod
+    def call_price_adaptive(s: float, k: float, t: float, r: float, q: float, sigma: float) -> float:
+        """Calculate American call option price using adaptive BAW approximation (experimental).
+
+        Uses dynamic dampening factor based on moneyness and time to maturity.
+
+        Args:
+            s: Spot price
+            k: Strike price
+            t: Time to maturity
+            r: Risk-free rate
+            q: Dividend yield
+            sigma: Volatility
+
+        Returns:
+            Call option price using adaptive method
+        """
+        ...
+
+    @staticmethod
+    def put_price_adaptive(s: float, k: float, t: float, r: float, q: float, sigma: float) -> float:
+        """Calculate American put option price using adaptive BAW approximation (experimental).
+
+        Uses dynamic dampening factor based on moneyness and time to maturity.
+
+        Args:
+            s: Spot price
+            k: Strike price
+            t: Time to maturity
+            r: Risk-free rate
+            q: Dividend yield
+            sigma: Volatility
+
+        Returns:
+            Put option price using adaptive method
+        """
+        ...
+
+    @staticmethod
     def call_price_batch(
         spots: FloatOrArray,
         strikes: FloatOrArray,

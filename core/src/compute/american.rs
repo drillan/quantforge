@@ -16,6 +16,8 @@ use super::american_simple::{
     american_call_simple, american_put_simple, calculate_critical_price_call,
     calculate_critical_price_put,
 };
+// Adaptive implementation for experimental use
+pub(crate) use super::american_adaptive::{american_call_adaptive, american_put_adaptive};
 use super::formulas::black_scholes_call_scalar;
 use super::{get_scalar_or_array_value, validate_broadcast_compatibility};
 use crate::constants::{
@@ -72,6 +74,32 @@ pub fn american_put_scalar(s: f64, k: f64, t: f64, r: f64, q: f64, sigma: f64) -
 
     // Use BAW approximation with empirical dampening
     american_put_simple(s, k, t, r, q, sigma)
+}
+
+/// Adaptive BAW American call option price (experimental)
+/// Uses dynamic dampening factor based on moneyness and time to maturity
+#[inline(always)]
+pub fn american_call_scalar_adaptive(s: f64, k: f64, t: f64, r: f64, q: f64, sigma: f64) -> f64 {
+    // Validation
+    if s <= 0.0 || k <= 0.0 || t < 0.0 || sigma < 0.0 {
+        panic!("Invalid parameters: s, k must be positive; t, sigma must be non-negative");
+    }
+
+    // Use adaptive approximation
+    american_call_adaptive(s, k, t, r, q, sigma)
+}
+
+/// Adaptive BAW American put option price (experimental)
+/// Uses dynamic dampening factor based on moneyness and time to maturity
+#[inline(always)]
+pub fn american_put_scalar_adaptive(s: f64, k: f64, t: f64, r: f64, q: f64, sigma: f64) -> f64 {
+    // Validation
+    if s <= 0.0 || k <= 0.0 || t < 0.0 || sigma < 0.0 {
+        panic!("Invalid parameters: s, k must be positive; t, sigma must be non-negative");
+    }
+
+    // Use adaptive approximation
+    american_put_adaptive(s, k, t, r, q, sigma)
 }
 
 /// Cox-Ross-Rubinstein binomial tree for American options
