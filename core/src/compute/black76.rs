@@ -375,12 +375,11 @@ impl Black76 {
         let mut builder = Float64Builder::with_capacity(len);
 
         // Newton-Raphson parameters
+        use crate::constants::{MAX_VOLATILITY, MIN_VOLATILITY, VEGA_MIN_THRESHOLD};
         const INITIAL_SIGMA: f64 = 0.2;
         const MAX_ITERATIONS: i32 = 100;
         const TOLERANCE: f64 = 1e-8;
-        const MIN_SIGMA: f64 = 0.001;
-        const MAX_SIGMA: f64 = 10.0;
-        const MIN_VEGA: f64 = 1e-10;
+        const MIN_VEGA: f64 = VEGA_MIN_THRESHOLD;
 
         if len >= get_parallel_threshold() {
             // Parallel processing for large arrays
@@ -447,7 +446,7 @@ impl Black76 {
                         sigma -= diff / vega;
 
                         // Keep sigma in valid range
-                        sigma = sigma.clamp(MIN_SIGMA, MAX_SIGMA);
+                        sigma = sigma.clamp(MIN_VOLATILITY, MAX_VOLATILITY);
                     }
 
                     // Failed to converge
@@ -522,7 +521,7 @@ impl Black76 {
                     sigma -= diff / vega;
 
                     // Keep sigma in valid range
-                    sigma = sigma.clamp(MIN_SIGMA, MAX_SIGMA);
+                    sigma = sigma.clamp(MIN_VOLATILITY, MAX_VOLATILITY);
                 }
 
                 builder.append_value(if converged { sigma } else { f64::NAN });
@@ -536,14 +535,14 @@ impl Black76 {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::constants::TEST_TOLERANCE_VEGA;
+    use crate::constants::{TEST_RATE, TEST_TOLERANCE_VEGA};
 
     #[test]
     fn test_call_price() {
         let forwards = Float64Array::from(vec![100.0]);
         let strikes = Float64Array::from(vec![100.0]);
         let times = Float64Array::from(vec![1.0]);
-        let rates = Float64Array::from(vec![0.05]);
+        let rates = Float64Array::from(vec![TEST_RATE]);
         let sigmas = Float64Array::from(vec![0.2]);
 
         let result = Black76::call_price(&forwards, &strikes, &times, &rates, &sigmas).unwrap();
@@ -560,7 +559,7 @@ mod tests {
         let forwards = Float64Array::from(vec![100.0]);
         let strikes = Float64Array::from(vec![100.0]);
         let times = Float64Array::from(vec![1.0]);
-        let rates = Float64Array::from(vec![0.05]);
+        let rates = Float64Array::from(vec![TEST_RATE]);
         let sigmas = Float64Array::from(vec![0.2]);
 
         let result = Black76::put_price(&forwards, &strikes, &times, &rates, &sigmas).unwrap();
@@ -578,7 +577,7 @@ mod tests {
         let forwards = Float64Array::from(vec![100.0, 105.0, 110.0]);
         let strikes = Float64Array::from(vec![100.0]); // scalar
         let times = Float64Array::from(vec![1.0]); // scalar
-        let rates = Float64Array::from(vec![0.05]); // scalar
+        let rates = Float64Array::from(vec![TEST_RATE]); // scalar
         let sigmas = Float64Array::from(vec![0.2]); // scalar
 
         let result = Black76::call_price(&forwards, &strikes, &times, &rates, &sigmas).unwrap();

@@ -200,6 +200,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::constants::TEST_RATE;
 
     #[test]
     fn test_d1_d2_calculation() {
@@ -207,7 +208,7 @@ mod tests {
             s: 100.0,
             k: 100.0,
             t: 1.0,
-            r: 0.05,
+            r: TEST_RATE,
             sigma: 0.2,
         };
 

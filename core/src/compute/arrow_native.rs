@@ -91,6 +91,7 @@ impl ArrowNativeCompute {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::constants::{PRACTICAL_TOLERANCE, TEST_RATE};
     use approx::assert_relative_eq;
 
     #[test]
@@ -98,7 +99,7 @@ mod tests {
         let spots = Float64Array::from(vec![100.0, 105.0, 110.0]);
         let strikes = Float64Array::from(vec![100.0, 100.0, 100.0]);
         let times = Float64Array::from(vec![1.0, 1.0, 1.0]);
-        let rates = Float64Array::from(vec![0.05, 0.05, 0.05]);
+        let rates = Float64Array::from(vec![TEST_RATE, TEST_RATE, TEST_RATE]);
         let sigmas = Float64Array::from(vec![0.2, 0.2, 0.2]);
 
         let result =
@@ -108,7 +109,11 @@ mod tests {
         let result_array = result.as_any().downcast_ref::<Float64Array>().unwrap();
 
         // 期待値（既存実装から）
-        assert_relative_eq!(result_array.value(0), 10.45058, epsilon = 0.00001);
+        assert_relative_eq!(
+            result_array.value(0),
+            10.45058,
+            epsilon = PRACTICAL_TOLERANCE
+        );
         assert!(result_array.value(1) > result_array.value(0)); // スポットが高いほど価格も高い
         assert!(result_array.value(2) > result_array.value(1));
     }
@@ -119,7 +124,7 @@ mod tests {
         let spots = Float64Array::from(vec![100.0, 105.0]);
         let strikes = Float64Array::from(vec![100.0]); // Single value broadcasts
         let times = Float64Array::from(vec![1.0, 1.0]);
-        let rates = Float64Array::from(vec![0.05, 0.05]);
+        let rates = Float64Array::from(vec![TEST_RATE, TEST_RATE]);
         let sigmas = Float64Array::from(vec![0.2, 0.2]);
 
         let result =
@@ -138,7 +143,7 @@ mod tests {
         let spots = Float64Array::from(vec![100.0, 105.0]); // length 2
         let strikes = Float64Array::from(vec![100.0, 95.0, 90.0]); // length 3 (incompatible)
         let times = Float64Array::from(vec![1.0]);
-        let rates = Float64Array::from(vec![0.05]);
+        let rates = Float64Array::from(vec![TEST_RATE]);
         let sigmas = Float64Array::from(vec![0.2]);
 
         let result =

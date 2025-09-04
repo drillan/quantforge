@@ -79,18 +79,19 @@ pub fn d1_to_d2(d1: f64, sigma: f64, sqrt_t: f64) -> f64 {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::constants::{PRACTICAL_TOLERANCE, TEST_RATE};
 
     #[test]
     fn test_d1_d2_calculation() {
-        let (d1, d2) = calculate_d1_d2(100.0, 100.0, 1.0, 0.05, 0.0, 0.2);
-        assert!((d1 - 0.35).abs() < 0.01);
-        assert!((d2 - 0.15).abs() < 0.01);
+        let (d1, d2) = calculate_d1_d2(100.0, 100.0, 1.0, TEST_RATE, 0.0, 0.2);
+        assert!((d1 - 0.35).abs() < PRACTICAL_TOLERANCE * 10.0);
+        assert!((d2 - 0.15).abs() < PRACTICAL_TOLERANCE * 10.0);
     }
 
     #[test]
     fn test_black76_d1_d2() {
         let (d1, d2) = calculate_black76_d1_d2(100.0, 100.0, 1.0, 0.2);
-        assert!((d1 - 0.1).abs() < 0.01);
-        assert!((d2 - -0.1).abs() < 0.01);
+        assert!((d1 - 0.1).abs() < PRACTICAL_TOLERANCE * 10.0);
+        assert!((d2 - -0.1).abs() < PRACTICAL_TOLERANCE * 10.0);
     }
 }

@@ -716,14 +716,15 @@ impl American {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::constants::{TEST_DIVIDEND_YIELD, TEST_RATE};
 
     #[test]
     fn test_exercise_boundary_call() {
         // ATM call with dividends
         let k = 100.0;
         let t = 1.0;
-        let r = 0.05;
-        let q = 0.03;
+        let r = TEST_RATE;
+        let q = TEST_DIVIDEND_YIELD;
         let sigma = 0.2;
 
         let boundary = exercise_boundary_scalar(k, t, r, q, sigma, true);
@@ -738,8 +739,8 @@ mod tests {
         // ATM put
         let k = 100.0;
         let t = 1.0;
-        let r = 0.05;
-        let q = 0.03;
+        let r = TEST_RATE;
+        let q = TEST_DIVIDEND_YIELD;
         let sigma = 0.2;
 
         let boundary = exercise_boundary_scalar(k, t, r, q, sigma, false);
@@ -754,7 +755,7 @@ mod tests {
         // Call with no dividends - should never exercise early
         let k = 100.0;
         let t = 1.0;
-        let r = 0.05;
+        let r = TEST_RATE;
         let q = 0.0; // No dividends
         let sigma = 0.2;
 
@@ -769,8 +770,8 @@ mod tests {
         // Near expiry, boundary should converge to strike
         let k = 100.0;
         let t = 0.001; // Very close to expiry
-        let r = 0.05;
-        let q = 0.03;
+        let r = TEST_RATE;
+        let q = TEST_DIVIDEND_YIELD;
         let sigma = 0.2;
 
         let call_boundary = exercise_boundary_scalar(k, t, r, q, sigma, true);
@@ -790,8 +791,8 @@ mod tests {
 
         let strikes = Float64Array::from(vec![95.0, 100.0, 105.0]);
         let times = Float64Array::from(vec![0.5, 1.0, 1.5]);
-        let rates = Float64Array::from(vec![0.05]);
-        let dividend_yields = Float64Array::from(vec![0.03]);
+        let rates = Float64Array::from(vec![TEST_RATE]);
+        let dividend_yields = Float64Array::from(vec![TEST_DIVIDEND_YIELD]);
         let sigmas = Float64Array::from(vec![0.2]);
 
         let result =

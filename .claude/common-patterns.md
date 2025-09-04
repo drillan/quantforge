@@ -112,11 +112,38 @@ uv run mypy .
 ### ハードコード検出
 
 ```bash
-# 浮動小数点数の検出
+# 自動検出スクリプト
+./scripts/detect_hardcode.sh
+
+# 手動検出（浮動小数点数）
 rg '\b\d*\.\d+\b' src/ tests/ --type rust --type python | grep -v "const\|TOLERANCE"
 
-# 大きな整数の検出
+# 手動検出（大きな整数）
 rg '\b[1-9]\d{2,}\b' src/ tests/ --type rust --type python | grep -v "const\|MAX\|MIN"
+```
+
+### ハードコード修正パターン（2025-09-05追加）
+
+```rust
+// テストコードの定数化
+use crate::constants::{TEST_RATE, TEST_DIVIDEND_YIELD, TEST_VOLATILITY};
+
+// MIN_SIGMA統一
+// ❌ 各ファイルでローカル定義
+const MIN_SIGMA: f64 = 0.001;
+
+// ✅ 共通定数を使用
+use crate::constants::MIN_VOLATILITY;
+// MIN_SIGMAへの参照をすべてMIN_VOLATILITYに置換
+
+// IV計算での統一
+use crate::constants::{MIN_VOLATILITY, MAX_VOLATILITY, VEGA_MIN_THRESHOLD};
+const MIN_VEGA: f64 = VEGA_MIN_THRESHOLD;  // ローカルエイリアス可
+
+// 許容誤差の使い分け
+use crate::constants::{PRACTICAL_TOLERANCE, NUMERICAL_TOLERANCE};
+assert!((value - expected).abs() < PRACTICAL_TOLERANCE);  // 実用精度
+assert!((value - expected).abs() < NUMERICAL_TOLERANCE); // 高精度
 ```
 
 ## 実装パターン

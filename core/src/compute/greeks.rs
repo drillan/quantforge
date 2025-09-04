@@ -60,6 +60,7 @@ fn calculate_black_scholes_greeks(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::constants::TEST_RATE;
     use arrow::array::Array;
 
     #[test]
@@ -67,7 +68,7 @@ mod tests {
         let spots = Float64Array::from(vec![100.0]);
         let strikes = Float64Array::from(vec![100.0]);
         let times = Float64Array::from(vec![1.0]);
-        let rates = Float64Array::from(vec![0.05]);
+        let rates = Float64Array::from(vec![TEST_RATE]);
         let sigmas = Float64Array::from(vec![0.2]);
 
         let greeks = calculate_greeks(

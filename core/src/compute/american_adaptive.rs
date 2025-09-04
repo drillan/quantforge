@@ -214,12 +214,13 @@ fn calculate_adaptive_a2_put(k: f64, t: f64, r: f64, q: f64, sigma: f64, dampeni
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::constants::{PRACTICAL_TOLERANCE, TEST_RATE};
 
     #[test]
     fn test_adaptive_dampening_factor() {
         // ATM, medium term should give base factor
         let factor = get_adaptive_dampening_factor(100.0, 100.0, 1.0, 0.2);
-        assert!((factor - BAW_DAMPENING_FACTOR).abs() < 0.01);
+        assert!((factor - BAW_DAMPENING_FACTOR).abs() < PRACTICAL_TOLERANCE);
 
         // Deep OTM should give higher dampening
         let factor_otm = get_adaptive_dampening_factor(70.0, 100.0, 1.0, 0.2);
@@ -237,7 +238,7 @@ mod tests {
         let s = 90.0; // Slightly OTM
         let k = 100.0;
         let t = 0.25; // Quarter year
-        let r = 0.05;
+        let r = TEST_RATE;
         let q = 0.0;
         let sigma = 0.3; // Medium-high vol
 
