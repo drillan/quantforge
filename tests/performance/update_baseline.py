@@ -30,7 +30,8 @@ class BaselineUpdater:
             sys.exit(1)
 
         with open(latest_path) as f:
-            return json.load(f)
+            data: dict[str, Any] = json.load(f)
+            return data
 
     def validate_results(self, results: dict[str, Any]) -> bool:
         """結果の妥当性を検証."""
@@ -49,11 +50,7 @@ class BaselineUpdater:
 
         # 必須テストの存在確認
         test_names = [b["name"] for b in benchmarks]
-        required_tests = [
-            "test_quantforge_single",
-            "test_pure_python_single",
-            "test_numpy_scipy_single"
-        ]
+        required_tests = ["test_quantforge_single", "test_pure_python_single", "test_numpy_scipy_single"]
 
         for test in required_tests:
             if not any(test in name for name in test_names):
@@ -110,7 +107,7 @@ class BaselineUpdater:
         else:
             return f"{time_seconds:.2f} s"
 
-    def update_baseline(self, output_path: Path = None) -> None:
+    def update_baseline(self, output_path: Path | None = None) -> None:
         """ベースラインを更新.
 
         Args:
@@ -189,16 +186,9 @@ def main():
 
     parser = argparse.ArgumentParser(description="ベースライン更新")
     parser.add_argument(
-        "--output",
-        type=Path,
-        default=Path("tests/performance/baseline.json"),
-        help="ベースラインの出力先"
+        "--output", type=Path, default=Path("tests/performance/baseline.json"), help="ベースラインの出力先"
     )
-    parser.add_argument(
-        "--check",
-        action="store_true",
-        help="更新せずに現在の結果を確認するのみ"
-    )
+    parser.add_argument("--check", action="store_true", help="更新せずに現在の結果を確認するのみ")
 
     args = parser.parse_args()
 

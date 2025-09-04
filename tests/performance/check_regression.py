@@ -32,7 +32,8 @@ class RegressionChecker:
             sys.exit(1)
 
         with open(path) as f:
-            return json.load(f)
+            data: dict[str, Any] = json.load(f)
+            return data
 
     def extract_benchmark_times(self, benchmarks: list[dict]) -> dict[str, dict[str, float]]:
         """ベンチマーク結果から実行時間を抽出（generate_benchmark_report.pyと同じ形式）."""
@@ -172,23 +173,12 @@ def main():
 
     parser = argparse.ArgumentParser(description="パフォーマンス退行検出")
     parser.add_argument(
-        "--baseline",
-        type=Path,
-        default=Path("tests/performance/baseline.json"),
-        help="ベースラインファイルのパス"
+        "--baseline", type=Path, default=Path("tests/performance/baseline.json"), help="ベースラインファイルのパス"
     )
     parser.add_argument(
-        "--latest",
-        type=Path,
-        default=Path("benchmark_results/latest.json"),
-        help="最新結果ファイルのパス"
+        "--latest", type=Path, default=Path("benchmark_results/latest.json"), help="最新結果ファイルのパス"
     )
-    parser.add_argument(
-        "--threshold",
-        type=float,
-        default=1.2,
-        help="許容する劣化率（1.2 = 20%%の劣化まで許容）"
-    )
+    parser.add_argument("--threshold", type=float, default=1.2, help="許容する劣化率（1.2 = 20%%の劣化まで許容）")
 
     args = parser.parse_args()
 
