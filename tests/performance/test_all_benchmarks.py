@@ -13,22 +13,6 @@ import pytest
 import quantforge as qf
 from scipy.stats import norm
 
-# Arrow Native import check
-try:
-    import pyarrow as pa
-
-    HAS_ARROW_NATIVE = True
-    try:
-        # Note: arrow_native module no longer exists, using black_scholes directly
-
-        HAS_ARROW_NATIVE_MODULE = True
-    except ImportError as e:
-        print(f"Warning: arrow_native import failed: {e}")
-        HAS_ARROW_NATIVE_MODULE = False
-except ImportError:
-    HAS_ARROW_NATIVE = False
-    HAS_ARROW_NATIVE_MODULE = False
-
 
 def black_scholes_pure_python(s: float, k: float, t: float, r: float, sigma: float) -> float:
     """Pure Python Black-Scholes call option price calculation.
@@ -198,60 +182,3 @@ class TestModelComparison:
         assert result > 0, f"Option price should be positive for {model}"
 
 
-@pytest.mark.benchmark
-@pytest.mark.skipif(not (HAS_ARROW_NATIVE and HAS_ARROW_NATIVE_MODULE), reason="Arrow Native or PyArrow not available")
-class TestArrowNative:
-    """Benchmark tests for Arrow Native zero-copy implementation."""
-
-    def setup_method(self):
-        """Setup Arrow arrays for testing."""
-        import random
-
-        random.seed(42)
-
-    def _generate_arrow_batch_data(self, size: int) -> tuple:
-        """Generate Arrow arrays directly without NumPy intermediary.
-
-        This method creates Arrow arrays from Python lists to avoid
-        unnecessary NumPy array creation and conversion overhead.
-        """
-        import random
-
-        random.seed(42)
-
-        # Generate Python lists directly (avoid NumPy)
-        spots_list = [random.uniform(80, 120) for _ in range(size)]
-        strikes_list = [100.0] * size
-        times_list = [1.0] * size
-        rates_list = [0.05] * size
-        sigmas_list = [random.uniform(0.15, 0.35) for _ in range(size)]
-
-        # Create Arrow arrays directly from Python lists
-        spots = pa.array(spots_list)
-        strikes = pa.array(strikes_list)
-        times = pa.array(times_list)
-        rates = pa.array(rates_list)
-        sigmas = pa.array(sigmas_list)
-
-        return spots, strikes, times, rates, sigmas
-
-    @pytest.mark.parametrize("size", [100, 1000, 10000])
-    def test_arrow_native_batch(self, benchmark, size):
-        """Benchmark Arrow Native batch calculation with zero-copy."""
-        # Generate Arrow arrays directly without NumPy
-        spots, strikes, times, rates, sigmas = self._generate_arrow_batch_data(size)
-
-        # Benchmark zero-copy Arrow Native implementation
-        # Arrow native implementation not available - skip
-        pytest.skip("Arrow native implementation not available")
-
-    def test_arrow_vs_numpy_memory(self, benchmark):
-        """Compare memory efficiency: Arrow Native vs NumPy conversion."""
-        size = 10000
-
-        # Generate Arrow arrays directly (true zero-copy potential)
-        spots_arrow, strikes_arrow, times_arrow, rates_arrow, sigmas_arrow = self._generate_arrow_batch_data(size)
-
-        # Benchmark Arrow Native (should be zero-copy)
-        # Arrow native implementation not available - skip
-        pytest.skip("Arrow native implementation not available")
