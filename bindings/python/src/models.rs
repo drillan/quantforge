@@ -468,6 +468,7 @@ pub fn greeks<'py>(
 
 /// Black76 call price (scalar version)
 #[pyfunction]
+#[pyo3(name = "call_price")]
 pub fn black76_call_price(f: f64, k: f64, t: f64, r: f64, sigma: f64) -> PyResult<f64> {
     validate_black76_scalar_inputs_detailed(f, k, t, r, sigma)?;
     Ok(black76_call_scalar(f, k, t, r, sigma))
@@ -475,6 +476,7 @@ pub fn black76_call_price(f: f64, k: f64, t: f64, r: f64, sigma: f64) -> PyResul
 
 /// Black76 put price (scalar version)
 #[pyfunction]
+#[pyo3(name = "put_price")]
 pub fn black76_put_price(f: f64, k: f64, t: f64, r: f64, sigma: f64) -> PyResult<f64> {
     validate_black76_scalar_inputs_detailed(f, k, t, r, sigma)?;
     Ok(black76_put_scalar(f, k, t, r, sigma))
@@ -482,6 +484,7 @@ pub fn black76_put_price(f: f64, k: f64, t: f64, r: f64, sigma: f64) -> PyResult
 
 /// Merton call price (scalar version with dividends)
 #[pyfunction]
+#[pyo3(name = "call_price")]
 pub fn merton_call_price(s: f64, k: f64, t: f64, r: f64, q: f64, sigma: f64) -> PyResult<f64> {
     validate_scalar_inputs_detailed(s, k, t, r, sigma)?;
     // Allow negative dividend (storage cost) within reasonable range
@@ -495,6 +498,7 @@ pub fn merton_call_price(s: f64, k: f64, t: f64, r: f64, q: f64, sigma: f64) -> 
 
 /// Merton put price (scalar version with dividends)
 #[pyfunction]
+#[pyo3(name = "put_price")]
 pub fn merton_put_price(s: f64, k: f64, t: f64, r: f64, q: f64, sigma: f64) -> PyResult<f64> {
     validate_scalar_inputs_detailed(s, k, t, r, sigma)?;
     // Allow negative dividend (storage cost) within reasonable range
@@ -508,6 +512,7 @@ pub fn merton_put_price(s: f64, k: f64, t: f64, r: f64, q: f64, sigma: f64) -> P
 
 /// American call price using BS2002 approximation
 #[pyfunction]
+#[pyo3(name = "call_price")]
 #[pyo3(signature = (s, k, t, r, q, sigma))]
 pub fn american_call_price(s: f64, k: f64, t: f64, r: f64, q: f64, sigma: f64) -> PyResult<f64> {
     validate_scalar_inputs_detailed(s, k, t, r, sigma)?;
@@ -524,6 +529,7 @@ pub fn american_call_price(s: f64, k: f64, t: f64, r: f64, q: f64, sigma: f64) -
 
 /// American put price using BS2002 approximation
 #[pyfunction]
+#[pyo3(name = "put_price")]
 #[pyo3(signature = (s, k, t, r, q, sigma))]
 pub fn american_put_price(s: f64, k: f64, t: f64, r: f64, q: f64, sigma: f64) -> PyResult<f64> {
     validate_scalar_inputs_detailed(s, k, t, r, sigma)?;
@@ -540,6 +546,7 @@ pub fn american_put_price(s: f64, k: f64, t: f64, r: f64, q: f64, sigma: f64) ->
 
 /// American option binomial tree pricing
 #[pyfunction]
+#[pyo3(name = "binomial_tree")]
 #[pyo3(signature = (s, k, t, r, q, sigma, n_steps=100, is_call=true))]
 #[allow(clippy::too_many_arguments)]
 pub fn american_binomial(
@@ -569,6 +576,7 @@ pub fn american_binomial(
 
 /// American option Greeks calculation
 #[pyfunction]
+#[pyo3(name = "greeks")]
 #[pyo3(signature = (s, k, t, r, q, sigma, is_call=true))]
 #[allow(clippy::too_many_arguments)]
 pub fn american_greeks(
@@ -627,6 +635,7 @@ pub fn american_greeks(
 
 /// American option implied volatility using Newton-Raphson
 #[pyfunction]
+#[pyo3(name = "implied_volatility")]
 #[pyo3(signature = (price, s, k, t, r, q, is_call=true, initial_guess=0.2, tolerance=1e-6, max_iterations=100))]
 #[allow(clippy::too_many_arguments)]
 pub fn american_implied_volatility(
@@ -681,6 +690,7 @@ pub fn american_implied_volatility(
 
 /// American call option price batch processing
 #[pyfunction]
+#[pyo3(name = "call_price_batch")]
 pub fn american_call_price_batch(
     py: Python,
     spots: &Bound<'_, PyAny>,
@@ -756,6 +766,7 @@ pub fn american_call_price_batch(
 
 /// American put option price batch processing
 #[pyfunction]
+#[pyo3(name = "put_price_batch")]
 pub fn american_put_price_batch(
     py: Python,
     spots: &Bound<'_, PyAny>,
@@ -831,6 +842,7 @@ pub fn american_put_price_batch(
 
 /// American option Greeks batch processing
 #[pyfunction]
+#[pyo3(name = "greeks_batch")]
 #[pyo3(signature = (spots, strikes, times, rates, dividend_yields, sigmas, is_calls=true))]
 #[allow(clippy::too_many_arguments)]
 pub fn american_greeks_batch(
@@ -950,6 +962,7 @@ pub fn american_greeks_batch(
 
 /// American option implied volatility batch processing
 #[pyfunction]
+#[pyo3(name = "implied_volatility_batch")]
 #[pyo3(signature = (prices, spots, strikes, times, rates, dividend_yields, is_calls=true))]
 #[allow(clippy::too_many_arguments)]
 pub fn american_implied_volatility_batch(
@@ -1130,6 +1143,7 @@ pub fn black76_greeks<'py>(
 
 /// Black76 call price batch calculation
 #[pyfunction]
+#[pyo3(name = "call_price_batch")]
 pub fn black76_call_price_batch(
     py: Python,
     forwards: &Bound<'_, PyAny>,
@@ -1144,6 +1158,7 @@ pub fn black76_call_price_batch(
 
 /// Black76 put price batch calculation
 #[pyfunction]
+#[pyo3(name = "put_price_batch")]
 pub fn black76_put_price_batch(
     py: Python,
     forwards: &Bound<'_, PyAny>,
@@ -1175,6 +1190,7 @@ pub fn black76_greeks_batch(
 
 /// Black76 implied volatility (scalar)
 #[pyfunction]
+#[pyo3(name = "implied_volatility")]
 #[pyo3(signature = (price, f, k, t, r, is_call=true))]
 pub fn black76_implied_volatility(
     price: f64,
@@ -1250,6 +1266,7 @@ pub fn black76_implied_volatility(
 ///
 /// Returns Arrow array of implied volatilities
 #[pyfunction]
+#[pyo3(name = "implied_volatility_batch")]
 pub fn black76_implied_volatility_batch(
     py: Python,
     prices: &Bound<'_, PyAny>,
@@ -1305,6 +1322,7 @@ pub fn black76_implied_volatility_batch(
 
 /// Merton Greeks calculation (scalar version)
 #[pyfunction]
+#[pyo3(name = "greeks")]
 #[pyo3(signature = (s, k, t, r, q, sigma, is_call=true))]
 #[allow(clippy::too_many_arguments)]
 pub fn merton_greeks<'py>(
@@ -1520,6 +1538,7 @@ pub fn arrow_merton_call_price(
 
 /// Merton call price batch calculation
 #[pyfunction]
+#[pyo3(name = "call_price_batch")]
 pub fn merton_call_price_batch(
     py: Python,
     spots: &Bound<'_, PyAny>,
@@ -1627,6 +1646,7 @@ pub fn arrow_merton_put_price(
 
 /// Merton put price batch calculation
 #[pyfunction]
+#[pyo3(name = "put_price_batch")]
 pub fn merton_put_price_batch(
     py: Python,
     spots: &Bound<'_, PyAny>,
@@ -1793,6 +1813,7 @@ pub fn arrow_merton_greeks(
 
 /// Merton Greeks batch calculation
 #[pyfunction]
+#[pyo3(name = "greeks_batch")]
 #[pyo3(signature = (spots, strikes, times, rates, dividend_yields, sigmas, is_call=true))]
 #[allow(clippy::too_many_arguments)]
 pub fn merton_greeks_batch(
@@ -1820,6 +1841,7 @@ pub fn merton_greeks_batch(
 
 /// Merton implied volatility (scalar)
 #[pyfunction]
+#[pyo3(name = "implied_volatility")]
 #[pyo3(signature = (price, s, k, t, r, q, is_call=true))]
 pub fn merton_implied_volatility(
     price: f64,

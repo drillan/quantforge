@@ -96,7 +96,7 @@ def benchmark_recorder():
 # Only define benchmark hooks if pytest-benchmark is installed
 try:
     # Check if pytest-benchmark is available
-    import pytest_benchmark.plugin  # noqa: F401
+    import pytest_benchmark.plugin  # type: ignore[import-untyped]  # noqa: F401
 
     def pytest_benchmark_compare_machine_info(config, benchmarksession, machine_info, compared_benchmark):
         """Hook to customize machine info in benchmark output."""

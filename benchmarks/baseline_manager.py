@@ -65,7 +65,8 @@ class BaselineManager:
             raise FileNotFoundError(f"Baseline not found at {self.baseline_path}")
 
         with open(self.baseline_path) as f:
-            return json.load(f)
+            data: dict[str, Any] = json.load(f)
+            return data
 
 
 def main() -> None:
