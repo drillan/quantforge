@@ -1,23 +1,32 @@
+(index)=
 # QuantForge Documentation
 
+(index-overview)=
 ## High-Performance Option Pricing Library
 
-QuantForge is a financial derivatives pricing library built using Rust + PyO3.
-It maintains Python's ease of use while providing high-speed computational performance.
+QuantForge is a high-performance financial derivatives pricing library built with Rust.
+It provides high-speed computational performance while maintaining Python's ease of use.
 
 :::{note}
+:name: index-note-features
+
 **Key Features**
 - Up to 40x faster processing compared to pure Python implementations (measured on AMD Ryzen 5 5600G)
 - Numerical error < 1e-15 (double precision)
 - Simple Python API
 - Supports Black-Scholes, Black76, Merton, and American options
-- Efficient Parallel Computation Using Rayon
-- Zero-copy Operations on NumPy Arrays
+- Efficient parallel computation using Rayon
+- Zero-copy processing of NumPy arrays
 :::
 
+(index-quickstart)=
 ## Quick Start
 
-```python
+```{code-block} python
+:name: index-code-quickstart
+:caption: Quick Start Code Example
+:linenos:
+
 import numpy as np
 from quantforge.models import black_scholes
 
@@ -30,7 +39,7 @@ price = black_scholes.call_price(
 )
 
 # Batch processing
-# Process 1 million records in ~56ms (tested on AMD Ryzen 5 5600G, CLI mode)
+# Process 1 million records in ~56ms (measured on AMD Ryzen 5 5600G, CLI mode)
 spots = np.random.uniform(90, 110, 1_000_000)
 prices = black_scholes.call_price_batch(
     spots=spots,
@@ -41,22 +50,45 @@ prices = black_scholes.call_price_batch(
 )
 ```
 
+(index-performance)=
 ## Performance Comparison
 
 :::{note}
+:name: index-note-performance-environment
+
 Measurement Environment: AMD Ryzen 5 5600G (6 cores/12 threads), 29.3GB RAM, Pop!_OS 22.04 (CLI mode)
 Measurement Date: 2025-08-28
+See [Benchmark Results](performance/benchmarks.md) for details
 :::
 
-| Library | Single Calculation | million records processed | relative velocity |
-|------------|----------|----------------|----------|
-| QuantForge | 1.4 μs | 55.6ms | 1.0x |
-| NumPy+SciPy | 77.7 μs | 63.9ms | 1.15x slower |
-| Pure Python | 2.4 μs | - | (Single) 1.7x slower |
+```{list-table} Performance Comparison
+:name: index-table-performance
+:header-rows: 1
+:widths: 25 25 25 25
 
-## Document Structure
+* - Library
+  - Single Calculation
+  - 1 Million Records Processing Time
+  - Relative Speed
+* - QuantForge
+  - 1.4 μs
+  - 55.6ms
+  - 1.0x
+* - NumPy+SciPy
+  - 77.7 μs
+  - 63.9ms
+  - 1.15x slower
+* - Pure Python
+  - 2.4 μs
+  - -
+  - (Single) 1.7x slower
+```
+
+(index-documentation-structure)=
+## Documentation Structure
 
 ```{toctree}
+:name: index-toc-introduction
 :caption: Getting Started
 :maxdepth: 2
 
@@ -65,6 +97,7 @@ installation
 ```
 
 ```{toctree}
+:name: index-toc-user-guide
 :caption: User Guide
 :maxdepth: 2
 
@@ -72,10 +105,12 @@ user_guide/index
 user_guide/basic_usage
 user_guide/advanced_models
 user_guide/numpy_integration
+user_guide/arrow_native_guide
 user_guide/examples
 ```
 
 ```{toctree}
+:name: index-toc-api-reference
 :caption: API Reference
 :maxdepth: 2
 
@@ -92,18 +127,20 @@ api/rust/index
 ```
 
 ```{toctree}
+:name: index-toc-mathematical-models
 :caption: Mathematical Models
 :maxdepth: 2
 
 models/index
-models/american_options
-models/asian_options
 models/black_scholes
 models/black76
 models/merton
+models/american_options
+models/asian_options
 ```
 
 ```{toctree}
+:name: index-toc-performance
 :caption: Performance
 :maxdepth: 2
 
@@ -113,19 +150,26 @@ performance/tuning
 ```
 
 ```{toctree}
+:name: index-toc-development
 :caption: For Developers
 :maxdepth: 2
 
+development/setup
 development/architecture
 development/contributing
+development/testing
+development/hardcode-prevention
+migration/numpy_to_arrow
 ```
 
-## index
+(index-indices)=
+## Indices
 
 * {ref}`genindex`
 * {ref}`modindex`
 * {ref}`search`
 
+(index-project-links)=
 ## Project Links
 
 - [GitHub Repository](https://github.com/yourusername/quantforge)

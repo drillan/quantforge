@@ -7,46 +7,24 @@
 [![Python Version](https://img.shields.io/badge/python-3.12%2B-blue)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Rust](https://img.shields.io/badge/rust-1.88%2B-orange)](https://www.rust-lang.org/)
-[![codecov](https://codecov.io/gh/yourusername/quantforge/branch/main/graph/badge.svg)](https://codecov.io/gh/yourusername/quantforge)
-[![Test Coverage](https://img.shields.io/badge/coverage-82.45%25-green)](./target/llvm-cov-html/html)
 
-**Option Pricing Library with Rust Performance — Up to 472x Faster than NumPy+SciPy**
+**Rust-Powered Option Pricing Library — Up to <!-- BENCHMARK:MAX_SPEEDUP_NUMPY -->70<!-- /BENCHMARK:MAX_SPEEDUP_NUMPY -->x Faster than NumPy+SciPy**
 
-[Features](#-features) • [Benchmarks](#-benchmarks) • [Installation](#-installation) • [Quick Start](#-quick-start) • [Documentation](#-documentation)
+[Features](#-main-features) • [Installation](#-installation) • [Quick Start](#-quick-start) • [Benchmarks](#-benchmarks) • [Documentation](#-documentation)
 
 </div>
 
 ---
 
-## Overview
+## 📖 Overview
 
-QuantForge is a high-performance quantitative finance library that combines the safety and speed of Rust with the ease of Python. Built for production use cases requiring microsecond-level latency, it provides battle-tested option pricing models with complete Greeks calculation. The library achieves 100-500x speedup over pure Python implementations through Rust optimization, SIMD vectorization, and automatic parallelization for batch operations.
+QuantForge is a high-performance option pricing library implemented in Rust with Python bindings via PyO3. It provides Black-Scholes based pricing, Greeks calculation, and implied volatility computation with Rust's performance while maintaining Python's ease of use.
 
-## 📊 Performance Metrics
+## 📋 Features and Implementation
 
-Measured performance on AMD Ryzen 5 5600G (6-core/12-thread), 29.3GB RAM, Linux 6.12 (2025-08-28):
+#### Option Pricing Models
 
-### Implied Volatility Calculation
-| Implementation | Single Calc | vs NumPy+SciPy | 10K Batch | vs Pure Python |
-|----------------|-------------|----------------|-----------|----------------|
-| **QuantForge** | 1.5 μs | - | 19.87 ms | - |
-| **Pure Python** | 32.9 μs | 22x faster | 6,865 ms | 346x slower |
-| **NumPy+SciPy** | 707.3 μs | 472x slower | 120 ms | 6x slower |
-
-### Black-Scholes Pricing
-| Operation | Time | Notes |
-|-----------|------|-------|
-| Single Call Price | 1.40 μs | Using error function implementation |
-| Complete Greeks | < 50 ns | Delta, Gamma, Vega, Theta, Rho |
-| 1M Batch Processing | 55.60 ms | With automatic parallelization |
-
-*Performance varies based on hardware configuration and data size. Benchmarks represent median of 5 runs after 100 warmup iterations.*
-
-## 📋 Features and Capabilities
-
-### Option Pricing Models
-
-QuantForge supports multiple option pricing models, each optimized for specific asset classes:
+QuantForge supports multiple option pricing models optimized for various asset classes:
 
 - **Black-Scholes**: European options on stocks
 - **American Options**: Early exercise options with Bjerksund-Stensland (2002) approximation
@@ -56,19 +34,36 @@ QuantForge supports multiple option pricing models, each optimized for specific 
 - **Spread Options** *(coming soon)*: Multi-asset options
 - **Garman-Kohlhagen** *(coming soon)*: FX options
 
-### Core Capabilities
-- **Complete Greeks**: Delta, Gamma, Vega, Theta, Rho with analytical precision
-- **Model-Specific Greeks**: Dividend Rho (Merton), Early Exercise Boundaries (American)
-- **Implied Volatility**: Hybrid Newton-Raphson/Brent solver with Brenner-Subrahmanyam initialization
-- **Batch Processing**: Zero-copy NumPy integration with automatic parallelization (>30k elements)
+#### Core Features
 
-### Technical Implementation
-- 🦀 **Pure Rust Core**: Memory-safe, zero-overhead abstractions
-- 🎯 **Machine Precision**: Error-function based implementation (<1e-15 accuracy)
-- ⚡ **Mathematical Functions**: Optimized implementations with measured performance
-- 🔧 **Production Ready**: Comprehensive input validation and edge case handling
+- ⚡ **High Performance**: Up to <!-- BENCHMARK:MAX_SPEEDUP_NUMPY -->70<!-- /BENCHMARK:MAX_SPEEDUP_NUMPY -->x faster than NumPy+SciPy, <!-- BENCHMARK:MAX_SPEEDUP_PYTHON -->75<!-- /BENCHMARK:MAX_SPEEDUP_PYTHON -->x faster than Pure Python
+- 🎯 **Machine Precision**: erf-based implementation achieving <1e-15 accuracy
+- 📊 **Complete Greeks**: Delta, Gamma, Vega, Theta, Rho plus model-specific Greeks (Dividend Rho, Early Exercise Boundary)
+- 🚀 **Auto-Parallelization**: Automatic Rayon parallelization for batches >30,000 elements
+- 📦 **Zero-Copy Design**: Direct NumPy array access eliminating memory copy overhead
+- ✅ **Robustness**: 250+ golden master tests with comprehensive coverage
+- 🔧 **Production Ready**: Input validation, edge case handling, Put-Call parity verified
 
-## 📦 Installation
+## 📊 Performance Benchmark Results
+
+<!-- BENCHMARK:SUMMARY:START -->
+Test Environment: Linux - 6 cores - 29.3GB RAM - Python 3.12.5 - 2025-09-04 22:40:03
+<!-- BENCHMARK:SUMMARY:END -->
+
+### Latest Benchmark Results
+<!-- BENCHMARK:TABLE:START -->
+| Data Size | QuantForge | Pure Python | NumPy+SciPy | vs Python | vs NumPy |
+|-----------|------------|-------------|------------|-----------|----------|
+| Single | 1.51 μs | 2.10 μs | 105.94 μs | 1.4x | 70.0x |
+| 100 | 18.81 μs | 183.66 μs | 79.71 μs | 9.8x | 4.2x |
+| 1,000 | 53.29 μs | 1.79 ms | 132.72 μs | 33.5x | 2.5x |
+| 10,000 | 237.46 μs | 17.84 ms | 537.96 μs | 75.1x | 2.3x |
+<!-- BENCHMARK:TABLE:END -->
+
+*Performance varies by environment. Values shown are medians of 5 runs. See [benchmarks](docs/en/performance/benchmarks.md) for details.*
+
+## 📥 Installation
+
 
 ### From TestPyPI (Latest Development Version)
 
@@ -102,372 +97,199 @@ uv sync --group dev
 pip install -e ".[dev]"
 ```
 
-## 💻 Quick Start
+## 🚀 Quick Start
 
-### Black-Scholes Model (European Options)
+### Basic Usage
 
 ```python
 import numpy as np
 from quantforge.models import black_scholes
 
-# Single option pricing
-spot = 100.0      # Underlying price
-strike = 105.0    # Strike price  
-time = 0.25       # Time to maturity (years)
-rate = 0.05       # Risk-free rate
-sigma = 0.2       # Volatility (industry standard σ)
+# Single option calculation
+spot = 100.0   # Current price
+strike = 110.0 # Strike price
+time = 1.0     # Time to maturity (years)
+rate = 0.05    # Risk-free rate
+sigma = 0.2    # Volatility
 
-# Black-Scholes model for stock options
+# Call option price
 call_price = black_scholes.call_price(spot, strike, time, rate, sigma)
+print(f"Call Price: ${call_price:.4f}")
+
+# Put option price
 put_price = black_scholes.put_price(spot, strike, time, rate, sigma)
+print(f"Put Price: ${put_price:.4f}")
 
-print(f"Call: ${call_price:.4f}, Put: ${put_price:.4f}")
-```
-
-### American Options (Early Exercise)
-
-```python
-from quantforge.models import american
-
-# American option with dividends
-spot = 100.0      # Current stock price
-strike = 100.0    # Strike price
-time = 1.0        # Time to maturity (years)
-rate = 0.05       # Risk-free rate
-q = 0.03          # Dividend yield
-sigma = 0.2       # Volatility
-
-# American call price (Barone-Adesi-Whaley 1987 with empirical dampening)
-call_price = american.call_price(spot, strike, time, rate, q, sigma)
-put_price = american.put_price(spot, strike, time, rate, q, sigma)
-
-# Early exercise boundary
-boundary = american.exercise_boundary(spot, strike, time, rate, q, sigma, is_call=True)
-print(f"Early exercise boundary: ${boundary:.2f}")
-```
-
-**Note on American Option Pricing**:
-- Implementation: Barone-Adesi-Whaley (BAW) 1987 approximation with empirical dampening factor
-- Accuracy: < 1% error vs BENCHOP reference values for ATM options
-- Performance: ~0.27μs per calculation (optimal for real-time applications)
-- **Limitations**: 
-  - Optimized for ATM options (S/K = 0.9-1.1) with T = 0.5-1.5 years
-  - May have reduced accuracy for deep ITM/OTM options or short-term options (T < 0.1)
-  - For maximum accuracy outside these ranges, consider using `american.binomial()` with higher steps
-
-### Merton Model (Dividend-Paying Assets)
-
-```python
-from quantforge.models import merton
-
-# Options on dividend-paying stocks
-spot = 100.0      # Current stock price
-strike = 105.0    # Strike price
-time = 1.0        # Time to maturity
-rate = 0.05       # Risk-free rate
-q = 0.03          # Continuous dividend yield
-sigma = 0.2       # Volatility
-
-# Merton model pricing
-call_price = merton.call_price(spot, strike, time, rate, q, sigma)
-put_price = merton.put_price(spot, strike, time, rate, q, sigma)
-
-# Greeks including dividend sensitivity
-greeks = merton.greeks(spot, strike, time, rate, q, sigma, is_call=True)
-print(f"Dividend Rho: {greeks.dividend_rho:.4f}")  # Merton-specific Greek
-```
-
-### Black76 Model (Futures & Commodities)
-
-```python
-from quantforge.models import black76
-
-# Commodity futures options
-forward = 75.50   # Forward/futures price
-strike = 70.00    # Strike price
-time = 0.25       # Time to maturity
-rate = 0.05       # Risk-free rate
-sigma = 0.3       # Volatility
-
-# Black76 pricing for futures
-call_price = black76.call_price(forward, strike, time, rate, sigma)
-put_price = black76.put_price(forward, strike, time, rate, sigma)
-
-print(f"Futures Call: ${call_price:.4f}, Put: ${put_price:.4f}")
-```
-
-### Batch Processing (Full Array Support)
-
-```python
-# Process 100,000 options with full array support and broadcasting
-n = 100000
-spots = np.linspace(80, 120, n)
-strikes = 100.0  # Scalar automatically broadcasts to array size
-times = np.random.uniform(0.1, 2.0, n)
-rates = 0.05
-sigmas = np.random.uniform(0.1, 0.4, n)
-
-from quantforge.models import black_scholes
-# All parameters can be arrays or scalars (broadcasting supported)
-call_prices = black_scholes.call_price_batch(spots, strikes, times, rates, sigmas)
-
-# Greeks batch returns dictionary of NumPy arrays
-greeks = black_scholes.greeks_batch(spots, strikes, times, rates, sigmas, is_calls=True)
-portfolio_delta = greeks['delta'].sum()
-portfolio_vega = greeks['vega'].sum()
-
-# Automatic parallelization for large arrays (>30k elements)
-print(f"Processed {len(call_prices):,} options")
-print(f"Portfolio Delta: {portfolio_delta:.2f}, Vega: {portfolio_vega:.2f}")
-```
-
-### Greeks Calculation
-
-```python
-# Module-based API
-from quantforge.models import black_scholes
-
-# All Greeks at once
+# All Greeks calculation
 greeks = black_scholes.greeks(spot, strike, time, rate, sigma, is_call=True)
-print(greeks)  # Greeks(delta=0.377, gamma=0.038, vega=0.189, theta=-0.026, rho=0.088)
-
-# Access individual Greeks
-print(f"Delta: {greeks.delta:.3f}")
-print(f"Gamma: {greeks.gamma:.3f}")
+print(f"Delta: {greeks.delta:.4f}")
+print(f"Gamma: {greeks.gamma:.4f}")
+print(f"Vega: {greeks.vega:.4f}")
+print(f"Theta: {greeks.theta:.4f}")
+print(f"Rho: {greeks.rho:.4f}")
 ```
 
-### Implied Volatility
+### Batch Processing (High Performance)
+
+```python
+import numpy as np
+from quantforge.models import black_scholes
+
+# Generate 1 million random data points
+n = 1_000_000
+spots = np.random.uniform(80, 120, n)      # Uniform distribution 80-120
+strikes = np.full(n, 100.0)                # Fixed strike
+times = np.random.uniform(0.1, 2.0, n)     # 0.1-2 years
+rates = np.full(n, 0.05)                   # Fixed rate
+sigmas = np.random.uniform(0.1, 0.4, n)    # 10-40% volatility
+
+# Batch processing (~56ms for 1M elements)
+prices = black_scholes.call_price_batch(spots, strikes, times, rates, sigmas)
+
+# Batch Greeks calculation
+greeks = black_scholes.greeks_batch(spots, strikes, times, rates, sigmas, 
+                                    is_call=np.full(n, True))
+```
+
+### Implied Volatility Calculation
 
 ```python
 from quantforge.models import black_scholes
 
-# Solve for IV from market price
-market_price = 3.5
+# Calculate implied volatility from market price
+market_price = 12.50
 iv = black_scholes.implied_volatility(
-    market_price, spot, strike, time, rate, is_call=True
+    price=market_price,
+    s=100.0,  # Current price
+    k=110.0,  # Strike price
+    t=1.0,    # Time to maturity
+    r=0.05,   # Risk-free rate
+    is_call=True
 )
 print(f"Implied Volatility: {iv:.2%}")
-
-# Note: Batch IV calculation coming in future release
-# Will support vectorized implied volatility solving
 ```
 
-## 🔬 Implementation Details
+## 🔄 Parallelization Optimization
 
-### Mathematical Foundation
-- **Normal CDF**: Error function (erf) based implementation for machine precision
-- **Greeks**: Analytical formulas with special handling for edge cases (ATM, near-expiry)
-- **IV Solver**: Hybrid approach combining Newton-Raphson (fast convergence) with Brent's method (guaranteed convergence)
+QuantForge automatically balances computation and overhead by applying parallelization based on data size:
 
-### Architecture
-- **Zero-Copy Design**: Direct NumPy array access via PyO3
-- **Dynamic Parallelization**: Automatic thread pool sizing based on workload
-- **Memory Efficiency**: Stack allocation for small batches, minimal heap pressure
+| Data Size | Processing Mode | Notes |
+|-----------|----------------|-------|
+| < 1,000 | Single-threaded | Avoid overhead |
+| 1,000 - 30,000 | Multi-threaded (small) | 2-4 threads |
+| > 30,000 | Fully parallel | All available cores |
 
-### Validation
-- **250+ Golden Master Tests**: Validated against reference implementations
-- **Property-Based Testing**: Hypothesis framework for edge case discovery
-- **Put-Call Parity**: Automatic validation in test suite
-- **Boundary Conditions**: Special handling for extreme values
-- **Model Cross-Validation**: Consistency checks between related models (BS-Merton, American-European)
+```python
+import numpy as np
+from quantforge.models import black_scholes
 
-## 🚀 Why QuantForge is Fast
+# Large data: Automatic parallelization (all cores)
+large_spots = np.random.uniform(90, 110, 1_000_000)
+large_prices = black_scholes.call_price_batch(large_spots, 100, 1.0, 0.05, 0.2)
 
-QuantForge achieves exceptional performance through five key optimizations:
-
-1. **Rust Core Implementation**
-   - Zero-cost abstractions and memory safety without garbage collection
-   - Compile-time optimizations and inlining
-   - Direct memory layout control
-
-2. **Mathematical Optimizations**
-   - Error function (erf) based normal CDF for machine precision
-   - Analytical Greeks formulas avoiding numerical differentiation
-   - Special case handling for boundary conditions
-
-3. **Automatic Parallelization**
-   - Rayon-based parallel processing for arrays > 30,000 elements
-   - Work-stealing scheduler for optimal CPU utilization
-   - Cache-friendly data access patterns
-
-4. **Zero-Copy NumPy Integration**
-   - Direct memory access via PyO3 unsafe blocks
-   - No serialization/deserialization overhead
-   - Efficient array iteration with ndarray
-
-5. **Optimized Mathematical Functions**
-   - SIMD vectorization where applicable
-   - Branch-free algorithms for critical paths
-   - Lookup tables for frequently accessed values
-
-## 📊 Detailed Performance Analysis
-
-### Test Environment
-- **CPU**: AMD Ryzen 5 5600G (6 cores/12 threads)
-- **Memory**: 29.3 GB DDR5
-- **OS**: Linux 6.12 (Pop!_OS 22.04)
-- **Python**: 3.12.5
-- **Measurement Date**: 2025-08-28
-- **Methodology**: CUI mode (multi-user.target), median of 5 runs
-
-### Implementation Comparison by Data Size
-
-#### Small Scale (100-1,000 elements)
-- QuantForge shows best performance due to low FFI overhead
-- NumPy+SciPy vectorization benefits not yet realized
-
-#### Medium Scale (10,000-100,000 elements)
-- NumPy+SciPy vectorization becomes competitive
-- FFI overhead most noticeable at this scale
-
-#### Large Scale (1M+ elements)
-- QuantForge parallel processing shows maximum benefit
-- Rayon parallelization automatically engages
-
-### Technical Considerations
-- **FFI Overhead**: ~1 μs per call, amortized in batch operations
-- **Parallelization Threshold**: Automatically enabled for >30,000 elements
-- **Memory Access**: Zero-copy design via PyO3 for NumPy arrays
-
-## 🛠️ Development
-
-### Building
-```bash
-# Debug build
-cargo build
-
-# Release build (optimized)
-cargo build --release
-
-# Run tests
-cargo test --release
-pytest
+# Small data: Single-threaded (avoid overhead)
+small_spots = np.array([100, 105, 110])
+small_prices = black_scholes.call_price_batch(small_spots, 100, 1.0, 0.05, 0.2)
 ```
 
-### Code Quality
-```bash
-# Rust linting
-cargo clippy -- -D warnings
+## 📊 Benchmarks
 
-# Python formatting
-uv run ruff format .
+### Practical Scenario: Volatility Surface Construction (10×10 Grid)
+| Implementation | Time | vs QuantForge |
+|---------------|------|---------------|
+| **QuantForge** (parallel) | 0.1 ms | - |
+| **NumPy+SciPy** (vectorized) | 0.4 ms | 4x slower |
+| **Pure Python** (for loop) | 5.5 ms | 55x slower |
 
-# Python linting
-uv run ruff check .
+### Practical Scenario: 10,000 Option Portfolio Risk Calculation
+| Implementation | Time | vs QuantForge |
+|---------------|------|---------------|
+| **QuantForge** (parallel) | 1.9 ms | - |
+| **NumPy+SciPy** (vectorized) | 2.7 ms | 1.4x slower |
+| **Pure Python** (for loop, estimated) | ~70 ms | 37x slower |
 
-# Type checking
-uv run mypy .
+See [performance benchmarks](docs/en/performance/benchmarks.md) for detailed results.
+
+## 🏗️ Architecture
+
+```
+quantforge/
+├── src/                    # Rust core implementation
+│   ├── models/            # Pricing models (Black-Scholes, Black76, Merton, etc.)
+│   ├── math/              # Mathematical functions (erf, norm_cdf, etc.)
+│   ├── validation.rs      # Input validation
+│   └── traits.rs          # Batch processing traits
+│
+├── python/                 # Python bindings
+│   └── quantforge/        # Python package
+│       └── models/        # Model-specific modules
+│
+└── tests/                  # Test suite
+    ├── unit/              # Unit tests
+    ├── integration/       # Integration tests
+    ├── golden_master/     # Golden master tests
+    └── performance/       # Benchmark tests
 ```
 
-### Performance Testing
-```bash
-# Run benchmarks
-cargo bench
-pytest tests/performance/ --benchmark-only
-
-# Generate performance report
-pytest tests/performance/ --benchmark-json=benchmark.json
-```
+### Technology Stack
+- **Rust 1.88+**: Core computation engine
+- **PyO3**: Python-Rust bindings
+- **Rayon**: Data parallel processing
+- **NumPy**: Array interface
+- **maturin**: Build and packaging
 
 ## 📚 Documentation
 
-Complete documentation is available at: **https://drillan.github.io/quantforge/**
+- [Official Documentation (English)](https://drillan.github.io/quantforge/en/)
+- [API Reference](https://drillan.github.io/quantforge/en/api/)
+- [Performance Guide](docs/en/performance/optimization.md)
+- [Developer Guide](docs/en/development/architecture.md)
+- [Detailed Benchmarks](docs/en/performance/benchmarks.md)
 
-For local documentation building:
+## 🧪 Testing
 
 ```bash
-# Build documentation locally
-uv run sphinx-build -M html docs/en docs/en/_build
+# Run Python tests (450+ test cases)
+pytest tests/
 
-# View in browser
-open docs/en/_build/html/index.html
+# Run Rust tests
+cargo test --release
+
+# Measure coverage
+pytest tests/ --cov=quantforge --cov-report=html
+
+# Run benchmarks
+pytest tests/performance/ -m benchmark
 ```
-
-Documentation includes:
-- Complete API reference
-- Mathematical foundations
-- Performance optimization guide
-- Architecture deep-dive
-
-## 🗺️ Roadmap
-
-### Completed ✅
-- [x] Black-Scholes Model (European options)
-- [x] American Options (Bjerksund-Stensland 2002 approximation)
-- [x] Merton Model (Dividend-paying assets)
-- [x] Black76 Model (Futures and commodities)
-- [x] Complete Greeks suite (including model-specific Greeks)
-- [x] Implied Volatility solver
-- [x] Batch processing with auto-parallelization
-- [x] Zero-copy NumPy integration
-- [x] Early exercise boundary calculation
-
-### In Progress 🚧
-- [ ] Asian options (geometric and arithmetic averaging)
-- [ ] Spread options (Kirk's approximation)
-- [ ] Barrier options (up/down, in/out)
-- [ ] Lookback options
-
-### Planned 📋
-- [ ] Garman-Kohlhagen (FX options)
-- [ ] Stochastic volatility models (Heston, SABR)
-- [ ] Monte Carlo framework with variance reduction
-- [ ] Finite difference methods (American options refinement)
-- [ ] GPU acceleration (CUDA/Metal)
-- [ ] Real-time market data integration
-- [ ] Calibration framework
 
 ## 🤝 Contributing
 
-We welcome contributions!
-
-### Development Workflow
+Pull requests are welcome! For major changes, please open an issue first to discuss what you would like to change.
 
 1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/your-feature`)
-3. Commit your changes (`git commit -m 'Add your feature'`)
-4. Push to the branch (`git push origin feature/your-feature`)
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
 
-### Code Standards
-- Follow Rust idioms and `clippy` recommendations
-- Maintain test coverage above 90%
-- Document public APIs
-- Benchmark performance-critical changes
+See [Contributing Guide](CONTRIBUTING.md) for details.
 
-## 📈 Use Cases
-
-QuantForge is designed for:
-- **High-Frequency Trading**: Sub-microsecond pricing for market making
-- **Risk Management**: Real-time portfolio Greeks calculation
-- **Backtesting**: Process millions of scenarios efficiently
-- **Research**: Rapid prototyping with Python, production performance with Rust
-
-## 🔐 License
+## 📄 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## 🙏 Acknowledgments
 
-Built with these excellent tools:
-- [PyO3](https://github.com/PyO3/pyo3) - Rust bindings for Python
-- [Rayon](https://github.com/rayon-rs/rayon) - Data parallelism for Rust
-- [maturin](https://github.com/PyO3/maturin) - Build and publish Rust Python extensions
+- QuantLib for implementation and validation data
+- Rayon project for high-speed parallel processing
+- PyO3 project for Python-Rust bindings
 
-## 📞 Contact
+## 📮 Contact
 
-- **Issues**: [GitHub Issues](https://github.com/drillan/quantforge/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/drillan/quantforge/discussions)
-- **Security**: Please report security vulnerabilities privately
+For questions or suggestions, please [open an issue](https://github.com/drillan/quantforge/issues) or join our [discussions](https://github.com/drillan/quantforge/discussions).
 
 ---
 
 <div align="center">
-
-**Built with Rust for Speed, Wrapped in Python for Simplicity**
-
-⭐ Star us on GitHub — it helps the project grow!
-
-*Performance metrics measured on AMD Ryzen 5 5600G, 29.3GB RAM, Linux 6.12 (2025-08-28)*
-
+Made with ❤️ by the QuantForge team
 </div>

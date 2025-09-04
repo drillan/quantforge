@@ -57,7 +57,7 @@ For details, refer to the [Batch Processing API](batch_processing.md).
 Bulk calculation of option sensitivities (Greeks) considering dividends:
 
 ```{code-block} python
-:name: merton-code-section
+:name: merton-code-greeks-calculation
 :caption: Calculate all Greeks at once
 :linenos:
 

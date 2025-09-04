@@ -66,7 +66,7 @@ For details, refer to the [Batch Processing API](batch_processing.md).
 Bulk calculate optional sensitivities (Greeks):
 
 ```{code-block} python
-:name: black-scholes-code-section
+:name: black-scholes-code-greeks-calculation
 :caption: Calculate all Greeks at once
 :linenos:
 # Calculate all Greeks at once

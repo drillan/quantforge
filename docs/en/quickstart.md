@@ -44,7 +44,7 @@ print(f"Call Option Price: ${price:.2f}")
 ### The Greeks' Calculations
 
 ```{code-block} python
-:name: quickstart-code-section
+:name: quickstart-code-greeks-calculation
 :caption: Detailed calculation including Greeks
 :linenos:
 

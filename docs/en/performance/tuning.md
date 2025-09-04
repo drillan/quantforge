@@ -1,360 +1,313 @@
-# Performance Tuning Guide
+# Performance Tuning
 
-Guide for optimizing QuantForge performance in production environments.
+Detailed tuning guide according to environment and workload.
 
-## System Requirements
-
-### Minimum Requirements
-- **CPU**: x86_64 with SSE2 support
-- **Memory**: 4GB RAM
-- **OS**: Linux/macOS/Windows (64-bit)
-- **Python**: 3.8+
-
-### Recommended Requirements
-- **CPU**: Modern x86_64 with AVX2 support (Intel Haswell+ or AMD Zen+)
-- **Memory**: 16GB+ RAM for large portfolios
-- **OS**: Linux for best performance
-- **Python**: 3.10+ with NumPy 1.20+
-
-## Installation Optimization
-
-### 1. Compiler Optimization
-
-Install from source with native CPU optimizations:
-```bash
-# Clone repository
-git clone https://github.com/quantforge/quantforge.git
-cd quantforge
-
-# Build with native optimizations
-RUSTFLAGS="-C target-cpu=native" pip install .
+```{warning}
+The advanced performance tuning features described on this page (strategy selection, CPU-specific optimization, NUMA settings, etc.) are planned for future implementation.
+Currently, QuantForge performs optimizations automatically internally.
 ```
 
-### 2. Pre-built Wheels
-
-For production, use optimized pre-built wheels:
-```bash
-# Intel CPUs with AVX2
-pip install quantforge[avx2]
-
-# AMD CPUs with Zen2+
-pip install quantforge[zen2]
-
-# Generic x86_64 (fallback)
-pip install quantforge
-```
-
-## Runtime Configuration
-
-### 1. Thread Pool Configuration
-
-```python
-import quantforge as qf
-
-# Set thread pool size (default: CPU cores)
-qf.set_num_threads(8)
-
-# Get current configuration
-print(qf.get_num_threads())
-
-# Auto-tune based on workload
-qf.auto_tune_threads(sample_size=10000)
-```
-
-### 2. Memory Pool Settings
-
-```python
-# Enable memory pooling for repeated calculations
-qf.enable_memory_pool(
-    initial_size_mb=100,
-    max_size_mb=1000,
-    growth_factor=2.0
-)
-
-# Monitor memory usage
-stats = qf.get_memory_stats()
-print(f"Pool usage: {stats['used_mb']:.1f}/{stats['total_mb']:.1f} MB")
-```
-
-### 3. Precision Settings
-
-```python
-# Set precision mode
-qf.set_precision_mode('high')  # Full f64 precision (default)
-qf.set_precision_mode('fast')  # Mixed precision where safe
-qf.set_precision_mode('ultra')  # Extended precision for edge cases
-
-# Configure tolerances
-qf.set_convergence_tolerance(1e-10)  # For iterative methods
-qf.set_numerical_tolerance(1e-15)    # For comparisons
-```
-
-## Workload-Specific Tuning
-
-### 1. Real-time Trading
-
-For low-latency applications:
-```python
-# Minimize latency configuration
-qf.configure_realtime(
-    thread_priority='high',
-    cpu_affinity=[0, 1],  # Pin to specific cores
-    disable_gc=True,       # Disable Python GC during critical sections
-    preallocate_memory=True
-)
-
-# Warm up the JIT and caches
-qf.warmup(iterations=1000)
-
-# Use low-latency API
-price = qf.black_scholes_fast(s, k, t, r, sigma)  # Single precision
-```
-
-### 2. Batch Processing
-
-For high-throughput scenarios:
-```python
-# Configure for batch processing
-qf.configure_batch(
-    chunk_size=10000,
-    parallel_threshold=1000,  # Use parallel processing above this size
-    memory_prefetch=True
-)
-
-# Process large dataset
-results = qf.black_scholes_batch(
-    data,
-    progress_callback=lambda x: print(f"Progress: {x:.1%}")
-)
-```
-
-### 3. Risk Analytics
-
-For portfolio-wide calculations:
-```python
-# Configure for analytics
-qf.configure_analytics(
-    cache_greeks=True,        # Cache intermediate results
-    aggregate_parallel=True,  # Parallel aggregation
-    use_approximations=False  # Full precision for risk
-)
-
-# Calculate portfolio metrics
-portfolio_risk = qf.calculate_portfolio_risk(
-    positions,
-    market_data,
-    correlation_matrix=corr_matrix
-)
-```
-
-## Platform-Specific Optimization
+## Environment-Specific Tuning
 
 ### Linux
 
-```bash
-# Disable CPU frequency scaling
+```{code-block} bash
+:name: tuning-code-cpu
+:caption: CPU Governor Settings
+
+# CPU Governor Settings
 sudo cpupower frequency-set -g performance
 
-# Set CPU governor
-echo performance | sudo tee /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor
+# Enable Huge Pages
+echo 1024 | sudo tee /proc/sys/vm/nr_hugepages
 
-# Increase file descriptor limits
-ulimit -n 65536
-
-# Disable NUMA balancing for dedicated servers
-echo 0 | sudo tee /proc/sys/kernel/numa_balancing
+# NUMA Optimization
+numactl --cpunodebind=0 --membind=0 python script.py
 ```
 
 ### macOS
 
-```bash
-# Disable App Nap
-defaults write NSGlobalDomain NSAppSleepDisabled -bool YES
+```{code-block} bash
+:name: tuning-code-apple-silicon
+:caption: Apple Silicon Optimization
 
-# Increase memory limits
-sudo launchctl limit maxfiles 65536 200000
+# Apple Silicon Optimization
+export CARGO_BUILD_TARGET=aarch64-apple-darwin
+
+# Avoid Rosetta (Native Execution)
+arch -arm64 python script.py
 ```
 
 ### Windows
 
-```powershell
-# Set high performance power plan
-powercfg -setactive 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c
+```{code-block} powershell
+:name: tuning-code-power-plan
+:caption: Power Plan
 
-# Disable CPU throttling
-powercfg -setacvalueindex scheme_current sub_processor PROCTHROTTLEMAX 100
+# Power Plan
+powercfg /setactive SCHEME_MIN
+
+# Process Priority
+Start-Process python.exe -Priority High
 ```
 
-## Monitoring and Profiling
+## Batch Size Optimization
 
-### 1. Built-in Profiler
+### Parallel Processing Thresholds
+
+Current threshold values (future adjustable):
+
+| Constant | Current Value | Purpose |
+|----------|--------------|---------|
+| `PARALLEL_THRESHOLD_SMALL` | 1,000 | Threshold for parallel processing of small data |
+| `PARALLEL_THRESHOLD_MEDIUM` | 10,000 | Threshold for switching parallel strategy |
+| `PARALLEL_THRESHOLD_LARGE` | 100,000 | Threshold for large-scale processing |
+
+### Batch Size Guidelines
+
+| Calculation Type | Recommended Batch Size | Reason |
+|-----------------|------------------------|---------|
+| Real-time | 1-100 | Minimize latency |
+| Interactive | 100-1,000 | Balance responsiveness and efficiency |
+| Batch processing | 10,000-100,000 | Maximize throughput |
+| Backtesting | 1,000,000+ | Utilize full parallelization |
+
+## Memory Optimization
+
+### Pre-allocation Strategy
 
 ```python
-# Enable profiling
-qf.enable_profiler()
+import numpy as np
+from quantforge.models import black_scholes
 
-# Run calculations
-results = perform_calculations()
+# Pre-allocate memory
+n = 1_000_000
+spots = np.empty(n, dtype=np.float64)
+results = np.empty(n, dtype=np.float64)
 
-# Get profile report
-profile = qf.get_profile_report()
-print(profile.to_string(sort_by='time'))
-
-# Export to file
-profile.to_csv('profile_results.csv')
+# Reuse allocated memory
+for batch in data_batches:
+    spots[:len(batch)] = batch
+    results[:len(batch)] = black_scholes.call_price_batch(
+        spots=spots[:len(batch)],
+        strike=100.0,
+        time=1.0,
+        rate=0.05,
+        sigma=0.2
+    )
 ```
 
-### 2. Performance Metrics
+### Memory Pool Usage
 
 ```python
-# Enable metrics collection
-qf.enable_metrics()
-
-# After calculations
-metrics = qf.get_metrics()
-print(f"""
-Performance Metrics:
-- Total operations: {metrics['total_ops']:,}
-- Throughput: {metrics['ops_per_second']:,.0f} ops/sec
-- Average latency: {metrics['avg_latency_us']:.2f} μs
-- P99 latency: {metrics['p99_latency_us']:.2f} μs
-- Cache hit rate: {metrics['cache_hit_rate']:.1%}
-""")
-```
-
-### 3. Memory Profiling
-
-```python
-# Track memory usage
-qf.enable_memory_tracking()
-
-# Run calculations
-results = process_large_dataset()
-
-# Get memory report
-mem_report = qf.get_memory_report()
-print(f"""
-Memory Usage:
-- Peak usage: {mem_report['peak_mb']:.1f} MB
-- Current usage: {mem_report['current_mb']:.1f} MB
-- Allocations: {mem_report['num_allocations']:,}
-- Deallocations: {mem_report['num_deallocations']:,}
-""")
-```
-
-## Troubleshooting Performance Issues
-
-### Common Issues and Solutions
-
-#### 1. Slower than Expected Performance
-
-**Symptoms**: Performance below benchmarks
-**Solutions**:
-- Check CPU throttling: `cat /proc/cpuinfo | grep MHz`
-- Verify thread pool size: `qf.get_num_threads()`
-- Ensure optimized build: `qf.get_build_info()`
-
-#### 2. High Memory Usage
-
-**Symptoms**: Excessive memory consumption
-**Solutions**:
-```python
-# Limit memory pool
-qf.set_memory_limit_mb(500)
-
-# Process in chunks
-for chunk in qf.chunk_iterator(data, chunk_size=1000):
-    process_chunk(chunk)
-
-# Clear caches periodically
-qf.clear_caches()
-```
-
-#### 3. Inconsistent Latency
-
-**Symptoms**: Variable response times
-**Solutions**:
-```python
-# Disable automatic garbage collection
+# Use memory pool for repeated allocations
 import gc
+
+# Disable GC during calculation
 gc.disable()
 try:
-    results = critical_calculation()
+    # Intensive calculations
+    for _ in range(1000):
+        prices = black_scholes.call_price_batch(...)
 finally:
     gc.enable()
-
-# Pin threads to cores
-qf.set_cpu_affinity([0, 1, 2, 3])
-
-# Pre-warm caches
-qf.warmup(iterations=100)
+    gc.collect()
 ```
 
-## Best Practices
+## CPU Architecture Specific Optimization
 
-### 1. Data Preparation
-- Pre-sort data when possible
-- Use contiguous memory layouts
-- Avoid unnecessary type conversions
-
-### 2. API Usage
-- Use batch APIs for multiple calculations
-- Reuse option objects for repeated calculations
-- Prefer specialized functions over generic ones
-
-### 3. System Configuration
-- Dedicate cores for QuantForge in production
-- Monitor and adjust thread pool size
-- Use memory pools for repeated allocations
-
-## Advanced Tuning
-
-### Custom Compilation Flags
-
-```toml
-# pyproject.toml
-[tool.maturin]
-rustc-args = [
-    "-C", "target-cpu=native",
-    "-C", "opt-level=3",
-    "-C", "lto=fat",
-    "-C", "codegen-units=1"
-]
-```
-
-### Environment Variables
+### x86_64 (Intel/AMD)
 
 ```bash
-# Set before running Python
-export QUANTFORGE_THREADS=8
-export QUANTFORGE_MEMORY_POOL=1
-export QUANTFORGE_SIMD=avx2
-export QUANTFORGE_PRECISION=fast
+# Check CPU features
+lscpu | grep -E "avx|sse"
+
+# Build with specific features
+RUSTFLAGS="-C target-cpu=native" pip install quantforge
 ```
 
-### Configuration File
+### ARM (Apple Silicon/AWS Graviton)
+
+```bash
+# Neon SIMD optimization
+export RUSTFLAGS="-C target-feature=+neon"
+
+# Build for ARM
+cargo build --release --target aarch64-apple-darwin
+```
+
+## Parallel Processing Control
+
+### Thread Count Adjustment
+
+```python
+import os
+
+# Set Rayon thread count
+os.environ['RAYON_NUM_THREADS'] = '8'
+
+# Or use system CPU count
+os.environ['RAYON_NUM_THREADS'] = str(os.cpu_count())
+```
+
+### NUMA Awareness
+
+```bash
+# Bind to specific NUMA node
+numactl --cpunodebind=0 --membind=0 python your_script.py
+
+# Check NUMA topology
+numactl --hardware
+```
+
+## Profiling and Measurement
+
+### Performance Profiling
+
+```bash
+# Python profiling
+python -m cProfile -o profile.out your_script.py
+python -m pstats profile.out
+
+# Flamegraph generation
+py-spy record -o profile.svg -- python your_script.py
+```
+
+### Bottleneck Identification
+
+```python
+import time
+import contextlib
+
+@contextlib.contextmanager
+def timer(name):
+    start = time.perf_counter()
+    yield
+    end = time.perf_counter()
+    print(f"{name}: {(end - start) * 1000:.2f}ms")
+
+# Usage
+with timer("Price calculation"):
+    prices = black_scholes.call_price_batch(...)
+
+with timer("Greeks calculation"):
+    greeks = black_scholes.greeks_batch(...)
+```
+
+## Production Deployment
+
+### Container Optimization
+
+```dockerfile
+# Dockerfile
+FROM python:3.12-slim
+
+# Install with optimization
+RUN RUSTFLAGS="-C target-cpu=native" pip install quantforge
+
+# Set thread count
+ENV RAYON_NUM_THREADS=4
+```
+
+### Kubernetes Configuration
 
 ```yaml
-# quantforge.yaml
-performance:
-  threads: 8
-  memory_pool_mb: 1000
-  simd_level: avx2
-  precision: high
-  
-optimization:
-  parallel_threshold: 1000
-  cache_size_mb: 100
-  prefetch_distance: 8
-  
-monitoring:
-  enable_metrics: true
-  enable_profiling: false
-  log_level: info
+# deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+spec:
+  template:
+    spec:
+      containers:
+      - name: quantforge-app
+        resources:
+          requests:
+            memory: "1Gi"
+            cpu: "2"
+          limits:
+            memory: "4Gi"
+            cpu: "4"
+        env:
+        - name: RAYON_NUM_THREADS
+          value: "4"
 ```
 
-## References
+## Benchmarking Best Practices
 
-- [QuantForge Benchmarks](benchmarks.md)
-- [Optimization Guide](optimization.md)
-- [Installation Guide](../installation.md)
+### Warm-up Runs
+
+```python
+# Warm up cache and JIT
+for _ in range(10):
+    _ = black_scholes.call_price(
+        spot=100.0, strike=100.0, time=1.0, rate=0.05, sigma=0.2
+    )
+
+# Actual measurement
+import timeit
+result = timeit.timeit(
+    lambda: black_scholes.call_price_batch(spots, 100.0, 1.0, 0.05, 0.2),
+    number=100
+)
+```
+
+### Statistical Measurement
+
+```python
+import numpy as np
+
+# Multiple measurements
+times = []
+for _ in range(100):
+    start = time.perf_counter()
+    result = black_scholes.call_price_batch(...)
+    times.append(time.perf_counter() - start)
+
+# Statistical analysis
+print(f"Mean: {np.mean(times):.3f}s")
+print(f"Std: {np.std(times):.3f}s")
+print(f"Min: {np.min(times):.3f}s")
+print(f"Max: {np.max(times):.3f}s")
+print(f"Median: {np.median(times):.3f}s")
+```
+
+## Troubleshooting
+
+### Performance Degradation
+
+1. **Check CPU throttling**
+   ```bash
+   # Linux
+   cat /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor
+   
+   # Should show "performance"
+   ```
+
+2. **Check memory pressure**
+   ```bash
+   free -h
+   vmstat 1
+   ```
+
+3. **Check background processes**
+   ```bash
+   top -H
+   htop
+   ```
+
+### Unexpected Slowness
+
+- Verify release build: `pip show quantforge`
+- Check Python version: `python --version` (3.10+ recommended)
+- Confirm NumPy uses BLAS: `np.show_config()`
+- Test with simple benchmark first
+
+## Future Optimization Plans
+
+The following features are planned for implementation:
+
+1. **Strategy Selection API**: Choose parallel strategy based on data characteristics
+2. **GPU Acceleration**: CUDA/ROCm support for massive parallel calculations
+3. **Custom Memory Allocators**: Specialized allocators for specific workloads
+4. **JIT Compilation**: Runtime optimization for hot paths
+5. **Vector Instructions**: Explicit SIMD usage for critical loops

@@ -8,7 +8,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Rust](https://img.shields.io/badge/rust-1.88%2B-orange)](https://www.rust-lang.org/)
 
-**Rust実装オプション価格計算ライブラリ - NumPy+SciPy比最大472倍の処理速度**
+**Rust実装オプション価格計算ライブラリ - NumPy+SciPy比最大<!-- BENCHMARK:MAX_SPEEDUP_NUMPY -->70<!-- /BENCHMARK:MAX_SPEEDUP_NUMPY -->倍の処理速度**
 
 [Features](#-主要機能) • [Installation](#-インストール) • [Quick Start](#-クイックスタート) • [Benchmarks](#-ベンチマーク) • [Documentation](#-ドキュメント)
 
@@ -36,7 +36,7 @@ QuantForgeは複数のオプション価格モデルをサポートし、各資�
 
 #### コア機能
 
-- ⚡ **高速処理**: Rust実装により、NumPy+SciPy比で最大472倍、Pure Python比で最大346倍の高速化
+- ⚡ **高速処理**: Rust実装により、NumPy+SciPy比で最大<!-- BENCHMARK:MAX_SPEEDUP_NUMPY -->70<!-- /BENCHMARK:MAX_SPEEDUP_NUMPY -->倍、Pure Python比で最大<!-- BENCHMARK:MAX_SPEEDUP_PYTHON -->75<!-- /BENCHMARK:MAX_SPEEDUP_PYTHON -->倍の高速化
 - 🎯 **高精度計算**: erfベース実装により機械精度レベル（<1e-15）の計算精度を実現
 - 📊 **完全なグリークス**: Delta, Gamma, Vega, Theta, Rho に加え、モデル固有のグリークス（配当Rho、早期行使境界など）
 - 🚀 **自動並列化**: 30,000要素以上のバッチ処理で自動的にRayon並列処理を適用
@@ -46,23 +46,21 @@ QuantForgeは複数のオプション価格モデルをサポートし、各資�
 
 ## 📊 パフォーマンス測定結果
 
-測定環境: AMD Ryzen 5 5600G (6コア/12スレッド)、29.3GB RAM、Linux 6.12（2025-08-28測定）
+<!-- BENCHMARK:SUMMARY:START -->
+測定環境: Linux - 6コア - 29.3GB RAM - Python 3.12.5 - 2025-09-04 22:40:03
+<!-- BENCHMARK:SUMMARY:END -->
 
-### インプライドボラティリティ計算
-| 実装方式 | 単一計算 | 10,000件バッチ | 
-|---------|----------|---------------|
-| **QuantForge** | 1.5 μs | 19.87 ms |
-| **Pure Python** | 32.9 μs (22倍遅い) | 6,865 ms (346倍遅い) |
-| **NumPy+SciPy** | 707.3 μs (472倍遅い) | 120 ms (6倍遅い) |
+### 最新ベンチマーク結果
+<!-- BENCHMARK:TABLE:START -->
+| データサイズ | QuantForge | Pure Python | NumPy+SciPy | vs Python | vs NumPy |
+|------------|------------|-------------|------------|-----------|----------|
+| 単一 | 1.51 μs | 2.10 μs | 105.94 μs | 1.4x | 70.0x |
+| 100件 | 18.81 μs | 183.66 μs | 79.71 μs | 9.8x | 4.2x |
+| 1,000件 | 53.29 μs | 1.79 ms | 132.72 μs | 33.5x | 2.5x |
+| 10,000件 | 237.46 μs | 17.84 ms | 537.96 μs | 75.1x | 2.3x |
+<!-- BENCHMARK:TABLE:END -->
 
-### Black-Scholes価格計算
-| 操作 | 処理時間 | 備考 |
-|------|----------|------|
-| 単一コール価格 | 1.40 μs | 誤差関数実装 |
-| 全グリークス計算 | < 50 ns | Delta, Gamma, Vega, Theta, Rho |
-| 100万件バッチ処理 | 55.60 ms | 自動並列化適用 |
-
-*性能は使用環境により変動します。測定値は5回実行の中央値です。*
+*性能は使用環境により変動します。測定値は5回実行の中央値です。詳細は[ベンチマーク](docs/ja/performance/benchmarks.md)を参照。*
 
 ## 📥 インストール
 
@@ -100,129 +98,58 @@ uv sync --group dev
 pip install -e ".[dev]"
 ```
 
-## 💡 クイックスタート
+## 🚀 クイックスタート
 
-### Black-Scholesモデル（ヨーロピアンオプション）
+### 基本的な使い方
 
 ```python
 import numpy as np
 from quantforge.models import black_scholes
 
-# 単一のオプション価格計算
-spot = 100.0      # 原資産価格
-strike = 105.0    # 権利行使価格
-time = 0.25       # 満期までの時間（年）
-rate = 0.05       # 無リスク金利
-sigma = 0.2       # ボラティリティ（業界標準記号σ）
+# 単一価格計算
+spot = 100.0   # 現在価格
+strike = 110.0 # 権利行使価格
+time = 1.0     # 満期までの時間（年）
+rate = 0.05    # 無リスク金利
+sigma = 0.2    # ボラティリティ
 
-# 株式オプションのBlack-Scholesモデル
+# コールオプション価格
 call_price = black_scholes.call_price(spot, strike, time, rate, sigma)
+print(f"Call Price: ${call_price:.4f}")
+
+# プットオプション価格
 put_price = black_scholes.put_price(spot, strike, time, rate, sigma)
-print(f"Call: ${call_price:.4f}, Put: ${put_price:.4f}")
-```
+print(f"Put Price: ${put_price:.4f}")
 
-### アメリカンオプション（早期行使権付き）
-
-```python
-from quantforge.models import american
-
-# 配当付き株式のアメリカンオプション
-spot = 100.0      # 現在の株価
-strike = 100.0    # 権利行使価格
-time = 1.0        # 満期までの時間（年）
-rate = 0.05       # 無リスク金利
-q = 0.03          # 配当利回り
-sigma = 0.2       # ボラティリティ
-
-# Bjerksund-Stensland 2002近似による価格計算
-call_price = american.call_price(spot, strike, time, rate, q, sigma)
-put_price = american.put_price(spot, strike, time, rate, q, sigma)
-
-# 早期行使境界
-boundary = american.exercise_boundary(spot, strike, time, rate, q, sigma, is_call=True)
-print(f"早期行使境界: ${boundary:.2f}")
-```
-
-### Mertonモデル（配当付き資産）
-
-```python
-from quantforge.models import merton
-
-# 配当を支払う株式のオプション
-spot = 100.0      # 現在の株価
-strike = 105.0    # 権利行使価格
-time = 1.0        # 満期までの時間
-rate = 0.05       # 無リスク金利
-q = 0.03          # 連続配当利回り
-sigma = 0.2       # ボラティリティ
-
-# Mertonモデルによる価格計算
-call_price = merton.call_price(spot, strike, time, rate, q, sigma)
-put_price = merton.put_price(spot, strike, time, rate, q, sigma)
-
-# 配当感応度を含むグリークス
-greeks = merton.greeks(spot, strike, time, rate, q, sigma, is_call=True)
-print(f"配当Rho: {greeks.dividend_rho:.4f}")  # Merton固有のグリーク
-```
-
-### Black76モデル（先物・商品）
-
-```python
-from quantforge.models import black76
-
-# 商品先物オプション
-forward = 75.50   # 先物価格
-strike = 70.00    # 権利行使価格
-time = 0.25       # 満期までの時間
-rate = 0.05       # 無リスク金利
-sigma = 0.3       # ボラティリティ
-
-# Black76による先物オプション価格
-call_price = black76.call_price(forward, strike, time, rate, sigma)
-put_price = black76.put_price(forward, strike, time, rate, sigma)
-
-print(f"先物コール: ${call_price:.4f}, プット: ${put_price:.4f}")
-```
-
-### バッチ処理（完全配列サポート + Broadcasting）
-
-```python
-# すべてのパラメータが配列を受け付ける（Broadcasting対応）
-n = 100000  # 10万個のオプション
-spots = np.linspace(80, 120, n)
-strikes = 100.0  # スカラーは自動的に配列サイズに拡張
-times = np.random.uniform(0.1, 2.0, n)
-rates = 0.05
-sigmas = np.random.uniform(0.1, 0.4, n)
-
-from quantforge.models import black_scholes
-# すべてのパラメータに配列またはスカラーを指定可能
-call_prices = black_scholes.call_price_batch(spots, strikes, times, rates, sigmas)
-
-# Greeksバッチ計算（NumPy配列の辞書を返却）
-greeks = black_scholes.greeks_batch(spots, strikes, times, rates, sigmas, is_calls=True)
-portfolio_delta = greeks['delta'].sum()
-portfolio_vega = greeks['vega'].sum()
-
-# 自動的に並列処理が適用される（30,000要素以上）
-print(f"{len(call_prices):,}個のオプションを処理")
-print(f"ポートフォリオDelta: {portfolio_delta:.2f}, Vega: {portfolio_vega:.2f}")
-```
-
-### グリークス計算
-
-```python
-# モジュールベースAPI
-from quantforge.models import black_scholes
-
-# 全グリークス一括計算
+# 全グリークス計算
 greeks = black_scholes.greeks(spot, strike, time, rate, sigma, is_call=True)
-print(greeks)  # Greeks(delta=0.377, gamma=0.038, vega=0.189, theta=-0.026, rho=0.088)
-
-# 個別のグリークスへのアクセス
 print(f"Delta: {greeks.delta:.4f}")
 print(f"Gamma: {greeks.gamma:.4f}")
 print(f"Vega: {greeks.vega:.4f}")
+print(f"Theta: {greeks.theta:.4f}")
+print(f"Rho: {greeks.rho:.4f}")
+```
+
+### バッチ処理（高速化の効果大）
+
+```python
+import numpy as np
+from quantforge.models import black_scholes
+
+# 100万件のランダムデータ生成
+n = 1_000_000
+spots = np.random.uniform(80, 120, n)      # 80-120の一様分布
+strikes = np.full(n, 100.0)                # 固定ストライク
+times = np.random.uniform(0.1, 2.0, n)     # 0.1-2年
+rates = np.full(n, 0.05)                   # 固定金利
+sigmas = np.random.uniform(0.1, 0.4, n)    # 10-40%のボラティリティ
+
+# バッチ処理（約56ms for 100万件）
+prices = black_scholes.call_price_batch(spots, strikes, times, rates, sigmas)
+
+# バッチグリークス計算
+greeks = black_scholes.greeks_batch(spots, strikes, times, rates, sigmas, 
+                                    is_call=np.full(n, True))
 ```
 
 ### インプライドボラティリティ計算
@@ -230,247 +157,140 @@ print(f"Vega: {greeks.vega:.4f}")
 ```python
 from quantforge.models import black_scholes
 
-# マーケット価格からインプライドボラティリティを逆算
-market_price = 3.5
+# 市場価格からインプライドボラティリティを逆算
+market_price = 12.50
 iv = black_scholes.implied_volatility(
-    market_price, spot, strike, time, rate, is_call=True
+    price=market_price,
+    s=100.0,  # 現在価格
+    k=110.0,  # 権利行使価格
+    t=1.0,    # 満期
+    r=0.05,   # 金利
+    is_call=True
 )
-print(f"Implied Volatility: {iv:.4%}")
-
-# 注：バッチ処理版は将来のリリースで提供予定
+print(f"Implied Volatility: {iv:.2%}")
 ```
 
-## 🔬 実装の詳細
+## 🔄 並列処理の最適化
 
-### 数学的基盤
-- **正規CDF**: 機械精度を実現するerror function (erf)ベース実装
-- **グリークス**: エッジケース（ATM、満期直前）の特別処理を含む解析式
-- **IVソルバー**: Newton-Raphson法（高速収束）とBrent法（確実な収束）のハイブリッドアプローチ
+QuantForgeは計算量とオーバーヘッドのバランスを考慮して、自動的に並列処理を適用します：
 
-### アーキテクチャ
-- **ゼロコピー設計**: PyO3経由でNumPy配列に直接アクセス
-- **動的並列化**: ワークロードに基づく自動スレッドプール調整
-- **メモリ効率**: 小バッチではスタック割り当て、最小限のヒープ使用
+| データサイズ | 処理方式 | 備考 |
+|------------|---------|------|
+| < 1,000 | 単一スレッド | オーバーヘッド回避 |
+| 1,000 ~ 30,000 | マルチスレッド（小） | 2-4スレッド使用 |
+| > 30,000 | 完全並列 | 利用可能な全コア使用 |
 
-### 検証
-- **250以上のゴールデンマスターテスト**: 参照実装との照合
-- **プロパティベーステスティング**: Hypothesisフレームワークによるエッジケース検出
-- **プットコールパリティ**: テストスイートでの自動検証
-- **境界条件**: 極値の特別処理
-- **モデル間クロス検証**: 関連モデル（BS-Merton、American-European）間の整合性チェック
+```python
+import numpy as np
+from quantforge.models import black_scholes
 
-## 🚀 QuantForgeが高速な理由
+# 大規模データ: 自動的に並列処理（すべてのコア使用）
+large_spots = np.random.uniform(90, 110, 1_000_000)
+large_prices = black_scholes.call_price_batch(large_spots, 100, 1.0, 0.05, 0.2)
 
-QuantForgeは5つの主要な最適化により卓越したパフォーマンスを実現しています：
-
-1. **Rustコア実装**
-   - ガベージコレクション無しでゼロコスト抽象化とメモリ安全性を実現
-   - コンパイル時最適化とインライン化
-   - メモリレイアウトの直接制御
-
-2. **数学的最適化**
-   - 機械精度を実現するerror function (erf)ベースの正規CDF
-   - 数値微分を回避する解析的グリークス公式
-   - 境界条件の特別ケース処理
-
-3. **自動並列化**
-   - 30,000要素以上の配列に対するRayonベースの並列処理
-   - 最適なCPU使用率のためのワークスティーリングスケジューラ
-   - キャッシュフレンドリーなデータアクセスパターン
-
-4. **ゼロコピーNumPy統合**
-   - PyO3のunsafeブロックを介した直接メモリアクセス
-   - シリアライゼーション/デシリアライゼーションのオーバーヘッドなし
-   - ndarrayによる効率的な配列イテレーション
-
-5. **最適化された数学関数**
-   - 適用可能な場所でのSIMDベクトル化
-   - クリティカルパスのブランチフリーアルゴリズム
-   - 頻繁にアクセスされる値のルックアップテーブル
-
-## 📊 詳細なベンチマーク結果
-
-### 実践シナリオでの性能比較
-
-#### ボラティリティサーフェス構築（100×100グリッド）
-| 実装方式 | 処理時間 | 
-|---------|----------|
-| **NumPy+SciPy** (ベクトル化) | 2.3 ms |
-| **QuantForge** (並列処理) | 6.5 ms |
-
-※ 大規模データではNumPy+SciPyのベクトル化が有効な場合があります
-
-#### ポートフォリオリスク計算（10,000オプション）  
-| 実装方式 | 処理時間 |
-|---------|----------|
-| **QuantForge** (並列処理) | 1.9 ms |
-| **NumPy+SciPy** (ベクトル化) | 2.7 ms |
-
-### データサイズ別の最適実装
-
-#### 小規模（100-1,000要素）
-- QuantForgeが最高性能（FFIオーバーヘッドが少ない）
-
-#### 中規模（10,000-100,000要素）
-- NumPy+SciPyのベクトル化が競合
-- FFIオーバーヘッドが顕著
-
-#### 大規模（100万要素以上）
-- QuantForgeの並列処理が最大効果を発揮
-- Rayonによる自動並列化
-
-## 🛠️ 開発環境セットアップ
-
-### 必要要件
-
-- Python 3.11以上
-- Rust 1.88以上
-- NumPy 1.20以上
-
-### ビルドとテスト
-
-```bash
-# Rustコードのビルド
-cargo build --release
-
-# Rustテストの実行
-cargo test --release
-
-# Pythonテストの実行
-pytest
-
-# カバレッジ付きテスト
-pytest --cov=quantforge --cov-report=html
-
-# ベンチマークの実行
-pytest tests/performance/ -v --benchmark-only
+# 小規模データ: 単一スレッド処理（オーバーヘッド回避）
+small_spots = np.array([100, 105, 110])
+small_prices = black_scholes.call_price_batch(small_spots, 100, 1.0, 0.05, 0.2)
 ```
 
-### コード品質管理
+## 📊 ベンチマーク
 
-```bash
-# Pythonコードのフォーマット
-uv run ruff format .
+### 実践シナリオ: ボラティリティサーフェス構築（10×10グリッド）
+| 実装方式 | 処理時間 | 対QuantForge比 |
+|---------|----------|---------------|
+| **QuantForge** (並列処理) | 0.1 ms | - |
+| **NumPy+SciPy** (ベクトル化) | 0.4 ms | 4倍遅い |
+| **Pure Python** (forループ) | 5.5 ms | 55倍遅い |
 
-# リントチェック
-uv run ruff check .
+### 実践シナリオ: 10,000オプションのポートフォリオリスク計算
+| 実装方式 | 処理時間 | 対QuantForge比 |
+|---------|----------|---------------|
+| **QuantForge** (並列処理) | 1.9 ms | - |
+| **NumPy+SciPy** (ベクトル化) | 2.7 ms | 1.4倍遅い |
+| **Pure Python** (forループ、推定) | ~70 ms | 37倍遅い |
 
-# 型チェック
-uv run mypy .
+詳細なベンチマーク結果は[パフォーマンス測定](docs/ja/performance/benchmarks.md)を参照してください。
 
-# Rustコードのチェック
-cargo clippy -- -D warnings
+## 🏗️ アーキテクチャ
+
 ```
+quantforge/
+├── src/                    # Rustコア実装
+│   ├── models/            # 価格モデル（Black-Scholes, Black76, Merton等）
+│   ├── math/              # 数学関数（erf, norm_cdf等）
+│   ├── validation.rs      # 入力検証
+│   └── traits.rs          # バッチ処理トレイト
+│
+├── python/                 # Pythonバインディング
+│   └── quantforge/        # Pythonパッケージ
+│       └── models/        # モデル別モジュール
+│
+└── tests/                  # テストスイート
+    ├── unit/              # 単体テスト
+    ├── integration/       # 統合テスト
+    ├── golden_master/     # ゴールデンマスターテスト
+    └── performance/       # ベンチマークテスト
+```
+
+### 技術スタック
+- **Rust 1.88+**: コア計算エンジン
+- **PyO3**: Python-Rustバインディング
+- **Rayon**: データ並列処理
+- **NumPy**: 配列インターフェース
+- **maturin**: ビルド・パッケージング
 
 ## 📚 ドキュメント
 
-完全なドキュメントはこちら: **https://drillan.github.io/quantforge/ja/**
+- [公式ドキュメント（日本語）](https://drillan.github.io/quantforge/ja/)
+- [API リファレンス](https://drillan.github.io/quantforge/ja/api/)
+- [パフォーマンスガイド](docs/ja/performance/optimization.md)
+- [開発者ガイド](docs/ja/development/architecture.md)
+- [詳細なベンチマーク結果](docs/ja/performance/benchmarks.md)
 
-ローカルでのドキュメントビルド：
+## 🧪 テスト
 
 ```bash
-# ドキュメントのビルド
-uv run sphinx-build -M html docs/ja docs/ja/_build
+# Pythonテスト実行（450以上のテストケース）
+pytest tests/
 
-# ブラウザで開く
-open docs/ja/_build/html/index.html
+# Rustテスト実行
+cargo test --release
+
+# カバレッジ測定
+pytest tests/ --cov=quantforge --cov-report=html
+
+# ベンチマーク実行
+pytest tests/performance/ -m benchmark
 ```
-
-ドキュメントには以下が含まれます：
-- APIリファレンス
-- 数学的背景
-- アーキテクチャ解説
-- パフォーマンスチューニングガイド
-
-## 🗺️ ロードマップ
-
-### 実装済み ✅
-- [x] Black-Scholesモデル（ヨーロピアンオプション）
-- [x] アメリカンオプション（Bjerksund-Stensland 2002）
-- [x] Mertonモデル（配当付き資産）
-- [x] Black76モデル（先物・商品）
-- [x] 全グリークス実装（モデル固有グリークス含む）
-- [x] インプライドボラティリティ計算
-- [x] バッチ処理と自動並列化
-- [x] ゼロコピーNumPy統合
-- [x] 早期行使境界計算
-- [x] 250以上のゴールデンマスターテスト
-
-### 開発中 🚧
-- [ ] アジアンオプション（幾何平均・算術平均）
-- [ ] スプレッドオプション（Kirk近似）
-- [ ] バリアオプション（アップ/ダウン、イン/アウト）
-- [ ] ルックバックオプション
-
-### 開発予定 📋
-- [ ] Garman-Kohlhagen（FXオプション）
-- [ ] 確率的ボラティリティモデル（Heston、SABR）
-- [ ] モンテカルロフレームワーク（分散削減技法付き）
-- [ ] 有限差分法（アメリカンオプション精密化）
-- [ ] GPU高速化（CUDA/Metal）
-- [ ] リアルタイムマーケットデータ連携
-- [ ] キャリブレーションフレームワーク
 
 ## 🤝 コントリビューション
 
-プルリクエストを歓迎します！開発に参加する際は以下をご確認ください：
+プルリクエストを歓迎します！重要な変更の場合は、まずissueを開いて変更内容について議論してください。
 
-1. [CLAUDE.md](./CLAUDE.md) - 開発ガイドラインと品質基準
-2. [plans/](./plans/) - 実装計画と技術設計書
-3. テストの追加（既存のテストスイートを参考に）
-4. コード品質チェックの実施
+1. フォーク
+2. 機能ブランチを作成（`git checkout -b feature/amazing-feature`）
+3. 変更をコミット（`git commit -m 'Add amazing feature'`）
+4. ブランチにプッシュ（`git push origin feature/amazing-feature`）
+5. プルリクエストを開く
 
-### 開発フロー
-
-```bash
-# フィーチャーブランチの作成
-git checkout -b feature/your-feature
-
-# 変更の実装とテスト
-cargo test --release
-pytest
-
-# コミット前の品質チェック
-cargo clippy -- -D warnings
-uv run ruff check .
-uv run mypy .
-
-# プルリクエストの作成
-git push origin feature/your-feature
-```
-
-## 📈 ユースケース
-
-QuantForgeは以下の用途に最適化されています：
-- **高頻度取引**: マーケットメイキングのためのマイクロ秒レベルの価格計算
-- **リスク管理**: リアルタイムポートフォリオグリークス計算
-- **バックテスト**: 数百万シナリオの効率的な処理
-- **リサーチ**: Pythonでの高速プロトタイピング、本番環境レベルの性能
+詳細は[コントリビューションガイド](CONTRIBUTING.md)を参照してください。
 
 ## 📄 ライセンス
 
-このプロジェクトはMITライセンスの下で公開されています。詳細は[LICENSE](LICENSE)ファイルをご確認ください。
+このプロジェクトはMITライセンスの下で公開されています - 詳細は[LICENSE](LICENSE)ファイルを参照してください。
 
 ## 🙏 謝辞
 
-- [PyO3](https://github.com/PyO3/pyo3) - RustとPythonの優れたバインディング
-- [Rayon](https://github.com/rayon-rs/rayon) - データ並列処理ライブラリ
-- [maturin](https://github.com/PyO3/maturin) - Rust拡張モジュールのビルドツール
+- Black-Scholes式の実装と検証データを提供してくださったQuantLib
+- 高速並列処理を実現するRayonプロジェクト
+- Python-Rustバインディングを容易にするPyO3プロジェクト
 
-## 📞 お問い合わせ
+## 📮 連絡先
 
-- **Issues**: [GitHub Issues](https://github.com/drillan/quantforge/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/drillan/quantforge/discussions)
-- **Security**: セキュリティ脆弱性は非公開でご報告ください
+質問や提案がある場合は、[issue](https://github.com/drillan/quantforge/issues)を開くか、[ディスカッション](https://github.com/drillan/quantforge/discussions)に参加してください。
 
 ---
 
 <div align="center">
-
-**Built with ❤️ and Rust**
-
-[Report Bug](https://github.com/drillan/quantforge/issues) • [Request Feature](https://github.com/drillan/quantforge/issues)
-
-*パフォーマンス測定環境: AMD Ryzen 5 5600G、29.3GB RAM、Linux 6.12（2025-08-28測定）*
-
+Made with ❤️ by the QuantForge team
 </div>

@@ -50,7 +50,7 @@ For details, refer to the [Batch Processing API](batch_processing.md).
 ### Greek Calculations
 
 ```{code-block} python
-:name: black76-code-section
+:name: black76-code-greeks-calculation
 :caption: Calculate all Greeks at once
 :linenos:
 

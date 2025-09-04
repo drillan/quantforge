@@ -50,7 +50,7 @@ import numpy as np
 ### American Put Option
 
 ```{code-block} python
-:name: advanced-models-code-section
+:name: advanced-models-code-american-put
 :caption: American put (early exercise is more significant)
 :linenos:
 
@@ -81,7 +81,7 @@ print(f"Early Exercise Premium: ${premium:.2f} ({premium/european_put*100:.1f}%)
 ### Early Exercise Boundary
 
 ```{code-block} python
-:name: advanced-models-code-section
+:name: advanced-models-code-early-exercise-boundary
 :caption: Calculate early exercise boundary
 :linenos:
 
@@ -126,7 +126,7 @@ plt.show()
 ### Arithmetic Average Asian Option
 
 ```{code-block} python
-:name: advanced-models-code-section
+:name: advanced-models-code-arithmetic-asian
 :caption: Arithmetic average price option
 :linenos:
 
@@ -151,7 +151,7 @@ print(f"Asian Discount: ${european - asian_call:.2f}")
 ### Geometric Asian Option
 
 ```{code-block} python
-:name: advanced-models-code-section
+:name: advanced-models-code-geometric-asian
 :caption: Geometric average (has analytical solution)
 :linenos:
 
@@ -170,7 +170,7 @@ print(f"Geometric Asian: ${asian_geometric:.2f}")
 ### Considered Known Prices
 
 ```{code-block} python
-:name: advanced-models-code-section
+:name: advanced-models-code-partially-observed-asian
 :caption: Partially observed Asian option
 :linenos:
 
@@ -219,7 +219,7 @@ print(f"Spread Option: ${spread_call:.2f}")
 ### Markov Spread Option
 
 ```{code-block} python
-:name: advanced-models-code-section
+:name: advanced-models-code-markov-model
 :caption: More accurate Markov model
 :linenos:
 
@@ -244,7 +244,7 @@ print(f"Markov Spread: ${spread_markov:.2f}")
 ### Knock-in/Knock-out Options
 
 ```{code-block} python
-:name: advanced-models-code-section
+:name: advanced-models-code-up-and-out-call
 :caption: Up-and-out call option
 :linenos:
 
@@ -269,7 +269,7 @@ print(f"Barrier Discount: ${vanilla_call - barrier_call:.2f}")
 ### Double Barrier Option
 
 ```{code-block} python
-:name: advanced-models-code-section
+:name: advanced-models-code-double-barrier
 :caption: Double barrier (both upper and lower)
 :linenos:
 
@@ -292,7 +292,7 @@ print(f"Double Barrier Call: ${double_barrier:.2f}")
 ### Fixed Strike Lookback
 
 ```{code-block} python
-:name: advanced-models-code-section
+:name: advanced-models-code-lookback-max
 :caption: Call based on maximum value during the period
 :linenos:
 
@@ -311,7 +311,7 @@ print(f"Fixed Strike Lookback Call: ${lookback_call:.2f}")
 ### Variable Strike Lookback
 
 ```{code-block} python
-:name: advanced-models-code-section
+:name: advanced-models-code-chooser-option
 :caption: Choose optimal strike price
 :linenos:
 
@@ -363,7 +363,7 @@ print(f"Probability of ITM: {prob_itm:.1%}")
 ### Asset or Nothing
 
 ```{code-block} python
-:name: advanced-models-code-section
+:name: advanced-models-code-digital-asset-or-nothing
 :caption: Asset-or-nothing digital option
 :linenos:
 
@@ -444,7 +444,7 @@ plt.show()
 ### Performance Comparison of Each Model
 
 ```{code-block} python
-:name: advanced-models-code-section
+:name: advanced-models-code-performance-comparison
 :caption: Comparison of calculation time for different models
 :linenos:
 

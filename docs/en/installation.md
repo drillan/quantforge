@@ -31,7 +31,7 @@ pip install -i https://test.pypi.org/simple/ --extra-index-url https://pypi.org/
 ### Installing stable version from PyPI (in progress)
 
 ```{code-block} bash
-:name: installation-code-section
+:name: installation-code-stable-pypi
 :caption: After stable version is released
 :linenos:
 

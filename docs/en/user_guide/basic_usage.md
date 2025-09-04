@@ -1,18 +1,27 @@
+(basic-usage)=
 # Basic Usage
 
 Learn about QuantForge's basic functions and option pricing using the Black-Scholes model.
 
+(basic-usage-import)=
 ## Import
 
-```python
+```{code-block} python
+:name: basic-usage-code-import
+:caption: Import necessary modules
 from quantforge.models import black_scholes
 ```
 
+(basic-usage-black-scholes)=
 ## Black-Scholes Model
 
+(basic-usage-basic-pricing)=
 ### Basic Price Calculation
 
-```python
+```{code-block} python
+:name: basic-usage-code-call-put-price
+:caption: Call and put option price calculation
+:linenos:
 from quantforge.models import black_scholes
 
 # Call option price
@@ -43,12 +52,16 @@ theoretical = 100.0 - 110.0 * np.exp(-0.05 * 1.0)
 print(f"Put-Call Parity Check: {abs(parity - theoretical) < 1e-10}")
 ```
 
-
+(basic-usage-greeks)=
 ## Greek Calculations
 
+(basic-usage-all-greeks)=
 ### Bulk Calculations for All Greeks
 
-```python
+```{code-block} python
+:name: basic-usage-code-greeks-calculation
+:caption: Calculate all Greeks at once
+:linenos:
 from quantforge.models import black_scholes
 
 # Calculate all Greeks at once (efficient)
@@ -69,12 +82,16 @@ print(f"  Theta: {greeks.theta:.4f}")
 print(f"  Rho:   {greeks.rho:.4f}")
 ```
 
-
+(basic-usage-batch)=
 ## Simultaneous Calculation of Multiple Options
 
+(basic-usage-batch-arrow)=
 ### Batch Processing (NumPy Arrays)
 
-```python
+```{code-block} python
+:name: basic-usage-code-batch-processing
+:caption: Batch processing implementation
+:linenos:
 import numpy as np
 from quantforge.models import black_scholes
 
@@ -105,7 +122,7 @@ for i, (spot, call, put) in enumerate(zip(spots, call_prices, put_prices)):
 ### Multiple Parameter Sets
 
 ```{code-block} python
-:name: basic-usage-code-section
+:name: basic-usage-code-different-maturities
 :caption: Options with different maturities
 :linenos:
 
@@ -201,7 +218,7 @@ print(f"Hedge position: {hedge_shares:.0f} shares")
 ### Portfolio Greeks
 
 ```{code-block} python
-:name: basic-usage-code-section
+:name: basic-usage-code-portfolio-greeks
 :caption: Portfolio of multiple options
 :linenos:
 

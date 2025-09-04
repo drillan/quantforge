@@ -69,7 +69,7 @@ print(f"F-layout: {time_f*1000:.2f}ms")  # Slightly slower
 ### Automatic Broadcast
 
 ```{code-block} python
-:name: numpy-integration-code-section
+:name: numpy-integration-code-scalar-array-mix
 :caption: Combination of scalars and arrays
 :linenos:
 
@@ -122,7 +122,7 @@ print(f"Shape: {prices.shape}")
 ### Slices and Indices
 
 ```{code-block} python
-:name: numpy-integration-code-section
+:name: numpy-integration-code-large-array
 :caption: Large array
 :linenos:
 
@@ -146,7 +146,7 @@ subset_prices = black_scholes.call_price_batch(
 ### Conditional Processing
 
 ```{code-block} python
-:name: numpy-integration-code-section
+:name: numpy-integration-code-conditional-selection
 :caption: Conditional selection
 :linenos:
 
@@ -198,7 +198,7 @@ print(f"Output dtype: {prices_f32.dtype}")  # Converted to float64
 ### structured array
 
 ```{code-block} python
-:name: numpy-integration-code-section
+:name: numpy-integration-code-structured-array
 :caption: Structured array for option data
 :linenos:
 
@@ -236,7 +236,7 @@ prices = np.array([
 ### Processing Large Data
 
 ```{code-block} python
-:name: numpy-integration-code-section
+:name: numpy-integration-code-memory-mapped
 :caption: Create memory-mapped file
 :linenos:
 
@@ -405,7 +405,7 @@ tracemalloc.stop()
 ### Direct Result Writing
 
 ```{code-block} python
-:name: numpy-integration-code-section
+:name: numpy-integration-code-preallocated-arrays
 :caption: Pre-allocated arrays
 :linenos:
 
@@ -432,7 +432,7 @@ print(f"Prices array modified in-place: {prices[:5]}")
 ### Combining with NumPy Statistical Functions
 
 ```{code-block} python
-:name: numpy-integration-code-section
+:name: numpy-integration-code-portfolio-statistics
 :caption: Portfolio statistics
 :linenos:
 

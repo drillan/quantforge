@@ -1,93 +1,132 @@
 # Benchmark Results
 
-Detailed performance measurement results for QuantForge.
+Detailed performance measurement results for QuantForge. Data is automatically updated.
 
 ## Data Management Policy
 
 Benchmark results are managed as structured data:
-- **Historical Data**: `benchmarks/results/history.jsonl` (JSON Lines format)
-- **Latest Results**: `benchmarks/results/latest.json`
-- **CSV Output**: `benchmarks/results/history.csv` (for analysis)
+- **Historical Data**: `benchmark_results/history.jsonl` (JSON Lines format)
+- **Latest Results**: `benchmark_results/latest.json`
+- **Display CSVs**: `docs/en/_static/benchmark_data/*.csv` (auto-generated)
 
-## Latest Measurement Results (2025-08-28)
+## Test Environment
 
-### Test Environment
-- **CPU**: AMD Ryzen 5 5600G (6 cores/12 threads)
-- **Memory**: 29.3 GB
-- **OS**: Linux 6.12 (Pop!_OS 22.04) - CUI mode (multi-user.target)
-- **Python**: 3.12.5
-- **Measurement Method**: Measured in CUI mode without GUI overhead
+```{csv-table}
+:file: ../_static/benchmark_data/environment.csv
+:header-rows: 1
+:widths: 30, 70
+```
 
-### Implied Volatility Benchmark (Latest)
+## Black-Scholes Call Option Pricing
 
-#### Single IV Calculation
-| Implementation | Actual Time | vs Fastest(QF) | vs Slowest(Brentq) |
-|----------------|-------------|----------------|-------------------|
-| **QuantForge** (Rust + PyO3) | 1.5 μs | - | 472x faster |
-| **Pure Python** (Newton-Raphson + math) | 32.9 μs | 22x slower | 22x faster |
-| **NumPy+SciPy** (optimize.brentq) | 707.3 μs | 472x slower | - |
+### Single Calculation
 
-#### Batch Processing (10,000 items)
-| Implementation | Actual Time | Throughput | vs Fastest(QF) | vs Slowest |
-|----------------|-------------|------------|----------------|------------|
-| **QuantForge** (Parallel) | 19.87 ms | 503K ops/sec | - | 346x faster |
-| **NumPy+SciPy** (Vectorized) | 120 ms | 83K ops/sec | 6x slower | 57x faster |
-| **Pure Python** (for loop) | 6,865 ms | 1.5K ops/sec | 346x slower | - |
+Single execution performance of Black-Scholes call option pricing:
 
-### Practical Scenario Benchmarks
+```{csv-table}
+:file: ../_static/benchmark_data/single_calculation.csv
+:header-rows: 1
+:widths: 30, 20, 25, 25
+```
 
-#### Volatility Surface Construction
-Building volatility smile curves that are important for options trading. Calculating implied volatility from market prices to form a 3D surface.
+### Batch Processing Performance
 
-**Note**: Vectorized NumPy+SciPy implementation shows different characteristics depending on data size.
-- Small scale (100 points): QuantForge is fastest (less parallelization overhead)
-- Large scale (10,000 points): NumPy+SciPy is fastest (maximized vectorization efficiency)
+#### Small Batch (100 items)
 
-##### Small Scale (10×10 grid = 100 points) - 3 Implementation Comparison
-| Implementation | Actual Time | vs Fastest(QF) | vs Slowest(Python) |
-|----------------|-------------|----------------|-------------------|
-| **QuantForge** (Parallel) | 0.1 ms | - | 55x faster |
-| **NumPy+SciPy** (Vectorized) | 0.4 ms | 4x slower | 14x faster |
-| **Pure Python** (for loop) | 5.5 ms | 55x slower | - |
+```{csv-table}
+:file: ../_static/benchmark_data/batch_100.csv
+:header-rows: 1
+:widths: 25, 25, 30, 20
+```
 
-##### Large Scale (100×100 grid = 10,000 points)
-| Implementation | Actual Time | vs Fastest(NumPy) | vs QuantForge |
-|----------------|-------------|-------------------|---------------|
-| **NumPy+SciPy** (Vectorized) | 2.3 ms | - | 2.8x faster |
-| **QuantForge** (Parallel) | 6.5 ms | 2.8x slower | - |
-| **Pure Python** (for loop, estimated) | ~550 ms | 239x slower | 85x slower |
+#### Medium Batch (1,000 items)
 
-#### Portfolio Risk Calculation
-Risk management for large option portfolios. Calculating Greeks (Delta, Gamma, Vega, Theta, Rho) for each option to quantify market risk.
+```{csv-table}
+:file: ../_static/benchmark_data/batch_1000.csv
+:header-rows: 1
+:widths: 25, 25, 30, 20
+```
 
-##### Small Scale (100 options) - 3 Implementation Comparison
-| Implementation | Actual Time | vs Fastest(QF) | vs Slowest(Python) |
-|----------------|-------------|----------------|-------------------|
-| **QuantForge** (Batch) | 0.03 ms | - | 23x faster |
-| **NumPy+SciPy** (Vectorized) | 0.5 ms | 17x slower | 1.4x faster |
-| **Pure Python** (for loop) | 0.7 ms | 23x slower | - |
+#### Large Batch (10,000 items)
 
-##### Large Scale (10,000 options)
-| Implementation | Actual Time | vs Fastest(QF) | vs NumPy+SciPy |
-|----------------|-------------|----------------|----------------|
-| **QuantForge** (Parallel) | 1.9 ms | - | 1.4x faster |
-| **NumPy+SciPy** (Vectorized) | 2.7 ms | 1.4x slower | - |
-| **Pure Python** (for loop, estimated) | ~70 ms | 37x slower | 26x slower |
+```{csv-table}
+:file: ../_static/benchmark_data/batch_10000.csv
+:header-rows: 1
+:widths: 25, 25, 30, 20
+```
 
-### Black-Scholes Call Option Pricing
+## Performance Analysis
 
-#### Single Calculation
-| Implementation | Actual Time | vs Fastest(QF) | vs Slowest(NumPy+SciPy) |
-|----------------|-------------|----------------|------------------------|
-| **QuantForge** (Rust + PyO3) | 1.40 μs | - | 55.6x faster |
-| **Pure Python** (math.erf) | 2.37 μs | 1.7x slower | 32.8x faster |
-| **NumPy+SciPy** (stats.norm.cdf) | 77.74 μs | 55.6x slower | - |
+### Relative Performance
 
-## Performance Comparison Summary
+```{csv-table}
+:file: ../_static/benchmark_data/relative_performance.csv
+:header-rows: 1
+:widths: 20, 20, 20, 20, 20
+```
 
-QuantForge consistently outperforms traditional Python implementations:
-- **Single calculations**: 50-500x faster than NumPy+SciPy
-- **Batch processing**: Maintains high performance with parallel processing
-- **Memory efficiency**: Zero-copy data transfer via PyO3
+### Throughput
 
-For detailed optimization techniques, see [Optimization Guide](optimization.md).
+Calculations per second by data size:
+
+```{csv-table}
+:file: ../_static/benchmark_data/throughput.csv
+:header-rows: 1
+:widths: 20, 20, 20, 20, 20
+```
+
+## Greeks Calculation
+
+### Greeks Batch (1,000 items)
+
+```{csv-table}
+:file: ../_static/benchmark_data/greeks_batch_1000.csv
+:header-rows: 1
+:widths: 30, 25, 25, 20
+```
+
+## Update Method
+
+### Automatic Benchmark Execution
+
+```bash
+# Run benchmarks
+pytest tests/performance/ -m benchmark
+
+# Generate reports
+python tests/performance/generate_benchmark_report.py
+```
+
+### Continuous Integration
+
+Benchmark tests run automatically on every push.
+Results are automatically saved in JSON format.
+
+## Detailed Metrics
+
+### Statistical Information
+
+Each benchmark includes the following metrics:
+- **min**: Minimum execution time
+- **max**: Maximum execution time
+- **mean**: Average execution time
+- **stddev**: Standard deviation
+- **rounds**: Number of measurement rounds
+- **iterations**: Iterations per round
+
+### Outlier Detection
+
+Outliers are automatically detected and excluded from statistics.
+This ensures stable benchmark results.
+
+## Historical Trend
+
+Historical benchmark data is recorded in:
+- `benchmark_results/history.jsonl` (all measurement history)
+- Latest visualization through dashboard
+
+## Notes
+
+- Measurements are performed in release mode (optimized build)
+- Cache warming is implemented to ensure stable measurement
+- Parallelization is automatically optimized by Rayon
