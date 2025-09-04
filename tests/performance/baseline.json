@@ -1,0 +1,46 @@
+{
+  "version": "0.0.11",
+  "git_commit": "32ac0c6",
+  "timestamp": "2025-09-04T10:53:30.640506Z",
+  "environment": {
+    "platform": "Linux",
+    "python_version": "3.12.5",
+    "cpu_count": 6,
+    "memory_gb": 29.3
+  },
+  "benchmarks": [
+    {
+      "name": "test_quantforge_single",
+      "stats": {
+        "min": 4.1899329517036676e-07,
+        "max": 1.7530997865833342e-05,
+        "mean": 1.3751590991237887e-06,
+        "stddev": 3.9971090970658465e-07,
+        "rounds": 60158,
+        "iterations": null
+      }
+    },
+    {
+      "name": "test_pure_python_single",
+      "stats": {
+        "min": 8.380011422559619e-07,
+        "max": 6.90059969201684e-05,
+        "mean": 2.0824949482587934e-06,
+        "stddev": 6.503727290559669e-07,
+        "rounds": 74572,
+        "iterations": null
+      }
+    },
+    {
+      "name": "test_numpy_scipy_single",
+      "stats": {
+        "min": 9.20530001167208e-05,
+        "max": 0.0001962610040209256,
+        "mean": 0.00010489170279283542,
+        "stddev": 1.6245028239645663e-05,
+        "rounds": 3351,
+        "iterations": null
+      }
+    }
+  ]
+}
