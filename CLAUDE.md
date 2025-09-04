@@ -68,10 +68,11 @@ uv run maturin develop
 
 # ドキュメント
 uv run sphinx-build -M html docs/en/ docs/en/_build/ && uv run sphinx-build -M html docs/ja/ docs/ja/_build/
-
-# ベンチマーク
-uv run python benchmarks/run_practical_scenarios.py
 ```
+
+### ベンチマーク
+
+@docs/ja/internal/benchmark_management_guide.md
 
 ## 🎯 プロジェクト原則
 

@@ -145,12 +145,8 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@v4
       
-      - name: Run Performance Guard
-        run: |
-          uv sync
-          uv run python benchmarks/performance_guard.py
-      
-      # Skip regression check for now - baseline_manager.py doesn't have this option yet
+      # Performance Guard removed - benchmarks/ directory is deprecated
+      # See tests/performance/ for current benchmark implementation
       
       - name: Upload Benchmark Results
         uses: actions/upload-artifact@v4

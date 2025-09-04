@@ -28,41 +28,13 @@ jobs:
         uv sync --all-extras
         uv run maturin develop --release
     
-    - name: Download baseline (main branch)
-      if: github.ref == 'refs/heads/main'
-      uses: actions/download-artifact@v4
-      with:
-        name: performance-baseline
-        path: benchmarks/results/
-      continue-on-error: true
-    
-    - name: Check baseline exists
-      run: |
-        if [ ! -f benchmarks/results/baseline.json ]; then
-          echo "警告: ベースラインが存在しません。作成中..."
-          uv run python benchmarks/baseline_manager.py --update --runs 3 --buffer 1.2
-        fi
+    # Baseline management removed - benchmarks/ directory is deprecated
+    # See tests/performance/ for current benchmark implementation
     
     - name: Run performance tests
       run: |
         uv run pytest tests/performance/test_all_benchmarks.py -v --benchmark-only
     
-    - name: Check for regressions
-      run: |
-        uv run python benchmarks/performance_guard.py
+    # Performance guard removed - benchmarks/ directory is deprecated
     
-    - name: Update baseline (main branch only)
-      if: github.ref == 'refs/heads/main' && success()
-      run: |
-        # 主ブランチでは定期的にベースラインを更新
-        # ただし、性能劣化がある場合は更新しない
-        uv run python benchmarks/baseline_manager.py --check || \
-        uv run python benchmarks/baseline_manager.py --update --runs 5 --buffer 1.2
-    
-    - name: Upload baseline
-      if: github.ref == 'refs/heads/main'
-      uses: actions/upload-artifact@v4
-      with:
-        name: performance-baseline
-        path: benchmarks/results/baseline.json
-        retention-days: 90
+    # Baseline update removed - benchmarks/ directory is deprecated

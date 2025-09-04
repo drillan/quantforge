@@ -5,7 +5,7 @@ All notable changes to QuantForge will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.0.11] - 2025-01-26
 
 ### Added
 - **American Options Implementation**: Complete implementation with both Binomial Tree and BS2002 approximation
@@ -14,6 +14,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `american_greeks`, `american_greeks_batch` - Greeks calculation (single and batch)
   - Early exercise detection (`is_early_exercise` flag)
   - Support for both American calls and puts with dividend adjustment
+- **American Adaptive Option Pricing**: Experimental adaptive BAW approximation method
+  - `call_price_adaptive`, `put_price_adaptive` - Dynamic dampening factor based pricing
+  - Adjusts dampening based on moneyness (S/K), time to maturity, and volatility
+  - Improved accuracy for deep OTM and short-term options
+  - Performance within 20% of standard BAW implementation
+  - Comprehensive test coverage with 9 test cases
 - **Complete Python Bindings**: Added missing bindings for Black76 and Merton models
   - Full parity across all pricing models
   - Consistent API surface for all models
@@ -420,7 +426,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Cross-platform compatibility testing
 - Documentation framework with Sphinx
 
-[Unreleased]: https://github.com/drillan/quantforge/compare/v0.0.10...HEAD
+[Unreleased]: https://github.com/drillan/quantforge/compare/v0.0.11...HEAD
+[0.0.11]: https://github.com/drillan/quantforge/compare/v0.0.10...v0.0.11
 [0.0.10]: https://github.com/drillan/quantforge/compare/v0.0.9...v0.0.10
 [0.0.9]: https://github.com/drillan/quantforge/compare/v0.0.8...v0.0.9
 [0.0.8]: https://github.com/drillan/quantforge/compare/v0.0.6...v0.0.8
