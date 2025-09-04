@@ -52,7 +52,13 @@ jobs:
     
     - name: Check for performance regressions
       run: |
-        uv run python tests/performance/check_regression.py
+        # NumPy+SciPyはCI環境で変動が大きいため、閾値を緩める（初回実行時）
+        if [ ! -f tests/performance/baseline.json ]; then
+          echo "Note: First run, using relaxed threshold"
+          uv run python tests/performance/check_regression.py --threshold 1.5
+        else
+          uv run python tests/performance/check_regression.py
+        fi
     
     - name: Update baseline (main branch only)
       if: github.ref == 'refs/heads/main' && success()
