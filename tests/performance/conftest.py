@@ -93,10 +93,17 @@ def benchmark_recorder():
     return BenchmarkRecorder()
 
 
-def pytest_benchmark_compare_machine_info(config, benchmarksession, machine_info, compared_benchmark):
-    """Hook to customize machine info in benchmark output."""
-    machine_info["quantforge_version"] = quantforge.__version__
-    return machine_info
+# Only define benchmark hooks if pytest-benchmark is installed
+try:
+    from pytest_benchmark.plugin import pytest_benchmark_compare_machine_info as _benchmark_hook
+    
+    def pytest_benchmark_compare_machine_info(config, benchmarksession, machine_info, compared_benchmark):
+        """Hook to customize machine info in benchmark output."""
+        machine_info["quantforge_version"] = quantforge.__version__
+        return machine_info
+except ImportError:
+    # pytest-benchmark not installed, skip hook definition
+    pass
 
 
 def pytest_sessionfinish(session, exitstatus):
