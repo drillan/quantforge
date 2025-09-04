@@ -72,6 +72,7 @@ dev = [
     "types-pyyaml>=6.0.12.20250822",
     "scipy-stubs>=1.16.1.1",
     "types-psutil>=7.0.0.20250822",
+    "pyyaml>=6.0.2",
 ]
 
 [tool.ruff]

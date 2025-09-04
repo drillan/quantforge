@@ -212,29 +212,6 @@ class TestBlackScholesBatch:
             assert abs(arrow.get_value(call_batch, i) - call_single) < THEORETICAL_TOLERANCE
             assert abs(arrow.get_value(put_batch, i) - put_single) < THEORETICAL_TOLERANCE
 
-    @pytest.mark.skip(reason="NumPy API migrated to Arrow")
-    def test_batch_with_invalid_spots(self) -> None:
-        """Test batch processing with invalid spots."""
-        spots = np.array([100.0, -50.0, 110.0])
-        strikes = np.array([100.0, 100.0, 100.0])
-        times = np.array([1.0, 1.0, 1.0])
-        rates = np.array([0.05, 0.05, 0.05])
-        sigmas = np.array([0.2, 0.2, 0.2])
-        # Invalid spot should raise an error now (validation enhanced)
-        with pytest.raises(ValueError, match="spot must be positive"):
-            black_scholes.call_price_batch(spots, strikes, times, rates, sigmas)
-
-    @pytest.mark.skip(reason="NumPy API migrated to Arrow")
-    def test_empty_batch(self) -> None:
-        """Test batch processing with empty array."""
-        spots = np.array([])
-        strikes = np.array([])
-        times = np.array([])
-        rates = np.array([])
-        sigmas = np.array([])
-        prices = black_scholes.call_price_batch(spots, strikes, times, rates, sigmas)
-        assert len(prices) == 0
-
 
 class TestBlackScholesGreeks:
     """Test Black-Scholes Greeks calculation."""
@@ -301,23 +278,6 @@ class TestBlackScholesGreeks:
         # Gamma should be small for deep OTM
         assert greeks["gamma"] < 0.01
 
-    @pytest.mark.skip(reason="NumPy API migrated to Arrow")
-    def test_greeks_batch(self) -> None:
-        """Test batch Greeks calculation."""
-        spots = np.array([90.0, 100.0, 110.0])
-        strikes = np.array([100.0, 100.0, 100.0])
-        times = np.array([1.0, 1.0, 1.0])
-        rates = np.array([0.05, 0.05, 0.05])
-        sigmas = np.array([0.2, 0.2, 0.2])
-        is_calls = np.array([1.0, 1.0, 1.0])  # 1.0 for calls, 0.0 for puts
-        greeks_dict = black_scholes.greeks_batch(spots, strikes, times, rates, sigmas, is_calls)
-
-        # greeks_batch returns a dictionary with arrays
-        assert "delta" in greeks_dict
-        assert len(greeks_dict["delta"]) == 3
-        # Delta should increase with spot for calls
-        assert greeks_dict["delta"][0] < greeks_dict["delta"][1] < greeks_dict["delta"][2]
-
     def test_greeks_invalid_inputs(self) -> None:
         """Test Greeks with invalid inputs."""
         with pytest.raises(ValueError):
@@ -367,24 +327,6 @@ class TestBlackScholesImpliedVolatility:
         # High but valid price
         iv_high = black_scholes.implied_volatility(price=30.0, s=100.0, k=100.0, t=1.0, r=0.05, is_call=True)
         assert iv_high > 0.5
-
-    @pytest.mark.skip(reason="NumPy API migrated to Arrow")
-    def test_implied_volatility_batch(self) -> None:
-        """Test batch implied volatility calculation."""
-        # Create prices with known volatilities
-        sigmas = np.array([0.2, 0.25, 0.3])
-        prices = np.array([black_scholes.call_price(s=100.0, k=100.0, t=1.0, r=0.05, sigma=sig) for sig in sigmas])
-
-        spots = np.array([100.0, 100.0, 100.0])
-        strikes = np.array([100.0, 100.0, 100.0])
-        times = np.array([1.0, 1.0, 1.0])
-        rates = np.array([0.05, 0.05, 0.05])
-        # Use scalar boolean for batch processing (will broadcast)
-        ivs = black_scholes.implied_volatility_batch(prices, spots, strikes, times, rates, True)
-
-        assert len(ivs) == 3
-        for _i, (iv, true_sigma) in enumerate(zip(ivs, sigmas, strict=False)):
-            assert abs(iv - true_sigma) < THEORETICAL_TOLERANCE
 
     def test_implied_volatility_invalid_price(self) -> None:
         """Test implied volatility with invalid price."""

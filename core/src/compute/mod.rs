@@ -1,6 +1,7 @@
 //! Arrow-native computation kernels for option pricing
 
 pub mod american;
+pub mod american_adaptive;
 pub mod american_simple;
 pub mod arrow_native;
 pub mod black76;

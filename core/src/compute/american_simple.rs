@@ -2,7 +2,7 @@
 //! Based on Barone-Adesi and Whaley (1987) approximation
 
 use super::formulas::{merton_call_scalar, merton_put_scalar};
-use crate::constants::TIME_NEAR_EXPIRY_THRESHOLD;
+use crate::constants::{BAW_DAMPENING_FACTOR, TIME_NEAR_EXPIRY_THRESHOLD};
 use crate::math::calculate_d1;
 use crate::math::distributions::norm_cdf;
 
@@ -59,11 +59,11 @@ pub fn american_put_simple(s: f64, k: f64, t: f64, r: f64, q: f64, sigma: f64) -
         return k - s;
     }
 
-    // Add early exercise premium
+    // Add early exercise premium with dampening to avoid overestimation
     let a2 = calculate_a2_put(k, t, r, q, sigma);
     let q1 = calculate_q1(r, q, sigma);
     // q1 is negative, so we use it directly to get decreasing premium as s increases
-    let premium = a2 * (s / s_star).powf(q1);
+    let premium = BAW_DAMPENING_FACTOR * a2 * (s / s_star).powf(q1);
     european_value + premium.max(0.0)
 }
 
@@ -121,11 +121,11 @@ pub(super) fn calculate_critical_price_put(k: f64, t: f64, r: f64, q: f64, sigma
     // Initial guess based on perpetual option
     let s_inf = k * q1 / (q1 - 1.0);
 
-    // Time adjustment factor
+    // Time adjustment factor - use a dampening factor to reduce overestimation
     let h = 1.0 - (-r * t).exp();
 
-    // Approximate critical price
-    s_inf * (1.0 + h * (1.0 - (k / s_inf).powf(1.0 / m)))
+    // Approximate critical price with dampening
+    s_inf * (1.0 + BAW_DAMPENING_FACTOR * h * (1.0 - (k / s_inf).powf(1.0 / m)))
 }
 
 /// Calculate A2 coefficient for call

@@ -1,4 +1,3 @@
-import pytest
 
 """Tests for quantforge __init__ module."""
 
@@ -70,8 +69,3 @@ class TestVersionHandling:
         for func_name in expected_functions:
             assert hasattr(black_scholes, func_name), f"black_scholes.{func_name} not found"
             assert callable(getattr(black_scholes, func_name))
-
-    @pytest.mark.skip(reason="Module structure changed")
-    def test_no_unexpected_exports(self) -> None:
-        """Test that __init__ doesn't export unexpected items."""
-        pass
