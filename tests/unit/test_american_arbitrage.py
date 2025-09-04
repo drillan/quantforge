@@ -1,10 +1,27 @@
 """Test no-arbitrage conditions for American options."""
 
+import numpy as np
 import quantforge as qf
 
 # Direct access to modules
 american = qf.american
 merton = qf.merton
+
+
+def to_numpy(arr):
+    """Convert Arrow array to numpy if needed."""
+    if isinstance(arr, np.ndarray):
+        return arr
+    # Handle Arrow arrays
+    if hasattr(arr, 'to_numpy'):
+        return arr.to_numpy()
+    # Handle arro3.core.Array
+    try:
+        # For arro3 arrays, convert each element
+        return np.array([float(x.as_py()) if hasattr(x, 'as_py') else float(x) for x in arr])
+    except:
+        # Last resort - try to convert directly
+        return np.array(arr)
 
 
 class TestAmericanNoArbitrage:
@@ -118,8 +135,8 @@ class TestAmericanNoArbitrage:
         sigmas = np.array([0.2, 0.2, 0.2])
 
         # Test put batch
-        amer_puts = american.put_price_batch(spots, strikes, times, rates, 0.0, sigmas)
-        euro_puts = merton.put_price_batch(spots, strikes, times, rates, 0.0, sigmas)
+        amer_puts = to_numpy(american.put_price_batch(spots, strikes, times, rates, 0.0, sigmas))
+        euro_puts = to_numpy(merton.put_price_batch(spots, strikes, times, rates, 0.0, sigmas))
 
         for i, (amer, euro, s, k) in enumerate(zip(amer_puts, euro_puts, spots, strikes, strict=False)):
             intrinsic = max(k - s, 0)
@@ -127,8 +144,8 @@ class TestAmericanNoArbitrage:
             assert amer >= intrinsic - 1e-10, f"Batch put {i}: American ({amer}) < intrinsic ({intrinsic})"
 
         # Test call batch
-        amer_calls = american.call_price_batch(spots, strikes, times, rates, 0.0, sigmas)
-        euro_calls = merton.call_price_batch(spots, strikes, times, rates, 0.0, sigmas)
+        amer_calls = to_numpy(american.call_price_batch(spots, strikes, times, rates, 0.0, sigmas))
+        euro_calls = to_numpy(merton.call_price_batch(spots, strikes, times, rates, 0.0, sigmas))
 
         for i, (amer, euro, s, k) in enumerate(zip(amer_calls, euro_calls, spots, strikes, strict=False)):
             intrinsic = max(s - k, 0)

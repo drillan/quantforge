@@ -300,25 +300,27 @@ pub fn american_put_vega(s: f64, k: f64, t: f64, r: f64, q: f64, sigma: f64) -> 
 /// Calculate theta using finite difference
 #[inline(always)]
 pub fn american_call_theta(s: f64, k: f64, t: f64, r: f64, q: f64, sigma: f64) -> f64 {
-    let h = 1.0 / 365.0; // One day
+    let h = 1.0 / 365.0; // One day in years
     if t <= h {
         return 0.0; // Can't calculate theta near expiry
     }
     let price_now = american_call_scalar(s, k, t, r, q, sigma);
     let price_later = american_call_scalar(s, k, t - h, r, q, sigma);
-    -(price_later - price_now) / h / 365.0 // Annual theta
+    // Theta = dPrice/dt, as time decreases price decreases, so this is negative
+    (price_later - price_now) / h
 }
 
 /// Calculate theta for put
 #[inline(always)]
 pub fn american_put_theta(s: f64, k: f64, t: f64, r: f64, q: f64, sigma: f64) -> f64 {
-    let h = 1.0 / 365.0; // One day
+    let h = 1.0 / 365.0; // One day in years
     if t <= h {
         return 0.0; // Can't calculate theta near expiry
     }
     let price_now = american_put_scalar(s, k, t, r, q, sigma);
     let price_later = american_put_scalar(s, k, t - h, r, q, sigma);
-    -(price_later - price_now) / h / 365.0 // Annual theta
+    // Theta = dPrice/dt, as time decreases price usually decreases (but may increase for ITM puts)
+    (price_later - price_now) / h
 }
 
 /// Calculate rho using finite difference

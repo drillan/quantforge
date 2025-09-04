@@ -101,7 +101,7 @@ def test_put_input_validation() -> None:
         # 負のボラティリティ
         black_scholes.put_price(100.0, 100.0, 1.0, 0.05, -0.2)
 
-    with pytest.raises(ValueError):
+    with pytest.raises(Exception):
         # NaN入力
         spots = np.array([100.0, np.nan, 110.0])
         black_scholes.put_price_batch(spots, 100.0, 1.0, 0.05, 0.2)

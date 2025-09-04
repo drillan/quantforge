@@ -22,11 +22,13 @@
 ### アクティブな計画
 | 計画名 | ステータス | 進捗 | 開始日 |
 |--------|------------|------|--------|
-| [Arrow Nativeテスト移行](2025-09-03-both-arrow-native-test-migration.md) | ACTIVE | 45% | 2025-09-03 |
+| （現在アクティブな計画なし） | - | - | - |
 
 ### 最近完了した計画
 | 計画名 | 完了日 | 成果 |
 |--------|--------|------|
+| [Arrow Nativeテスト移行](archive/2025-09-03-both-arrow-native-test-migration.md) | 2025-09-04 | テスト成功率100%達成（554/554）、Arrow完全互換 |
+| [Implied Volatility Batch実装](archive/2025-09-03-both-implied-volatility-batch.md) | 2025-09-03 | Newton-Raphson法による高精度IV逆算、2,738万ops/sec達成 |
 | [Arrow Zero-Copy FFI完全移行](archive/2025-09-02-rust-quality-improvement.md) | 2025-09-02 | v0.0.9: pyo3-arrow統合、コード77%削減、ゼロコピー実現 |
 | [包括的品質改善](archive/2025-09-02-both-comprehensive-quality-improvement.md) | 2025-09-02 | Critical Rules完全準拠、品質基準達成 |
 | [Apache Arrow Native移行](archive/2025-09-01-arrow-native-migration.md) | 2025-09-01 | Arrow-first実装、2.65倍高速化、コード70%削減 |

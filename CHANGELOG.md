@@ -7,6 +7,44 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **American Options Implementation**: Complete implementation with both Binomial Tree and BS2002 approximation
+  - `american_call_price`, `american_put_price` - Single calculations
+  - `american_call_price_batch`, `american_put_price_batch` - Batch processing
+  - `american_greeks`, `american_greeks_batch` - Greeks calculation (single and batch)
+  - Early exercise detection (`is_early_exercise` flag)
+  - Support for both American calls and puts with dividend adjustment
+- **Complete Python Bindings**: Added missing bindings for Black76 and Merton models
+  - Full parity across all pricing models
+  - Consistent API surface for all models
+  - Zero-copy Arrow FFI throughout
+- **Test Infrastructure**: Started Arrow Native test migration
+  - Foundation for comprehensive Arrow-based testing
+  - Improved test organization with base classes
+
+### Improved
+- **Code Quality**: Eliminated duplication with trait patterns and base test classes
+  - Common test base classes reduce test code duplication by ~40%
+  - Arrow common utilities extracted to dedicated module
+  - Trait-based design for cleaner model implementations
+  - Reduced overall codebase complexity
+- **Input Validation**: Comprehensive validation with detailed error messages
+  - Parameter-specific error descriptions
+  - Multi-error reporting capability
+  - Clear guidance for fixing invalid inputs
+  - Consistent validation across all models
+- **Merton Model**: Fixed implementation issues and improved accuracy
+  - Correct dividend yield handling
+  - Improved numerical stability
+  - Better convergence for edge cases
+
+### Fixed
+- American option calculation accuracy and early exercise detection bugs
+- Merton model dividend processing inconsistencies
+- Documentation claims updated to reflect Arrow-native design
+- Test suite compatibility with new implementations
+- Import issues in Python bindings for Black76 and Merton models
+
 ## [0.0.10] - 2025-09-03
 
 ### Added

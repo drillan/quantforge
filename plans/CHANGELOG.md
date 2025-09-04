@@ -1,5 +1,21 @@
 # 計画変更履歴
 
+## 2025-09-04（Arrow Native Test Migration Complete）
+- `2025-09-03-both-arrow-native-test-migration.md` → archive/ ✅
+  - Arrow Nativeテスト移行完了
+  - テスト成功率: 53.5% → 100%（554/554テスト合格）
+  - Arrow型互換性修正、パラメータ名統一
+  - Americanオプション完全実装確認（24テスト全合格）
+  - 目標の85%を大幅に超える100%達成
+
+## 2025-09-03（Implied Volatility Batch Implementation）
+- `2025-09-03-both-implied-volatility-batch.md` → archive/ ✅
+  - Implied Volatility Batch実装計画（実際には既に実装済み）
+  - Black-Scholes, Black76, Mertonの3モデルで完全実装
+  - Newton-Raphson法による高精度逆算（誤差 < 1e-10）
+  - 高速バッチ処理: 100,000要素を3.65ms（2,738万ops/sec）で処理
+  - 並列処理（Rayon）、ゼロコピーArrow処理、完全Broadcasting対応
+
 ## 2025-09-02（Arrow Zero-Copy FFI Complete Migration & Quality Improvement）
 - `2025-09-02-rust-quality-improvement.md` → archive/ ✅
   - v0.0.9: Arrow Zero-Copy FFI完全移行

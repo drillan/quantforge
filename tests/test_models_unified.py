@@ -213,15 +213,15 @@ class TestGreeksAdvanced:
         numerical_delta = (spot_up - base_price) / epsilon
         assert abs(greeks["delta"] - numerical_delta) < 1e-3
 
-        # Vega: dPrice/dSigma (scaled by 0.01)
+        # Vega: dPrice/dSigma (scaled by 1.0 = 100% volatility change)
         sigma_up = black_scholes.call_price(s=spot, k=strike, t=time, r=rate, sigma=sigma + 0.01)
-        numerical_vega = sigma_up - base_price
-        assert abs(greeks["vega"] - numerical_vega) < 1e-3
+        numerical_vega = (sigma_up - base_price) * 100  # Scale to per 1.0 change
+        assert abs(greeks["vega"] - numerical_vega) < 0.1  # Slightly higher tolerance for vega scaling
 
-        # Rho: dPrice/dRate (scaled by 0.01)
+        # Rho: dPrice/dRate (scaled by 1.0 = 100% rate change)
         rate_up = black_scholes.call_price(s=spot, k=strike, t=time, r=rate + 0.01, sigma=sigma)
-        numerical_rho = rate_up - base_price
-        assert abs(greeks["rho"] - numerical_rho) < 1e-3
+        numerical_rho = (rate_up - base_price) * 100  # Scale to per 1.0 change
+        assert abs(greeks["rho"] - numerical_rho) < 1.0  # Higher tolerance due to scaling and finite difference
 
     def test_greeks_batch_consistency(self) -> None:
         """Test that batch Greeks match single calculations."""

@@ -5,6 +5,7 @@
 
 use arrow::array::Float64Array;
 use arrow::error::ArrowError;
+use numpy::{PyArray1, PyArrayMethods, PyReadonlyArray1};
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 use pyo3::types::{PyDict, PyList};
@@ -22,6 +23,38 @@ use crate::arrow_common::{
     validate_black76_scalar_inputs_detailed, validate_black_scholes_arrays_with_rates,
     validate_scalar_inputs_detailed, wrap_result_array,
 };
+
+/// Helper function to extract scalar or array as Vec<f64>
+fn extract_as_vec(value: &Bound<'_, PyAny>) -> PyResult<Vec<f64>> {
+    // Try scalar first
+    if let Ok(scalar) = value.extract::<f64>() {
+        return Ok(vec![scalar]);
+    }
+    
+    // Try Vec<f64>
+    if let Ok(vec) = value.extract::<Vec<f64>>() {
+        return Ok(vec);
+    }
+    
+    // Try numpy array
+    if let Ok(np_array) = value.downcast::<PyArray1<f64>>() {
+        let readonly = np_array.readonly();
+        return Ok(readonly.as_array().to_vec());
+    }
+    
+    // Last resort - try to extract as Python list
+    if let Ok(list) = value.downcast::<PyList>() {
+        let mut vec = Vec::with_capacity(list.len());
+        for item in list.iter() {
+            vec.push(item.extract::<f64>()?);
+        }
+        return Ok(vec);
+    }
+    
+    Err(PyValueError::new_err(
+        "Expected float, list of floats, or numpy array",
+    ))
+}
 
 /// Black-Scholes call price calculation using Arrow arrays
 ///
@@ -657,31 +690,38 @@ pub fn american_call_price_batch(
     dividend_yields: &Bound<'_, PyAny>,
     sigmas: &Bound<'_, PyAny>,
 ) -> PyResult<PyObject> {
-    // For now, use simple Python list approach
-    // TODO: Implement proper Arrow batch processing
-    let spots_list = spots.extract::<Vec<f64>>()?;
-    let strikes_list = strikes.extract::<Vec<f64>>()?;
-    let times_list = times.extract::<Vec<f64>>()?;
-    let rates_list = rates.extract::<Vec<f64>>()?;
-    let divs_list = dividend_yields.extract::<Vec<f64>>()?;
-    let sigmas_list = sigmas.extract::<Vec<f64>>()?;
+    // Handle scalar or array inputs
+    let spots_vec = extract_as_vec(spots)?;
+    let strikes_vec = extract_as_vec(strikes)?;
+    let times_vec = extract_as_vec(times)?;
+    let rates_vec = extract_as_vec(rates)?;
+    let divs_vec = extract_as_vec(dividend_yields)?;
+    let sigmas_vec = extract_as_vec(sigmas)?;
 
-    let len = spots_list.len();
+    // Determine output length (max of all input lengths)
+    let len = *[spots_vec.len(), strikes_vec.len(), times_vec.len(), 
+                rates_vec.len(), divs_vec.len(), sigmas_vec.len()]
+                .iter().max().unwrap();
+
     let mut results = Vec::with_capacity(len);
 
     for i in 0..len {
+        let s = if spots_vec.len() == 1 { spots_vec[0] } else { spots_vec[i] };
+        let k = if strikes_vec.len() == 1 { strikes_vec[0] } else { strikes_vec[i] };
+        let t = if times_vec.len() == 1 { times_vec[0] } else { times_vec[i] };
+        let r = if rates_vec.len() == 1 { rates_vec[0] } else { rates_vec[i] };
+        let q = if divs_vec.len() == 1 { divs_vec[0] } else { divs_vec[i] };
+        let sigma = if sigmas_vec.len() == 1 { sigmas_vec[0] } else { sigmas_vec[i] };
+        
         let price = quantforge_core::compute::american::american_call_scalar(
-            spots_list[i],
-            strikes_list[i],
-            times_list[i],
-            rates_list[i],
-            divs_list[i],
-            sigmas_list[i],
+            s, k, t, r, q, sigma
         );
         results.push(price);
     }
 
-    Ok(PyList::new(py, results)?.into())
+    // Return as numpy array
+    use numpy::{PyArray1, ToPyArray};
+    Ok(results.to_pyarray(py).into())
 }
 
 /// American put option price batch processing
@@ -695,36 +735,43 @@ pub fn american_put_price_batch(
     dividend_yields: &Bound<'_, PyAny>,
     sigmas: &Bound<'_, PyAny>,
 ) -> PyResult<PyObject> {
-    // For now, use simple Python list approach
-    // TODO: Implement proper Arrow batch processing
-    let spots_list = spots.extract::<Vec<f64>>()?;
-    let strikes_list = strikes.extract::<Vec<f64>>()?;
-    let times_list = times.extract::<Vec<f64>>()?;
-    let rates_list = rates.extract::<Vec<f64>>()?;
-    let divs_list = dividend_yields.extract::<Vec<f64>>()?;
-    let sigmas_list = sigmas.extract::<Vec<f64>>()?;
+    // Handle scalar or array inputs
+    let spots_vec = extract_as_vec(spots)?;
+    let strikes_vec = extract_as_vec(strikes)?;
+    let times_vec = extract_as_vec(times)?;
+    let rates_vec = extract_as_vec(rates)?;
+    let divs_vec = extract_as_vec(dividend_yields)?;
+    let sigmas_vec = extract_as_vec(sigmas)?;
 
-    let len = spots_list.len();
+    // Determine output length (max of all input lengths)
+    let len = *[spots_vec.len(), strikes_vec.len(), times_vec.len(), 
+                rates_vec.len(), divs_vec.len(), sigmas_vec.len()]
+                .iter().max().unwrap();
+
     let mut results = Vec::with_capacity(len);
 
     for i in 0..len {
+        let s = if spots_vec.len() == 1 { spots_vec[0] } else { spots_vec[i] };
+        let k = if strikes_vec.len() == 1 { strikes_vec[0] } else { strikes_vec[i] };
+        let t = if times_vec.len() == 1 { times_vec[0] } else { times_vec[i] };
+        let r = if rates_vec.len() == 1 { rates_vec[0] } else { rates_vec[i] };
+        let q = if divs_vec.len() == 1 { divs_vec[0] } else { divs_vec[i] };
+        let sigma = if sigmas_vec.len() == 1 { sigmas_vec[0] } else { sigmas_vec[i] };
+        
         let price = quantforge_core::compute::american::american_put_scalar(
-            spots_list[i],
-            strikes_list[i],
-            times_list[i],
-            rates_list[i],
-            divs_list[i],
-            sigmas_list[i],
+            s, k, t, r, q, sigma
         );
         results.push(price);
     }
 
-    Ok(PyList::new(py, results)?.into())
+    // Return as numpy array
+    use numpy::{PyArray1, ToPyArray};
+    Ok(results.to_pyarray(py).into())
 }
 
 /// American option Greeks batch processing
 #[pyfunction]
-#[pyo3(signature = (spots, strikes, times, rates, dividend_yields, sigmas, is_call=true))]
+#[pyo3(signature = (spots, strikes, times, rates, dividend_yields, sigmas, is_calls=true))]
 #[allow(clippy::too_many_arguments)]
 pub fn american_greeks_batch(
     py: Python,
@@ -734,17 +781,20 @@ pub fn american_greeks_batch(
     rates: &Bound<'_, PyAny>,
     dividend_yields: &Bound<'_, PyAny>,
     sigmas: &Bound<'_, PyAny>,
-    is_call: bool,
+    is_calls: bool,  // Changed from is_call to is_calls for consistency
 ) -> PyResult<PyObject> {
-    // For now, use simple Python list approach
-    let s_array = spots.extract::<Vec<f64>>()?;
-    let k_array = strikes.extract::<Vec<f64>>()?;
-    let t_array = times.extract::<Vec<f64>>()?;
-    let r_array = rates.extract::<Vec<f64>>()?;
-    let q_array = dividend_yields.extract::<Vec<f64>>()?;
-    let sigma_array = sigmas.extract::<Vec<f64>>()?;
+    // Handle scalar or array inputs
+    let s_array = extract_as_vec(spots)?;
+    let k_array = extract_as_vec(strikes)?;
+    let t_array = extract_as_vec(times)?;
+    let r_array = extract_as_vec(rates)?;
+    let q_array = extract_as_vec(dividend_yields)?;
+    let sigma_array = extract_as_vec(sigmas)?;
 
-    let len = s_array.len();
+    // Determine output length (max of all input lengths)
+    let len = *[s_array.len(), k_array.len(), t_array.len(), 
+                r_array.len(), q_array.len(), sigma_array.len()]
+                .iter().max().unwrap();
 
     let mut delta_vec = Vec::with_capacity(len);
     let mut gamma_vec = Vec::with_capacity(len);
@@ -753,14 +803,14 @@ pub fn american_greeks_batch(
     let mut rho_vec = Vec::with_capacity(len);
 
     for i in 0..len {
-        let s = s_array[i];
-        let k = k_array[i];
-        let t = t_array[i];
-        let r = r_array[i];
-        let q = q_array[i];
-        let sigma = sigma_array[i];
+        let s = if s_array.len() == 1 { s_array[0] } else { s_array[i] };
+        let k = if k_array.len() == 1 { k_array[0] } else { k_array[i] };
+        let t = if t_array.len() == 1 { t_array[0] } else { t_array[i] };
+        let r = if r_array.len() == 1 { r_array[0] } else { r_array[i] };
+        let q = if q_array.len() == 1 { q_array[0] } else { q_array[i] };
+        let sigma = if sigma_array.len() == 1 { sigma_array[0] } else { sigma_array[i] };
 
-        let delta = if is_call {
+        let delta = if is_calls {
             quantforge_core::compute::american::american_call_delta(s, k, t, r, q, sigma)
         } else {
             quantforge_core::compute::american::american_put_delta(s, k, t, r, q, sigma)
@@ -768,19 +818,19 @@ pub fn american_greeks_batch(
 
         let gamma = quantforge_core::compute::american::american_call_gamma(s, k, t, r, q, sigma);
 
-        let vega = if is_call {
+        let vega = if is_calls {
             quantforge_core::compute::american::american_call_vega(s, k, t, r, q, sigma)
         } else {
             quantforge_core::compute::american::american_put_vega(s, k, t, r, q, sigma)
         };
 
-        let theta = if is_call {
+        let theta = if is_calls {
             quantforge_core::compute::american::american_call_theta(s, k, t, r, q, sigma)
         } else {
             quantforge_core::compute::american::american_put_theta(s, k, t, r, q, sigma)
         };
 
-        let rho = if is_call {
+        let rho = if is_calls {
             quantforge_core::compute::american::american_call_rho(s, k, t, r, q, sigma)
         } else {
             quantforge_core::compute::american::american_put_rho(s, k, t, r, q, sigma)
@@ -793,63 +843,68 @@ pub fn american_greeks_batch(
         rho_vec.push(rho);
     }
 
-    // Create output dictionary
+    // Create output dictionary with numpy arrays
+    use numpy::ToPyArray;
     let greeks_dict = PyDict::new(py);
-    greeks_dict.set_item("delta", delta_vec)?;
-    greeks_dict.set_item("gamma", gamma_vec)?;
-    greeks_dict.set_item("vega", vega_vec)?;
-    greeks_dict.set_item("theta", theta_vec)?;
-    greeks_dict.set_item("rho", rho_vec)?;
-    greeks_dict.set_item("dividend_rho", vec![0.0; len])?;
+    greeks_dict.set_item("delta", delta_vec.to_pyarray(py))?;
+    greeks_dict.set_item("gamma", gamma_vec.to_pyarray(py))?;
+    greeks_dict.set_item("vega", vega_vec.to_pyarray(py))?;
+    greeks_dict.set_item("theta", theta_vec.to_pyarray(py))?;
+    greeks_dict.set_item("rho", rho_vec.to_pyarray(py))?;
+    greeks_dict.set_item("dividend_rho", vec![0.0; len].to_pyarray(py))?;
 
     Ok(greeks_dict.into())
 }
 
 /// American option implied volatility batch processing
 #[pyfunction]
-#[pyo3(signature = (option_prices, spots, strikes, times, rates, dividend_yields, is_call=true))]
+#[pyo3(signature = (prices, spots, strikes, times, rates, dividend_yields, is_calls=true))]
 #[allow(clippy::too_many_arguments)]
 pub fn american_implied_volatility_batch(
     py: Python,
-    option_prices: &Bound<'_, PyAny>,
+    prices: &Bound<'_, PyAny>,
     spots: &Bound<'_, PyAny>,
     strikes: &Bound<'_, PyAny>,
     times: &Bound<'_, PyAny>,
     rates: &Bound<'_, PyAny>,
     dividend_yields: &Bound<'_, PyAny>,
-    is_call: bool,
+    is_calls: bool,  // Changed to is_calls for consistency
 ) -> PyResult<PyObject> {
-    let price_array = option_prices.extract::<Vec<f64>>()?;
-    let s_array = spots.extract::<Vec<f64>>()?;
-    let k_array = strikes.extract::<Vec<f64>>()?;
-    let t_array = times.extract::<Vec<f64>>()?;
-    let r_array = rates.extract::<Vec<f64>>()?;
-    let q_array = dividend_yields.extract::<Vec<f64>>()?;
+    // Handle scalar or array inputs
+    let price_array = extract_as_vec(prices)?;
+    let s_array = extract_as_vec(spots)?;
+    let k_array = extract_as_vec(strikes)?;
+    let t_array = extract_as_vec(times)?;
+    let r_array = extract_as_vec(rates)?;
+    let q_array = extract_as_vec(dividend_yields)?;
 
-    let len = price_array.len();
+    // Determine output length (max of all input lengths)
+    let len = *[price_array.len(), s_array.len(), k_array.len(), 
+                t_array.len(), r_array.len(), q_array.len()]
+                .iter().max().unwrap();
 
     let mut results = Vec::with_capacity(len);
 
     for i in 0..len {
-        let price = price_array[i];
-        let s = s_array[i];
-        let k = k_array[i];
-        let t = t_array[i];
-        let r = r_array[i];
-        let q = q_array[i];
+        let price = if price_array.len() == 1 { price_array[0] } else { price_array[i] };
+        let s = if s_array.len() == 1 { s_array[0] } else { s_array[i] };
+        let k = if k_array.len() == 1 { k_array[0] } else { k_array[i] };
+        let t = if t_array.len() == 1 { t_array[0] } else { t_array[i] };
+        let r = if r_array.len() == 1 { r_array[0] } else { r_array[i] };
+        let q = if q_array.len() == 1 { q_array[0] } else { q_array[i] };
 
         // Simple Newton-Raphson implied volatility
         let mut sigma = 0.2; // Initial guess
         let mut converged = false;
 
         for _ in 0..100 {
-            let calc_price = if is_call {
+            let calc_price = if is_calls {
                 quantforge_core::compute::american::american_call_scalar(s, k, t, r, q, sigma)
             } else {
                 quantforge_core::compute::american::american_put_scalar(s, k, t, r, q, sigma)
             };
 
-            let vega = if is_call {
+            let vega = if is_calls {
                 quantforge_core::compute::american::american_call_vega(s, k, t, r, q, sigma)
             } else {
                 quantforge_core::compute::american::american_put_vega(s, k, t, r, q, sigma)
@@ -868,7 +923,9 @@ pub fn american_implied_volatility_batch(
         results.push(if converged { sigma } else { f64::NAN });
     }
 
-    Ok(PyList::new(py, results)?.into())
+    // Return as numpy array
+    use numpy::ToPyArray;
+    Ok(results.to_pyarray(py).into())
 }
 
 // ============================================================================
@@ -978,7 +1035,7 @@ pub fn black76_put_price_batch(
 /// Black76 Greeks batch calculation
 #[pyfunction]
 #[pyo3(name = "greeks_batch")]
-#[pyo3(signature = (forwards, strikes, times, rates, sigmas, is_calls=true))]
+#[pyo3(signature = (forwards, strikes, times, rates, sigmas, is_call=true))]
 pub fn black76_greeks_batch(
     py: Python,
     forwards: &Bound<'_, PyAny>,
@@ -986,10 +1043,10 @@ pub fn black76_greeks_batch(
     times: &Bound<'_, PyAny>,
     rates: &Bound<'_, PyAny>,
     sigmas: &Bound<'_, PyAny>,
-    is_calls: bool,
+    is_call: bool,
 ) -> PyArrowResult<PyObject> {
     // Use existing arrow76_greeks function
-    arrow76_greeks(py, forwards, strikes, times, rates, sigmas, is_calls)
+    arrow76_greeks(py, forwards, strikes, times, rates, sigmas, is_call)
 }
 
 /// Black76 implied volatility (scalar)
@@ -1612,7 +1669,7 @@ pub fn arrow_merton_greeks(
 
 /// Merton Greeks batch calculation
 #[pyfunction]
-#[pyo3(signature = (spots, strikes, times, rates, dividend_yields, sigmas, is_calls=true))]
+#[pyo3(signature = (spots, strikes, times, rates, dividend_yields, sigmas, is_call=true))]
 #[allow(clippy::too_many_arguments)]
 pub fn merton_greeks_batch(
     py: Python,
@@ -1622,7 +1679,7 @@ pub fn merton_greeks_batch(
     rates: &Bound<'_, PyAny>,
     dividend_yields: &Bound<'_, PyAny>,
     sigmas: &Bound<'_, PyAny>,
-    is_calls: bool,
+    is_call: bool,
 ) -> PyArrowResult<PyObject> {
     // Use existing arrow_merton_greeks function
     arrow_merton_greeks(
@@ -1633,7 +1690,7 @@ pub fn merton_greeks_batch(
         rates,
         dividend_yields,
         sigmas,
-        is_calls,
+        is_call,
     )
 }
 
