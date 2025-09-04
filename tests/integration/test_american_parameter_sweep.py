@@ -25,10 +25,10 @@ class TestAmericanParameterSweep:
         # Note: american.binomial関数が利用可能な場合に使用
         # 現在の実装ではPython側にエクスポートされていない可能性がある
         # その場合はQuantLibやpy_vollib等の外部ライブラリを使用
-        try:
-            # Rust側のbinomial実装を呼び出す（エクスポートされている場合）
-            return american.binomial_tree(s, k, t, r, q, sigma, n_steps=100, is_call=not is_put)
-        except AttributeError:
+        # Note: binomial_tree not exposed in Python API yet
+        if False:  # Placeholder for future binomial_tree implementation
+            pass
+        else:
             # フォールバック: European価格に早期行使プレミアムの推定値を加算
             if is_put:
                 european = quantforge.merton.put_price(s, k, t, r, q, sigma)
@@ -62,33 +62,33 @@ class TestAmericanParameterSweep:
             # 相対誤差を計算（Europeanからの乖離率で代用）
             if baw_price > european:
                 premium_ratio = (baw_price - european) / european if european > 0 else 0
-                results.append({
-                    'moneyness': m,
-                    's': s,
-                    'baw': baw_price,
-                    'european': european,
-                    'premium_ratio': premium_ratio
-                })
+                results.append(
+                    {"moneyness": m, "s": s, "baw": baw_price, "european": european, "premium_ratio": premium_ratio}
+                )
             else:
                 # エラー: Americanが Europeanより安い
-                results.append({
-                    'moneyness': m,
-                    's': s,
-                    'baw': baw_price,
-                    'european': european,
-                    'premium_ratio': -1  # エラーフラグ
-                })
+                results.append(
+                    {
+                        "moneyness": m,
+                        "s": s,
+                        "baw": baw_price,
+                        "european": european,
+                        "premium_ratio": -1,  # エラーフラグ
+                    }
+                )
 
         # 結果の検証
         for res in results:
             # American >= European の基本原則
-            assert res['baw'] >= res['european'] - 1e-10, \
+            assert res["baw"] >= res["european"] - 1e-10, (
                 f"American < European at moneyness {res['moneyness']}: {res['baw']:.4f} < {res['european']:.4f}"
+            )
 
             # ATM付近（0.9-1.1）では早期行使プレミアムが存在すべき
-            if 0.9 <= res['moneyness'] <= 1.1:
-                assert res['premium_ratio'] > 0.05, \
-                    f"Premium too small at moneyness {res['moneyness']}: {res['premium_ratio']*100:.2f}%"
+            if 0.9 <= res["moneyness"] <= 1.1:
+                assert res["premium_ratio"] > 0.05, (
+                    f"Premium too small at moneyness {res['moneyness']}: {res['premium_ratio'] * 100:.2f}%"
+                )
 
     def test_time_to_maturity_sweep(self) -> None:
         """満期までの時間による精度変化を検証"""
@@ -113,24 +113,20 @@ class TestAmericanParameterSweep:
             premium = baw_price - european
             premium_ratio = premium / european if european > 0 else 0
 
-            results.append({
-                'time': t,
-                'baw': baw_price,
-                'european': european,
-                'premium': premium,
-                'premium_ratio': premium_ratio
-            })
+            results.append(
+                {"time": t, "baw": baw_price, "european": european, "premium": premium, "premium_ratio": premium_ratio}
+            )
 
         # 結果の検証
         for res in results:
             # American >= European
-            assert res['baw'] >= res['european'] - 1e-10, \
+            assert res["baw"] >= res["european"] - 1e-10, (
                 f"American < European at T={res['time']}: {res['baw']:.4f} < {res['european']:.4f}"
+            )
 
             # 時間が長いほどプレミアムが大きくなる傾向（一般的な性質）
-            if res['time'] >= 0.1:
-                assert res['premium'] > 0, \
-                    f"No early exercise premium at T={res['time']}"
+            if res["time"] >= 0.1:
+                assert res["premium"] > 0, f"No early exercise premium at T={res['time']}"
 
     def test_volatility_sweep(self) -> None:
         """ボラティリティによる精度変化を検証"""
@@ -155,26 +151,28 @@ class TestAmericanParameterSweep:
             premium = baw_price - european
             premium_ratio = premium / european if european > 0 else 0
 
-            results.append({
-                'sigma': sigma,
-                'baw': baw_price,
-                'european': european,
-                'premium': premium,
-                'premium_ratio': premium_ratio
-            })
+            results.append(
+                {
+                    "sigma": sigma,
+                    "baw": baw_price,
+                    "european": european,
+                    "premium": premium,
+                    "premium_ratio": premium_ratio,
+                }
+            )
 
         # 結果の検証
-        prev_baw = 0
+        prev_baw: float = 0.0
         for res in results:
             # American >= European
-            assert res['baw'] >= res['european'] - 1e-10, \
+            assert res["baw"] >= res["european"] - 1e-10, (
                 f"American < European at σ={res['sigma']}: {res['baw']:.4f} < {res['european']:.4f}"
+            )
 
             # ボラティリティが増加すると価格も増加（一般的な性質）
             if prev_baw > 0:
-                assert res['baw'] >= prev_baw - 1e-6, \
-                    f"Price decreases with volatility: σ={res['sigma']}"
-            prev_baw = res['baw']
+                assert res["baw"] >= prev_baw - 1e-6, f"Price decreases with volatility: σ={res['sigma']}"
+            prev_baw = res["baw"]
 
     def test_combined_parameter_sweep(self) -> None:
         """複合パラメータでの精度検証（限定的な組み合わせ）"""
@@ -210,18 +208,20 @@ class TestAmericanParameterSweep:
                 expected_accuracy = "medium"
                 max_error = 0.02  # 2%
 
-            results.append({
-                'moneyness': m,
-                'time': t,
-                'sigma': sigma,
-                'baw': baw_price,
-                'european': european,
-                'expected_accuracy': expected_accuracy,
-                'max_error': max_error
-            })
+            results.append(
+                {
+                    "moneyness": m,
+                    "time": t,
+                    "sigma": sigma,
+                    "baw": baw_price,
+                    "european": european,
+                    "expected_accuracy": expected_accuracy,
+                    "max_error": max_error,
+                }
+            )
 
         # 結果サマリー
-        high_accuracy_count = sum(1 for r in results if r['expected_accuracy'] == 'high')
+        high_accuracy_count = sum(1 for r in results if r["expected_accuracy"] == "high")
         medium_accuracy_count = len(results) - high_accuracy_count
 
         print("\nParameter Sweep Summary:")
@@ -232,8 +232,9 @@ class TestAmericanParameterSweep:
         # 基本検証
         for res in results:
             # American >= European
-            assert res['baw'] >= res['european'] - 1e-10, \
+            assert res["baw"] >= res["european"] - 1e-10, (  # type: ignore[operator]
                 f"American < European at (S/K={res['moneyness']}, T={res['time']}, σ={res['sigma']})"
+            )
 
     @pytest.mark.slow
     def test_full_parameter_sweep(self) -> None:

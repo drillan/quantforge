@@ -3,10 +3,11 @@
 
 import sys
 
-sys.path.insert(0, '.')
+sys.path.insert(0, ".")
 
 # 現在の実装で適応的実装が利用可能かテスト
 # 注: 現時点ではRust側の実装のみで、Python bindingはまだ
+
 
 def test_adaptive_implementation_concept():
     """適応的実装のコンセプト検証"""
@@ -47,6 +48,7 @@ def test_adaptive_implementation_concept():
         assert put_price >= european - 1e-10, "American < European"
         assert put_price >= max(k - s, 0), "Below intrinsic value"
 
+
 def test_dampening_factor_ranges():
     """Dampening factorの妥当性検証"""
 
@@ -57,10 +59,10 @@ def test_dampening_factor_ranges():
 
     # モネーネス別の期待されるdampening調整
     adjustments = {
-        'ATM (0.9-1.1)': 1.00,
-        'Near ATM (0.8-1.2)': 1.03,
-        'Deep OTM (<0.8)': 1.08,
-        'Deep ITM (>1.2)': 0.95,
+        "ATM (0.9-1.1)": 1.00,
+        "Near ATM (0.8-1.2)": 1.03,
+        "Deep OTM (<0.8)": 1.08,
+        "Deep ITM (>1.2)": 0.95,
     }
 
     print("\nDampening Factor Analysis")
@@ -73,6 +75,7 @@ def test_dampening_factor_ranges():
         adjusted = BASE_DAMPENING * factor
         clamped = max(MIN_DAMPENING, min(MAX_DAMPENING, adjusted))
         print(f"  {region}: x{factor} = {adjusted:.3f} → {clamped:.3f}")
+
 
 def test_parameter_sensitivity():
     """パラメータ感度分析"""
@@ -113,6 +116,7 @@ def test_parameter_sensitivity():
         price = quantforge.american.put_price(s_base, k, t, r, q, sigma_test)
         change = (price - base_price) / base_price * 100
         print(f"  σ={sigma_test:3.1f}: {price:6.4f} ({change:+6.2f}%)")
+
 
 if __name__ == "__main__":
     test_adaptive_implementation_concept()

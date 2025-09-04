@@ -1,7 +1,8 @@
 # American Option Pricing Accuracy Fix
 
-## ステータス: DRAFT
+## ステータス: COMPLETED
 ## 開始日: 2025-01-26
+## 完了日: 2025-01-26
 ## 言語: Rust（コア実装）
 
 ## 1. 背景と問題

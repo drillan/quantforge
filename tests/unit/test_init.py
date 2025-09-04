@@ -1,4 +1,3 @@
-
 """Tests for quantforge __init__ module."""
 
 

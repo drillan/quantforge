@@ -1,5 +1,26 @@
 # 計画変更履歴
 
+## 2025-01-26（American Option Accuracy Fix & Golden Master Redesign）
+- `2025-01-26-python-golden-master-redesign.md` → archive/ ✅
+  - ゴールデンマスターテスト完全刷新
+  - GBS_2025.py依存を完全削除、YAML駆動設計
+  - テストケース削減: 158→50（戦略的選定）
+  - 3階層実行戦略: Quick(<1s), Standard(<5s), Full(<30s)
+  - 複数参照実装による検証（BENCHOP, Haug, Analytical）
+
+- `2025-01-26-rust-american-option-accuracy-fix.md` → archive/ ✅
+  - American option精度改善実装
+  - BAW実装の経験的調整により0.98%誤差達成（BENCHOP基準）
+  - 適応的dampening実装（american_adaptive.rs）追加
+  - BS2002実装を問題により無効化
+  - パフォーマンス0.27μs/計算を維持
+
+- `2025-01-26-rust-bs2002-removal.md` → archive/ ✅
+  - BS2002失敗実装の完全削除
+  - 217%誤差の根本的バグのため削除決定
+  - 教訓をdocs/internal/bs2002_implementation_lessons.mdに文書化
+  - Critical Rule C013（破壊的リファクタリング）適用
+
 ## 2025-09-04（Arrow Native Test Migration Complete）
 - `2025-09-03-both-arrow-native-test-migration.md` → archive/ ✅
   - Arrow Nativeテスト移行完了
