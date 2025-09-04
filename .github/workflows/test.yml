@@ -88,7 +88,7 @@ jobs:
         run: |
           source .venv/bin/activate
           uv pip install mypy
-          mypy python/
+          mypy bindings/python/python/
 
   integration-tests:
     name: Integration Tests
