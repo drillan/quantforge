@@ -66,8 +66,7 @@ jobs:
       
       - name: Install dependencies
         run: |
-          uv venv
-          uv pip install maturin pytest numpy
+          uv sync --group dev
       
       - name: Build Python bindings
         run: |
@@ -113,15 +112,13 @@ jobs:
       - name: Full Build
         run: |
           cargo build --workspace --release
-          uv venv
+          uv sync --group dev
           source .venv/bin/activate
-          uv pip install maturin
           maturin build --release
       
       - name: Integration Tests
         run: |
           source .venv/bin/activate
-          uv pip install pytest numpy
           pytest tests/integration/ tests/e2e/ -v
 
   benchmarks:

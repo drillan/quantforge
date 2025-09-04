@@ -45,7 +45,7 @@ jobs:
     
     - name: Run performance tests
       run: |
-        uv run pytest tests/performance/test_benchmarks.py -v --benchmark-only
+        uv run pytest tests/performance/test_all_benchmarks.py -v --benchmark-only
     
     - name: Check for regressions
       run: |
