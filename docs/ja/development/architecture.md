@@ -251,8 +251,9 @@ pub type Result<T> = std::result::Result<T, QuantForgeError>;
 ### コンパイル時最適化
 
 ```{code-block} rust
-:name: architecture-code-section
+:name: architecture-code-constant-folding
 :caption: 定数畳み込み
+:linenos:
 
 // 定数畳み込み
 const SQRT_2PI: f64 = 2.5066282746310007;

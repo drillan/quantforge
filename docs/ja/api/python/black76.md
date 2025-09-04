@@ -63,8 +63,9 @@ print(np.array(greeks['vega']))   # NumPy配列に変換
 ### グリークス計算
 
 ```{code-block} python
-:name: black76-code-section
+:name: black76-code-greeks-calculation
 :caption: 全グリークスを一括計算
+:linenos:
 
 # 全グリークスを一括計算
 # パラメータ: f(forward), k(strike), t(time), r(rate), sigma, is_call

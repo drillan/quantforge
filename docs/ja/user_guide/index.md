@@ -77,8 +77,9 @@ prices = black_scholes.call_price_batch(
 ### ポートフォリオ評価
 
 ```{code-block} python
-:name: index-code-section
+:name: user-guide-code-portfolio-evaluation
 :caption: 複数のオプションポジション
+:linenos:
 
 # 複数のオプションポジションの評価
 positions = [

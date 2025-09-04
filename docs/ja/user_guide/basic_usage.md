@@ -1,18 +1,27 @@
+(basic-usage)=
 # 基本的な使い方
 
 QuantForgeの基本的な関数とBlack-Scholesモデルを使ったオプション価格計算を学びます。
 
+(basic-usage-import)=
 ## インポート
 
-```python
+```{code-block} python
+:name: basic-usage-code-import
+:caption: 必要なモジュールのインポート
 from quantforge.models import black_scholes
 ```
 
+(basic-usage-black-scholes)=
 ## Black-Scholesモデル
 
+(basic-usage-basic-pricing)=
 ### 基本的な価格計算
 
-```python
+```{code-block} python
+:name: basic-usage-code-call-put-price
+:caption: コールとプットオプションの価格計算
+:linenos:
 from quantforge.models import black_scholes
 
 # コールオプション価格
@@ -43,12 +52,16 @@ theoretical = 100.0 - 110.0 * np.exp(-0.05 * 1.0)
 print(f"Put-Call Parity Check: {abs(parity - theoretical) < 1e-10}")
 ```
 
-
+(basic-usage-greeks)=
 ## グリークス計算
 
+(basic-usage-all-greeks)=
 ### 全グリークスの一括計算
 
-```python
+```{code-block} python
+:name: basic-usage-code-greeks-calculation
+:caption: 全グリークスの一括計算
+:linenos:
 from quantforge.models import black_scholes
 
 # 全グリークスを一括計算（効率的）
@@ -69,12 +82,16 @@ print(f"  Theta: {greeks.theta:.4f}")
 print(f"  Rho:   {greeks.rho:.4f}")
 ```
 
-
+(basic-usage-batch)=
 ## 複数オプションの同時計算
 
+(basic-usage-batch-arrow)=
 ### バッチ処理（PyArrow推奨）
 
-```python
+```{code-block} python
+:name: basic-usage-code-batch-processing
+:caption: バッチ処理の実装例
+:linenos:
 import pyarrow as pa
 import numpy as np  # 統計処理用
 from quantforge.models import black_scholes
@@ -108,8 +125,9 @@ for i, (spot, call, put) in enumerate(zip(spots, call_prices, put_prices)):
 ### 複数のパラメータセット
 
 ```{code-block} python
-:name: basic-usage-code-section
+:name: basic-usage-code-different-maturities
 :caption: 異なる満期のオプション
+:linenos:
 
 # 異なる満期のオプション
 times = [0.25, 0.5, 1.0, 2.0]
@@ -124,11 +142,16 @@ for time_val in times:
     print(f"Maturity {t} years: ${price:.2f}")
 ```
 
+(basic-usage-implied-volatility)=
 ## インプライドボラティリティ
 
+(basic-usage-single-iv)=
 ### 単一のIV計算
 
-```python
+```{code-block} python
+:name: basic-usage-code-single-iv
+:caption: 単一のIV計算
+:linenos:
 from quantforge.models import black_scholes
 
 # 市場価格からボラティリティを逆算
@@ -149,9 +172,13 @@ calculated_price = black_scholes.call_price(s=100, k=100, t=1.0, r=0.05, sigma=i
 print(f"Price Check: Market={market_price:.2f}, Calculated={calculated_price:.2f}")
 ```
 
+(basic-usage-iv-smile)=
 ### IVスマイルの分析
 
-```python
+```{code-block} python
+:name: basic-usage-code-iv-smile-analysis
+:caption: IVスマイルの分析
+:linenos:
 import numpy as np
 from quantforge.models import black_scholes
 
@@ -174,11 +201,16 @@ for strike, price in zip(strikes, market_prices):
     print(f"Strike {k}: IV={iv:.1%}")
 ```
 
+(basic-usage-risk-management)=
 ## リスク管理への応用
 
+(basic-usage-delta-hedge)=
 ### デルタヘッジ
 
-```python
+```{code-block} python
+:name: basic-usage-code-delta-hedge
+:caption: デルタヘッジ戦略
+:linenos:
 from quantforge.models import black_scholes
 
 # ポジション情報
@@ -203,8 +235,9 @@ print(f"Hedge position: {hedge_shares:.0f} shares")
 ### ポートフォリオのグリークス
 
 ```{code-block} python
-:name: basic-usage-code-section
+:name: basic-usage-code-portfolio-greeks
 :caption: 複数オプションのポートフォリオ
+:linenos:
 
 # 複数オプションのポートフォリオ
 positions = [

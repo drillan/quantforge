@@ -15,7 +15,7 @@ QuantForgeへの貢献を歓迎します！このガイドでは、プロジェ�
 Issue作成時に含めるべき情報：
 
 ```{code-block} markdown
-:name: contributing-code-section
+:name: contributing-code-bug-report
 :caption: # 環境
 
 ## 環境
@@ -40,7 +40,7 @@ Issue作成時に含めるべき情報：
 ### ✨ 機能提案
 
 ```{code-block} markdown
-:name: contributing-code-section
+:name: contributing-code-feature-proposal
 :caption: # 提案内容
 
 ## 提案内容
@@ -70,7 +70,7 @@ Issue作成時に含めるべき情報：
 ### 1. 環境セットアップ
 
 ```{code-block} bash
-:name: contributing-code-section
+:name: contributing-code-fork-setup
 :caption: リポジトリをフォーク
 
 # リポジトリをフォーク
@@ -95,7 +95,7 @@ cargo build
 #### Rust
 
 ```{code-block} rust
-:name: contributing-code-good
+:name: contributing-code-rust-good
 :caption: ✅ Good
 
 // ✅ Good
@@ -119,7 +119,7 @@ pub fn calc(s: f64, k: f64, r: f64, v: f64, t: f64) -> f64 {
 #### Python
 
 ```{code-block} python
-:name: contributing-code-good
+:name: contributing-code-python-good
 :caption: ✅ Good
 
 # ✅ Good
@@ -253,7 +253,7 @@ def new_feature(param1: float, param2: str) -> dict:
 ### 5. コミット
 
 ```{code-block} bash
-:name: contributing-code-section
+:name: contributing-code-commit-workflow
 :caption: 変更の確認
 
 # 変更の確認
@@ -306,7 +306,7 @@ Types:
 ### 6. プルリクエスト
 
 ```{code-block} markdown
-:name: contributing-code-section
+:name: contributing-code-pr-template
 :caption: # 概要
 
 ## 概要
@@ -342,7 +342,7 @@ Closes #123
 - 良い点も指摘
 
 ```{code-block} markdown
-:name: contributing-code-section
+:name: contributing-code-feedback-example
 :caption: 良いフィードバック例
 
 # 良いフィードバック例

@@ -169,8 +169,9 @@ strategy = optimal_parallel_strategy(len(data))
 ### メモリ割り当て削減
 
 ```{code-block} python
-:name: optimization-code-section
+:name: optimization-code-preallocated-arrays
 :caption: 事前確保された配列への直接書き込み
+:linenos:
 
 # 事前確保された配列への直接書き込み
 n = 1_000_000

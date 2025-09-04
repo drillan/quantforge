@@ -70,8 +70,9 @@ print(np.array(greeks['dividend_rho']))  # 配当利回り感応度
 配当を考慮したオプションの感応度（グリークス）を一括計算：
 
 ```{code-block} python
-:name: merton-code-section
+:name: merton-code-greeks-calculation
 :caption: 全グリークスを一括計算
+:linenos:
 
 # 全グリークスを一括計算
 # パラメータ: s(spot), k, t, r, q, sigma, is_call

@@ -104,8 +104,9 @@ assert abs(actual - expected) < THEORETICAL_TOLERANCE
 ### 自動検出スクリプト
 
 ```{code-block} bash
-:name: hardcode-prevention-code-section
+:name: hardcode-prevention-code-detection-script
 :caption: 実行方法
+:linenos:
 
 # 実行方法
 ./scripts/detect_hardcode.sh

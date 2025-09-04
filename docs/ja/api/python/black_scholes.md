@@ -81,8 +81,9 @@ portfolio_vega = np.sum(np.array(greeks['vega']))
 オプションの感応度（グリークス）を一括計算：
 
 ```{code-block} python
-:name: black-scholes-code-section
+:name: black-scholes-api-code-greeks-calculation
 :caption: 全グリークスを一括計算
+:linenos:
 
 # 全グリークスを一括計算
 # パラメータ: s(spot), k, t, r, sigma, is_call

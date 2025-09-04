@@ -43,7 +43,7 @@ print(f"Call Option Price: ${price:.2f}")
 ### グリークスの計算
 
 ```{code-block} python
-:name: quickstart-code-section
+:name: quickstart-code-greeks-calculation
 :caption: グリークスを含む詳細な計算
 
 # グリークスを含む詳細な計算

@@ -41,7 +41,7 @@ arch -arm64 python script.py
 ### Windows
 
 ```{code-block} powershell
-:name: tuning-code-section
+:name: tuning-code-power-plan
 :caption: 電源プラン
 
 # 電源プラン
@@ -56,7 +56,7 @@ Start-Process python.exe -ArgumentList "script.py" -Priority High
 ### Intel
 
 ```{code-block} python
-:name: tuning-code-section
+:name: tuning-code-advanced-parallelization
 :caption: 高度な並列化
 
 # 高度な並列化
@@ -94,7 +94,7 @@ qf.set_efficiency_cores(False)  # 高性能コアのみ使用
 ### リアルタイム処理
 
 ```{code-block} python
-:name: tuning-code-section
+:name: tuning-code-low-latency
 :caption: 低レイテンシ設定（将来実装予定）
 
 # 低レイテンシ設定（将来実装予定）
@@ -116,7 +116,7 @@ _ = black_scholes.call_price_batch(dummy_data, 100, 1.0, 0.05, 0.2)
 ### バッチ処理
 
 ```{code-block} python
-:name: tuning-code-section
+:name: tuning-code-high-throughput
 :caption: 高スループット設定（将来実装予定）
 
 # 高スループット設定（将来実装予定）
@@ -138,7 +138,7 @@ prices = black_scholes.call_price_batch(spots, 100, 1.0, 0.05, 0.2)
 ### メモリ制限環境
 
 ```{code-block} python
-:name: tuning-code-section
+:name: tuning-code-memory-efficient
 :caption: 省メモリ設定（将来実装予定）
 
 # 省メモリ設定（将来実装予定）
@@ -201,7 +201,7 @@ print(f"Optimal batch size: {optimal}")
 ### プリフェッチ
 
 ```{code-block} python
-:name: tuning-code-section
+:name: tuning-code-data-prefetch
 :caption: データプリフェッチ
 
 # データプリフェッチ
@@ -248,7 +248,7 @@ def numa_aware_processing(data):
 ### 省電力モード
 
 ```{code-block} python
-:name: tuning-code-section
+:name: tuning-code-battery-optimized
 :caption: バッテリー動作時の設定
 
 # バッテリー動作時の設定

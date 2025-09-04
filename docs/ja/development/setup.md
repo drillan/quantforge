@@ -7,7 +7,7 @@ QuantForgeの開発環境構築手順です。
 ### Rust環境
 
 ```{code-block} bash
-:name: setup-code-rust
+:name: setup-code-rust-install
 :caption: Rustインストール
 
 # Rustインストール
@@ -79,7 +79,7 @@ quantforge/
 ### 開発ビルド
 
 ```{code-block} bash
-:name: setup-code-section
+:name: setup-code-debug-build
 :caption: デバッグビルド（高速コンパイル）
 
 # デバッグビルド（高速コンパイル）
@@ -92,7 +92,7 @@ maturin develop --release
 ### テスト実行
 
 ```{code-block} bash
-:name: setup-code-rust
+:name: setup-code-rust-test
 :caption: Rustテスト
 
 # Rustテスト
@@ -134,7 +134,7 @@ cargo bench
 ### Rustデバッグ
 
 ```{code-block} bash
-:name: setup-code-section
+:name: setup-code-debug-info-build
 :caption: デバッグ情報付きビルド
 
 # デバッグ情報付きビルド
@@ -173,7 +173,7 @@ logging.basicConfig(level=logging.DEBUG)
 ### プロファイリング
 
 ```{code-block} bash
-:name: setup-code-rust
+:name: setup-code-rust-profiling
 :caption: Rust プロファイリング
 
 # Rust プロファイリング
@@ -202,7 +202,7 @@ python benchmarks/benchmark.py
 ### ビルドエラー
 
 ```{code-block} bash
-:name: setup-code-section
+:name: setup-code-clean-build
 :caption: クリーンビルド
 
 # クリーンビルド

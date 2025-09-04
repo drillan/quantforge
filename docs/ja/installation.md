@@ -30,7 +30,7 @@ pip install -i https://test.pypi.org/simple/ --extra-index-url https://pypi.org/
 ### PyPIから安定版をインストール（準備中）
 
 ```{code-block} bash
-:name: installation-code-section
+:name: installation-code-pypi-stable
 :caption: 安定版がリリースされた後
 
 # 安定版がリリースされた後
@@ -123,7 +123,7 @@ uv pip install maturin
 ### ビルド手順
 
 ```{code-block} bash
-:name: installation-code-section
+:name: installation-code-build-from-source
 :caption: リポジトリのクローン
 
 # リポジトリのクローン
@@ -237,7 +237,7 @@ maturin build --release
 #### メモリ不足エラー
 
 ```{code-block} python
-:name: installation-code-section
+:name: installation-code-batch-size
 :caption: バッチサイズを調整
 
 # バッチサイズを調整
@@ -250,7 +250,7 @@ batch_size = 10_000  # 100万件ではなく1万件ずつ処理
 #### 環境変数
 
 ```{code-block} bash
-:name: installation-code-section
+:name: installation-code-thread-control
 :caption: スレッド数の制御
 
 # スレッド数の制御
@@ -278,7 +278,7 @@ os.environ["NUMEXPR_NUM_THREADS"] = "1"
 ### 最新版へのアップグレード
 
 ```{code-block} bash
-:name: installation-code-uv
+:name: installation-code-upgrade-uv
 :caption: uvを使用
 
 # uvを使用
@@ -291,7 +291,7 @@ pip install --upgrade quantforge
 ### 特定バージョンのインストール
 
 ```{code-block} bash
-:name: installation-code-section
+:name: installation-code-version-specific
 :caption: バージョン指定
 
 # バージョン指定
@@ -304,7 +304,7 @@ uv pip install quantforge --pre
 ## アンインストール
 
 ```{code-block} bash
-:name: installation-code-uv
+:name: installation-code-uninstall-uv
 :caption: uvを使用
 
 # uvを使用

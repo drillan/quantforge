@@ -8,6 +8,8 @@ QuantForgeは、Rustで構築された高性能金融デリバティブ価格計
 Pythonの使いやすさを保ちながら、高速な計算性能を提供します。
 
 :::{note}
+:name: index-note-features
+
 **主要機能**
 - Pure Python実装比 最大40倍の処理速度（AMD Ryzen 5 5600G測定値）
 - 数値誤差 < 1e-15（倍精度演算）
@@ -52,6 +54,8 @@ prices = black_scholes.call_price_batch(
 ## パフォーマンス比較
 
 :::{note}
+:name: index-note-performance-environment
+
 測定環境: AMD Ryzen 5 5600G（6コア/12スレッド）、29.3GB RAM、Pop!_OS 22.04（CUIモード）
 測定日: 2025-08-28
 詳細は[ベンチマーク結果](performance/benchmarks.md)を参照
@@ -84,6 +88,7 @@ prices = black_scholes.call_price_batch(
 ## ドキュメント構成
 
 ```{toctree}
+:name: index-toc-introduction
 :caption: はじめに
 :maxdepth: 2
 
@@ -92,6 +97,7 @@ installation
 ```
 
 ```{toctree}
+:name: index-toc-user-guide
 :caption: ユーザーガイド
 :maxdepth: 2
 
@@ -104,6 +110,7 @@ user_guide/examples
 ```
 
 ```{toctree}
+:name: index-toc-api-reference
 :caption: API リファレンス
 :maxdepth: 2
 
@@ -120,6 +127,7 @@ api/rust/index
 ```
 
 ```{toctree}
+:name: index-toc-mathematical-models
 :caption: 数理モデル
 :maxdepth: 2
 
@@ -132,6 +140,7 @@ models/asian_options
 ```
 
 ```{toctree}
+:name: index-toc-performance
 :caption: パフォーマンス
 :maxdepth: 2
 
@@ -141,6 +150,7 @@ performance/tuning
 ```
 
 ```{toctree}
+:name: index-toc-development
 :caption: 開発者向け
 :maxdepth: 2
 
