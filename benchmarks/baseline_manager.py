@@ -5,7 +5,6 @@ Manages baseline performance metrics for continuous integration.
 """
 
 import json
-import statistics
 import sys
 from pathlib import Path
 from typing import Any
@@ -21,7 +20,7 @@ class BaselineManager:
 
     def update(self, runs: int = 3, buffer: float = 1.2) -> None:
         """Update baseline metrics.
-        
+
         Args:
             runs: Number of benchmark runs to average
             buffer: Buffer factor for baseline (1.2 = 20% buffer)
@@ -54,17 +53,17 @@ class BaselineManager:
                 },
             },
         }
-        
+
         with open(self.baseline_path, "w") as f:
             json.dump(baseline_data, f, indent=2)
-        
+
         print(f"Baseline updated at {self.baseline_path}")
 
     def load(self) -> dict[str, Any]:
         """Load baseline metrics."""
         if not self.baseline_path.exists():
             raise FileNotFoundError(f"Baseline not found at {self.baseline_path}")
-        
+
         with open(self.baseline_path) as f:
             return json.load(f)
 
@@ -72,17 +71,17 @@ class BaselineManager:
 def main() -> None:
     """Main entry point."""
     import argparse
-    
+
     parser = argparse.ArgumentParser(description="Manage benchmark baselines")
     parser.add_argument("--update", action="store_true", help="Update baseline")
     parser.add_argument("--check", action="store_true", help="Check if baseline exists")
     parser.add_argument("--runs", type=int, default=3, help="Number of runs to average")
     parser.add_argument("--buffer", type=float, default=1.2, help="Buffer factor")
-    
+
     args = parser.parse_args()
-    
+
     manager = BaselineManager()
-    
+
     if args.check:
         # Check if baseline exists
         if manager.baseline_path.exists():
