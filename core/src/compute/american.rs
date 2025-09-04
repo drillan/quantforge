@@ -5,8 +5,6 @@
 //!    - Achieves <1% error vs BENCHOP reference values
 //!    - Dampening factor of 0.695 calibrated to match BENCHOP
 //! 2. Cox-Ross-Rubinstein binomial tree - optional high-precision method
-//!
-//! Note: BS2002 implementation is disabled due to trigger price calculation errors
 
 use arrow::array::builder::Float64Builder;
 use arrow::array::{ArrayRef, Float64Array};
@@ -18,8 +16,6 @@ use super::american_simple::{
     american_call_simple, american_put_simple, calculate_critical_price_call,
     calculate_critical_price_put,
 };
-// BS2002 is disabled due to implementation issues
-// use super::american_bs2002::{bs2002_call, bs2002_put};
 use super::formulas::black_scholes_call_scalar;
 use super::{get_scalar_or_array_value, validate_broadcast_compatibility};
 use crate::constants::{
