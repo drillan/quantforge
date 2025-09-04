@@ -29,21 +29,21 @@ jobs:
         uv run maturin develop --release
     
     - name: Download baseline artifact
-      if: github.event_name == 'pull_request'
       uses: actions/download-artifact@v4
       with:
         name: performance-baseline
         path: tests/performance/
       continue-on-error: true
     
-    - name: Create initial baseline if needed
-      if: github.ref == 'refs/heads/main'
+    - name: Check baseline status
+      id: baseline-check
       run: |
-        if [ ! -f tests/performance/baseline.json ]; then
-          echo "Creating initial baseline..."
-          # Run tests first to generate latest.json
-          uv run pytest tests/performance/test_all_benchmarks.py -v --benchmark-only
-          uv run python tests/performance/update_baseline.py
+        if [ -f tests/performance/baseline.json ]; then
+          echo "Baseline exists"
+          echo "baseline_exists=true" >> $GITHUB_OUTPUT
+        else
+          echo "No baseline found - will create initial baseline"
+          echo "baseline_exists=false" >> $GITHUB_OUTPUT
         fi
     
     - name: Run performance tests
@@ -51,17 +51,26 @@ jobs:
         uv run pytest tests/performance/test_all_benchmarks.py -v --benchmark-only
     
     - name: Check for performance regressions
+      if: steps.baseline-check.outputs.baseline_exists == 'true'
       run: |
-        # NumPy+SciPyはCI環境で変動が大きいため、閾値を緩める（初回実行時）
-        if [ ! -f tests/performance/baseline.json ]; then
-          echo "Note: First run, using relaxed threshold"
-          uv run python tests/performance/check_regression.py --threshold 1.5
-        else
-          uv run python tests/performance/check_regression.py
-        fi
+        echo "Checking for performance regressions..."
+        uv run python tests/performance/check_regression.py
+    
+    - name: Create initial baseline
+      if: steps.baseline-check.outputs.baseline_exists == 'false' && github.ref == 'refs/heads/main'
+      run: |
+        echo "Creating initial baseline from test results..."
+        uv run python tests/performance/update_baseline.py
+    
+    - name: Skip regression check (no baseline)
+      if: steps.baseline-check.outputs.baseline_exists == 'false' && github.ref != 'refs/heads/main'
+      run: |
+        echo "⚠️ No baseline available for comparison."
+        echo "Performance regression check skipped."
+        echo "Baseline will be created when merged to main."
     
     - name: Update baseline (main branch only)
-      if: github.ref == 'refs/heads/main' && success()
+      if: github.ref == 'refs/heads/main' && success() && steps.baseline-check.outputs.baseline_exists == 'true'
       run: |
         echo "Updating baseline for main branch..."
         uv run python tests/performance/update_baseline.py
