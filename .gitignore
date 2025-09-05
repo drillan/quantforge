@@ -253,9 +253,6 @@ scratch/
 *.old/
 *_backup/
 
-# Progress tracking (experimental)
-tracker/
-
 # Legacy progress files (to be removed)
 progress_report.md
 progress_report_*.md
@@ -265,9 +262,6 @@ tracker_temp.yaml
 benchmark_results/
 benchmark_results_*.json
 perf_*.log
-
-# Local translation system (private work area)
-translations/
 
 # Internal tools (not for distribution)
 .internal/

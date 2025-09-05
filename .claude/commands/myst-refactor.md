@@ -205,7 +205,7 @@ cd docs && sphinx-build -M html ja _build/ja 2>&1 | grep "duplicate label"
 cd docs && sphinx-build -M html en _build/en 2>&1 | grep "duplicate label"
 
 # 構造比較ツールでの検証
-python translations/compare/structure_compare.py \
+python .internal/translations/compare/structure_compare.py \
   --ja docs/ja/models/black_scholes.md \
   --en docs/en/models/black_scholes.md \
   --format json | jq '.summary.issues'
@@ -254,7 +254,7 @@ A: そのまま残します。ブロック要素のみが対象
 **Q: Sphinxビルドで"duplicate label"警告が出る**
 A: name属性が重複しています。構造比較ツールで特定：
 ```bash
-python translations/compare/check_duplicates.py docs/ja/
+python .internal/translations/compare/check_duplicates.py docs/ja/
 ```
 
 ### 8. 実装経験に基づくベストプラクティス
@@ -326,16 +326,16 @@ python scripts/add_myst_names.py --file docs/ja/models/black_scholes.md --dry-ru
 #### 構造比較（検証）
 ```bash
 # 日英の構造を比較（正しいパス）
-python translations/compare/structure_compare.py \
+python .internal/translations/compare/structure_compare.py \
   --ja docs/ja/models/black_scholes.md \
   --en docs/en/models/black_scholes.md \
   --format all
 
 # 全体の検証
-cd translations/compare && ./check_all.sh
+cd .internal/translations/compare && ./check_all.sh
 
 # レポート確認（同期率95%以上が目標）
-cat translations/compare/reports/latest/summary.json | jq '.average_sync_rate'
+cat .internal/translations/compare/reports/latest/summary.json | jq '.average_sync_rate'
 ```
 
 ## 実行方法

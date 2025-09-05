@@ -14,20 +14,20 @@
 BASENAME=$(basename "$ARGUMENTS" .md)
 
 # JSONレポートの生成
-python translations/compare/structure_compare.py \
+python .internal/translations/compare/structure_compare.py \
   --ja $ARGUMENTS \
   --en ${ARGUMENTS/\/ja\//\/en\/} \
   --format json \
-  --output translations/compare/reports/latest/$BASENAME
+  --output .internal/translations/compare/reports/latest/$BASENAME
 ```
 
 生成されるJSONファイル：
-`translations/compare/reports/latest/${BASENAME}.json`
+`.internal/translations/compare/reports/latest/${BASENAME}.json`
 
 例：
 - 入力: `docs/ja/models/black_scholes.md`
 - 英語側: `docs/en/models/black_scholes.md` (自動変換)
-- 出力: `translations/compare/reports/latest/black_scholes.json`
+- 出力: `.internal/translations/compare/reports/latest/black_scholes.json`
 
 ### 2. 構造確認と修正
 
@@ -91,7 +91,7 @@ JSONレポートを基に以下を確認します：
 
 ```bash
 # 全ドキュメントの一括チェック
-cd translations/compare
+cd .internal/translations/compare
 ./check_all.sh
 ```
 
@@ -102,7 +102,7 @@ cd translations/compare
 
 レポート出力（各ファイルごとに3形式）：
 ```
-translations/compare/reports/latest/
+.internal/translations/compare/reports/latest/
 ├── models/
 │   ├── black_scholes.json  # AI処理用（推奨）
 │   ├── black_scholes.csv   # 人間レビュー用

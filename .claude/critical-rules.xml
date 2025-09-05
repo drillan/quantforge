@@ -113,10 +113,21 @@
     </subrules>
   </rule>
 
+  <rule id="C015" priority="CRITICAL">
+    <name>ファイル配置厳格管理原則</name>
+    <description>ファイル・ディレクトリの配置を厳格に管理し、プロジェクトルートへの無承認作成を禁止する</description>
+    <subrules>
+      <subrule id="C015-1">プロジェクトルート作成時のユーザー承認必須</subrule>
+      <subrule id="C015-2">一時ファイルのplayground/配置強制</subrule>
+      <subrule id="C015-3">scriptsディレクトリの品質チェック必須</subrule>
+      <subrule id="C015-4">ディレクトリ用途の厳格遵守</subrule>
+    </subrules>
+  </rule>
+
   <enforcement>
     <format>
-      <header>[Active Rules: C001-C014]</header>
-      <summary>**CRITICAL原則**: ルール歪曲禁止・エラー迂回禁止・理想実装ファースト・記録管理・品質基準遵守・ドキュメント整合性・TDD必須・DRY原則・破壊的リファクタリング推奨・妥協実装絶対禁止</summary>
+      <header>[Active Rules: C001-C015]</header>
+      <summary>**CRITICAL原則**: ルール歪曲禁止・エラー迂回禁止・理想実装ファースト・記録管理・品質基準遵守・ドキュメント整合性・TDD必須・DRY原則・破壊的リファクタリング推奨・妥協実装絶対禁止・ファイル配置厳格管理</summary>
     </format>
   </enforcement>
 </critical_rules>

@@ -36,7 +36,7 @@ For path-specific commits:
 - `--skip-tests` - Skip test execution
 - `--skip-rust` - Skip Rust quality checks
 - `--skip-python` - Skip Python quality checks
-- `--message "..."` - Use custom commit message
+- `--message "..."` - Use custom commit message (English only)
 - `--no-fix` - Disable automatic fixes (report only)
 - `--scope <scope>` - Specify commit scope
 
@@ -84,7 +84,7 @@ elif [[ "$ARGUMENTS" == "help" ]]; then
     echo "  --skip-tests      Skip test execution"
     echo "  --skip-rust       Skip Rust checks"
     echo "  --skip-python     Skip Python checks"
-    echo "  --message \"...\"   Custom message"
+    echo "  --message \"...\"   Custom message (English only)"
     echo "  --no-fix          No auto-fixes"
     echo "  --scope <scope>   Commit scope"
     exit 0
@@ -579,6 +579,27 @@ fi
 Generate appropriate commit message based on type:
 
 ```bash
+# Function to validate that message is in English
+validate_english_message() {
+    local message="$1"
+    
+    # Check for Japanese characters (Hiragana, Katakana, Kanji)
+    if echo "$message" | grep -qP '[\p{Hiragana}\p{Katakana}\p{Han}]' 2>/dev/null || \
+       echo "$message" | grep -qE '[ぁ-んァ-ヶー一-龥]' 2>/dev/null; then
+        echo "❌ Error: Commit messages must be in English"
+        echo "   Japanese characters detected in: $message"
+        echo ""
+        echo "📝 Please provide an English commit message"
+        echo "   Examples:"
+        echo "   - feat(models): add Black-Scholes implementation"
+        echo "   - fix(api): resolve memory leak in batch processing"
+        echo "   - docs(readme): update installation instructions"
+        return 1
+    fi
+    
+    return 0
+}
+
 generate_commit_message() {
     local type="$1"
     local scope="$2"
@@ -586,6 +607,11 @@ generate_commit_message() {
     
     # If custom message provided, validate and use it
     if [[ -n "$custom_msg" ]]; then
+        # Validate that message is in English
+        if ! validate_english_message "$custom_msg"; then
+            exit 1
+        fi
+        
         # Ensure it follows conventional commits format
         if ! echo "$custom_msg" | grep -qE "^(feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert)"; then
             echo "$TYPE($SCOPE): $custom_msg"
@@ -652,6 +678,13 @@ After all checks pass:
 ```bash
 # Generate commit message
 COMMIT_MSG=$(generate_commit_message "$TYPE" "$SCOPE" "$CUSTOM_MESSAGE")
+
+# Final validation to ensure English message
+if ! validate_english_message "$COMMIT_MSG"; then
+    echo "🔤 Auto-generated message must be in English. Regenerating..."
+    # Force regeneration without custom message
+    COMMIT_MSG=$(generate_commit_message "$TYPE" "$SCOPE" "")
+fi
 
 echo "💬 Commit message: $COMMIT_MSG"
 
@@ -725,6 +758,7 @@ report_completion
 3. **Document features**: Always update docs for new features
 4. **Test fixes**: Ensure bug fixes include tests
 5. **Benchmark performance**: Measure improvements with `perf` type
+6. **English messages only**: All commit messages must be in English for global collaboration
 
 ## 📚 Examples
 
@@ -768,6 +802,25 @@ report_completion
 # Full quality check (default)
 /commit-ai
 ```
+
+## ⚠️ Important Notes
+
+### English-Only Commit Messages
+All commit messages must be written in English. This ensures:
+- Global collaboration and understanding
+- Consistency across the project history
+- Professional standards for open-source projects
+
+If you provide a commit message containing Japanese characters (Hiragana, Katakana, or Kanji), the command will:
+1. Display an error message
+2. Show examples of proper English commit messages
+3. Exit without creating the commit
+
+Examples of valid English commit messages:
+- `feat(models): implement Monte Carlo simulation`
+- `fix(api): resolve memory leak in batch processing`
+- `docs: update API documentation`
+- `refactor(core): improve error handling`
 
 ---
 

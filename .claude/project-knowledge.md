@@ -23,7 +23,7 @@ docs/
 ### 翻訳システム
 - **ツール**: PLaMo-2-translate（GGUF形式、Q3_K_M量子化）
 - **実行環境**: llama.cpp（ローカル実行）
-- **キャッシュ**: SQLiteベース（translations/cache/）
+- **キャッシュ**: SQLiteベース（.internal/translations/cache/）
 - **パフォーマンス**: 約5-6秒/段落、キャッシュヒットで即座
 
 ### GitHub Pages設定
@@ -39,7 +39,7 @@ docs/
    - Bashツールのtimeoutパラメータで指定
 
 2. **相対パス対応**: 
-   - translationsディレクトリから`../docs/`形式でアクセス
+   - .internal/translationsディレクトリから`../../docs/`形式でアクセス
    - 絶対パスより相対パスが安定
 
 3. **キャッシュ効果**: 

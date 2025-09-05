@@ -11,7 +11,7 @@
 - `draft/` - ドラフトファイル
 - `plans/` - 計画文書
 - `docs/` - Sphinx設定ファイル
-- `translations/` - 翻訳比較スクリプト
+- `.internal/translations/` - 翻訳比較スクリプト
 
 ### Critical Rules遵守
 - **C011-3**: ハードコード禁止ポリシー

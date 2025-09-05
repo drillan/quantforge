@@ -6,8 +6,8 @@
 現在のCore + Bindingsアーキテクチャ構造に基づいて確認します。
 
 ## 出力先ファイル
-- **詳細データ**: `tracker/data.yaml`
-- **進捗レポート**: `tracker/report.md`
+- **詳細データ**: `.internal/tracker/data.yaml`
+- **進捗レポート**: `.internal/tracker/report.md`
 
 ### 確認手順
 
@@ -147,19 +147,19 @@ docs/ja/models/black_scholes.md:
 このコマンドをAIアシスタント（Claude）で実行すると、自動的に：
 1. ドキュメント構造を解析
 2. 実装ファイルを検索
-3. `tracker/data.yaml` を更新
-4. `tracker/report.md` を生成
+3. `.internal/tracker/data.yaml` を更新
+4. `.internal/tracker/report.md` を生成
 
 ```bash
 # コマンド実行例
-echo "QuantForgeの実装進捗を確認し、tracker/配下のファイルを更新してください" | claude
+echo "QuantForgeの実装進捗を確認し、.internal/tracker/配下のファイルを更新してください" | claude
 ```
 
 ### 検証スクリプトとの連携
 
 1. **先に検証スクリプトを実行**
    ```bash
-   python tracker/verify_documentation_code.py
+   python .internal/tracker/verify_documentation_code.py
    ```
    
 2. **検証結果を含めてレポート生成**
