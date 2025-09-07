@@ -28,12 +28,15 @@ jobs:
         uv sync --all-extras
         uv run maturin develop --release
     
-    - name: Download baseline artifact
-      uses: actions/download-artifact@v4
-      with:
-        name: performance-baseline
-        path: tests/performance/
-      continue-on-error: true
+    - name: Download baseline from Git history
+      run: |
+        # mainブランチから最新のbaseline.jsonを取得（存在する場合）
+        if git show origin/main:tests/performance/baseline.json > /tmp/baseline.json 2>/dev/null; then
+          echo "Baseline found in Git history"
+          cp /tmp/baseline.json tests/performance/baseline.json
+        else
+          echo "No baseline found in Git history"
+        fi
     
     - name: Check baseline status
       id: baseline-check
@@ -70,15 +73,16 @@ jobs:
         echo "Baseline will be created when merged to main."
     
     - name: Update baseline (main branch only)
-      if: github.ref == 'refs/heads/main' && success() && steps.baseline-check.outputs.baseline_exists == 'true'
+      if: github.ref == 'refs/heads/main' && success()
       run: |
         echo "Updating baseline for main branch..."
         uv run python tests/performance/update_baseline.py
-    
-    - name: Upload baseline artifact
-      if: github.ref == 'refs/heads/main'
-      uses: actions/upload-artifact@v4
-      with:
-        name: performance-baseline
-        path: tests/performance/baseline.json
-        retention-days: 90
+        
+        # Git にbaseline.jsonをコミット
+        git config user.name "github-actions[bot]"
+        git config user.email "github-actions[bot]@users.noreply.github.com"
+        git add tests/performance/baseline.json
+        git diff --cached --quiet || {
+          git commit -m "chore: update performance baseline [skip ci]"
+          git push origin main
+        }

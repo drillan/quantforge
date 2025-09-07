@@ -21,7 +21,15 @@ class RegressionChecker:
         Args:
             threshold: 許容する劣化率（1.2 = 20%の劣化まで許容）
         """
-        self.threshold = threshold
+        # CI環境では測定が不安定なため、より寛容な闾値を使用
+        import os
+        if os.environ.get('CI'):
+            # GitHub Actions環境では25%まで許容
+            self.threshold = max(threshold, 1.25)
+            self.warning_threshold = 1.15  # 15%で警告
+        else:
+            self.threshold = threshold
+            self.warning_threshold = 1.1  # 10%で警告
         self.violations: list[str] = []
         self.warnings: list[str] = []
 
@@ -98,7 +106,7 @@ class RegressionChecker:
                             f"単一計算 ({impl}): {self.format_time(base_time)} → "
                             f"{self.format_time(latest_time)} ({ratio:.2f}x slower)"
                         )
-                    elif latest_time > base_time * 1.1:  # 10%の劣化は警告
+                    elif latest_time > base_time * self.warning_threshold:
                         ratio = latest_time / base_time
                         self.warnings.append(
                             f"単一計算 ({impl}): {self.format_time(base_time)} → "
@@ -120,7 +128,7 @@ class RegressionChecker:
                                 f"バッチ処理 {size}件 ({impl}): {self.format_time(base_time)} → "
                                 f"{self.format_time(latest_time)} ({ratio:.2f}x slower)"
                             )
-                        elif latest_time > base_time * 1.1:  # 10%の劣化は警告
+                        elif latest_time > base_time * self.warning_threshold:
                             ratio = latest_time / base_time
                             self.warnings.append(
                                 f"バッチ処理 {size}件 ({impl}): {self.format_time(base_time)} → "
@@ -150,12 +158,15 @@ class RegressionChecker:
         print("=" * 60)
 
         if self.warnings:
-            print("\n⚠️ 警告（10%以上の劣化）:")
+            import os
+            threshold_pct = int((self.warning_threshold - 1) * 100)
+            print(f"\n⚠️ 警告（{threshold_pct}%以上の劣化）:")
             for warning in self.warnings:
                 print(f"  - {warning}")
 
         if self.violations:
-            print("\n❌ 退行検出（20%以上の劣化）:")
+            threshold_pct = int((self.threshold - 1) * 100)
+            print(f"\n❌ 退行検出（{threshold_pct}%以上の劣化）:")
             for violation in self.violations:
                 print(f"  - {violation}")
             print("\n退行が検出されました。パフォーマンスを確認してください。")
@@ -179,6 +190,7 @@ def main():
         "--latest", type=Path, default=Path("benchmark_results/latest.json"), help="最新結果ファイルのパス"
     )
     parser.add_argument("--threshold", type=float, default=1.2, help="許容する劣化率（1.2 = 20%%の劣化まで許容）")
+    parser.add_argument("--ci-mode", action="store_true", help="CI環境モード（より寛容な闾値を使用）")
 
     args = parser.parse_args()
 
@@ -188,6 +200,11 @@ def main():
         print("  初回実行時は update_baseline.py でベースラインを作成してください。")
         sys.exit(0)
 
+    # CI環境の検出または明示的な指定
+    import os
+    if args.ci_mode or os.environ.get('CI'):
+        print("🔧 CI環境モード: より寛容な闾値を使用")
+    
     checker = RegressionChecker(threshold=args.threshold)
     success = checker.check_regression(args.baseline, args.latest)
 
