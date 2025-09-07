@@ -431,7 +431,7 @@ class BenchmarkReportGenerator:
             writer = csv.writer(f)
             baseline_name = "Pure Python" if baseline == "pure_python" else "NumPy+SciPy"
             writer.writerow(["計算タイプ", "データサイズ", f"vs {baseline_name}"])
-            
+
             # Single calculation
             if "single" in times:
                 single = times["single"]
@@ -440,7 +440,7 @@ class BenchmarkReportGenerator:
                 if base_time > 0 and qf_time > 0:
                     speedup = base_time / qf_time
                     writer.writerow(["単一計算", "1件", f"{speedup:.1f}倍の処理速度"])
-            
+
             # Batch calculations
             for size in [100, 1000, 10000]:
                 key = f"batch_{size}"

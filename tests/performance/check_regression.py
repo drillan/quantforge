@@ -158,7 +158,6 @@ class RegressionChecker:
         print("=" * 60)
 
         if self.warnings:
-            import os
             threshold_pct = int((self.warning_threshold - 1) * 100)
             print(f"\n⚠️ 警告（{threshold_pct}%以上の劣化）:")
             for warning in self.warnings:
@@ -204,7 +203,7 @@ def main():
     import os
     if args.ci_mode or os.environ.get('CI'):
         print("🔧 CI環境モード: より寛容な闾値を使用")
-    
+
     checker = RegressionChecker(threshold=args.threshold)
     success = checker.check_regression(args.baseline, args.latest)
 
