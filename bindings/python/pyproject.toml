@@ -4,7 +4,7 @@ build-backend = "maturin"
 
 [project]
 name = "quantforge"
-version = "0.0.5"
+version = "0.0.12"
 requires-python = ">=3.12"
 dependencies = [
     "numpy>=1.20",
