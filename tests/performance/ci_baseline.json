@@ -1,0 +1,191 @@
+{
+  "version": "0.0.12",
+  "git_commit": "1c2d2cd",
+  "timestamp": "2025-09-08T05:40:20.566390Z",
+  "environment": {
+    "platform": "Linux",
+    "python_version": "3.12.11",
+    "cpu_count": 2,
+    "memory_gb": 15.6,
+    "note": "GitHub Actions Ubuntu runner"
+  },
+  "benchmarks": [
+    {
+      "name": "test_quantforge_single",
+      "stats": {
+        "min": 2.0999999605919584e-07,
+        "max": 1.0308999975450206e-05,
+        "mean": 2.3410117868828423e-07,
+        "stddev": 1.482202106106414e-07,
+        "rounds": 49121,
+        "iterations": null
+      }
+    },
+    {
+      "name": "test_pure_python_single",
+      "stats": {
+        "min": 9.520000219254143e-07,
+        "max": 1.424699999574841e-05,
+        "mean": 1.0747055604302738e-06,
+        "stddev": 2.8169519493857087e-07,
+        "rounds": 60824,
+        "iterations": null
+      }
+    },
+    {
+      "name": "test_numpy_scipy_single",
+      "stats": {
+        "min": 0.0001231890000212843,
+        "max": 0.0002541940000071463,
+        "mean": 0.000130964859745127,
+        "stddev": 9.30631365691633e-06,
+        "rounds": 2745,
+        "iterations": null
+      }
+    },
+    {
+      "name": "test_quantforge_batch[100]",
+      "stats": {
+        "min": 1.8253999996886705e-05,
+        "max": 4.327999999986787e-05,
+        "mean": 1.896306323006306e-05,
+        "stddev": 1.6265617084089552e-06,
+        "rounds": 6421,
+        "iterations": null
+      }
+    },
+    {
+      "name": "test_quantforge_batch[1000]",
+      "stats": {
+        "min": 5.8989999985215036e-05,
+        "max": 0.0001189719999956651,
+        "mean": 6.046355074427567e-05,
+        "stddev": 3.120259901545748e-06,
+        "rounds": 12031,
+        "iterations": null
+      }
+    },
+    {
+      "name": "test_quantforge_batch[10000]",
+      "stats": {
+        "min": 0.0003254769999898599,
+        "max": 0.0004950539999981629,
+        "mean": 0.0003493917539237347,
+        "stddev": 3.364937319757769e-05,
+        "rounds": 1784,
+        "iterations": null
+      }
+    },
+    {
+      "name": "test_pure_python_batch[100]",
+      "stats": {
+        "min": 0.00019709800000100586,
+        "max": 0.0003853679999963333,
+        "mean": 0.00020350308431883136,
+        "stddev": 6.540007650767883e-06,
+        "rounds": 3890,
+        "iterations": null
+      }
+    },
+    {
+      "name": "test_pure_python_batch[1000]",
+      "stats": {
+        "min": 0.0019799689999899783,
+        "max": 0.0022047969999903216,
+        "mean": 0.002004074466395102,
+        "stddev": 1.8704319395247788e-05,
+        "rounds": 491,
+        "iterations": null
+      }
+    },
+    {
+      "name": "test_pure_python_batch[10000]",
+      "stats": {
+        "min": 0.020453754000016033,
+        "max": 0.021870484000004353,
+        "mean": 0.02077595648936289,
+        "stddev": 0.000336359937921154,
+        "rounds": 47,
+        "iterations": null
+      }
+    },
+    {
+      "name": "test_numpy_scipy_batch[100]",
+      "stats": {
+        "min": 0.00010061800000471521,
+        "max": 0.00024559700000281737,
+        "mean": 0.00010656751404223646,
+        "stddev": 8.322226755584659e-06,
+        "rounds": 4344,
+        "iterations": null
+      }
+    },
+    {
+      "name": "test_numpy_scipy_batch[1000]",
+      "stats": {
+        "min": 0.0001526650000016616,
+        "max": 0.00034802800001898504,
+        "mean": 0.00016034915470533183,
+        "stddev": 9.552228277338107e-06,
+        "rounds": 4208,
+        "iterations": null
+      }
+    },
+    {
+      "name": "test_numpy_scipy_batch[10000]",
+      "stats": {
+        "min": 0.0006710300000065672,
+        "max": 0.0008042689999854247,
+        "mean": 0.0006954592090759831,
+        "stddev": 1.3833773795044022e-05,
+        "rounds": 1234,
+        "iterations": null
+      }
+    },
+    {
+      "name": "test_quantforge_models[black_scholes]",
+      "stats": {
+        "min": 1.2707894750531666e-07,
+        "max": 1.0113421047052678e-06,
+        "mean": 1.3136355037988741e-07,
+        "stddev": 1.559222945755989e-08,
+        "rounds": 199243,
+        "iterations": null
+      }
+    },
+    {
+      "name": "test_quantforge_models[black76]",
+      "stats": {
+        "min": 2.1999997557031747e-07,
+        "max": 1.7032000016570237e-05,
+        "mean": 2.434174047465156e-07,
+        "stddev": 1.5414044763364701e-07,
+        "rounds": 145075,
+        "iterations": null
+      }
+    },
+    {
+      "name": "test_quantforge_models[merton]",
+      "stats": {
+        "min": 1.3858333305607732e-07,
+        "max": 9.186666668862623e-07,
+        "mean": 1.4270902916067425e-07,
+        "stddev": 1.7170838952709982e-08,
+        "rounds": 195351,
+        "iterations": null
+      }
+    },
+    {
+      "name": "test_quantforge_models[american]",
+      "stats": {
+        "min": 2.7499999930569177e-07,
+        "max": 2.3051450000366458e-05,
+        "mean": 2.8254301555307844e-07,
+        "stddev": 9.879515980539126e-08,
+        "rounds": 175132,
+        "iterations": null
+      }
+    }
+  ],
+  "ci_environment": true
+}
