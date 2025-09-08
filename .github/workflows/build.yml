@@ -32,7 +32,7 @@ jobs:
       
       - name: Build wheels
         run: |
-          maturin build --release --strip --interpreter python${{ matrix.python-version }}
+          maturin build --release --strip
       
       - name: Upload wheels
         uses: actions/upload-artifact@v4

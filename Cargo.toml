@@ -25,7 +25,7 @@ arrow-array = "56.0"
 arrow-buffer = "56.0"
 
 # PyO3はbindings層のみで使用
-pyo3 = { version = "0.25.1", features = ["extension-module"] }
+pyo3 = { version = "0.25.1", features = ["extension-module", "abi3-py312"] }
 pyo3-arrow = "0.11.0"
 numpy = "0.25"
 

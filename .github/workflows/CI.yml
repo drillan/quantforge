@@ -31,7 +31,7 @@ jobs:
         uses: PyO3/maturin-action@v1
         with:
           target: ${{ matrix.target }}
-          args: --release --out dist --manifest-path bindings/python/Cargo.toml -i python3.12 -i python3.12
+          args: --release --out dist --manifest-path bindings/python/Cargo.toml
           sccache: 'true'
           manylinux: '2014'
       
@@ -65,7 +65,7 @@ jobs:
         uses: PyO3/maturin-action@v1
         with:
           target: ${{ matrix.target }}
-          args: --release --out dist --manifest-path bindings/python/Cargo.toml -i python3.12
+          args: --release --out dist --manifest-path bindings/python/Cargo.toml
           sccache: 'true'
       
       - name: Test wheel
@@ -103,7 +103,7 @@ jobs:
         uses: PyO3/maturin-action@v1
         with:
           target: ${{ matrix.target }}
-          args: --release --out dist --manifest-path bindings/python/Cargo.toml -i python3.12
+          args: --release --out dist --manifest-path bindings/python/Cargo.toml
           sccache: 'true'
       
       - name: Test wheel
