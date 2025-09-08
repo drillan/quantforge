@@ -21,7 +21,8 @@ jobs:
   publish:
     needs: build
     runs-on: ubuntu-latest
-    environment: ${{ github.event.inputs.test_pypi == 'true' && 'testpypi' || 'pypi-release' }}
+    # Always use testpypi environment until ready for production
+    environment: testpypi
     permissions:
       id-token: write  # Required for Trusted Publisher
       contents: write   # For release artifacts
