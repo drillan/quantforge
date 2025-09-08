@@ -13,7 +13,7 @@ class TestVersionHandling:
         assert hasattr(quantforge, "__version__")
         assert quantforge.__version__ is not None
         # Should be either the actual version or the fallback
-        assert quantforge.__version__ in ["0.0.5", "0.0.9", "0.0.10", "0.0.11", "0.0.12", "0.0.0+unknown"]
+        assert quantforge.__version__ in ["0.0.14", "0.0.0+unknown"]
 
     def test_version_package_not_found(self) -> None:
         """Test version fallback when package is not found."""
