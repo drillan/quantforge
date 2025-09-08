@@ -262,8 +262,6 @@ tracker_temp.yaml
 benchmark_results/
 benchmark_results_*.json
 perf_*.log
-# Local baseline (CI uses ci_baseline.json)
-tests/performance/baseline.json
 
 # Internal tools (not for distribution)
 .internal/
