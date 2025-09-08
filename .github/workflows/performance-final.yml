@@ -97,43 +97,43 @@ jobs:
         
         # 大幅な改善があった場合のみ更新（10%以上の改善）
         python -c "
-import json
-import sys
-
-with open('tests/performance/baseline.json') as f:
-    baseline = json.load(f)
-with open('benchmark_results/latest.json') as f:
-    latest = json.load(f)
-
-improvements = []
-for i, bench in enumerate(latest['benchmarks']):
-    if i < len(baseline['benchmarks']):
-        old_mean = baseline['benchmarks'][i]['stats']['mean']
-        new_mean = bench['stats']['mean']
-        if new_mean < old_mean * 0.9:  # 10%以上の改善
-            improvements.append(bench['name'])
-
-if improvements:
-    print(f'Significant improvements detected: {improvements}')
-    sys.exit(0)
-else:
-    print('No significant improvements detected')
-    sys.exit(1)
-" && {
+        import json
+        import sys
+        
+        with open('tests/performance/baseline.json') as f:
+            baseline = json.load(f)
+        with open('benchmark_results/latest.json') as f:
+            latest = json.load(f)
+        
+        improvements = []
+        for i, bench in enumerate(latest['benchmarks']):
+            if i < len(baseline['benchmarks']):
+                old_mean = baseline['benchmarks'][i]['stats']['mean']
+                new_mean = bench['stats']['mean']
+                if new_mean < old_mean * 0.9:  # 10%以上の改善
+                    improvements.append(bench['name'])
+        
+        if improvements:
+            print(f'Significant improvements detected: {improvements}')
+            sys.exit(0)
+        else:
+            print('No significant improvements detected')
+            sys.exit(1)
+        " && {
           echo "Updating CI baseline due to performance improvements..."
           cp benchmark_results/latest.json tests/performance/ci_baseline.json
           
           # 環境情報を追加
           python -c "
-import json
-with open('tests/performance/ci_baseline.json', 'r+') as f:
-    data = json.load(f)
-    data['ci_environment'] = True
-    data['environment']['note'] = 'GitHub Actions Ubuntu runner (auto-updated)'
-    f.seek(0)
-    json.dump(data, f, indent=2)
-    f.truncate()
-"
+          import json
+          with open('tests/performance/ci_baseline.json', 'r+') as f:
+              data = json.load(f)
+              data['ci_environment'] = True
+              data['environment']['note'] = 'GitHub Actions Ubuntu runner (auto-updated)'
+              f.seek(0)
+              json.dump(data, f, indent=2)
+              f.truncate()
+          "
           
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"

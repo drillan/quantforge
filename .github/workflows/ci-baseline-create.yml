@@ -73,15 +73,15 @@ jobs:
         
         # 環境情報を追加
         python -c "
-import json
-with open('tests/performance/ci_baseline.json', 'r+') as f:
-    data = json.load(f)
-    data['ci_environment'] = True
-    data['environment']['note'] = 'GitHub Actions Ubuntu runner'
-    f.seek(0)
-    json.dump(data, f, indent=2)
-    f.truncate()
-"
+        import json
+        with open('tests/performance/ci_baseline.json', 'r+') as f:
+            data = json.load(f)
+            data['ci_environment'] = True
+            data['environment']['note'] = 'GitHub Actions Ubuntu runner'
+            f.seek(0)
+            json.dump(data, f, indent=2)
+            f.truncate()
+        "
     
     - name: Commit CI baseline
       if: steps.check-baseline.outputs.exists == 'false' || github.event.inputs.force == 'true'
