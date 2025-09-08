@@ -1,0 +1,143 @@
+name: Performance Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  performance:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+    
+    - name: Install uv
+      run: |
+        curl -LsSf https://astral.sh/uv/install.sh | sh
+        echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+    
+    - name: Install dependencies
+      run: |
+        uv sync --all-extras
+        uv run maturin develop --release
+    
+    - name: Show environment info
+      run: |
+        echo "=== Environment Info ==="
+        echo "CPU cores: $(nproc)"
+        echo "Memory: $(free -h | grep Mem | awk '{print $2}')"
+        echo "Python: $(python --version)"
+        echo "NumPy: $(uv run python -c 'import numpy; print(numpy.__version__)')"
+        echo "SciPy: $(uv run python -c 'import scipy; print(scipy.__version__)')"
+        echo "========================"
+    
+    - name: Download appropriate baseline
+      id: download-baseline
+      run: |
+        # CI環境専用のベースラインを優先的に使用
+        if git show origin/main:tests/performance/ci_baseline.json > /tmp/ci_baseline.json 2>/dev/null; then
+          echo "CI baseline found in Git history"
+          cp /tmp/ci_baseline.json tests/performance/baseline.json
+          echo "baseline_type=ci" >> $GITHUB_OUTPUT
+          echo "Using CI-specific baseline"
+        elif git show origin/main:tests/performance/baseline.json > /tmp/baseline.json 2>/dev/null; then
+          echo "Legacy baseline found in Git history (migration pending)"
+          cp /tmp/baseline.json tests/performance/baseline.json
+          echo "baseline_type=legacy" >> $GITHUB_OUTPUT
+          echo "⚠️ Using legacy baseline - CI baseline creation recommended"
+        else
+          echo "No baseline found - will skip regression check"
+          echo "baseline_type=none" >> $GITHUB_OUTPUT
+        fi
+    
+    - name: Run performance tests
+      run: |
+        # CI環境では並列処理を制限
+        export RAYON_NUM_THREADS=2
+        uv run pytest tests/performance/test_all_benchmarks.py -v --benchmark-only
+    
+    - name: Check for performance regressions (CI baseline)
+      if: steps.download-baseline.outputs.baseline_type == 'ci'
+      run: |
+        echo "Checking for performance regressions against CI baseline..."
+        # CI環境では30%まで許容（CI環境の変動を考慮）
+        uv run python tests/performance/check_regression.py --threshold 1.3 --ci-mode
+    
+    - name: Check for performance regressions (legacy baseline)
+      if: steps.download-baseline.outputs.baseline_type == 'legacy'
+      run: |
+        echo "⚠️ Checking against legacy baseline (higher tolerance)..."
+        # レガシーベースラインでは40%まで許容（環境差を考慮）
+        uv run python tests/performance/check_regression.py --threshold 1.4 --ci-mode || {
+          echo "⚠️ Regression detected but using legacy baseline"
+          echo "Run 'Create CI Baseline' workflow to establish proper CI baseline"
+          exit 0  # 警告のみ、失敗させない
+        }
+    
+    - name: Skip regression check (no baseline)
+      if: steps.download-baseline.outputs.baseline_type == 'none'
+      run: |
+        echo "⚠️ No baseline available for comparison."
+        echo "Performance regression check skipped."
+        if [ "${{ github.ref }}" == "refs/heads/main" ]; then
+          echo "Run 'Create CI Baseline' workflow to establish initial baseline"
+        fi
+    
+    - name: Update CI baseline (main branch only)
+      if: github.ref == 'refs/heads/main' && success() && steps.download-baseline.outputs.baseline_type == 'ci'
+      run: |
+        echo "Checking if CI baseline needs update..."
+        
+        # 大幅な改善があった場合のみ更新（10%以上の改善）
+        python -c "
+import json
+import sys
+
+with open('tests/performance/baseline.json') as f:
+    baseline = json.load(f)
+with open('benchmark_results/latest.json') as f:
+    latest = json.load(f)
+
+improvements = []
+for i, bench in enumerate(latest['benchmarks']):
+    if i < len(baseline['benchmarks']):
+        old_mean = baseline['benchmarks'][i]['stats']['mean']
+        new_mean = bench['stats']['mean']
+        if new_mean < old_mean * 0.9:  # 10%以上の改善
+            improvements.append(bench['name'])
+
+if improvements:
+    print(f'Significant improvements detected: {improvements}')
+    sys.exit(0)
+else:
+    print('No significant improvements detected')
+    sys.exit(1)
+" && {
+          echo "Updating CI baseline due to performance improvements..."
+          cp benchmark_results/latest.json tests/performance/ci_baseline.json
+          
+          # 環境情報を追加
+          python -c "
+import json
+with open('tests/performance/ci_baseline.json', 'r+') as f:
+    data = json.load(f)
+    data['ci_environment'] = True
+    data['environment']['note'] = 'GitHub Actions Ubuntu runner (auto-updated)'
+    f.seek(0)
+    json.dump(data, f, indent=2)
+    f.truncate()
+"
+          
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add tests/performance/ci_baseline.json
+          git commit -m "chore: update CI performance baseline (improvements detected) [skip ci]"
+          git push origin main
+        } || echo "No significant improvements - keeping current baseline"
