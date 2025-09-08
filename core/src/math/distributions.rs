@@ -6,8 +6,10 @@ use crate::constants::{
 use arrow::array::{ArrayRef, Float64Array};
 use arrow::compute::kernels::arity::unary;
 use arrow::error::ArrowError;
-use libm::erf;
 use std::sync::Arc;
+
+// 一時的にlibm::erfを使用（高速版の精度改善後に切り替え）
+use libm::erf;
 
 /// Standard normal cumulative distribution function for Arrow arrays
 ///
@@ -61,7 +63,7 @@ pub fn norm_pdf_array(x: &Float64Array) -> Result<ArrayRef, ArrowError> {
 }
 
 /// Standard normal CDF for scalar values (backward compatibility)
-#[inline]
+#[inline(always)]
 pub fn norm_cdf_scalar(x: f64) -> f64 {
     if x.is_nan() {
         f64::NAN
@@ -75,7 +77,7 @@ pub fn norm_cdf_scalar(x: f64) -> f64 {
 }
 
 /// Standard normal PDF for scalar values (backward compatibility)
-#[inline]
+#[inline(always)]
 pub fn norm_pdf_scalar(x: f64) -> f64 {
     if x.is_nan() {
         f64::NAN

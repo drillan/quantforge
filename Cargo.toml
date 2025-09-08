@@ -33,3 +33,17 @@ numpy = "0.25"
 approx = "0.5"
 criterion = "0.5"
 proptest = "1.0"
+
+# リリースプロファイル最適化
+[profile.release]
+opt-level = 3          # 最大最適化
+lto = "fat"           # Link Time Optimization（全体最適化）
+codegen-units = 1     # 単一コンパイル単位（最適化向上）
+panic = "abort"       # パニック時の巻き戻しなし（高速化）
+strip = true          # デバッグ情報削除（バイナリサイズ削減）
+overflow-checks = false # オーバーフローチェック無効化（本番環境）
+
+# LTO専用プロファイル
+[profile.release-lto]
+inherits = "release"
+lto = "fat"

@@ -9,6 +9,7 @@ pub mod black_scholes;
 pub mod formulas;
 pub mod greeks;
 pub mod merton;
+pub mod micro_batch;
 pub mod traits;
 
 // Re-export for convenience

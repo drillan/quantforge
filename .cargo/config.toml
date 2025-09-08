@@ -1,2 +1,24 @@
-[env]
-PYO3_PYTHON = "python3"
+# Cargo ビルド設定
+[build]
+rustflags = [
+    "-C", "target-cpu=native",     # CPUネイティブ命令使用
+    "-C", "prefer-dynamic=no",     # 静的リンク優先
+]
+
+# x86_64-Linux向け最適化
+[target.x86_64-unknown-linux-gnu]
+rustflags = [
+    "-C", "target-feature=+avx2,+fma", # AVX2/FMA有効化（自動ベクトル化用）
+]
+
+# x86_64-macOS向け最適化
+[target.x86_64-apple-darwin]
+rustflags = [
+    "-C", "target-feature=+avx2,+fma", # AVX2/FMA有効化（自動ベクトル化用）
+]
+
+# Apple Silicon (ARM64)向け最適化
+[target.aarch64-apple-darwin]
+rustflags = [
+    "-C", "target-feature=+neon",      # NEON SIMD有効化
+]
