@@ -22,6 +22,7 @@ graph TB
         TRAITS[OptionModel Trait]
         PARALLEL[Parallel Executor]
         MATH[Math Functions]
+        COMPUTE[Compute Module]
         ERROR[Error Handling]
     end
     
@@ -72,7 +73,8 @@ __all__ = [
 // core/src/lib.rs - PyO3依存なし
 pub mod models;
 pub mod traits;
-pub mod math;
+pub mod math;      // fast_erf等の高速数学関数を含む
+pub mod compute;   // micro_batch等の最適化モジュール
 pub mod error;
 
 // 言語非依存のトレイト定義
@@ -245,6 +247,87 @@ pub enum QuantForgeError {
 // Result型エイリアス
 pub type Result<T> = std::result::Result<T, QuantForgeError>;
 ```
+
+## 最適化パイプライン
+
+### マイクロバッチ処理アーキテクチャ
+
+```{code-block} rust
+:name: architecture-micro-batch
+:caption: core/src/compute/micro_batch.rs
+
+/// マイクロバッチ専用最適化
+/// 100-1000要素の小規模バッチに特化
+pub fn black_scholes_call_micro_batch(
+    spots: &[f64],
+    strikes: &[f64],
+    times: &[f64],
+    rates: &[f64],
+    sigmas: &[f64],
+    output: &mut [f64],
+) {
+    let len = spots.len();
+    let chunks = len / 4;
+
+    // 4要素ループアンローリング
+    // コンパイラの自動ベクトル化を促進
+    for i in 0..chunks {
+        let idx = i * 4;
+        // 4つの計算を明示的に展開
+        output[idx] = calculate_single(/*...*/);
+        output[idx + 1] = calculate_single(/*...*/);
+        output[idx + 2] = calculate_single(/*...*/);
+        output[idx + 3] = calculate_single(/*...*/);
+    }
+    
+    // 余りの処理
+    for i in (chunks * 4)..len {
+        output[i] = calculate_single(/*...*/);
+    }
+}
+```
+
+このアーキテクチャによる利点：
+- **命令レベル並列性（ILP）**: CPUが複数の命令を同時実行
+- **分岐予測の改善**: ループ回数削減による予測ミスの減少
+- **キャッシュ効率**: データの局所性向上
+
+### 高速数学関数の実装
+
+```{code-block} rust
+:name: architecture-fast-erf
+:caption: core/src/math/fast_erf.rs
+
+/// 高速erf近似実装
+/// Abramowitz & Stegun近似を使用
+/// 精度: 1.5e-7（金融計算に十分）
+/// 速度: libm::erfの2-3倍高速
+#[inline(always)]
+pub fn fast_erf(x: f64) -> f64 {
+    // Handbook of Mathematical Functions
+    // (Abramowitz and Stegun)より
+    const A1: f64 = 0.254829592;
+    const A2: f64 = -0.284496736;
+    const A3: f64 = 1.421413741;
+    const A4: f64 = -1.453152027;
+    const A5: f64 = 1.061405429;
+    const P: f64 = 0.3275911;
+
+    let sign = x.signum();
+    let x = x.abs();
+    
+    let t = 1.0 / (1.0 + P * x);
+    let y = 1.0 - (((((A5 * t + A4) * t + A3) * t + A2) * t + A1) 
+            * t * (-x * x).exp());
+    
+    sign * y
+}
+```
+
+高速数学関数の選択理由：
+- **精度とパフォーマンスのバランス**: オプション価格計算には1.5e-7の精度で十分
+- **計算量の削減**: テイラー展開より少ない演算数
+- **ブランチフリー**: 条件分岐を最小限に
 
 ## 最適化パイプライン
 

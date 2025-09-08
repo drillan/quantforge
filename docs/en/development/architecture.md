@@ -20,6 +20,7 @@ graph TB
         MODELS[Price Models]
         PARALLEL[Parallel Executor]
         MATH[Math Functions]
+        COMPUTE[Compute Module]
     end
     
     subgraph "Hardware"
@@ -64,6 +65,7 @@ class QuantForgeAPI:
 pub struct QuantForgeCore {
     parallel_executor: ParallelExecutor,
     memory_pool: MemoryPool,
+    compute_module: ComputeModule, // Includes micro_batch optimizations
 }
 
 impl QuantForgeCore {
@@ -122,6 +124,83 @@ fn calculate_zero_copy(
     })
 }
 ```
+
+## Optimization Pipeline
+
+### Micro-batch Processing Architecture
+
+```rust
+// core/src/compute/micro_batch.rs
+/// Micro-batch specialized optimization
+/// Targets 100-1000 element small batches
+pub fn black_scholes_call_micro_batch(
+    spots: &[f64],
+    strikes: &[f64],
+    times: &[f64],
+    rates: &[f64],
+    sigmas: &[f64],
+    output: &mut [f64],
+) {
+    let len = spots.len();
+    let chunks = len / 4;
+
+    // 4-element loop unrolling
+    // Promotes compiler auto-vectorization
+    for i in 0..chunks {
+        let idx = i * 4;
+        // Four calculations explicitly unrolled
+        output[idx] = calculate_single(/*...*/);
+        output[idx + 1] = calculate_single(/*...*/);
+        output[idx + 2] = calculate_single(/*...*/);
+        output[idx + 3] = calculate_single(/*...*/);
+    }
+    
+    // Process remainder
+    for i in (chunks * 4)..len {
+        output[i] = calculate_single(/*...*/);
+    }
+}
+```
+
+Benefits of this architecture:
+- **Instruction-Level Parallelism (ILP)**: CPU executes multiple instructions simultaneously
+- **Improved Branch Prediction**: Reduced loop count decreases mispredictions
+- **Cache Efficiency**: Better data locality
+
+### High-Speed Mathematical Functions
+
+```rust
+// core/src/math/fast_erf.rs
+/// Fast erf approximation implementation
+/// Using Abramowitz & Stegun approximation
+/// Accuracy: 1.5e-7 (sufficient for finance)
+/// Speed: 2-3x faster than libm::erf
+#[inline(always)]
+pub fn fast_erf(x: f64) -> f64 {
+    // From Handbook of Mathematical Functions
+    // (Abramowitz and Stegun)
+    const A1: f64 = 0.254829592;
+    const A2: f64 = -0.284496736;
+    const A3: f64 = 1.421413741;
+    const A4: f64 = -1.453152027;
+    const A5: f64 = 1.061405429;
+    const P: f64 = 0.3275911;
+
+    let sign = x.signum();
+    let x = x.abs();
+    
+    let t = 1.0 / (1.0 + P * x);
+    let y = 1.0 - (((((A5 * t + A4) * t + A3) * t + A2) * t + A1) 
+            * t * (-x * x).exp());
+    
+    sign * y
+}
+```
+
+Design rationale for fast math functions:
+- **Accuracy vs Performance Balance**: 1.5e-7 accuracy is sufficient for option pricing
+- **Reduced Computation**: Fewer operations than Taylor expansion
+- **Branch-Free**: Minimal conditional logic
 
 ## Parallel Processing Architecture
 

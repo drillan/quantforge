@@ -9,6 +9,130 @@ QuantForge achieves extreme performance through multiple optimization layers:
 - **Implementation-level**: Rust's zero-cost abstractions
 - **System-level**: Parallel processing and vectorization
 
+## Micro-batch Optimization
+
+### 4-Element Loop Unrolling
+
+For small batches of 100-1000 elements, we implement special optimization:
+
+```rust
+// 4-element loop unrolling for compiler auto-vectorization
+pub fn black_scholes_call_micro_batch(
+    spots: &[f64],
+    strikes: &[f64],
+    times: &[f64],
+    rates: &[f64],
+    sigmas: &[f64],
+    output: &mut [f64],
+) {
+    let len = spots.len();
+    let chunks = len / 4;
+
+    // Process 4 elements at a time
+    for i in 0..chunks {
+        let idx = i * 4;
+        output[idx] = black_scholes_call_scalar(
+            spots[idx], strikes[idx], times[idx], 
+            rates[idx], sigmas[idx]
+        );
+        output[idx + 1] = black_scholes_call_scalar(
+            spots[idx + 1], strikes[idx + 1], times[idx + 1],
+            rates[idx + 1], sigmas[idx + 1]
+        );
+        output[idx + 2] = black_scholes_call_scalar(
+            spots[idx + 2], strikes[idx + 2], times[idx + 2],
+            rates[idx + 2], sigmas[idx + 2]
+        );
+        output[idx + 3] = black_scholes_call_scalar(
+            spots[idx + 3], strikes[idx + 3], times[idx + 3],
+            rates[idx + 3], sigmas[idx + 3]
+        );
+    }
+
+    // Process remaining elements
+    for i in (chunks * 4)..len {
+        output[i] = black_scholes_call_scalar(
+            spots[i], strikes[i], times[i], rates[i], sigmas[i]
+        );
+    }
+}
+```
+
+This optimization provides:
+- **Instruction-Level Parallelism (ILP)** improvement
+- **Compiler auto-vectorization** encouragement
+- **Branch prediction** efficiency
+- **Cache line** utilization
+
+### Micro-batch Threshold
+
+```rust
+// MICRO_BATCH_THRESHOLD: Apply micro-batch optimization for ≤1000 elements
+if data.len() <= MICRO_BATCH_THRESHOLD {
+    black_scholes_call_micro_batch(/* ... */);
+} else {
+    // Regular parallel processing
+}
+```
+
+## High-Speed Mathematical Functions
+
+### Fast erf Approximation
+
+Using Abramowitz & Stegun approximation for high-speed erf implementation:
+
+```rust
+/// Fast erf approximation
+/// Accuracy: 1.5e-7 (sufficient for financial calculations)
+/// Speed: 2-3x faster than libm::erf
+#[inline(always)]
+pub fn fast_erf(x: f64) -> f64 {
+    // Abramowitz & Stegun coefficients
+    let a1 = 0.254829592;
+    let a2 = -0.284496736;
+    let a3 = 1.421413741;
+    let a4 = -1.453152027;
+    let a5 = 1.061405429;
+    let p = 0.3275911;
+
+    let sign = if x < 0.0 { -1.0 } else { 1.0 };
+    let x = x.abs();
+
+    let t = 1.0 / (1.0 + p * x);
+    let y = 1.0 - (((((a5 * t + a4) * t + a3) * t + a2) * t + a1) 
+            * t * (-x * x).exp());
+
+    sign * y
+}
+
+/// Fast norm_cdf implementation
+#[inline(always)]
+pub fn fast_norm_cdf(x: f64) -> f64 {
+    if x > NORM_CDF_UPPER_BOUND {
+        1.0
+    } else if x < NORM_CDF_LOWER_BOUND {
+        0.0
+    } else {
+        0.5 * (1.0 + fast_erf(x / std::f64::consts::SQRT_2))
+    }
+}
+```
+
+### Performance Characteristics
+
+| Function | Previous Implementation | Fast Implementation | Improvement |
+|----------|------------------------|--------------------|--------------|
+| erf | libm::erf | fast_erf | 2-3x |
+| norm_cdf | erf-based | fast_norm_cdf | 2-3x |
+| norm_pdf | unchanged | fast_norm_pdf | - |
+
+### Accuracy vs Performance Trade-off
+
+- **Absolute Error**: < 1.5e-7
+- **Relative Error**: < 1e-6
+- **Use Case**: Sufficient accuracy for option pricing
+- **Note**: Use standard implementation for scientific computing requiring higher precision
+
 ## Algorithm Optimization
 
 ### 1. Black-Scholes Formula Optimization
@@ -118,22 +242,28 @@ pub struct OptionData {
 }
 ```
 
-### 2. SIMD Vectorization
+### 2. Compiler-Driven Vectorization
 
-Using packed_simd for batch operations:
+Instead of explicit SIMD, we rely on compiler auto-vectorization through loop unrolling:
 ```rust
-use packed_simd::f64x4;
-
-pub fn black_scholes_batch_simd(data: &[OptionData]) -> Vec<f64> {
-    data.chunks_exact(4)
-        .flat_map(|chunk| {
-            let s = f64x4::from_slice_unaligned(&[
-                chunk[0].spot, chunk[1].spot, 
-                chunk[2].spot, chunk[3].spot
-            ]);
-            // ... vectorized calculation
-        })
-        .collect()
+// Compiler-friendly pattern for auto-vectorization
+pub fn process_batch_vectorizable(data: &[f64], output: &mut [f64]) {
+    // 4-element unrolling helps compiler recognize vectorization opportunity
+    let chunks = data.len() / 4;
+    
+    for i in 0..chunks {
+        let idx = i * 4;
+        // Compiler can vectorize these independent operations
+        output[idx] = compute(data[idx]);
+        output[idx + 1] = compute(data[idx + 1]);
+        output[idx + 2] = compute(data[idx + 2]);
+        output[idx + 3] = compute(data[idx + 3]);
+    }
+    
+    // Handle remainder
+    for i in (chunks * 4)..data.len() {
+        output[i] = compute(data[i]);
+    }
 }
 ```
 

@@ -88,6 +88,75 @@ prices_medium = black_scholes.call_price_batch(medium_batch, 100, 1.0, 0.05, 0.2
 prices_large = black_scholes.call_price_batch(large_batch, 100, 1.0, 0.05, 0.2)
 ```
 
+## マイクロバッチ最適化
+
+### 4要素ループアンローリング
+
+100-1000要素の小規模バッチに対して、特別な最適化を実装しています：
+
+```{code-block} rust
+:name: optimization-micro-batch
+:caption: マイクロバッチ専用最適化
+
+// 4要素単位で処理（コンパイラの自動ベクトル化を促進）
+pub fn black_scholes_call_micro_batch(
+    spots: &[f64],
+    strikes: &[f64],
+    times: &[f64],
+    rates: &[f64],
+    sigmas: &[f64],
+    output: &mut [f64],
+) {
+    let len = spots.len();
+    let chunks = len / 4;
+
+    // 4要素ループアンローリング
+    for i in 0..chunks {
+        let idx = i * 4;
+        output[idx] = black_scholes_call_scalar(
+            spots[idx], strikes[idx], times[idx], 
+            rates[idx], sigmas[idx]
+        );
+        output[idx + 1] = black_scholes_call_scalar(
+            spots[idx + 1], strikes[idx + 1], times[idx + 1],
+            rates[idx + 1], sigmas[idx + 1]
+        );
+        output[idx + 2] = black_scholes_call_scalar(
+            spots[idx + 2], strikes[idx + 2], times[idx + 2],
+            rates[idx + 2], sigmas[idx + 2]
+        );
+        output[idx + 3] = black_scholes_call_scalar(
+            spots[idx + 3], strikes[idx + 3], times[idx + 3],
+            rates[idx + 3], sigmas[idx + 3]
+        );
+    }
+
+    // 余りを処理
+    for i in (chunks * 4)..len {
+        output[i] = black_scholes_call_scalar(
+            spots[i], strikes[i], times[i], rates[i], sigmas[i]
+        );
+    }
+}
+```
+
+この最適化により：
+- **命令レベル並列性（ILP）** の向上
+- **コンパイラの自動ベクトル化** を促進
+- **分岐予測** の効率化
+- **キャッシュライン** の有効活用
+
+### マイクロバッチの閾値
+
+```rust
+// MICRO_BATCH_THRESHOLD: 1000要素以下でマイクロバッチ最適化を適用
+if data.len() <= MICRO_BATCH_THRESHOLD {
+    black_scholes_call_micro_batch(/* ... */);
+} else {
+    // 通常の並列処理
+}
+```
+
 ## メモリ最適化
 
 ### アラインメント
@@ -253,6 +322,67 @@ for label, elapsed in timer.times.items():
     print(f"{label}: {elapsed*1000:.2f}ms")
 ```
 
+## 高速数学関数
+
+### 高速erf近似実装
+
+Abramowitz & Stegun近似を使用した高速erf実装により、norm_cdf計算を大幅に高速化：
+
+```{code-block} rust
+:name: optimization-fast-erf
+:caption: 高速erf近似（Abramowitz & Stegun）
+
+/// 高速erf近似
+/// 精度: 1.5e-7（金融計算には十分）
+/// 速度: libm::erfの2-3倍高速
+#[inline(always)]
+pub fn fast_erf(x: f64) -> f64 {
+    // Abramowitz & Stegun係数
+    let a1 = 0.254829592;
+    let a2 = -0.284496736;
+    let a3 = 1.421413741;
+    let a4 = -1.453152027;
+    let a5 = 1.061405429;
+    let p = 0.3275911;
+
+    let sign = if x < 0.0 { -1.0 } else { 1.0 };
+    let x = x.abs();
+
+    let t = 1.0 / (1.0 + p * x);
+    let y = 1.0 - (((((a5 * t + a4) * t + a3) * t + a2) * t + a1) 
+            * t * (-x * x).exp());
+
+    sign * y
+}
+
+/// 高速norm_cdf実装
+#[inline(always)]
+pub fn fast_norm_cdf(x: f64) -> f64 {
+    if x > NORM_CDF_UPPER_BOUND {
+        1.0
+    } else if x < NORM_CDF_LOWER_BOUND {
+        0.0
+    } else {
+        0.5 * (1.0 + fast_erf(x / std::f64::consts::SQRT_2))
+    }
+}
+```
+
+### パフォーマンス特性
+
+| 関数 | 従来実装 | 高速実装 | 改善率 |
+|------|----------|----------|--------|
+| erf | libm::erf | fast_erf | 2-3倍 |
+| norm_cdf | erf依存 | fast_norm_cdf | 2-3倍 |
+| norm_pdf | 変更なし | fast_norm_pdf | - |
+
+### 精度とトレードオフ
+
+- **絶対誤差**: < 1.5e-7
+- **相対誤差**: < 1e-6
+- **用途**: オプション価格計算には十分な精度
+- **注意**: 科学計算や高精度要求時は標準実装を使用
+
 ## コンパイラ最適化
 
 ### Rust側の最適化
@@ -320,7 +450,7 @@ data = data.astype(np.float64)
 
 1. **Python リストの使用**
 ```{code-block} python
-:name: optimization-code-bad
+:name: optimization-code-bad-list
 :caption: Bad
 
 # Bad
@@ -329,7 +459,7 @@ spots = [100, 105, 110]  # 内部で変換が発生
 
 2. **小さすぎる/大きすぎるバッチ**
 ```{code-block} python
-:name: optimization-code-bad
+:name: optimization-code-bad-batch
 :caption: Bad: オーバーヘッドが大きい
 
 # Bad: オーバーヘッドが大きい
@@ -340,7 +470,7 @@ for spot in spots:
 
 3. **頻繁な型変換**
 ```{code-block} python
-:name: optimization-code-bad
+:name: optimization-code-bad-conversion
 :caption: Bad
 
 # Bad
