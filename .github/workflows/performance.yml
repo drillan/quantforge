@@ -28,61 +28,76 @@ jobs:
         uv sync --all-extras
         uv run maturin develop --release
     
-    - name: Download baseline from Git history
+    - name: Show environment info
       run: |
-        # mainブランチから最新のbaseline.jsonを取得（存在する場合）
-        if git show origin/main:tests/performance/baseline.json > /tmp/baseline.json 2>/dev/null; then
-          echo "Baseline found in Git history"
-          cp /tmp/baseline.json tests/performance/baseline.json
+        echo "=== Environment Info ==="
+        echo "CPU cores: $(nproc)"
+        echo "Memory: $(free -h | grep Mem | awk '{print $2}')"
+        echo "Python: $(python --version)"
+        echo "NumPy: $(uv run python -c 'import numpy; print(numpy.__version__)')"
+        echo "SciPy: $(uv run python -c 'import scipy; print(scipy.__version__)')"
+        echo "========================"
+    
+    - name: Download CI-specific baseline
+      run: |
+        # CI環境専用のベースラインを使用（存在する場合）
+        if git show origin/main:tests/performance/ci_baseline.json > /tmp/ci_baseline.json 2>/dev/null; then
+          echo "CI baseline found in Git history"
+          cp /tmp/ci_baseline.json tests/performance/ci_baseline.json
         else
-          echo "No baseline found in Git history"
+          echo "No CI baseline found - will create initial baseline"
         fi
     
     - name: Check baseline status
       id: baseline-check
       run: |
-        if [ -f tests/performance/baseline.json ]; then
-          echo "Baseline exists"
+        if [ -f tests/performance/ci_baseline.json ]; then
+          echo "CI baseline exists"
           echo "baseline_exists=true" >> $GITHUB_OUTPUT
+          # CI専用ベースラインを使用
+          cp tests/performance/ci_baseline.json tests/performance/baseline.json
         else
-          echo "No baseline found - will create initial baseline"
+          echo "No CI baseline found - will create initial baseline"
           echo "baseline_exists=false" >> $GITHUB_OUTPUT
         fi
     
     - name: Run performance tests
       run: |
+        # CI環境では並列処理を制限
+        export RAYON_NUM_THREADS=2
         uv run pytest tests/performance/test_all_benchmarks.py -v --benchmark-only
     
     - name: Check for performance regressions
       if: steps.baseline-check.outputs.baseline_exists == 'true'
       run: |
         echo "Checking for performance regressions..."
-        uv run python tests/performance/check_regression.py
+        # CI環境ではより寛容な閾値を使用（40%まで許容）
+        uv run python tests/performance/check_regression.py --threshold 1.4 --ci-mode
     
-    - name: Create initial baseline
+    - name: Create initial CI baseline
       if: steps.baseline-check.outputs.baseline_exists == 'false' && github.ref == 'refs/heads/main'
       run: |
-        echo "Creating initial baseline from test results..."
-        uv run python tests/performance/update_baseline.py
+        echo "Creating initial CI baseline from test results..."
+        cp benchmark_results/latest.json tests/performance/ci_baseline.json
     
     - name: Skip regression check (no baseline)
       if: steps.baseline-check.outputs.baseline_exists == 'false' && github.ref != 'refs/heads/main'
       run: |
-        echo "⚠️ No baseline available for comparison."
+        echo "⚠️ No CI baseline available for comparison."
         echo "Performance regression check skipped."
-        echo "Baseline will be created when merged to main."
+        echo "CI baseline will be created when merged to main."
     
-    - name: Update baseline (main branch only)
+    - name: Update CI baseline (main branch only)
       if: github.ref == 'refs/heads/main' && success()
       run: |
-        echo "Updating baseline for main branch..."
-        uv run python tests/performance/update_baseline.py
+        echo "Updating CI baseline for main branch..."
+        cp benchmark_results/latest.json tests/performance/ci_baseline.json
         
-        # Git にbaseline.jsonをコミット
+        # Git にci_baseline.jsonをコミット
         git config user.name "github-actions[bot]"
         git config user.email "github-actions[bot]@users.noreply.github.com"
-        git add tests/performance/baseline.json
+        git add tests/performance/ci_baseline.json
         git diff --cached --quiet || {
-          git commit -m "chore: update performance baseline [skip ci]"
+          git commit -m "chore: update CI performance baseline [skip ci]"
           git push origin main
         }
