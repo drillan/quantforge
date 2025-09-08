@@ -46,18 +46,19 @@ jobs:
           subject-path: 'dist/*'
       
       - name: Publish to TestPyPI
-        if: github.event.inputs.test_pypi == 'true'
+        # Always publish to TestPyPI for now (both release event and manual dispatch)
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           repository-url: https://test.pypi.org/legacy/
           skip-existing: true
           verbose: true
       
-      - name: Publish to PyPI
-        if: github.event.inputs.test_pypi != 'true'
-        uses: pypa/gh-action-pypi-publish@release/v1
-        with:
-          verbose: true
+      # PyPI publishing is disabled until ready for production
+      # - name: Publish to PyPI
+      #   if: github.event.inputs.test_pypi == 'false'
+      #   uses: pypa/gh-action-pypi-publish@release/v1
+      #   with:
+      #     verbose: true
       
       - name: Upload release assets
         if: github.event_name == 'release'
