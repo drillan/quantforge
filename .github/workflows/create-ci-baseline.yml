@@ -1,7 +1,7 @@
 name: Create CI Baseline
 
 on:
-  workflow_dispatch:  # 手動実行可能
+  workflow_dispatch:
     inputs:
       force:
         description: 'Force overwrite existing baseline'
