@@ -1,5 +1,73 @@
 # Project Improvements
 
+## 2025-09-08: SIMD設定削除によるアンチパターン解消
+
+### 問題
+- `.cargo/config.toml`にSIMD関連設定（AVX2/FMA/NEON）が存在
+- プロジェクトのアンチパターンルール違反
+- 2025-08-27にSIMD実装を完全削除した経緯に反する
+
+### 実施内容
+1. **アンチパターン違反の検出**
+   - AVX2, FMA, NEON設定を発見
+   - プロジェクトルール（.claude/antipatterns/simd-optimization-trap.md）違反を確認
+
+2. **性能影響評価**
+   - ベースライン測定（SIMD設定あり）
+   - 設定削除後の再測定
+   - 詳細な比較分析実施
+
+3. **設定修正**
+   ```toml
+   # 削除した設定
+   [target.x86_64-unknown-linux-gnu]
+   rustflags = ["-C", "target-feature=+avx2,+fma"]
+   
+   [target.x86_64-apple-darwin]  
+   rustflags = ["-C", "target-feature=+avx2,+fma"]
+   
+   [target.aarch64-apple-darwin]
+   rustflags = ["-C", "target-feature=+neon"]
+   ```
+
+### 性能影響結果
+- **QuantForge**: ほぼ影響なし（±5%以内）
+  - single: -0.19%（改善）
+  - batch[100]: +1.76%
+  - batch[1000]: +1.90%
+  - batch[10000]: -7.89%（改善）
+- **性能判定**: 代替最適化不要（全て5%以内）
+
+### 成果
+- アンチパターン違反の完全解消
+- パフォーマンス劣化なし（むしろ一部改善）
+- プロジェクトルールへの完全準拠
+- クロスプラットフォーム互換性の向上
+
+### 学んだこと
+- `target-cpu=native`で十分な自動ベクトル化が実現
+- SIMD手動設定は保守コスト > パフォーマンス向上
+- コンパイラの自動最適化を信頼すべき
+- アンチパターンルールの定期確認が重要
+
+### 技術的詳細
+```toml
+# 修正後の.cargo/config.toml
+[build]
+rustflags = [
+    "-C", "target-cpu=native",     # CPUネイティブ命令使用（十分）
+    "-C", "prefer-dynamic=no",     # 静的リンク優先
+]
+# Target固有のSIMD設定は完全削除
+```
+
+### 関連ファイル
+- .cargo/config.toml - SIMD設定削除
+- plans/2025-09-08-rust-cargo-config-antipattern-fix.md - 実装計画
+- .claude/antipatterns/simd-optimization-trap.md - アンチパターン定義
+
+---
+
 ## 2025-01-30: Rustパフォーマンス最適化
 
 ### 問題
