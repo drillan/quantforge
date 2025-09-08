@@ -1,3 +1,6 @@
+# This is a prepared .gitignore for Phase 3 of the migration
+# To apply: mv .gitignore.prepared .gitignore
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]
@@ -262,6 +265,10 @@ tracker_temp.yaml
 benchmark_results/
 benchmark_results_*.json
 perf_*.log
+
+# Local baseline (CI uses ci_baseline.json)
+tests/performance/baseline.json
+tests/performance/baseline.local.backup
 
 # Internal tools (not for distribution)
 .internal/
