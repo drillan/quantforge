@@ -1,0 +1,118 @@
+name: Create CI Baseline
+
+on:
+  workflow_dispatch:  # 手動実行可能
+    inputs:
+      force:
+        description: 'Force overwrite existing baseline'
+        required: false
+        default: 'false'
+        type: choice
+        options:
+        - 'true'
+        - 'false'
+
+jobs:
+  create-baseline:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: Setup Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+    
+    - name: Install uv
+      run: |
+        curl -LsSf https://astral.sh/uv/install.sh | sh
+        echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+    
+    - name: Install dependencies
+      run: |
+        uv sync --all-extras
+        uv run maturin develop --release
+    
+    - name: Show environment info
+      run: |
+        echo "=== CI Environment Info ==="
+        echo "CPU cores: $(nproc)"
+        echo "Memory: $(free -h | grep Mem | awk '{print $2}')"
+        echo "Python: $(python --version)"
+        echo "NumPy: $(uv run python -c 'import numpy; print(numpy.__version__)')"
+        echo "SciPy: $(uv run python -c 'import scipy; print(scipy.__version__)')"
+        echo "=========================="
+    
+    - name: Check existing CI baseline
+      id: check-baseline
+      run: |
+        if git show origin/main:tests/performance/ci_baseline.json > /dev/null 2>&1; then
+          echo "CI baseline already exists in Git"
+          echo "exists=true" >> $GITHUB_OUTPUT
+        else
+          echo "No CI baseline found"
+          echo "exists=false" >> $GITHUB_OUTPUT
+        fi
+    
+    - name: Run performance benchmarks
+      if: steps.check-baseline.outputs.exists == 'false' || github.event.inputs.force == 'true'
+      run: |
+        # CI環境での適切な設定
+        export RAYON_NUM_THREADS=2
+        echo "Running benchmarks in CI environment..."
+        uv run pytest tests/performance/test_all_benchmarks.py -v --benchmark-only
+    
+    - name: Create CI baseline
+      if: steps.check-baseline.outputs.exists == 'false' || github.event.inputs.force == 'true'
+      run: |
+        echo "Creating CI baseline from benchmark results..."
+        cp benchmark_results/latest.json tests/performance/ci_baseline.json
+        
+        # 環境情報を追加
+        python -c "
+import json
+with open('tests/performance/ci_baseline.json', 'r+') as f:
+    data = json.load(f)
+    data['ci_environment'] = True
+    data['environment']['note'] = 'GitHub Actions Ubuntu runner'
+    f.seek(0)
+    json.dump(data, f, indent=2)
+    f.truncate()
+"
+    
+    - name: Commit CI baseline
+      if: steps.check-baseline.outputs.exists == 'false' || github.event.inputs.force == 'true'
+      run: |
+        git config user.name "github-actions[bot]"
+        git config user.email "github-actions[bot]@users.noreply.github.com"
+        git add tests/performance/ci_baseline.json
+        
+        if [ "${{ github.event.inputs.force }}" == "true" ]; then
+          git commit -m "chore: update CI performance baseline (forced)
+        
+        Environment: GitHub Actions Ubuntu runner
+        CPU cores: $(nproc)
+        Memory: $(free -h | grep Mem | awk '{print $2}')"
+        else
+          git commit -m "chore: create initial CI performance baseline
+        
+        Environment: GitHub Actions Ubuntu runner
+        CPU cores: $(nproc)
+        Memory: $(free -h | grep Mem | awk '{print $2}')"
+        fi
+        
+        git push origin main
+    
+    - name: Report status
+      if: always()
+      run: |
+        if [ -f tests/performance/ci_baseline.json ]; then
+          echo "✅ CI baseline successfully created/updated"
+          echo "File: tests/performance/ci_baseline.json"
+        else
+          echo "❌ Failed to create CI baseline"
+          exit 1
+        fi
