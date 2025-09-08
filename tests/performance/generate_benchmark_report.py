@@ -453,7 +453,7 @@ class BenchmarkReportGenerator:
                         if speedup >= 1:
                             writer.writerow(["バッチ処理", f"{size:,}件", f"{speedup:.1f}倍の処理速度"])
                         else:
-                            writer.writerow(["バッチ処理", f"{size:,}件", f"{1/speedup:.2f}倍遅い"])
+                            writer.writerow(["バッチ処理", f"{size:,}件", f"{1 / speedup:.2f}倍遅い"])
 
     def _generate_comparison_csv(self, file_path: Path, times: dict) -> None:
         """Generate comparison table CSV."""

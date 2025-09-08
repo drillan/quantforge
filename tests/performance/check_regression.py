@@ -23,7 +23,8 @@ class RegressionChecker:
         """
         # CI環境では測定が不安定なため、より寛容な闾値を使用
         import os
-        if os.environ.get('CI'):
+
+        if os.environ.get("CI"):
             # GitHub Actions環境では25%まで許容
             self.threshold = max(threshold, 1.25)
             self.warning_threshold = 1.15  # 15%で警告
@@ -201,7 +202,8 @@ def main():
 
     # CI環境の検出または明示的な指定
     import os
-    if args.ci_mode or os.environ.get('CI'):
+
+    if args.ci_mode or os.environ.get("CI"):
         print("🔧 CI環境モード: より寛容な闾値を使用")
 
     checker = RegressionChecker(threshold=args.threshold)
