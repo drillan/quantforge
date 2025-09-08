@@ -5,6 +5,7 @@ build-backend = "maturin"
 [project]
 name = "quantforge"
 version = "0.0.12"
+license = {text = "MIT"}
 requires-python = ">=3.12"
 dependencies = [
     "numpy>=1.20",
