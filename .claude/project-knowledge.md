@@ -777,6 +777,90 @@ let results = match strategy.mode() {
 - **Missing parameters**: American/Mertonで配当利回り`q`パラメータ追加
 - **Module references**: `models.` → `black_scholes.`等の個別参照
 
+## Python 3.13 Free Threading実験（2025-01-09）
+
+### 実験概要
+Python 3.13の新機能（Free Threading/GIL削除）の性能評価実験を実施。結果として採用見送り。
+
+### 実施内容
+1. **環境構築**: UV経由でPython 3.13.7環境構築
+2. **設定変更**: 
+   - `requires-python = "==3.13.*"`に限定
+   - abi3削除でPython固有バイナリ化
+3. **Free Threading検出実装**:
+   ```rust
+   #[cfg(Py_GIL_DISABLED)]
+   const FREE_THREADING: bool = true;
+   ```
+4. **動的並列化閾値**:
+   - GILなし: 1,000要素から並列化
+   - GIL有り: 50,000要素から並列化
+
+### 採用見送りの理由
+
+#### 技術的制約
+1. **arro3-core未対応**:
+   - v0.6.1はPython 3.13t（Free Threading）版wheel未提供
+   - エラー: `no wheels with a matching Python ABI tag (cp313t)`
+   - 依存関係がボトルネック
+
+2. **エコシステム未成熟**:
+   - PyArrow: Python 3.13対応済み ✅
+   - NumPy: Python 3.13対応済み ✅  
+   - arro3-core: 通常版のみ ❌
+
+3. **性能改善が得られない**:
+   - Free Threading版が使用不可
+   - 通常版Python 3.13では顕著な性能向上なし
+   - GIL制約は従来通り存在
+
+#### ビジネス判断
+1. **互換性リスク**: Python 3.13限定で多くのユーザー排除
+2. **時期尚早**: Python 3.12がまだ主流
+3. **メリット不十分**: Free Threading恩恵なしでは移行価値なし
+
+### 学んだ教訓
+
+1. **早期採用のリスク**:
+   - 新機能は魅力的だが、エコシステム成熟が必須
+   - 全依存関係の対応を待つべき
+   - 特にarro3のような重要依存は慎重に
+
+2. **段階的移行の重要性**:
+   - 完全切り替えより、オプショナルサポートから開始
+   - ユーザーベース維持しながら新技術導入
+   - 破壊的変更は避ける
+
+3. **性能改善の現実**:
+   - GIL削除は理論的に大きな改善
+   - 実際は依存関係の制約で恩恵を受けられない
+   - プロファイリングに基づく判断が重要
+
+4. **実験的実装の価値**:
+   - 実験ブランチで安全に検証
+   - 実装結果をアーカイブに保存（将来の参照用）
+   - 失敗も貴重な技術的知見
+
+### 将来の再評価基準
+
+**短期（3-6ヶ月）**:
+- arro3-coreのFree Threading対応監視
+- 他依存関係の対応状況確認
+
+**中期（6-12ヶ月）**:
+- Python 3.13を追加サポート（必須ではない）
+- Free Threading検出コード保持（将来の準備）
+
+**長期（1年後）**:
+- Python 3.13普及率確認
+- Free Threadingエコシステム成熟度評価
+- 性能ベンチマーク再実施
+
+### 技術的資産
+- 実験コード: `experiment/python313-max-performance`ブランチに保存
+- 実装計画: `plans/archive/2025-01-09-both-python313-free-threading-optimization.md`
+- Free Threading検出コード: 将来の再利用のため保持
+
 ## American Option実装の教訓（2025-01-26）
 
 ### BS2002実装の失敗から学んだ教訓
