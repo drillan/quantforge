@@ -64,14 +64,19 @@ jobs:
           path: dist/
       
       - name: Install wheel
+        shell: pwsh
         run: |
-          pip install dist/*.whl
-          pip install pytest numpy scipy pyarrow
+          # PowerShellでwheelファイルを確実にインストール
+          Get-ChildItem dist/*.whl | ForEach-Object {
+            python -m pip install $_.FullName
+          }
+          python -m pip install pytest numpy scipy pyarrow
       
       - name: Test installed package
+        shell: pwsh
         run: |
           python -c "import quantforge; print(quantforge.__version__)"
-          pytest tests/unit/ -v
+          python -m pytest tests/unit/ -v
   
   publish:
     name: Publish to PyPI
