@@ -8,7 +8,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Rust](https://img.shields.io/badge/rust-1.88%2B-orange)](https://www.rust-lang.org/)
 
-**Rust-Powered Option Pricing Library — Up to <!-- BENCHMARK:MAX_SPEEDUP_NUMPY -->70<!-- /BENCHMARK:MAX_SPEEDUP_NUMPY -->x Faster than NumPy+SciPy**
+**Rust-Powered Option Pricing Library — Up to <!-- BENCHMARK:MAX_SPEEDUP_NUMPY -->1<!-- /BENCHMARK:MAX_SPEEDUP_NUMPY -->x Faster than NumPy+SciPy**
 
 [Features](#-main-features) • [Installation](#-installation) • [Quick Start](#-quick-start) • [Benchmarks](#-benchmarks) • [Documentation](#-documentation)
 
@@ -36,9 +36,10 @@ QuantForge supports multiple option pricing models optimized for various asset c
 
 #### Core Features
 
-- ⚡ **High Performance**: Up to <!-- BENCHMARK:MAX_SPEEDUP_NUMPY -->70<!-- /BENCHMARK:MAX_SPEEDUP_NUMPY -->x faster than NumPy+SciPy, <!-- BENCHMARK:MAX_SPEEDUP_PYTHON -->75<!-- /BENCHMARK:MAX_SPEEDUP_PYTHON -->x faster than Pure Python
+- ⚡ **High Performance**: Up to <!-- BENCHMARK:MAX_SPEEDUP_NUMPY -->1<!-- /BENCHMARK:MAX_SPEEDUP_NUMPY -->x faster than NumPy+SciPy, <!-- BENCHMARK:MAX_SPEEDUP_PYTHON -->1<!-- /BENCHMARK:MAX_SPEEDUP_PYTHON -->x faster than Pure Python
 - 🎯 **Machine Precision**: erf-based implementation achieving <1e-15 accuracy
 - 📊 **Complete Greeks**: Delta, Gamma, Vega, Theta, Rho plus model-specific Greeks (Dividend Rho, Early Exercise Boundary)
+- 🔥 **Implied Volatility**: Newton-Raphson solver up to <!-- BENCHMARK:IV:MAX_SPEEDUP -->170<!-- /BENCHMARK:IV:MAX_SPEEDUP -->x faster than Pure Python
 - 🚀 **Auto-Parallelization**: Automatic Rayon parallelization for batches >30,000 elements
 - 📦 **Zero-Copy Design**: Direct NumPy array access eliminating memory copy overhead
 - ✅ **Robustness**: 250+ golden master tests with comprehensive coverage
@@ -47,20 +48,30 @@ QuantForge supports multiple option pricing models optimized for various asset c
 ## 📊 Performance Benchmark Results
 
 <!-- BENCHMARK:SUMMARY:START -->
-Test Environment: Linux - 6 cores - 29.3GB RAM - Python 3.12.5 - 2025-09-04 22:40:03
+Environment: Linux - 6 cores - 29.3GB RAM - Python 3.12.5 - 2025-09-12 12:47:56
 <!-- BENCHMARK:SUMMARY:END -->
 
 ### Latest Benchmark Results
 <!-- BENCHMARK:TABLE:START -->
-| Data Size | QuantForge | Pure Python | NumPy+SciPy | vs Python | vs NumPy |
-|-----------|------------|-------------|------------|-----------|----------|
-| Single | 1.51 μs | 2.10 μs | 105.94 μs | 1.4x | 70.0x |
-| 100 | 18.81 μs | 183.66 μs | 79.71 μs | 9.8x | 4.2x |
-| 1,000 | 53.29 μs | 1.79 ms | 132.72 μs | 33.5x | 2.5x |
-| 10,000 | 237.46 μs | 17.84 ms | 537.96 μs | 75.1x | 2.3x |
+*Benchmark data not found*
 <!-- BENCHMARK:TABLE:END -->
 
 *Performance varies by environment. Values shown are medians of 5 runs. See [benchmarks](docs/en/performance/benchmarks.md) for details.*
+
+### 🔥 Implied Volatility Performance
+
+Fair comparison using Newton-Raphson method (same algorithm and parameters):
+
+<!-- BENCHMARK:IV:TABLE:START -->
+| Data Size | QuantForge | NumPy Newton | Pure Python | Max Speedup |
+|-----------|------------|--------------|-------------|-------------|
+| Single | 3.94 μs | 180.86 μs | 3.18 μs | 45x |
+| 100 | 34.40 μs | 937.50 μs | 1.03 ms | 30x |
+| 1,000 | 184.11 μs | 1.33 ms | 10.45 ms | 56x |
+| 10,000 | 599.53 μs | 4.28 ms | 102.07 ms | **170x** |
+<!-- BENCHMARK:IV:TABLE:END -->
+
+Maximum speedup: <!-- BENCHMARK:IV:MAX_SPEEDUP -->170<!-- /BENCHMARK:IV:MAX_SPEEDUP -->x vs Pure Python, <!-- BENCHMARK:IV:MAX_SPEEDUP_NUMPY -->45<!-- /BENCHMARK:IV:MAX_SPEEDUP_NUMPY -->x vs NumPy
 
 ## 📥 Installation
 

@@ -133,6 +133,7 @@ def implied_volatility_numpy_scipy(
     """NumPy+SciPy implied volatility calculation using Brent's method.
 
     Uses scipy.optimize.brentq for robust root finding.
+    Note: This version uses a for loop for comparison purposes.
     """
     # Ensure arrays
     prices = np.atleast_1d(prices)
@@ -175,6 +176,148 @@ def implied_volatility_numpy_scipy(
         except (ValueError, RuntimeError):
             # Failed to converge, set to NaN
             ivs.flat[i] = np.nan
+
+    return ivs.reshape(prices.shape)
+
+
+def implied_volatility_numpy_scipy_vectorized(
+    prices: np.ndarray,
+    s: np.ndarray,
+    k: np.ndarray,
+    t: np.ndarray,
+    r: np.ndarray,
+    is_call: bool = True,
+) -> np.ndarray:
+    """NumPy+SciPy implied volatility using np.vectorize (no explicit for loop).
+
+    Uses np.vectorize to apply brentq element-wise without explicit loops.
+    """
+    # Ensure arrays
+    prices = np.atleast_1d(prices)
+    s = np.atleast_1d(s)
+    k = np.atleast_1d(k)
+    t = np.atleast_1d(t)
+    r = np.atleast_1d(r)
+
+    # Broadcast to same shape
+    prices, s, k, t, r = np.broadcast_arrays(prices, s, k, t, r)
+
+    def single_iv(price_i: float, s_i: float, k_i: float, t_i: float, r_i: float) -> float:
+        """Calculate IV for a single option."""
+
+        # Objective function for root finding
+        def objective(sigma: float) -> float:
+            sqrt_t = np.sqrt(t_i)
+            d1 = (np.log(s_i / k_i) + (r_i + sigma**2 / 2) * t_i) / (sigma * sqrt_t)
+            d2 = d1 - sigma * sqrt_t
+
+            if is_call:
+                theo_price = s_i * norm.cdf(d1) - k_i * np.exp(-r_i * t_i) * norm.cdf(d2)
+            else:
+                theo_price = k_i * np.exp(-r_i * t_i) * norm.cdf(-d2) - s_i * norm.cdf(-d1)
+
+            return theo_price - price_i
+
+        try:
+            # Use Brent's method for robust root finding
+            iv = brentq(objective, 0.001, 5.0, xtol=1e-6, maxiter=100)
+            return iv
+        except (ValueError, RuntimeError):
+            # Failed to converge, return NaN
+            return np.nan
+
+    # Use np.vectorize to avoid explicit for loop
+    vectorized_iv = np.vectorize(single_iv)
+    result = vectorized_iv(prices, s, k, t, r)
+    return result.reshape(prices.shape)
+
+
+def implied_volatility_numpy_newton(
+    prices: np.ndarray,
+    s: np.ndarray,
+    k: np.ndarray,
+    t: np.ndarray,
+    r: np.ndarray,
+    is_call: bool = True,
+    initial_guess: float = 0.2,
+    max_iterations: int = 100,
+    tolerance: float = 1e-6,
+) -> np.ndarray:
+    """Fully vectorized Newton-Raphson method for implied volatility.
+
+    Performs Newton-Raphson iteration on entire arrays simultaneously,
+    without any explicit loops.
+    """
+    # Ensure arrays and broadcast
+    prices = np.atleast_1d(prices)
+    s = np.atleast_1d(s)
+    k = np.atleast_1d(k)
+    t = np.atleast_1d(t)
+    r = np.atleast_1d(r)
+
+    prices, s, k, t, r = np.broadcast_arrays(prices, s, k, t, r)
+
+    # Initialize volatility array
+    sigma = np.full_like(prices, initial_guess, dtype=np.float64)
+    sqrt_t = np.sqrt(t)
+
+    # Track convergence status
+    converged = np.zeros_like(prices, dtype=bool)
+    ivs = np.full_like(prices, np.nan)
+
+    for iteration in range(max_iterations):
+        # Skip already converged values
+        active = ~converged
+        if not np.any(active):
+            break
+
+        # Current sigma values for active elements
+        sigma_active = sigma[active]
+        s_active = s[active]
+        k_active = k[active]
+        t_active = t[active]
+        r_active = r[active]
+        sqrt_t_active = sqrt_t[active]
+        prices_active = prices[active]
+
+        # Calculate d1 and d2
+        d1 = (np.log(s_active / k_active) + (r_active + sigma_active**2 / 2) * t_active) / (
+            sigma_active * sqrt_t_active
+        )
+        d2 = d1 - sigma_active * sqrt_t_active
+
+        # Calculate theoretical prices
+        if is_call:
+            theo_prices = s_active * norm.cdf(d1) - k_active * np.exp(-r_active * t_active) * norm.cdf(d2)
+        else:
+            theo_prices = k_active * np.exp(-r_active * t_active) * norm.cdf(-d2) - s_active * norm.cdf(-d1)
+
+        # Calculate vega
+        vega = s_active * norm.pdf(d1) * sqrt_t_active
+
+        # Price difference
+        price_diff = theo_prices - prices_active
+
+        # Check convergence
+        newly_converged = np.abs(price_diff) < tolerance
+        active_indices = np.where(active)[0]
+        converged[active_indices[newly_converged]] = True
+        ivs[active_indices[newly_converged]] = sigma_active[newly_converged]
+
+        # Newton-Raphson update for non-converged
+        still_active = ~newly_converged
+        if np.any(still_active):
+            # Avoid division by zero
+            valid_vega = np.abs(vega[still_active]) > 1e-10
+            if np.any(valid_vega):
+                update_indices = active_indices[still_active][valid_vega]
+                sigma[update_indices] -= price_diff[still_active][valid_vega] / vega[still_active][valid_vega]
+
+                # Apply boundaries
+                sigma[update_indices] = np.clip(sigma[update_indices], 0.001, 5.0)
+
+    # Set final values for non-converged
+    ivs[~converged] = np.nan
 
     return ivs.reshape(prices.shape)
 
@@ -374,6 +517,32 @@ class TestImpliedVolatilityCalculation:
         )
         assert abs(result.item() - self.true_sigma) < 1e-5, "IV should be close to true volatility"
 
+    def test_numpy_scipy_vectorized_iv_single(self, benchmark):
+        """Benchmark NumPy+SciPy vectorized single IV calculation."""
+        result = benchmark(
+            implied_volatility_numpy_scipy_vectorized,
+            prices=np.array(self.call_price),
+            s=np.array(self.s),
+            k=np.array(self.k),
+            t=np.array(self.t),
+            r=np.array(self.r),
+            is_call=True,
+        )
+        assert abs(result.item() - self.true_sigma) < 1e-5, "IV should be close to true volatility"
+
+    def test_numpy_newton_iv_single(self, benchmark):
+        """Benchmark NumPy Newton-Raphson single IV calculation."""
+        result = benchmark(
+            implied_volatility_numpy_newton,
+            prices=np.array(self.call_price),
+            s=np.array(self.s),
+            k=np.array(self.k),
+            t=np.array(self.t),
+            r=np.array(self.r),
+            is_call=True,
+        )
+        assert abs(result.item() - self.true_sigma) < 1e-5, "IV should be close to true volatility"
+
     @pytest.mark.parametrize("size", [100, 1000, 10000])
     def test_quantforge_iv_batch(self, benchmark, size):
         """Benchmark QuantForge batch IV calculation."""
@@ -445,7 +614,7 @@ class TestImpliedVolatilityCalculation:
 
     @pytest.mark.parametrize("size", [100, 1000, 10000])
     def test_numpy_scipy_iv_batch(self, benchmark, size):
-        """Benchmark NumPy+SciPy batch IV calculation."""
+        """Benchmark NumPy+SciPy batch IV calculation (with for loop)."""
         np.random.seed(42)
         true_sigmas = np.random.uniform(0.15, 0.35, size)
         spots = np.random.uniform(80, 120, size)
@@ -458,6 +627,60 @@ class TestImpliedVolatilityCalculation:
 
         result = benchmark(
             implied_volatility_numpy_scipy,
+            prices=prices,
+            s=spots,
+            k=strikes,
+            t=times,
+            r=rates,
+            is_call=True,
+        )
+        assert len(result) == size, f"Should return {size} IVs"
+        # Check that most converged
+        converged = np.sum(~np.isnan(result))
+        assert converged > size * 0.95, f"At least 95% should converge: {converged}/{size}"
+
+    @pytest.mark.parametrize("size", [100, 1000, 10000])
+    def test_numpy_scipy_vectorized_iv_batch(self, benchmark, size):
+        """Benchmark NumPy+SciPy vectorized batch IV calculation (np.vectorize)."""
+        np.random.seed(42)
+        true_sigmas = np.random.uniform(0.15, 0.35, size)
+        spots = np.random.uniform(80, 120, size)
+        strikes = np.full(size, 100.0)
+        times = np.full(size, 1.0)
+        rates = np.full(size, 0.05)
+
+        # Calculate prices with true volatilities
+        prices = black_scholes_numpy_scipy(spots, strikes, times, rates, true_sigmas)
+
+        result = benchmark(
+            implied_volatility_numpy_scipy_vectorized,
+            prices=prices,
+            s=spots,
+            k=strikes,
+            t=times,
+            r=rates,
+            is_call=True,
+        )
+        assert len(result) == size, f"Should return {size} IVs"
+        # Check that most converged
+        converged = np.sum(~np.isnan(result))
+        assert converged > size * 0.95, f"At least 95% should converge: {converged}/{size}"
+
+    @pytest.mark.parametrize("size", [100, 1000, 10000])
+    def test_numpy_newton_iv_batch(self, benchmark, size):
+        """Benchmark fully vectorized Newton-Raphson batch IV calculation."""
+        np.random.seed(42)
+        true_sigmas = np.random.uniform(0.15, 0.35, size)
+        spots = np.random.uniform(80, 120, size)
+        strikes = np.full(size, 100.0)
+        times = np.full(size, 1.0)
+        rates = np.full(size, 0.05)
+
+        # Calculate prices with true volatilities
+        prices = black_scholes_numpy_scipy(spots, strikes, times, rates, true_sigmas)
+
+        result = benchmark(
+            implied_volatility_numpy_newton,
             prices=prices,
             s=spots,
             k=strikes,

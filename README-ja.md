@@ -8,7 +8,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Rust](https://img.shields.io/badge/rust-1.88%2B-orange)](https://www.rust-lang.org/)
 
-**Rust実装オプション価格計算ライブラリ - NumPy+SciPy比最大<!-- BENCHMARK:MAX_SPEEDUP_NUMPY -->70<!-- /BENCHMARK:MAX_SPEEDUP_NUMPY -->倍の処理速度**
+**Rust実装オプション価格計算ライブラリ - NumPy+SciPy比最大<!-- BENCHMARK:MAX_SPEEDUP_NUMPY -->1<!-- /BENCHMARK:MAX_SPEEDUP_NUMPY -->倍の処理速度**
 
 [Features](#-主要機能) • [Installation](#-インストール) • [Quick Start](#-クイックスタート) • [Benchmarks](#-ベンチマーク) • [Documentation](#-ドキュメント)
 
@@ -36,8 +36,9 @@ QuantForgeは複数のオプション価格モデルをサポートし、各資�
 
 #### コア機能
 
-- ⚡ **高速処理**: Rust実装により、NumPy+SciPy比で最大<!-- BENCHMARK:MAX_SPEEDUP_NUMPY -->70<!-- /BENCHMARK:MAX_SPEEDUP_NUMPY -->倍、Pure Python比で最大<!-- BENCHMARK:MAX_SPEEDUP_PYTHON -->75<!-- /BENCHMARK:MAX_SPEEDUP_PYTHON -->倍の高速化
+- ⚡ **高速処理**: Rust実装により、NumPy+SciPy比で最大<!-- BENCHMARK:MAX_SPEEDUP_NUMPY -->1<!-- /BENCHMARK:MAX_SPEEDUP_NUMPY -->倍、Pure Python比で最大<!-- BENCHMARK:MAX_SPEEDUP_PYTHON -->1<!-- /BENCHMARK:MAX_SPEEDUP_PYTHON -->倍の高速化
 - 🎯 **高精度計算**: erfベース実装により機械精度レベル（<1e-15）の計算精度を実現
+- 🔥 **インプライドボラティリティ**: Newton-Raphson法により Pure Python比で最大<!-- BENCHMARK:IV:MAX_SPEEDUP -->170<!-- /BENCHMARK:IV:MAX_SPEEDUP -->倍の高速化
 - 📊 **完全なグリークス**: Delta, Gamma, Vega, Theta, Rho に加え、モデル固有のグリークス（配当Rho、早期行使境界など）
 - 🚀 **自動並列化**: 30,000要素以上のバッチ処理で自動的にRayon並列処理を適用
 - 📦 **ゼロコピー設計**: NumPy配列を直接参照し、メモリコピーのオーバーヘッドを排除
@@ -47,20 +48,30 @@ QuantForgeは複数のオプション価格モデルをサポートし、各資�
 ## 📊 パフォーマンス測定結果
 
 <!-- BENCHMARK:SUMMARY:START -->
-測定環境: Linux - 6コア - 29.3GB RAM - Python 3.12.5 - 2025-09-04 22:40:03
+測定環境: Linux - 6コア - 29.3GB RAM - Python 3.12.5 - 2025-09-12 12:47:56
 <!-- BENCHMARK:SUMMARY:END -->
 
 ### 最新ベンチマーク結果
 <!-- BENCHMARK:TABLE:START -->
-| データサイズ | QuantForge | Pure Python | NumPy+SciPy | vs Python | vs NumPy |
-|------------|------------|-------------|------------|-----------|----------|
-| 単一 | 1.51 μs | 2.10 μs | 105.94 μs | 1.4x | 70.0x |
-| 100件 | 18.81 μs | 183.66 μs | 79.71 μs | 9.8x | 4.2x |
-| 1,000件 | 53.29 μs | 1.79 ms | 132.72 μs | 33.5x | 2.5x |
-| 10,000件 | 237.46 μs | 17.84 ms | 537.96 μs | 75.1x | 2.3x |
+※ベンチマークデータが見つかりません
 <!-- BENCHMARK:TABLE:END -->
 
 *性能は使用環境により変動します。測定値は5回実行の中央値です。詳細は[ベンチマーク](docs/ja/performance/benchmarks.md)を参照。*
+
+### 🔥 インプライドボラティリティ性能
+
+Newton-Raphson法による公正な比較（同一アルゴリズム・同一パラメータ）:
+
+<!-- BENCHMARK:IV:TABLE:START -->
+| データサイズ | QuantForge | NumPy Newton | Pure Python | 最速比 |
+|------------|------------|--------------|-------------|--------|
+| 単一計算 | 3.94 μs | 180.86 μs | 3.18 μs | 45x |
+| 100件 | 34.40 μs | 937.50 μs | 1.03 ms | 30x |
+| 1,000件 | 184.11 μs | 1.33 ms | 10.45 ms | 56x |
+| 10,000件 | 599.53 μs | 4.28 ms | 102.07 ms | **170x** |
+<!-- BENCHMARK:IV:TABLE:END -->
+
+最大速度向上: <!-- BENCHMARK:IV:MAX_SPEEDUP -->170<!-- /BENCHMARK:IV:MAX_SPEEDUP -->倍（Pure Python比）、<!-- BENCHMARK:IV:MAX_SPEEDUP_NUMPY -->45<!-- /BENCHMARK:IV:MAX_SPEEDUP_NUMPY -->倍（NumPy比）
 
 ## 📥 インストール
 
