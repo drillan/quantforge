@@ -11,7 +11,7 @@ It provides high-speed computational performance while maintaining Python's ease
 :name: index-note-features
 
 **Key Features**
-- Up to 40x faster processing compared to pure Python implementations (measured on AMD Ryzen 5 5600G)
+- Up to 170x faster processing compared to pure Python implementations (Implied Volatility calculation)
 - Numerical error < 1e-15 (double precision)
 - Simple Python API
 - Supports Black-Scholes, Black76, Merton, and American options
@@ -39,7 +39,7 @@ price = black_scholes.call_price(
 )
 
 # Batch processing
-# Process 1 million records in ~56ms (measured on AMD Ryzen 5 5600G, CLI mode)
+# Process 1 million records at high speed (see performance table above for details)
 spots = np.random.uniform(90, 110, 1_000_000)
 prices = black_scholes.call_price_batch(
     spots=spots,
@@ -53,36 +53,28 @@ prices = black_scholes.call_price_batch(
 (index-performance)=
 ## Performance Comparison
 
-:::{note}
-:name: index-note-performance-environment
-
-Measurement Environment: AMD Ryzen 5 5600G (6 cores/12 threads), 29.3GB RAM, Pop!_OS 22.04 (CLI mode)
-Measurement Date: 2025-08-28
-See [Benchmark Results](performance/benchmarks.md) for details
-:::
-
-```{list-table} Performance Comparison
-:name: index-table-performance
+```{csv-table}
+:file: _static/benchmark_data/environment.csv
 :header-rows: 1
-:widths: 25 25 25 25
-
-* - Library
-  - Single Calculation
-  - 1 Million Records Processing Time
-  - Relative Speed
-* - QuantForge
-  - 1.4 μs
-  - 55.6ms
-  - 1.0x
-* - NumPy+SciPy
-  - 77.7 μs
-  - 63.9ms
-  - 1.15x slower
-* - Pure Python
-  - 2.4 μs
-  - -
-  - (Single) 1.7x slower
+:widths: 30, 70
 ```
+
+See [Benchmark Results](performance/benchmarks.md) for details
+
+(index-iv-performance)=
+## 🔥 Implied Volatility Performance
+
+Fair comparison using Newton-Raphson method (same algorithm, same parameters):
+
+```{csv-table}
+:file: _static/benchmark_data/implied_volatility_newton.csv
+:header-rows: 1
+:widths: 20, 20, 20, 20, 10, 10
+```
+
+- **Single calculation**: Slightly slower due to PyO3 overhead
+- **Batch processing**: Overwhelming speedup through Rayon parallelization
+- **10,000 items**: **170x faster than Pure Python**
 
 (index-documentation-structure)=
 ## Documentation Structure

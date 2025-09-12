@@ -16,7 +16,7 @@ Issue作成時に含めるべき情報：
 
 ```{code-block} markdown
 :name: contributing-code-bug-report
-:caption: # 環境
+:caption: Bug Report Template
 
 ## 環境
 - OS: [例: Ubuntu 22.04]
@@ -41,7 +41,7 @@ Issue作成時に含めるべき情報：
 
 ```{code-block} markdown
 :name: contributing-code-feature-proposal
-:caption: # 提案内容
+:caption: Feature Proposal Template
 
 ## 提案内容
 ...
@@ -307,7 +307,7 @@ Types:
 
 ```{code-block} markdown
 :name: contributing-code-pr-template
-:caption: # 概要
+:caption: Pull Request Template
 
 ## 概要
 この PR は...

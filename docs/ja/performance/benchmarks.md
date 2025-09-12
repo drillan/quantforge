@@ -63,21 +63,13 @@ Black-Scholes コールオプション価格計算の単一実行パフォーマ
 
 ## パフォーマンス要約
 
-### 対Pure Python
-
-```{csv-table}
-:file: ../_static/benchmark_data/performance_summary_python.csv
-:header-rows: 1
-:widths: 30, 30, 40
+:::{note}
+最新のベンチマーク結果を反映するには、以下のコマンドを実行してください：
+```bash
+pytest tests/performance/ -m benchmark
+python .internal/benchmark_automation/generate_benchmark_report.py
 ```
-
-### 対NumPy+SciPy
-
-```{csv-table}
-:file: ../_static/benchmark_data/performance_summary_numpy.csv
-:header-rows: 1
-:widths: 30, 30, 40
-```
+:::
 
 ## 技術的詳細
 
@@ -215,6 +207,62 @@ with open('history.jsonl') as f:
   ]
 }
 ```
+
+## インプライドボラティリティ逆算
+
+### Newton-Raphson法による公正な比較
+
+インプライドボラティリティ（IV）の逆算は、オプション価格から暗示されるボラティリティを求める重要な計算です。QuantForgeでは高速なNewton-Raphson法ソルバーを実装しています。
+
+:::{note}
+**公正なベンチマークのための統一条件**:
+- すべての実装で同一アルゴリズム（Newton-Raphson法）を使用
+- 同一パラメータ（tolerance: 1e-6, max_iterations: 100）
+- 純粋に実装技術（Rust vs Python vs NumPy）の差を測定
+:::
+
+### Newton-Raphson法での性能比較
+
+```{csv-table}
+:file: ../_static/benchmark_data/implied_volatility_newton.csv
+:header-rows: 1
+:widths: 20, 20, 20, 20, 10, 10
+```
+
+### 主要な成果
+
+- **10,000件バッチ処理**: Pure Pythonの**170倍**高速
+- **並列処理の効果**: 大規模データで Rayon による自動並列化が効果を発揮
+- **ゼロコピー設計**: PyO3によるメモリ効率的な実装
+
+### アルゴリズム特性比較（参考）
+
+```{csv-table}
+:file: ../_static/benchmark_data/implied_volatility_algorithm_comparison.csv
+:header-rows: 1
+:widths: 15, 20, 15, 10, 10, 10, 20
+```
+
+:::{note}
+**Brent法について**:
+- scipy.optimize.brentqを使用した実装は堅牢性重視
+- Newton-Raphson法より10-15倍遅いが、収束が保証される
+- 特殊なケースや高精度が必要な場合に適している
+:::
+
+### IV計算の最適化ポイント
+
+1. **初期値推定の改善**
+   - Manaster-Koehler近似による適切な初期値
+   - ATM近傍での収束速度向上
+
+2. **ベクトル化処理**
+   - NumPy配列の一括処理
+   - 条件分岐の最小化
+
+3. **並列化戦略**
+   - 30,000要素以上で自動的にRayon並列化
+   - オーバーヘッドと並列化効果のバランス
 
 ## 注記
 

@@ -143,6 +143,62 @@ Historical benchmark data is recorded in:
 - `benchmark_results/history.jsonl` (all measurement history)
 - Latest visualization through dashboard
 
+## Implied Volatility Calculation
+
+### Fair Comparison with Newton-Raphson Method
+
+Implied volatility (IV) calculation is a critical computation that extracts the volatility implied by option prices. QuantForge implements a high-performance Newton-Raphson solver.
+
+:::{note}
+**Unified conditions for fair benchmarking**:
+- All implementations use the same algorithm (Newton-Raphson method)
+- Same parameters (tolerance: 1e-6, max_iterations: 100)
+- Pure comparison of implementation technologies (Rust vs Python vs NumPy)
+:::
+
+### Performance Comparison with Newton-Raphson
+
+```{csv-table}
+:file: ../_static/benchmark_data/implied_volatility_newton.csv
+:header-rows: 1
+:widths: 20, 20, 20, 20, 10, 10
+```
+
+### Key Achievements
+
+- **10,000 item batch processing**: **170x** faster than Pure Python
+- **Parallelization effect**: Automatic Rayon parallelization excels with large datasets
+- **Zero-copy design**: Memory-efficient implementation with PyO3
+
+### Algorithm Characteristics Comparison (Reference)
+
+```{csv-table}
+:file: ../_static/benchmark_data/implied_volatility_algorithm_comparison.csv
+:header-rows: 1
+:widths: 15, 20, 15, 10, 10, 10, 20
+```
+
+:::{note}
+**About Brent's Method**:
+- Implementation using scipy.optimize.brentq prioritizes robustness
+- 10-15x slower than Newton-Raphson but guarantees convergence
+- Suitable for special cases or when high precision is required
+:::
+
+### IV Calculation Optimization Points
+
+1. **Improved Initial Value Estimation**
+   - Appropriate initial values using Manaster-Koehler approximation
+   - Faster convergence near ATM
+
+2. **Vectorized Processing**
+   - Batch processing of NumPy arrays
+   - Minimized conditional branching
+
+3. **Parallelization Strategy**
+   - Automatic Rayon parallelization for 30,000+ elements
+   - Balance between overhead and parallelization benefits
+
 ## Notes
 
 - Measurements are performed in release mode (optimized build)

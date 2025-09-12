@@ -327,5 +327,4 @@ pip uninstall quantforge
 問題が解決しない場合：
 
 - [GitHub Issues](https://github.com/drillan/quantforge/issues)
-- [FAQ](faq.md)
 - [プロジェクトページ](https://github.com/drillan/quantforge)

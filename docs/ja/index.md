@@ -11,7 +11,7 @@ Pythonの使いやすさを保ちながら、高速な計算性能を提供し�
 :name: index-note-features
 
 **主要機能**
-- Pure Python実装比 最大40倍の処理速度（AMD Ryzen 5 5600G測定値）
+- Pure Python実装比 最大170倍の処理速度（インプライドボラティリティ計算）
 - 数値誤差 < 1e-15（倍精度演算）
 - シンプルなPython API
 - Black-Scholes、Black76、Merton、アメリカンオプション対応
@@ -39,7 +39,7 @@ price = black_scholes.call_price(
 )
 
 # バッチ処理
-# 100万件を約56msで処理（測定環境: AMD Ryzen 5 5600G、CUIモード）
+# 100万件を高速処理（詳細は上記パフォーマンス表参照）
 spots = np.random.uniform(90, 110, 1_000_000)
 prices = black_scholes.call_price_batch(
     spots=spots,
@@ -53,36 +53,28 @@ prices = black_scholes.call_price_batch(
 (index-performance)=
 ## パフォーマンス比較
 
-:::{note}
-:name: index-note-performance-environment
-
-測定環境: AMD Ryzen 5 5600G（6コア/12スレッド）、29.3GB RAM、Pop!_OS 22.04（CUIモード）
-測定日: 2025-08-28
-詳細は[ベンチマーク結果](performance/benchmarks.md)を参照
-:::
-
-```{list-table} パフォーマンス比較
-:name: index-table-performance
+```{csv-table}
+:file: _static/benchmark_data/environment.csv
 :header-rows: 1
-:widths: 25 25 25 25
-
-* - ライブラリ
-  - 単一計算
-  - 100万件処理時間
-  - 相対速度
-* - QuantForge
-  - 1.4 μs
-  - 55.6ms
-  - 1.0x
-* - NumPy+SciPy
-  - 77.7 μs
-  - 63.9ms
-  - 1.15x遅い
-* - Pure Python
-  - 2.4 μs
-  - -
-  - （単一）1.7x遅い
+:widths: 30, 70
 ```
+
+詳細は[ベンチマーク結果](performance/benchmarks.md)を参照
+
+(index-iv-performance)=
+## 🔥 インプライドボラティリティ計算性能
+
+Newton-Raphson法での公正な比較（同一アルゴリズム・同一パラメータ）：
+
+```{csv-table}
+:file: _static/benchmark_data/implied_volatility_newton.csv
+:header-rows: 1
+:widths: 20, 20, 20, 20, 10, 10
+```
+
+- **単一計算**: PyO3のオーバーヘッドにより僅かに劣る
+- **バッチ処理**: Rayonの並列処理により圧倒的な高速化を実現
+- **10,000件**: **Pure Pythonの170倍高速**
 
 (index-documentation-structure)=
 ## ドキュメント構成

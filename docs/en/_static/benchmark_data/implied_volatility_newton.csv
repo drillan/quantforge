@@ -1,0 +1,5 @@
+Data Size,QuantForge,NumPy Newton,Pure Python,QF vs NumPy,QF vs Python
+Single,3.94 μs,180.86 μs,3.18 μs,45.9x,0.8x
+100 items,34.40 μs,937.50 μs,1.03 ms,27.3x,30.0x
+"1,000 items",184.11 μs,1.33 ms,10.45 ms,7.2x,56.7x
+"10,000 items",599.53 μs,4.28 ms,102.07 ms,7.1x,170.3x

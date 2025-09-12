@@ -88,7 +88,7 @@ if x > NORM_CDF_UPPER_BOUND { return 1.0; }
 ### 3. When Creating Test Code
 
 ```{code-block} python
-:name: hardcode-prevention-code-before
+:name: hardcode-prevention-code-test-before
 :caption: Before (bad example)
 
 # Before (bad example)
