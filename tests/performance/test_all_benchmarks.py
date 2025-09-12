@@ -48,24 +48,18 @@ def implied_volatility_pure_python(
     the given option price.
     """
     # Intrinsic value check
-    if is_call:
-        intrinsic = max(s - k * math.exp(-r * t), 0)
-    else:
-        intrinsic = max(k * math.exp(-r * t) - s, 0)
+    intrinsic = max(s - k * math.exp(-r * t), 0) if is_call else max(k * math.exp(-r * t) - s, 0)
 
     if price < intrinsic:
         raise ValueError(f"Price {price} is below intrinsic value {intrinsic}")
 
     # Manaster-Koehler initial guess
     moneyness = math.log(s / k) if s > 0 and k > 0 else 0
-    if abs(moneyness) < 0.1:  # Near ATM
-        sigma = initial_guess
-    else:
-        # Adjust initial guess based on moneyness
-        sigma = initial_guess * (1 + abs(moneyness))
+    # Near ATM vs adjusted for moneyness
+    sigma = initial_guess if abs(moneyness) < 0.1 else initial_guess * (1 + abs(moneyness))
 
     # Newton-Raphson iteration
-    for iteration in range(max_iterations):
+    for _ in range(max_iterations):
         # Calculate option price and vega
         sqrt_t = math.sqrt(t)
         d1 = (math.log(s / k) + (r + sigma**2 / 2) * t) / (sigma * sqrt_t)
@@ -157,7 +151,14 @@ def implied_volatility_numpy_scipy(
         r_i = r.flat[i]
 
         # Objective function for root finding
-        def objective(sigma: float) -> float:
+        def objective(
+            sigma: float,
+            price_i: float = price_i,
+            s_i: float = s_i,
+            k_i: float = k_i,
+            t_i: float = t_i,
+            r_i: float = r_i,
+        ) -> float:
             sqrt_t = np.sqrt(t_i)
             d1 = (np.log(s_i / k_i) + (r_i + sigma**2 / 2) * t_i) / (sigma * sqrt_t)
             d2 = d1 - sigma * sqrt_t
@@ -167,7 +168,7 @@ def implied_volatility_numpy_scipy(
             else:
                 theo_price = k_i * np.exp(-r_i * t_i) * norm.cdf(-d2) - s_i * norm.cdf(-d1)
 
-            return theo_price - price_i
+            return float(theo_price - price_i)
 
         try:
             # Use Brent's method for robust root finding
@@ -216,7 +217,7 @@ def implied_volatility_numpy_scipy_vectorized(
             else:
                 theo_price = k_i * np.exp(-r_i * t_i) * norm.cdf(-d2) - s_i * norm.cdf(-d1)
 
-            return theo_price - price_i
+            return float(theo_price - price_i)
 
         try:
             # Use Brent's method for robust root finding
@@ -228,7 +229,7 @@ def implied_volatility_numpy_scipy_vectorized(
 
     # Use np.vectorize to avoid explicit for loop
     vectorized_iv = np.vectorize(single_iv)
-    result = vectorized_iv(prices, s, k, t, r)
+    result: np.ndarray = vectorized_iv(prices, s, k, t, r)
     return result.reshape(prices.shape)
 
 
@@ -265,7 +266,7 @@ def implied_volatility_numpy_newton(
     converged = np.zeros_like(prices, dtype=bool)
     ivs = np.full_like(prices, np.nan)
 
-    for iteration in range(max_iterations):
+    for _ in range(max_iterations):
         # Skip already converged values
         active = ~converged
         if not np.any(active):
@@ -461,6 +462,263 @@ class TestModelComparison:
 
 
 @pytest.mark.benchmark
+class TestImpliedVolatilityNewtonRaphson:
+    """Fair benchmark tests for Newton-Raphson implied volatility calculations.
+
+    All implementations use the same algorithm (Newton-Raphson) with identical parameters
+    to ensure a fair comparison of implementation technologies (Rust vs Python vs NumPy).
+    """
+
+    # Unified parameters for all Newton-Raphson implementations
+    NEWTON_PARAMS: dict[str, float | int] = {
+        "initial_guess": 0.2,
+        "tolerance": 1e-6,
+        "max_iterations": 100,
+    }
+
+    def setup_method(self):
+        """Setup test parameters for IV calculation."""
+        self.s = 100.0
+        self.k = 100.0
+        self.t = 1.0
+        self.r = 0.05
+        self.true_sigma = 0.2
+        # Calculate the option price with true volatility
+        self.call_price = qf.black_scholes.call_price(self.s, self.k, self.t, self.r, self.true_sigma)
+
+    def test_quantforge_newton_single(self, benchmark):
+        """Benchmark QuantForge Newton-Raphson single IV calculation."""
+        result = benchmark(
+            qf.black_scholes.implied_volatility,
+            price=self.call_price,
+            s=self.s,
+            k=self.k,
+            t=self.t,
+            r=self.r,
+            is_call=True,
+        )
+        assert abs(result - self.true_sigma) < 1e-5, (
+            f"IV should be close to true volatility: {result} vs {self.true_sigma}"
+        )
+
+    def test_pure_python_newton_single(self, benchmark):
+        """Benchmark Pure Python Newton-Raphson single IV calculation."""
+        result = benchmark(
+            implied_volatility_pure_python,
+            price=self.call_price,
+            s=self.s,
+            k=self.k,
+            t=self.t,
+            r=self.r,
+            is_call=True,
+            initial_guess=float(self.NEWTON_PARAMS["initial_guess"]),
+            max_iterations=int(self.NEWTON_PARAMS["max_iterations"]),
+            tolerance=float(self.NEWTON_PARAMS["tolerance"]),
+        )
+        assert abs(result - self.true_sigma) < 1e-5, (
+            f"IV should be close to true volatility: {result} vs {self.true_sigma}"
+        )
+
+    def test_numpy_newton_single(self, benchmark):
+        """Benchmark NumPy Newton-Raphson single IV calculation."""
+        result = benchmark(
+            implied_volatility_numpy_newton,
+            prices=np.array(self.call_price),
+            s=np.array(self.s),
+            k=np.array(self.k),
+            t=np.array(self.t),
+            r=np.array(self.r),
+            is_call=True,
+            initial_guess=float(self.NEWTON_PARAMS["initial_guess"]),
+            max_iterations=int(self.NEWTON_PARAMS["max_iterations"]),
+            tolerance=float(self.NEWTON_PARAMS["tolerance"]),
+        )
+        assert abs(result.item() - self.true_sigma) < 1e-5, "IV should be close to true volatility"
+
+    @pytest.mark.parametrize("size", [100, 1000, 10000])
+    def test_quantforge_newton_batch(self, benchmark, size):
+        """Benchmark QuantForge Newton-Raphson batch IV calculation."""
+        np.random.seed(42)
+        # Generate random volatilities
+        true_sigmas = np.random.uniform(0.15, 0.35, size)
+        spots = np.random.uniform(80, 120, size)
+        strikes = np.full(size, 100.0)
+        times = np.full(size, 1.0)
+        rates = np.full(size, 0.05)
+
+        # Calculate prices with true volatilities
+        prices = qf.black_scholes.call_price_batch(
+            spots=spots, strikes=strikes, times=times, rates=rates, sigmas=true_sigmas
+        )
+        # Convert Arrow to NumPy for input
+        prices_np = prices.to_numpy() if hasattr(prices, "to_numpy") else prices
+
+        result = benchmark(
+            qf.black_scholes.implied_volatility_batch,
+            prices=prices_np,
+            spots=spots,
+            strikes=strikes,
+            times=times,
+            rates=rates,
+            is_calls=True,
+        )
+        assert len(result) == size, f"Should return {size} IVs"
+        # Convert result to numpy if needed
+        result_np = result.to_numpy() if hasattr(result, "to_numpy") else result
+        # Check average error is small
+        avg_error = np.mean(np.abs(result_np - true_sigmas))
+        assert avg_error < 1e-4, f"Average IV error should be small: {avg_error}"
+
+    @pytest.mark.parametrize("size", [100, 1000, 10000])
+    def test_pure_python_newton_batch(self, benchmark, size):
+        """Benchmark Pure Python Newton-Raphson batch IV calculation (loop)."""
+        np.random.seed(42)
+        true_sigmas = np.random.uniform(0.15, 0.35, size)
+        spots = np.random.uniform(80, 120, size)
+        strikes = np.full(size, 100.0)
+        times = np.full(size, 1.0)
+        rates = np.full(size, 0.05)
+
+        # Calculate prices with true volatilities
+        prices_list = []
+        for i in range(size):
+            price = black_scholes_pure_python(spots[i], strikes[i], times[i], rates[i], true_sigmas[i])
+            prices_list.append(price)
+        prices = np.array(prices_list)
+
+        def pure_python_iv_batch():
+            results = []
+            for i in range(size):
+                try:
+                    iv = implied_volatility_pure_python(
+                        prices[i],
+                        spots[i],
+                        strikes[i],
+                        times[i],
+                        rates[i],
+                        is_call=True,
+                        initial_guess=float(self.NEWTON_PARAMS["initial_guess"]),
+                        max_iterations=int(self.NEWTON_PARAMS["max_iterations"]),
+                        tolerance=float(self.NEWTON_PARAMS["tolerance"]),
+                    )
+                    results.append(iv)
+                except ValueError:
+                    results.append(np.nan)
+            return np.array(results)
+
+        result = benchmark(pure_python_iv_batch)
+        assert len(result) == size, f"Should return {size} IVs"
+        # Check that most converged
+        converged = np.sum(~np.isnan(result))
+        assert converged > size * 0.95, f"At least 95% should converge: {converged}/{size}"
+
+    @pytest.mark.parametrize("size", [100, 1000, 10000])
+    def test_numpy_newton_batch(self, benchmark, size):
+        """Benchmark NumPy Newton-Raphson batch IV calculation (fully vectorized)."""
+        np.random.seed(42)
+        true_sigmas = np.random.uniform(0.15, 0.35, size)
+        spots = np.random.uniform(80, 120, size)
+        strikes = np.full(size, 100.0)
+        times = np.full(size, 1.0)
+        rates = np.full(size, 0.05)
+
+        # Calculate prices with true volatilities
+        prices = black_scholes_numpy_scipy(spots, strikes, times, rates, true_sigmas)
+
+        result = benchmark(
+            implied_volatility_numpy_newton,
+            prices=prices,
+            s=spots,
+            k=strikes,
+            t=times,
+            r=rates,
+            is_call=True,
+            initial_guess=float(self.NEWTON_PARAMS["initial_guess"]),
+            max_iterations=int(self.NEWTON_PARAMS["max_iterations"]),
+            tolerance=float(self.NEWTON_PARAMS["tolerance"]),
+        )
+        assert len(result) == size, f"Should return {size} IVs"
+        # Check that most converged
+        converged = np.sum(~np.isnan(result))
+        assert converged > size * 0.95, f"At least 95% should converge: {converged}/{size}"
+
+
+@pytest.mark.benchmark
+class TestImpliedVolatilityBrentMethod:
+    """Reference benchmark tests for Brent's method implied volatility.
+
+    Brent's method is more robust but slower than Newton-Raphson.
+    These tests are provided as a reference for robustness-focused use cases.
+    Note: Brent's method uses a different algorithm, so performance comparisons
+    with Newton-Raphson methods should consider algorithmic differences.
+    """
+
+    def setup_method(self):
+        """Setup test parameters for IV calculation."""
+        self.s = 100.0
+        self.k = 100.0
+        self.t = 1.0
+        self.r = 0.05
+        self.true_sigma = 0.2
+        # Calculate the option price with true volatility
+        self.call_price = qf.black_scholes.call_price(self.s, self.k, self.t, self.r, self.true_sigma)
+
+    def test_numpy_scipy_brent_single(self, benchmark):
+        """Benchmark NumPy+SciPy Brent's method single IV calculation."""
+        result = benchmark(
+            implied_volatility_numpy_scipy,
+            prices=np.array(self.call_price),
+            s=np.array(self.s),
+            k=np.array(self.k),
+            t=np.array(self.t),
+            r=np.array(self.r),
+            is_call=True,
+        )
+        assert abs(result.item() - self.true_sigma) < 1e-5, "IV should be close to true volatility"
+
+    def test_numpy_scipy_vectorized_brent_single(self, benchmark):
+        """Benchmark NumPy+SciPy vectorized Brent's method single IV calculation."""
+        result = benchmark(
+            implied_volatility_numpy_scipy_vectorized,
+            prices=np.array(self.call_price),
+            s=np.array(self.s),
+            k=np.array(self.k),
+            t=np.array(self.t),
+            r=np.array(self.r),
+            is_call=True,
+        )
+        assert abs(result.item() - self.true_sigma) < 1e-5, "IV should be close to true volatility"
+
+    @pytest.mark.parametrize("size", [100, 1000, 10000])
+    def test_numpy_scipy_brent_batch(self, benchmark, size):
+        """Benchmark NumPy+SciPy Brent's method batch IV calculation."""
+        np.random.seed(42)
+        true_sigmas = np.random.uniform(0.15, 0.35, size)
+        spots = np.random.uniform(80, 120, size)
+        strikes = np.full(size, 100.0)
+        times = np.full(size, 1.0)
+        rates = np.full(size, 0.05)
+
+        # Calculate prices with true volatilities
+        prices = black_scholes_numpy_scipy(spots, strikes, times, rates, true_sigmas)
+
+        result = benchmark(
+            implied_volatility_numpy_scipy,
+            prices=prices,
+            s=spots,
+            k=strikes,
+            t=times,
+            r=rates,
+            is_call=True,
+        )
+        assert len(result) == size, f"Should return {size} IVs"
+        # Check that most converged
+        converged = np.sum(~np.isnan(result))
+        assert converged > size * 0.95, f"At least 95% should converge: {converged}/{size}"
+
+
+# Keep the original class for backward compatibility
+@pytest.mark.benchmark
 class TestImpliedVolatilityCalculation:
     """Benchmark tests for implied volatility calculations."""
 
@@ -588,11 +846,11 @@ class TestImpliedVolatilityCalculation:
         rates = np.full(size, 0.05)
 
         # Calculate prices with true volatilities
-        prices = []
+        prices_list = []
         for i in range(size):
             price = black_scholes_pure_python(spots[i], strikes[i], times[i], rates[i], true_sigmas[i])
-            prices.append(price)
-        prices = np.array(prices)
+            prices_list.append(price)
+        prices = np.array(prices_list)
 
         def pure_python_iv_batch():
             results = []

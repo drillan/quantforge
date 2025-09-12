@@ -163,6 +163,7 @@ exclude = [
     "tests/unit/test_implied_volatility.py",  # PyO3バインディングの型情報不完全
     "docs/",  # Sphinx configuration files
     ".internal/",  # Internal tools
+    "bindings/python/python/",  # Exclude duplicated module path
 ]
 
 [[tool.mypy.overrides]]
