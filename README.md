@@ -75,12 +75,8 @@ Maximum speedup: <!-- BENCHMARK:IV:MAX_SPEEDUP -->170<!-- /BENCHMARK:IV:MAX_SPEE
 
 ## 📥 Installation
 
-
-### From TestPyPI (Latest Development Version)
-
 ```bash
-# Install the latest development version from TestPyPI
-pip install -i https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ quantforge
+pip install quantforge
 ```
 
 ### From Source (Development)

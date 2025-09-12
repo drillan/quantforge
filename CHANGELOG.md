@@ -5,6 +5,24 @@ All notable changes to QuantForge will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.0] - 2025-01-30
+
+### Added
+- First stable release on PyPI
+- Production-ready wheel distribution via GitHub Actions
+- Comprehensive test coverage (620+ tests)
+- Full type hints support with mypy strict compliance
+
+### Changed
+- Version bump to 0.1.0 for stable release
+- Development Status updated from Alpha to Beta
+- Installation moved from TestPyPI to PyPI
+- CI/CD workflow simplified for PyPI-only deployment
+
+### Removed
+- TestPyPI distribution support (migrated to PyPI)
+- Dynamic environment selection in GitHub Actions (use static 'pypi')
+
 ## [0.0.14] - 2025-09-08
 
 ### Initial Stable Release
@@ -90,4 +108,5 @@ prices = black_scholes.call_price_batch(
 - Documentation: https://github.com/drillan/quantforge/tree/main/docs
 - Issues: https://github.com/drillan/quantforge/issues
 
+[0.1.0]: https://github.com/drillan/quantforge/releases/tag/v0.1.0
 [0.0.14]: https://github.com/drillan/quantforge/releases/tag/v0.0.14

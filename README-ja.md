@@ -75,11 +75,8 @@ Newton-Raphson法による公正な比較（同一アルゴリズム・同一パ
 
 ## 📥 インストール
 
-### TestPyPIからのインストール（最新開発版）
-
 ```bash
-# TestPyPIから最新の開発版をインストール
-pip install -i https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ quantforge
+pip install quantforge
 ```
 
 ### ソースからのインストール（開発用）

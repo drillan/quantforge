@@ -13,7 +13,7 @@ class TestVersionHandling:
         assert hasattr(quantforge, "__version__")
         assert quantforge.__version__ is not None
         # Should be either the actual version or the fallback
-        assert quantforge.__version__ in ["0.0.14", "0.0.0+unknown"]
+        assert quantforge.__version__ in ["0.1.0", "0.0.0+unknown"]
 
     def test_version_package_not_found(self) -> None:
         """Test version fallback when package is not found."""
@@ -41,9 +41,11 @@ class TestVersionHandling:
         """Test that the module imports correctly."""
         import quantforge
 
-        # Check that models is imported
-        assert hasattr(quantforge, "models")
-        assert quantforge.models is not None
+        # Check that model modules are imported
+        assert hasattr(quantforge, "black_scholes")
+        assert hasattr(quantforge, "black76")
+        assert hasattr(quantforge, "merton")
+        assert hasattr(quantforge, "american")
 
         # Check __all__ is defined
         assert hasattr(quantforge, "__all__")

@@ -4,13 +4,7 @@ name: Release to PyPI
 on:
   release:
     types: [published]
-  workflow_dispatch:
-    inputs:
-      test_pypi:
-        description: 'Release to TestPyPI instead of PyPI'
-        required: false
-        type: boolean
-        default: false
+  workflow_dispatch:  # Manual trigger for testing
 
 jobs:
   # Build all wheels
@@ -21,8 +15,7 @@ jobs:
   publish:
     needs: build
     runs-on: ubuntu-latest
-    # Always use testpypi environment until ready for production
-    environment: testpypi
+    environment: pypi  # Static PyPI environment
     permissions:
       id-token: write  # Required for Trusted Publisher
       contents: write   # For release artifacts
@@ -46,20 +39,10 @@ jobs:
         with:
           subject-path: 'dist/*'
       
-      - name: Publish to TestPyPI
-        # Always publish to TestPyPI for now (both release event and manual dispatch)
+      - name: Publish to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
-          repository-url: https://test.pypi.org/legacy/
-          skip-existing: true
           verbose: true
-      
-      # PyPI publishing is disabled until ready for production
-      # - name: Publish to PyPI
-      #   if: github.event.inputs.test_pypi == 'false'
-      #   uses: pypa/gh-action-pypi-publish@release/v1
-      #   with:
-      #     verbose: true
       
       - name: Upload release assets
         if: github.event_name == 'release'
