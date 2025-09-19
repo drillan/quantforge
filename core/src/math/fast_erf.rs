@@ -3,7 +3,10 @@
 //! 精度: 1.5e-7（十分な精度）
 //! 速度: libm::erfの2-3倍高速
 
-use crate::constants::{NORM_CDF_LOWER_BOUND, NORM_CDF_UPPER_BOUND};
+use crate::constants::{
+    ABRAMOWITZ_A1, ABRAMOWITZ_A2, ABRAMOWITZ_A3, ABRAMOWITZ_A4, ABRAMOWITZ_A5, ABRAMOWITZ_P,
+    NORM_CDF_LOWER_BOUND, NORM_CDF_UPPER_BOUND,
+};
 
 /// 高速erf近似（Abramowitz & Stegun近似 - 改良版）
 ///
@@ -16,18 +19,16 @@ use crate::constants::{NORM_CDF_LOWER_BOUND, NORM_CDF_UPPER_BOUND};
 pub fn fast_erf(x: f64) -> f64 {
     // 最も広く使われているerf近似
     // 出典: Handbook of Mathematical Functions (Abramowitz and Stegun)
-    let a1 = 0.254829592;
-    let a2 = -0.284496736;
-    let a3 = 1.421413741;
-    let a4 = -1.453152027;
-    let a5 = 1.061405429;
-    let p = 0.3275911;
 
     let sign = if x < 0.0 { -1.0 } else { 1.0 };
     let x = x.abs();
 
-    let t = 1.0 / (1.0 + p * x);
-    let y = 1.0 - (((((a5 * t + a4) * t + a3) * t + a2) * t + a1) * t * (-x * x).exp());
+    let t = 1.0 / (1.0 + ABRAMOWITZ_P * x);
+    let y = 1.0
+        - ((((ABRAMOWITZ_A5 * t + ABRAMOWITZ_A4) * t + ABRAMOWITZ_A3) * t + ABRAMOWITZ_A2) * t
+            + ABRAMOWITZ_A1)
+            * t
+            * (-x * x).exp();
 
     sign * y
 }
@@ -59,9 +60,9 @@ pub fn fast_norm_cdf(x: f64) -> f64 {
 /// φ(x) - 標準正規分布の確率密度関数
 #[inline(always)]
 pub fn fast_norm_pdf(x: f64) -> f64 {
-    const INV_SQRT_2PI: f64 = 0.3989422804014327; // 1.0 / (2.0 * PI).sqrt()
+    use crate::constants::{HALF, INV_SQRT_2PI};
 
-    INV_SQRT_2PI * (-0.5 * x * x).exp()
+    INV_SQRT_2PI * (-HALF * x * x).exp()
 }
 
 #[cfg(test)]

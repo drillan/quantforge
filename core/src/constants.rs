@@ -59,6 +59,33 @@ pub const PUT_DELTA_ADJUSTMENT: f64 = 1.0;
 pub const THETA_DENOMINATOR_FACTOR: f64 = 2.0;
 
 // ============================================================================
+// 数学関数係数定数
+// ============================================================================
+
+/// Abramowitz & Stegun (1964)の誤差関数近似係数 a1
+///
+/// Handbook of Mathematical Functions, Formula 7.1.26
+/// 高速誤差関数近似で使用される標準係数。
+pub const ABRAMOWITZ_A1: f64 = 0.254829592;
+
+/// Abramowitz & Stegun (1964)の誤差関数近似係数 a2
+pub const ABRAMOWITZ_A2: f64 = -0.284496736;
+
+/// Abramowitz & Stegun (1964)の誤差関数近似係数 a3
+pub const ABRAMOWITZ_A3: f64 = 1.421413741;
+
+/// Abramowitz & Stegun (1964)の誤差関数近似係数 a4
+pub const ABRAMOWITZ_A4: f64 = -1.453152027;
+
+/// Abramowitz & Stegun (1964)の誤差関数近似係数 a5
+pub const ABRAMOWITZ_A5: f64 = 1.061405429;
+
+/// Abramowitz & Stegun (1964)の誤差関数近似係数 p
+///
+/// 近似式で使用される定数係数。
+pub const ABRAMOWITZ_P: f64 = 0.3275911;
+
+// ============================================================================
 // 入力パラメータ制約定数
 // ============================================================================
 

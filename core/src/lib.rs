@@ -3,3 +3,4 @@ pub mod compute;
 pub mod constants;
 pub mod error;
 pub mod math;
+pub mod validation;
