@@ -10,16 +10,16 @@ This example demonstrates:
 """
 
 import math
-import numpy as np
 import time
+
+import numpy as np
 from quantforge.market_utils import (
+    PricingConfig,
     mid_price_batch,
-    mid_price_batch_with_config,
     mid_price_batch_with_metrics,
-    weighted_mid_price_batch,
     spread_batch,
     spread_pct_batch,
-    PricingConfig,
+    weighted_mid_price_batch,
 )
 
 
@@ -41,8 +41,7 @@ def example_basic_batch():
     print("Index | Bid    | Ask    | Mid     | Spread | Spread%")
     print("-" * 55)
     for i in range(len(bids)):
-        print(f"{i:5d} | {bids[i]:6.1f} | {asks[i]:6.1f} | "
-              f"{mids[i]:7.2f} | {spreads[i]:6.2f} | {spread_pcts[i]:6.3f}%")
+        print(f"{i:5d} | {bids[i]:6.1f} | {asks[i]:6.1f} | {mids[i]:7.2f} | {spreads[i]:6.2f} | {spread_pcts[i]:6.3f}%")
 
     print(f"\nProcessed {len(bids)} price pairs")
     print(f"Average mid: {np.mean(mids):.2f}")
@@ -119,8 +118,8 @@ def example_with_metrics():
     print(f"  Valid results: {metrics.total_processed - metrics.nan_count}")
     print(f"  Crossed spreads: {metrics.crossed_spreads}")
     print(f"  Abnormal spreads: {metrics.abnormal_spreads}")
-    print(f"  Mean spread %: {metrics.mean_spread_pct*100:.2f}%")
-    print(f"  Max spread %: {metrics.max_spread_pct*100:.2f}%")
+    print(f"  Mean spread %: {metrics.mean_spread_pct * 100:.2f}%")
+    print(f"  Max spread %: {metrics.max_spread_pct * 100:.2f}%")
 
     # Show some examples
     print("\nSample results:")
@@ -151,9 +150,7 @@ def example_weighted_batch():
     ask_volumes = np.array([150, 300, 450, 800, 1500])
 
     # Calculate weighted mids for each level
-    weighted_mids = weighted_mid_price_batch(
-        bid_prices, ask_prices, bid_volumes, ask_volumes
-    )
+    weighted_mids = weighted_mid_price_batch(bid_prices, ask_prices, bid_volumes, ask_volumes)
 
     # Compare with simple mids
     simple_mids = mid_price_batch(bid_prices, ask_prices)
@@ -163,10 +160,12 @@ def example_weighted_batch():
     print("-" * 70)
     for i in range(n_levels):
         diff = weighted_mids[i] - simple_mids[i]
-        print(f"{i:5d} | {bid_prices[i]:.2f}@{bid_volumes[i]:4.0f} | "
-              f"{ask_prices[i]:.2f}@{ask_volumes[i]:4.0f} | "
-              f"{simple_mids[i]:.3f} | {weighted_mids[i]:.3f} | "
-              f"{diff:+.3f}")
+        print(
+            f"{i:5d} | {bid_prices[i]:.2f}@{bid_volumes[i]:4.0f} | "
+            f"{ask_prices[i]:.2f}@{ask_volumes[i]:4.0f} | "
+            f"{simple_mids[i]:.3f} | {weighted_mids[i]:.3f} | "
+            f"{diff:+.3f}"
+        )
 
     # Volume imbalance analysis
     total_bid_vol = np.sum(bid_volumes)
@@ -174,7 +173,7 @@ def example_weighted_batch():
     imbalance = (total_bid_vol - total_ask_vol) / (total_bid_vol + total_ask_vol)
     print(f"\nTotal bid volume: {total_bid_vol:.0f}")
     print(f"Total ask volume: {total_ask_vol:.0f}")
-    print(f"Volume imbalance: {imbalance*100:+.1f}%")
+    print(f"Volume imbalance: {imbalance * 100:+.1f}%")
 
 
 def example_options_chain():
@@ -189,7 +188,7 @@ def example_options_chain():
     strikes = np.linspace(40000, 50000, n_strikes)
 
     # Time to expiry affects spreads
-    time_to_expiry = 30 / 365  # 30 days
+    _ = 30 / 365  # 30 days
 
     print(f"Spot price: {spot:,.0f}")
     print(f"Strikes: {strikes[0]:,.0f} to {strikes[-1]:,.0f}")
@@ -227,8 +226,8 @@ def example_options_chain():
         print(f"\n{config_name} configuration:")
         print(f"  Valid prices: {valid_count}/{n_strikes}")
         print(f"  Filtered: {metrics.nan_count}")
-        print(f"  Mean spread: {metrics.mean_spread_pct*100:.1f}%")
-        print(f"  Max spread: {metrics.max_spread_pct*100:.1f}%")
+        print(f"  Mean spread: {metrics.mean_spread_pct * 100:.1f}%")
+        print(f"  Max spread: {metrics.max_spread_pct * 100:.1f}%")
 
         # Show ATM ± 2 strikes
         atm_idx = n_strikes // 2
@@ -238,8 +237,7 @@ def example_options_chain():
             mid_val = mids[i]
             mid_str = f"{mid_val:8.2f}" if not math.isnan(mid_val) else "     NaN"
             spread_pct_val = spread_pcts[i] * 100
-            print(f"  {strikes[i]:7.0f} | {bids[i]:7.2f} | {asks[i]:8.2f} | "
-                  f"{mid_str} | {spread_pct_val:6.1f}%")
+            print(f"  {strikes[i]:7.0f} | {bids[i]:7.2f} | {asks[i]:8.2f} | {mid_str} | {spread_pct_val:6.1f}%")
 
 
 def example_performance():
@@ -260,7 +258,7 @@ def example_performance():
 
         # Time the processing
         start = time.perf_counter()
-        mids = mid_price_batch(bids, asks)
+        _ = mid_price_batch(bids, asks)
         elapsed = (time.perf_counter() - start) * 1000
 
         rate = size / elapsed / 1000  # Million per second

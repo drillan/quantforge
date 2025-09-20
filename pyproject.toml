@@ -75,6 +75,7 @@ dev = [
     "scipy-stubs>=1.16.1.1",
     "types-psutil>=7.0.0.20250822",
     "pyyaml>=6.0.2",
+    "pandas-stubs>=2.3.2.250827",
 ]
 
 [tool.ruff]
@@ -169,7 +170,7 @@ exclude = [
 
 [[tool.mypy.overrides]]
 module = "quantforge.*"
-ignore_missing_imports = false
+ignore_missing_imports = true  # Temporary: ignore missing imports for Rust modules
 
 [[tool.mypy.overrides]]
 module = "quantforge.quantforge"

@@ -10,14 +10,14 @@ This example demonstrates:
 """
 
 import math
-import numpy as np
+
 from quantforge.market_utils import (
+    PricingConfig,
     mid_price,
     mid_price_with_config,
-    weighted_mid_price,
     spread,
     spread_pct,
-    PricingConfig,
+    weighted_mid_price,
 )
 
 
@@ -33,14 +33,14 @@ def example_simple_mid_price():
     print(f"Normal spread: bid={bid}, ask={ask}")
     print(f"  Mid price: {mid:.2f}")
     print(f"  Spread: {spread(bid, ask):.2f}")
-    print(f"  Spread %: {spread_pct(bid, ask)*100:.3f}%")
+    print(f"  Spread %: {spread_pct(bid, ask) * 100:.3f}%")
 
     # Wide spread in options market
     bid, ask = 10.0, 15.0
     mid = mid_price(bid, ask)
     print(f"\nWide spread (33%): bid={bid}, ask={ask}")
     print(f"  Mid price: {mid:.2f}")
-    print(f"  Spread %: {spread_pct(bid, ask)*100:.1f}%")
+    print(f"  Spread %: {spread_pct(bid, ask) * 100:.1f}%")
 
     # Extreme spread (typical for deep OTM options)
     bid, ask = 1.0, 100.0
@@ -68,7 +68,7 @@ def example_custom_config():
     bid, ask = 1.0, 1000.0
     mid = mid_price_with_config(bid, ask, config_no_limit)
     print(f"No spread limit: bid={bid}, ask={ask}")
-    print(f"  Config: max_spread_pct=None")
+    print("  Config: max_spread_pct=None")
     print(f"  Mid price: {mid:.2f}")
 
     # Strict limit for forex/futures
@@ -76,17 +76,15 @@ def example_custom_config():
     bid, ask = 100.0, 100.15
     mid = mid_price_with_config(bid, ask, config_strict)
     print(f"\nStrict limit (0.1%): bid={bid}, ask={ask}")
-    print(f"  Spread: {spread_pct(bid, ask)*100:.3f}%")
+    print(f"  Spread: {spread_pct(bid, ask) * 100:.3f}%")
     print(f"  Result: {'NaN (exceeds limit)' if math.isnan(mid) else f'{mid:.2f}'}")
 
     # Auto-swap crossed spreads
-    config_swap = PricingConfig.with_config(
-        crossed_handling="swap_and_continue"
-    )
+    config_swap = PricingConfig.with_config(crossed_handling="swap_and_continue")
     bid, ask = 105.0, 100.0
     mid = mid_price_with_config(bid, ask, config_swap)
     print(f"\nAuto-swap crossed: bid={bid}, ask={ask}")
-    print(f"  Config: crossed_handling='swap_and_continue'")
+    print("  Config: crossed_handling='swap_and_continue'")
     print(f"  Mid price: {mid:.2f} (swapped to {ask}, {bid})")
 
 
@@ -147,7 +145,7 @@ def example_real_world_scenario():
 
     for strike in strikes:
         # Spread widens for OTM options
-        moneyness = max(spot - strike, 0) / spot
+        _ = max(spot - strike, 0) / spot
         base_spread = 0.002 if strike <= spot else 0.01
         spread_multiplier = 1 + abs(spot - strike) / spot * 10
 
@@ -172,10 +170,12 @@ def example_real_world_scenario():
         is_valid = not math.isnan(mid)
 
         mid_str = f"{mid:6.2f}" if is_valid else "   NaN"
-        print(f"{strike:5.1f} | {bid:6.2f} | {ask:7.2f} | "
-              f"{mid_str} | "
-              f"{spread_pct_val:6.1f}% | "
-              f"{'Yes' if is_valid else 'No'}")
+        print(
+            f"{strike:5.1f} | {bid:6.2f} | {ask:7.2f} | "
+            f"{mid_str} | "
+            f"{spread_pct_val:6.1f}% | "
+            f"{'Yes' if is_valid else 'No'}"
+        )
 
     print("\nNote: Deep OTM options filtered due to wide spreads")
 
