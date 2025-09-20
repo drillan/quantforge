@@ -2,12 +2,13 @@
 """残存エラーの詳細分析。"""
 
 import sys
-from pathlib import Path
 from collections import Counter
+from pathlib import Path
+
 sys.path.insert(0, str(Path(__file__).parent))
 
-from code_extractor import DocCodeExtractor
 from check_doc_codes import SimpleCodeExecutor
+from code_extractor import DocCodeExtractor
 
 
 def main():
@@ -15,12 +16,12 @@ def main():
     # 初期化
     extractor = DocCodeExtractor()
     executor = SimpleCodeExecutor()
-    doc_dir = Path(__file__).parent.parent.parent / 'docs'
+    doc_dir = Path(__file__).parent.parent.parent / "docs"
 
     # エラーを収集
-    error_types = Counter()
-    file_errors = Counter()
-    specific_errors = []
+    error_types: Counter[str] = Counter()
+    file_errors: Counter[str] = Counter()
+    specific_errors: list[str] = []
 
     blocks = extractor.extract_from_directory(doc_dir)
 
@@ -29,26 +30,26 @@ def main():
             success, _, error = executor.execute(block.code)
             if not success:
                 # エラーの種類を分類
-                if 'is not defined' in error:
-                    error_types['未定義変数'] += 1
+                if "is not defined" in error:
+                    error_types["未定義変数"] += 1
                     if len(specific_errors) < 5:
-                        specific_errors.append(('未定義変数', block, error))
-                elif 'invalid syntax' in error or 'expected' in error:
-                    error_types['構文エラー'] += 1
+                        specific_errors.append(("未定義変数", block, error))
+                elif "invalid syntax" in error or "expected" in error:
+                    error_types["構文エラー"] += 1
                     if len(specific_errors) < 10:
-                        specific_errors.append(('構文エラー', block, error))
-                elif 'No module named' in error:
-                    error_types['モジュール不在'] += 1
-                elif 'got an unexpected keyword' in error:
-                    error_types['パラメータエラー'] += 1
-                elif 'has no attribute' in error:
-                    error_types['属性エラー'] += 1
+                        specific_errors.append(("構文エラー", block, error))
+                elif "No module named" in error:
+                    error_types["モジュール不在"] += 1
+                elif "got an unexpected keyword" in error:
+                    error_types["パラメータエラー"] += 1
+                elif "has no attribute" in error:
+                    error_types["属性エラー"] += 1
                 else:
-                    error_types['その他'] += 1
+                    error_types["その他"] += 1
 
                 # ファイル別集計
                 rel_path = Path(block.filename).relative_to(doc_dir)
-                file_key = str(rel_path.parts[0]) if len(rel_path.parts) > 0 else 'root'
+                file_key = str(rel_path.parts[0]) if len(rel_path.parts) > 0 else "root"
                 file_errors[file_key] += 1
 
     # 結果表示

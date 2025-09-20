@@ -3,26 +3,26 @@
 
 import re
 import sys
-from pathlib import Path
-from typing import Dict, List, Tuple, Optional
+from collections import defaultdict
 from dataclasses import dataclass
 from difflib import unified_diff
-from collections import defaultdict
+from pathlib import Path
 
 # パスを追加
 sys.path.insert(0, str(Path(__file__).parent))
 
-from code_extractor import DocCodeExtractor, CodeBlock
+from code_extractor import CodeBlock, DocCodeExtractor
 
 
 @dataclass
 class CodeComparison:
     """コードブロック比較結果。"""
-    ja_block: Optional[CodeBlock]
-    en_block: Optional[CodeBlock]
+
+    ja_block: CodeBlock | None
+    en_block: CodeBlock | None
     is_identical: bool
     difference_type: str  # 'identical', 'comment_only', 'code_diff', 'missing_ja', 'missing_en'
-    diff_lines: List[str]
+    diff_lines: list[str]
 
 
 class DocumentCodeComparator:
@@ -41,7 +41,7 @@ class DocumentCodeComparator:
         Returns:
             正規化されたコード
         """
-        lines = code.split('\n')
+        lines = code.split("\n")
         normalized_lines = []
 
         for line in lines:
@@ -50,18 +50,18 @@ class DocumentCodeComparator:
                 continue
 
             # 日本語コメントを除去
-            line_without_jp_comment = re.sub(r'#.*[ひらがなカタカナ漢字].*$', '', line)
+            line_without_jp_comment = re.sub(r"#.*[ひらがなカタカナ漢字].*$", "", line)
             # 英語コメントを除去
-            line_without_comment = re.sub(r'#.*$', '', line_without_jp_comment)
+            line_without_comment = re.sub(r"#.*$", "", line_without_jp_comment)
 
             # 空白を正規化
             normalized = line_without_comment.strip()
             if normalized:
                 normalized_lines.append(normalized)
 
-        return '\n'.join(normalized_lines)
+        return "\n".join(normalized_lines)
 
-    def extract_comparable_pairs(self, ja_dir: Path, en_dir: Path) -> Dict[str, Tuple[Path, Path]]:
+    def extract_comparable_pairs(self, ja_dir: Path, en_dir: Path) -> dict[str, tuple[Path, Path]]:
         """比較可能なファイルペアを抽出。
 
         Args:
@@ -71,28 +71,28 @@ class DocumentCodeComparator:
         Returns:
             {相対パス: (日本語ファイル, 英語ファイル)} の辞書
         """
-        ja_files = {}
-        en_files = {}
+        ja_files: dict[str, Path] = {}
+        en_files: dict[str, Path] = {}
 
         # 日本語ファイルを収集
-        for filepath in ja_dir.rglob('*.md'):
+        for filepath in ja_dir.rglob("*.md"):
             rel_path = filepath.relative_to(ja_dir)
             ja_files[str(rel_path)] = filepath
 
         # 英語ファイルを収集
-        for filepath in en_dir.rglob('*.md'):
+        for filepath in en_dir.rglob("*.md"):
             rel_path = filepath.relative_to(en_dir)
             en_files[str(rel_path)] = filepath
 
         # 共通するファイルのペアを作成
-        pairs = {}
+        pairs: dict[str, tuple[Path, Path]] = {}
         for rel_path in ja_files:
             if rel_path in en_files:
                 pairs[rel_path] = (ja_files[rel_path], en_files[rel_path])
 
         return pairs
 
-    def compare_code_blocks(self, ja_blocks: List[CodeBlock], en_blocks: List[CodeBlock]) -> List[CodeComparison]:
+    def compare_code_blocks(self, ja_blocks: list[CodeBlock], en_blocks: list[CodeBlock]) -> list[CodeComparison]:
         """2つのファイルのコードブロックを比較。
 
         Args:
@@ -113,19 +113,11 @@ class DocumentCodeComparator:
 
             if ja_block is None:
                 comparison = CodeComparison(
-                    ja_block=None,
-                    en_block=en_block,
-                    is_identical=False,
-                    difference_type='missing_ja',
-                    diff_lines=[]
+                    ja_block=None, en_block=en_block, is_identical=False, difference_type="missing_ja", diff_lines=[]
                 )
             elif en_block is None:
                 comparison = CodeComparison(
-                    ja_block=ja_block,
-                    en_block=None,
-                    is_identical=False,
-                    difference_type='missing_en',
-                    diff_lines=[]
+                    ja_block=ja_block, en_block=None, is_identical=False, difference_type="missing_en", diff_lines=[]
                 )
             else:
                 # 両方存在する場合の比較
@@ -148,11 +140,7 @@ class DocumentCodeComparator:
         # 完全一致チェック
         if ja_block.code == en_block.code:
             return CodeComparison(
-                ja_block=ja_block,
-                en_block=en_block,
-                is_identical=True,
-                difference_type='identical',
-                diff_lines=[]
+                ja_block=ja_block, en_block=en_block, is_identical=True, difference_type="identical", diff_lines=[]
             )
 
         # 正規化後の比較
@@ -161,31 +149,25 @@ class DocumentCodeComparator:
 
         if ja_normalized == en_normalized:
             return CodeComparison(
-                ja_block=ja_block,
-                en_block=en_block,
-                is_identical=True,
-                difference_type='comment_only',
-                diff_lines=[]
+                ja_block=ja_block, en_block=en_block, is_identical=True, difference_type="comment_only", diff_lines=[]
             )
 
         # 差分がある場合
-        diff_lines = list(unified_diff(
-            ja_block.code.splitlines(keepends=True),
-            en_block.code.splitlines(keepends=True),
-            fromfile=f'ja/{ja_block.filename}:{ja_block.line_number}',
-            tofile=f'en/{en_block.filename}:{en_block.line_number}',
-            lineterm=''
-        ))
-
-        return CodeComparison(
-            ja_block=ja_block,
-            en_block=en_block,
-            is_identical=False,
-            difference_type='code_diff',
-            diff_lines=diff_lines
+        diff_lines = list(
+            unified_diff(
+                ja_block.code.splitlines(keepends=True),
+                en_block.code.splitlines(keepends=True),
+                fromfile=f"ja/{ja_block.filename}:{ja_block.line_number}",
+                tofile=f"en/{en_block.filename}:{en_block.line_number}",
+                lineterm="",
+            )
         )
 
-    def analyze_differences(self, doc_root: Path) -> Dict[str, List[CodeComparison]]:
+        return CodeComparison(
+            ja_block=ja_block, en_block=en_block, is_identical=False, difference_type="code_diff", diff_lines=diff_lines
+        )
+
+    def analyze_differences(self, doc_root: Path) -> dict[str, list[CodeComparison]]:
         """ドキュメント全体の差分を分析。
 
         Args:
@@ -194,8 +176,8 @@ class DocumentCodeComparator:
         Returns:
             {ファイル名: 比較結果リスト} の辞書
         """
-        ja_dir = doc_root / 'ja'
-        en_dir = doc_root / 'en'
+        ja_dir = doc_root / "ja"
+        en_dir = doc_root / "en"
 
         if not ja_dir.exists() or not en_dir.exists():
             raise ValueError("日本語版または英語版ディレクトリが見つかりません")
@@ -215,8 +197,7 @@ class DocumentCodeComparator:
 
             # 差分があるもののみ記録
             significant_comparisons = [
-                comp for comp in comparisons
-                if comp.difference_type in ['code_diff', 'missing_ja', 'missing_en']
+                comp for comp in comparisons if comp.difference_type in ["code_diff", "missing_ja", "missing_en"]
             ]
 
             if significant_comparisons:
@@ -228,7 +209,7 @@ class DocumentCodeComparator:
 def main():
     """メイン処理。"""
     project_root = Path(__file__).parent.parent.parent
-    doc_root = project_root / 'docs'
+    doc_root = project_root / "docs"
 
     comparator = DocumentCodeComparator()
 
@@ -247,36 +228,36 @@ def main():
 
         # 統計情報
         total_diffs = 0
-        diff_types = defaultdict(int)
+        diff_types: defaultdict[str, int] = defaultdict(int)
 
-        for file_path, comparisons in results.items():
+        for _file_path, comparisons in results.items():
             total_diffs += len(comparisons)
             for comp in comparisons:
                 diff_types[comp.difference_type] += 1
 
-        print(f"\n## 統計情報")
+        print("\n## 統計情報")
         print(f"差分ファイル数: {len(results)}")
         print(f"総差分数: {total_diffs}")
-        print(f"種類別:")
+        print("種類別:")
         for diff_type, count in diff_types.items():
             print(f"  {diff_type}: {count}")
 
         # 詳細表示
-        print(f"\n## 詳細")
+        print("\n## 詳細")
 
         for file_path, comparisons in results.items():
             print(f"\n### {file_path}")
 
             for i, comp in enumerate(comparisons, 1):
-                if comp.difference_type == 'missing_ja':
+                if comp.difference_type == "missing_ja":
                     print(f"  {i}. 日本語版にコードブロックが不足")
                     print(f"     英語版: line {comp.en_block.line_number}")
-                elif comp.difference_type == 'missing_en':
+                elif comp.difference_type == "missing_en":
                     print(f"  {i}. 英語版にコードブロックが不足")
                     print(f"     日本語版: line {comp.ja_block.line_number}")
-                elif comp.difference_type == 'code_diff':
-                    ja_line = comp.ja_block.line_number if comp.ja_block else 'N/A'
-                    en_line = comp.en_block.line_number if comp.en_block else 'N/A'
+                elif comp.difference_type == "code_diff":
+                    ja_line = comp.ja_block.line_number if comp.ja_block else "N/A"
+                    en_line = comp.en_block.line_number if comp.en_block else "N/A"
                     print(f"  {i}. コード内容に差分")
                     print(f"     日本語版: line {ja_line}")
                     print(f"     英語版: line {en_line}")

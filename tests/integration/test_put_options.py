@@ -7,9 +7,9 @@ import numpy as np
 import pytest
 from quantforge import black_scholes  # type: ignore[import-untyped]
 
+# tests/conftest.pyから直接import（名前空間衝突を回避）
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
-from conftest import INPUT_ARRAY_TYPES, PRACTICAL_TOLERANCE, arrow, create_test_array
+from tests.conftest import INPUT_ARRAY_TYPES, PRACTICAL_TOLERANCE, arrow, create_test_array
 
 
 class PutOptionTestData:

@@ -2,11 +2,11 @@
 
 import json
 from pathlib import Path
-from typing import List, Dict, Any
+from typing import Any
 
 import pytest
 
-from tests.doc_tests.code_extractor import DocCodeExtractor, CodeBlock
+from tests.doc_tests.code_extractor import CodeBlock, DocCodeExtractor
 
 # ホワイトリスト：テスト対象のドキュメントのみ指定
 TESTED_PATHS = [
@@ -22,7 +22,7 @@ TESTED_PATHS = [
     "docs/ja/api/python/index.md",
     "docs/ja/api/python/market_utils.md",
     "docs/ja/api/python/merton.md",
-    "docs/ja/api/python/pricing.md"
+    "docs/ja/api/python/pricing.md",
 ]
 
 
@@ -30,7 +30,7 @@ class TestDocumentationCode:
     """ドキュメントコードのテストクラス。"""
 
     @pytest.fixture(scope="class")
-    def code_blocks(self, doc_root, request) -> List[CodeBlock]:
+    def code_blocks(self, doc_root, request) -> list[CodeBlock]:
         """テスト対象のコードブロックを抽出。
 
         Args:
@@ -50,15 +50,15 @@ class TestDocumentationCode:
             blocks = []
 
             # フィルターパスを正規化
-            if doc_filter.startswith('docs/'):
+            if doc_filter.startswith("docs/"):
                 # フルパス指定の場合、project_rootから検索
                 project_root = doc_root.parent
 
                 # ワイルドカード（*）を含むかチェック
-                if '*' in doc_filter or '?' in doc_filter:
+                if "*" in doc_filter or "?" in doc_filter:
                     # globパターンとして処理
                     for filepath in project_root.glob(doc_filter):
-                        if filepath.is_file() and filepath.suffix == '.md':
+                        if filepath.is_file() and filepath.suffix == ".md":
                             blocks.extend(extractor.extract_from_file(filepath))
                 else:
                     # 単一ファイルまたはパターンマッチング
@@ -71,10 +71,10 @@ class TestDocumentationCode:
                             blocks.extend(extractor.extract_from_file(filepath))
             else:
                 # 相対パス指定の場合、doc_rootから検索
-                if '*' in doc_filter or '?' in doc_filter:
+                if "*" in doc_filter or "?" in doc_filter:
                     # globパターンとして処理
                     for filepath in doc_root.glob(doc_filter):
-                        if filepath.is_file() and filepath.suffix == '.md':
+                        if filepath.is_file() and filepath.suffix == ".md":
                             blocks.extend(extractor.extract_from_file(filepath))
                 else:
                     # パターンマッチング
@@ -94,20 +94,13 @@ class TestDocumentationCode:
         return blocks
 
     @pytest.fixture(scope="class")
-    def test_results(self) -> Dict[str, Any]:
+    def test_results(self) -> dict[str, Any]:
         """テスト結果を収集。
 
         Returns:
             テスト結果の辞書
         """
-        return {
-            'total': 0,
-            'executed': 0,
-            'skipped': 0,
-            'passed': 0,
-            'failed': 0,
-            'errors': []
-        }
+        return {"total": 0, "executed": 0, "skipped": 0, "passed": 0, "failed": 0, "errors": []}
 
     def test_code_blocks_found(self, code_blocks):
         """コードブロックが抽出されたことを確認。"""
@@ -116,14 +109,7 @@ class TestDocumentationCode:
 
     @pytest.mark.documentation
     @pytest.mark.parametrize("block_index", range(100))  # 最大100ブロック（APIドキュメント含む）
-    def test_code_execution(
-        self,
-        block_index,
-        code_blocks,
-        code_executor,
-        test_results,
-        request
-    ):
+    def test_code_execution(self, block_index, code_blocks, code_executor, test_results, request):
         """各コードブロックを実行してテスト。
 
         Args:
@@ -138,29 +124,31 @@ class TestDocumentationCode:
             pytest.skip("ブロックインデックスが範囲外")
 
         block = code_blocks[block_index]
-        test_results['total'] += 1
+        test_results["total"] += 1
 
         # スキップフラグが設定されている場合
         if block.skip:
-            test_results['skipped'] += 1
+            test_results["skipped"] += 1
             pytest.skip(f"スキップ設定: {block.test_name}")
 
         # コードを実行
-        test_results['executed'] += 1
+        test_results["executed"] += 1
         success, output, error = code_executor.execute(block.code)
 
         # 結果を記録
         if success:
-            test_results['passed'] += 1
+            test_results["passed"] += 1
         else:
-            test_results['failed'] += 1
-            test_results['errors'].append({
-                'block': block.test_name,
-                'file': block.filename,
-                'line': block.line_number,
-                'error': error,
-                'code_snippet': block.code[:200] + '...' if len(block.code) > 200 else block.code
-            })
+            test_results["failed"] += 1
+            test_results["errors"].append(
+                {
+                    "block": block.test_name,
+                    "file": block.filename,
+                    "line": block.line_number,
+                    "error": error,
+                    "code_snippet": block.code[:200] + "..." if len(block.code) > 200 else block.code,
+                }
+            )
 
         # アサーション
         if not success:
@@ -193,20 +181,20 @@ class TestDocumentationCode:
         print(f"成功:             {test_results['passed']}")
         print(f"失敗:             {test_results['failed']}")
 
-        if test_results['failed'] > 0:
+        if test_results["failed"] > 0:
             print("\n失敗したブロック:")
-            for error in test_results['errors']:
+            for error in test_results["errors"]:
                 print(f"  - {error['block']} ({error['file']}:{error['line']})")
 
         # レポートオプションが有効な場合、JSONファイルに保存
         if request.config.getoption("--doc-report"):
             report_file = test_report_dir / "doc_test_report.json"
-            with open(report_file, 'w', encoding='utf-8') as f:
+            with open(report_file, "w", encoding="utf-8") as f:
                 json.dump(test_results, f, indent=2, ensure_ascii=False)
             print(f"\n詳細レポート: {report_file}")
 
         # 失敗があった場合はテスト失敗
-        if test_results['failed'] > 0:
+        if test_results["failed"] > 0:
             pytest.fail(f"{test_results['failed']}個のコードブロックが失敗しました")
 
 
@@ -230,13 +218,15 @@ class TestSpecificDocuments:
                 success, output, error = code_executor.execute(block.code)
                 executed += 1
                 if not success:
-                    failed_blocks.append({
-                        'index': i + 1,
-                        'line': block.line_number,
-                        'name': block.test_name,
-                        'error': error,
-                        'code_snippet': block.code[:200]
-                    })
+                    failed_blocks.append(
+                        {
+                            "index": i + 1,
+                            "line": block.line_number,
+                            "name": block.test_name,
+                            "error": error,
+                            "code_snippet": block.code[:200],
+                        }
+                    )
 
         if failed_blocks:
             error_msg = "クイックスタートの例が失敗しました:\n"
@@ -262,25 +252,24 @@ class TestSpecificDocuments:
         for block in blocks:
             filename = Path(block.filename).name
             if filename not in by_file:
-                by_file[filename] = {'total': 0, 'executed': 0, 'passed': 0}
+                by_file[filename] = {"total": 0, "executed": 0, "passed": 0}
 
-            by_file[filename]['total'] += 1
+            by_file[filename]["total"] += 1
 
             if not block.skip:
                 success, output, error = code_executor.execute(block.code)
-                by_file[filename]['executed'] += 1
+                by_file[filename]["executed"] += 1
                 if success:
-                    by_file[filename]['passed'] += 1
+                    by_file[filename]["passed"] += 1
 
         # 結果を表示
         print("\nAPIドキュメントのテスト結果:")
         for filename, stats in by_file.items():
-            print(f"  {filename}: {stats['passed']}/{stats['executed']} 成功 "
-                  f"({stats['total']} ブロック中)")
+            print(f"  {filename}: {stats['passed']}/{stats['executed']} 成功 ({stats['total']} ブロック中)")
 
         # すべてのファイルで少なくとも1つは実行可能な例があることを確認
         for filename, stats in by_file.items():
-            assert stats['executed'] > 0, f"{filename}に実行可能な例がありません"
+            assert stats["executed"] > 0, f"{filename}に実行可能な例がありません"
 
 
 def pytest_collection_modifyitems(config, items):
@@ -290,17 +279,12 @@ def pytest_collection_modifyitems(config, items):
 
     # 実際のコードブロック数を取得（簡易的な推定）
     doc_filter = config.getoption("--doc-filter")
-    if doc_filter:
-        # フィルター使用時は多めに推定（ワイルドカード対応）
-        max_expected_blocks = 80
-    else:
-        # デフォルト時（TESTED_PATHS）は現在の設定に基づく
-        max_expected_blocks = 80  # 日本語APIドキュメント追加により増加
+    max_expected_blocks = 80 if doc_filter else 80
 
     for item in items:
         # test_code_executionのパラメータ化テストを対象に
-        if "test_code_execution[" in item.nodeid and hasattr(item, 'callspec'):
-            block_index = item.callspec.params.get('block_index')
+        if "test_code_execution[" in item.nodeid and hasattr(item, "callspec"):
+            block_index = item.callspec.params.get("block_index")
             if block_index is not None and block_index >= max_expected_blocks:
                 # 範囲外と推定されるテストは除外
                 continue
