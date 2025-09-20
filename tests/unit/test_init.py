@@ -6,14 +6,19 @@ class TestVersionHandling:
 
     def test_version_with_package_installed(self) -> None:
         """Test version retrieval when package is installed."""
-        # This test runs with the actual installed package
+        import re
         import quantforge
 
-        # Version should be set (either from package or fallback)
+        # Version should be set and accessible
         assert hasattr(quantforge, "__version__")
         assert quantforge.__version__ is not None
-        # Should be either the actual version or the fallback
-        assert quantforge.__version__ in ["0.1.0", "0.0.0+unknown"]
+        assert isinstance(quantforge.__version__, str)
+        assert len(quantforge.__version__) > 0
+
+        # Version should follow semantic versioning pattern or be fallback
+        VALID_VERSION_PATTERN = r'^(\d+\.\d+\.\d+.*|0\.0\.0\+unknown)$'
+        assert re.match(VALID_VERSION_PATTERN, quantforge.__version__), \
+            f"Invalid version format: {quantforge.__version__}"
 
     def test_version_package_not_found(self) -> None:
         """Test version fallback when package is not found."""
