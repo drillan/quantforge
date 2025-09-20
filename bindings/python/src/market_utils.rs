@@ -17,15 +17,24 @@ pub struct PyPricingConfig {
 
 #[pymethods]
 impl PyPricingConfig {
-    /// Create a new PricingConfig
+    /// Create a new PricingConfig with default threshold
+    #[new]
+    #[pyo3(signature = ())]
+    fn new() -> PyResult<Self> {
+        Ok(Self {
+            inner: CorePricingConfig::default(),
+        })
+    }
+
+    /// Create a custom PricingConfig
     ///
     /// Args:
-    ///     max_spread_pct: Maximum spread as percentage (e.g., 0.5 for 50%). None means no limit.
+    ///     max_spread_pct: Maximum spread as percentage (e.g., 0.5 for 50%). Pass None to disable threshold.
     ///     abnormal_handling: How to handle abnormal spreads ('return_nan', 'log_and_continue', 'return_error')
     ///     crossed_handling: How to handle crossed spreads ('return_nan', 'swap_and_continue', 'return_error')
-    #[new]
+    #[staticmethod]
     #[pyo3(signature = (max_spread_pct=None, abnormal_handling="return_nan", crossed_handling="return_nan"))]
-    fn new(
+    fn with_config(
         max_spread_pct: Option<f64>,
         abnormal_handling: &str,
         crossed_handling: &str,
@@ -200,14 +209,340 @@ pub fn py_spread_pct(bid: f64, ask: f64) -> f64 {
     core_spread_pct(bid, ask)
 }
 
+// =============================================================================
+// Batch Processing Functions
+// =============================================================================
+
+use arrow::array::Float64Array;
+use numpy::{IntoPyArray, PyArrayLike1};
+use quantforge_core::market_utils::{
+    mid_price_batch as core_mid_price_batch,
+    mid_price_batch_with_config as core_mid_price_batch_with_config,
+    mid_price_batch_with_metrics as core_mid_price_batch_with_metrics,
+    weighted_mid_price_batch as core_weighted_mid_price_batch,
+    weighted_mid_price_batch_with_config as core_weighted_mid_price_batch_with_config,
+    spread_batch as core_spread_batch,
+    spread_pct_batch as core_spread_pct_batch,
+    BatchMetrics as CoreBatchMetrics,
+};
+
+/// Python wrapper for BatchMetrics
+#[pyclass(name = "BatchMetrics")]
+#[derive(Clone)]
+pub struct PyBatchMetrics {
+    inner: CoreBatchMetrics,
+}
+
+#[pymethods]
+impl PyBatchMetrics {
+    /// Get total number of elements processed
+    #[getter]
+    fn total_processed(&self) -> usize {
+        self.inner.total_processed
+    }
+
+    /// Get number of NaN results
+    #[getter]
+    fn nan_count(&self) -> usize {
+        self.inner.nan_count
+    }
+
+    /// Get number of crossed spreads
+    #[getter]
+    fn crossed_spreads(&self) -> usize {
+        self.inner.crossed_spreads
+    }
+
+    /// Get number of abnormal spreads
+    #[getter]
+    fn abnormal_spreads(&self) -> usize {
+        self.inner.abnormal_spreads
+    }
+
+    /// Get mean spread percentage
+    #[getter]
+    fn mean_spread_pct(&self) -> f64 {
+        self.inner.mean_spread_pct
+    }
+
+    /// Get maximum spread percentage
+    #[getter]
+    fn max_spread_pct(&self) -> f64 {
+        self.inner.max_spread_pct
+    }
+
+    fn __repr__(&self) -> String {
+        format!(
+            "BatchMetrics(total={}, nan={}, crossed={}, abnormal={}, mean_spread={:.2}%, max_spread={:.2}%)",
+            self.inner.total_processed,
+            self.inner.nan_count,
+            self.inner.crossed_spreads,
+            self.inner.abnormal_spreads,
+            self.inner.mean_spread_pct * 100.0,
+            self.inner.max_spread_pct * 100.0
+        )
+    }
+}
+
+/// Calculate mid prices for batch of bid/ask prices
+///
+/// Args:
+///     bids: Bid prices (numpy array or scalar)
+///     asks: Ask prices (numpy array or scalar)
+///
+/// Returns:
+///     Array of mid prices
+#[pyfunction]
+#[pyo3(name = "mid_price_batch")]
+pub fn py_mid_price_batch<'py>(
+    py: Python<'py>,
+    bids: PyArrayLike1<'_, f64>,
+    asks: PyArrayLike1<'_, f64>,
+) -> PyResult<Bound<'py, numpy::PyArray1<f64>>> {
+    let bids_vec: Vec<f64> = bids.as_slice()?.to_vec();
+    let asks_vec: Vec<f64> = asks.as_slice()?.to_vec();
+    let bids_array = Float64Array::from(bids_vec);
+    let asks_array = Float64Array::from(asks_vec);
+
+    let result = core_mid_price_batch(&bids_array, &asks_array)
+        .map_err(|e| PyErr::new::<pyo3::exceptions::PyValueError, _>(e.to_string()))?;
+
+    let result_array = result.as_any()
+        .downcast_ref::<Float64Array>()
+        .ok_or_else(|| PyErr::new::<pyo3::exceptions::PyTypeError, _>("Expected Float64Array"))?;
+
+    let values: Vec<f64> = result_array.values().to_vec();
+    Ok(values.into_pyarray(py))
+}
+
+/// Calculate mid prices with custom configuration
+///
+/// Args:
+///     bids: Bid prices (numpy array or scalar)
+///     asks: Ask prices (numpy array or scalar)
+///     config: PricingConfig object
+///
+/// Returns:
+///     Array of mid prices
+#[pyfunction]
+#[pyo3(name = "mid_price_batch_with_config")]
+pub fn py_mid_price_batch_with_config<'py>(
+    py: Python<'py>,
+    bids: PyArrayLike1<'_, f64>,
+    asks: PyArrayLike1<'_, f64>,
+    config: &PyPricingConfig,
+) -> PyResult<Bound<'py, numpy::PyArray1<f64>>> {
+    let bids_vec: Vec<f64> = bids.as_slice()?.to_vec();
+    let asks_vec: Vec<f64> = asks.as_slice()?.to_vec();
+    let bids_array = Float64Array::from(bids_vec);
+    let asks_array = Float64Array::from(asks_vec);
+
+    let result = core_mid_price_batch_with_config(&bids_array, &asks_array, &config.inner)
+        .map_err(|e| PyErr::new::<pyo3::exceptions::PyValueError, _>(e.to_string()))?;
+
+    let result_array = result.as_any()
+        .downcast_ref::<Float64Array>()
+        .ok_or_else(|| PyErr::new::<pyo3::exceptions::PyTypeError, _>("Expected Float64Array"))?;
+
+    let values: Vec<f64> = result_array.values().to_vec();
+    Ok(values.into_pyarray(py))
+}
+
+/// Calculate mid prices and collect metrics
+///
+/// Args:
+///     bids: Bid prices (numpy array)
+///     asks: Ask prices (numpy array)
+///     config: PricingConfig object
+///
+/// Returns:
+///     Tuple of (mid prices array, BatchMetrics)
+#[pyfunction]
+#[pyo3(name = "mid_price_batch_with_metrics")]
+pub fn py_mid_price_batch_with_metrics<'py>(
+    py: Python<'py>,
+    bids: PyArrayLike1<'_, f64>,
+    asks: PyArrayLike1<'_, f64>,
+    config: &PyPricingConfig,
+) -> PyResult<(Bound<'py, numpy::PyArray1<f64>>, PyBatchMetrics)> {
+    let bids_vec: Vec<f64> = bids.as_slice()?.to_vec();
+    let asks_vec: Vec<f64> = asks.as_slice()?.to_vec();
+    let bids_array = Float64Array::from(bids_vec);
+    let asks_array = Float64Array::from(asks_vec);
+
+    let (result, metrics) = core_mid_price_batch_with_metrics(&bids_array, &asks_array, &config.inner)
+        .map_err(|e| PyErr::new::<pyo3::exceptions::PyValueError, _>(e.to_string()))?;
+
+    let result_array = result.as_any()
+        .downcast_ref::<Float64Array>()
+        .ok_or_else(|| PyErr::new::<pyo3::exceptions::PyTypeError, _>("Expected Float64Array"))?;
+
+    let values: Vec<f64> = result_array.values().to_vec();
+    let py_metrics = PyBatchMetrics { inner: metrics };
+
+    Ok((values.into_pyarray(py), py_metrics))
+}
+
+/// Calculate weighted mid prices for batch
+///
+/// Args:
+///     bids: Bid prices (numpy array)
+///     bid_qtys: Bid quantities (optional numpy array)
+///     asks: Ask prices (numpy array)
+///     ask_qtys: Ask quantities (optional numpy array)
+///
+/// Returns:
+///     Array of weighted mid prices
+#[pyfunction]
+#[pyo3(name = "weighted_mid_price_batch")]
+#[pyo3(signature = (bids, asks, bid_qtys=None, ask_qtys=None))]
+pub fn py_weighted_mid_price_batch<'py>(
+    py: Python<'py>,
+    bids: PyArrayLike1<'_, f64>,
+    asks: PyArrayLike1<'_, f64>,
+    bid_qtys: Option<PyArrayLike1<'_, f64>>,
+    ask_qtys: Option<PyArrayLike1<'_, f64>>,
+) -> PyResult<Bound<'py, numpy::PyArray1<f64>>> {
+    let bids_vec: Vec<f64> = bids.as_slice()?.to_vec();
+    let asks_vec: Vec<f64> = asks.as_slice()?.to_vec();
+    let bids_array = Float64Array::from(bids_vec);
+    let asks_array = Float64Array::from(asks_vec);
+
+    let bid_qtys_array = bid_qtys.map(|q| Float64Array::from(q.as_slice().unwrap().to_vec()));
+    let ask_qtys_array = ask_qtys.map(|q| Float64Array::from(q.as_slice().unwrap().to_vec()));
+
+    let result = core_weighted_mid_price_batch(
+        &bids_array,
+        bid_qtys_array.as_ref(),
+        &asks_array,
+        ask_qtys_array.as_ref(),
+    ).map_err(|e| PyErr::new::<pyo3::exceptions::PyValueError, _>(e.to_string()))?;
+
+    let result_array = result.as_any()
+        .downcast_ref::<Float64Array>()
+        .ok_or_else(|| PyErr::new::<pyo3::exceptions::PyTypeError, _>("Expected Float64Array"))?;
+
+    let values: Vec<f64> = result_array.values().to_vec();
+    Ok(values.into_pyarray(py))
+}
+
+/// Calculate weighted mid prices with configuration
+///
+/// Args:
+///     bids: Bid prices (numpy array)
+///     bid_qtys: Bid quantities (optional numpy array)
+///     asks: Ask prices (numpy array)
+///     ask_qtys: Ask quantities (optional numpy array)
+///     config: PricingConfig object
+///
+/// Returns:
+///     Array of weighted mid prices
+#[pyfunction]
+#[pyo3(name = "weighted_mid_price_batch_with_config")]
+#[pyo3(signature = (bids, asks, config, bid_qtys=None, ask_qtys=None))]
+pub fn py_weighted_mid_price_batch_with_config<'py>(
+    py: Python<'py>,
+    bids: PyArrayLike1<'_, f64>,
+    asks: PyArrayLike1<'_, f64>,
+    config: &PyPricingConfig,
+    bid_qtys: Option<PyArrayLike1<'_, f64>>,
+    ask_qtys: Option<PyArrayLike1<'_, f64>>,
+) -> PyResult<Bound<'py, numpy::PyArray1<f64>>> {
+    let bids_vec: Vec<f64> = bids.as_slice()?.to_vec();
+    let asks_vec: Vec<f64> = asks.as_slice()?.to_vec();
+    let bids_array = Float64Array::from(bids_vec);
+    let asks_array = Float64Array::from(asks_vec);
+
+    let bid_qtys_array = bid_qtys.map(|q| Float64Array::from(q.as_slice().unwrap().to_vec()));
+    let ask_qtys_array = ask_qtys.map(|q| Float64Array::from(q.as_slice().unwrap().to_vec()));
+
+    let result = core_weighted_mid_price_batch_with_config(
+        &bids_array,
+        bid_qtys_array.as_ref(),
+        &asks_array,
+        ask_qtys_array.as_ref(),
+        &config.inner,
+    ).map_err(|e| PyErr::new::<pyo3::exceptions::PyValueError, _>(e.to_string()))?;
+
+    let result_array = result.as_any()
+        .downcast_ref::<Float64Array>()
+        .ok_or_else(|| PyErr::new::<pyo3::exceptions::PyTypeError, _>("Expected Float64Array"))?;
+
+    let values: Vec<f64> = result_array.values().to_vec();
+    Ok(values.into_pyarray(py))
+}
+
+/// Calculate absolute spreads for batch
+///
+/// Args:
+///     bids: Bid prices (numpy array)
+///     asks: Ask prices (numpy array)
+///
+/// Returns:
+///     Array of spreads (ask - bid)
+#[pyfunction]
+#[pyo3(name = "spread_batch")]
+pub fn py_spread_batch<'py>(
+    py: Python<'py>,
+    bids: PyArrayLike1<'_, f64>,
+    asks: PyArrayLike1<'_, f64>,
+) -> PyResult<Bound<'py, numpy::PyArray1<f64>>> {
+    let bids_vec: Vec<f64> = bids.as_slice()?.to_vec();
+    let asks_vec: Vec<f64> = asks.as_slice()?.to_vec();
+    let bids_array = Float64Array::from(bids_vec);
+    let asks_array = Float64Array::from(asks_vec);
+
+    let result = core_spread_batch(&bids_array, &asks_array)
+        .map_err(|e| PyErr::new::<pyo3::exceptions::PyValueError, _>(e.to_string()))?;
+
+    let result_array = result.as_any()
+        .downcast_ref::<Float64Array>()
+        .ok_or_else(|| PyErr::new::<pyo3::exceptions::PyTypeError, _>("Expected Float64Array"))?;
+
+    let values: Vec<f64> = result_array.values().to_vec();
+    Ok(values.into_pyarray(py))
+}
+
+/// Calculate spread percentages for batch
+///
+/// Args:
+///     bids: Bid prices (numpy array)
+///     asks: Ask prices (numpy array)
+///
+/// Returns:
+///     Array of spread percentages
+#[pyfunction]
+#[pyo3(name = "spread_pct_batch")]
+pub fn py_spread_pct_batch<'py>(
+    py: Python<'py>,
+    bids: PyArrayLike1<'_, f64>,
+    asks: PyArrayLike1<'_, f64>,
+) -> PyResult<Bound<'py, numpy::PyArray1<f64>>> {
+    let bids_vec: Vec<f64> = bids.as_slice()?.to_vec();
+    let asks_vec: Vec<f64> = asks.as_slice()?.to_vec();
+    let bids_array = Float64Array::from(bids_vec);
+    let asks_array = Float64Array::from(asks_vec);
+
+    let result = core_spread_pct_batch(&bids_array, &asks_array)
+        .map_err(|e| PyErr::new::<pyo3::exceptions::PyValueError, _>(e.to_string()))?;
+
+    let result_array = result.as_any()
+        .downcast_ref::<Float64Array>()
+        .ok_or_else(|| PyErr::new::<pyo3::exceptions::PyTypeError, _>("Expected Float64Array"))?;
+
+    let values: Vec<f64> = result_array.values().to_vec();
+    Ok(values.into_pyarray(py))
+}
+
 /// Register the market_utils module with Python
 pub fn register_module(parent_module: &Bound<'_, PyModule>) -> PyResult<()> {
     let market_utils_module = PyModule::new(parent_module.py(), "market_utils")?;
 
     // Add configuration class
     market_utils_module.add_class::<PyPricingConfig>()?;
+    market_utils_module.add_class::<PyBatchMetrics>()?;
 
-    // Add functions
+    // Add single-value functions
     market_utils_module.add_function(wrap_pyfunction!(py_mid_price, &market_utils_module)?)?;
     market_utils_module.add_function(wrap_pyfunction!(
         py_mid_price_with_config,
@@ -223,6 +558,27 @@ pub fn register_module(parent_module: &Bound<'_, PyModule>) -> PyResult<()> {
     )?)?;
     market_utils_module.add_function(wrap_pyfunction!(py_spread, &market_utils_module)?)?;
     market_utils_module.add_function(wrap_pyfunction!(py_spread_pct, &market_utils_module)?)?;
+
+    // Add batch processing functions
+    market_utils_module.add_function(wrap_pyfunction!(py_mid_price_batch, &market_utils_module)?)?;
+    market_utils_module.add_function(wrap_pyfunction!(
+        py_mid_price_batch_with_config,
+        &market_utils_module
+    )?)?;
+    market_utils_module.add_function(wrap_pyfunction!(
+        py_mid_price_batch_with_metrics,
+        &market_utils_module
+    )?)?;
+    market_utils_module.add_function(wrap_pyfunction!(
+        py_weighted_mid_price_batch,
+        &market_utils_module
+    )?)?;
+    market_utils_module.add_function(wrap_pyfunction!(
+        py_weighted_mid_price_batch_with_config,
+        &market_utils_module
+    )?)?;
+    market_utils_module.add_function(wrap_pyfunction!(py_spread_batch, &market_utils_module)?)?;
+    market_utils_module.add_function(wrap_pyfunction!(py_spread_pct_batch, &market_utils_module)?)?;
 
     parent_module.add_submodule(&market_utils_module)?;
     Ok(())

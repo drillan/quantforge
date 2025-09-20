@@ -5,6 +5,60 @@ All notable changes to QuantForge will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.1] - 2025-09-20
+
+### Added
+- **Market Data Processing Utilities** (`quantforge.market_utils`)
+  - Simple and volume-weighted mid-price calculation
+  - Spread analysis (absolute and percentage)
+  - Abnormal spread handling for options markets
+  - Arrow-native batch processing with parallel execution
+  - Metrics collection during batch processing
+  - Configurable pricing behavior via `PricingConfig`
+
+#### Core Functions
+- `mid_price()`, `mid_price_with_config()` - Simple mid-price calculation
+- `weighted_mid_price()`, `weighted_mid_price_with_config()` - Volume-weighted mid-price
+- `spread()`, `spread_pct()` - Spread calculations
+- Complete batch processing equivalents (`*_batch()` functions)
+
+#### Advanced Features
+- Broadcasting support for scalar/array combinations
+- Automatic parallel processing for large datasets (10,000+ elements)
+- Zero-copy Arrow array processing
+- Comprehensive metrics collection (`BatchMetrics`)
+- Robust handling of extreme spreads common in options markets
+
+#### API Examples
+```python
+from quantforge.market_utils import mid_price, PricingConfig
+
+# Simple usage
+price = mid_price(bid=100.0, ask=100.2)  # 100.1
+
+# Handle extreme spreads (options market)
+config = PricingConfig.with_config(max_spread_pct=None)
+price = mid_price_with_config(bid=1.0, ask=1000.0, config)  # 500.5
+```
+
+### Technical Implementation
+- Rust core with Arrow-native batch processing
+- PyO3 bindings with complete Python API
+- 31 comprehensive unit tests with real-world scenarios
+- Complete Japanese API documentation
+
+### Documentation
+- Added `docs/ja/api/python/market_utils.md` - Comprehensive API documentation
+- Created practical examples in `examples/` directory:
+  - `market_utils_basic.py` - Basic usage patterns
+  - `market_utils_batch.py` - Batch processing examples
+  - `market_integration.py` - Real-world integration scenarios
+
+### Performance
+- High-speed batch processing with automatic parallelization
+- Zero-copy Arrow array operations
+- Efficient memory usage for large option chains
+
 ## [0.1.0] - 2025-01-30
 
 ### Added
@@ -108,5 +162,6 @@ prices = black_scholes.call_price_batch(
 - Documentation: https://github.com/drillan/quantforge/tree/main/docs
 - Issues: https://github.com/drillan/quantforge/issues
 
+[0.1.1]: https://github.com/drillan/quantforge/releases/tag/v0.1.1
 [0.1.0]: https://github.com/drillan/quantforge/releases/tag/v0.1.0
 [0.0.14]: https://github.com/drillan/quantforge/releases/tag/v0.0.14

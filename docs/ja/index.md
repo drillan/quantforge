@@ -115,6 +115,7 @@ api/python/black_scholes
 api/python/black76
 api/python/merton
 api/python/implied_vol
+api/python/market_utils
 api/rust/index
 ```
 
