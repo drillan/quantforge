@@ -59,6 +59,41 @@ price = mid_price_with_config(bid=1.0, ask=1000.0, config)  # 500.5
 - Zero-copy Arrow array operations
 - Efficient memory usage for large option chains
 
+- **Documentation Testing System** (`tests/doc_tests/`)
+  - Automated testing of all code examples in documentation
+  - Support for MyST/Sphinx code-block directives with metadata
+  - Wildcard pattern support for `--doc-filter` (e.g., `docs/ja/api/python/*.md`)
+  - Smart skip patterns for matplotlib, undefined functions, and placeholders
+  - Detailed test reporting with JSON output and error analysis
+  - Complete integration with pytest infrastructure
+
+#### Testing Features
+- Automatic code extraction from Markdown files
+- Batch testing with parallel execution
+- Mock environment with predefined functions for examples
+- Comprehensive error reporting and debugging tools
+- Configurable test targets via `TESTED_PATHS`
+
+#### Developer Tools
+- `check_doc_codes.py` - Statistics and overview of code blocks
+- `analyze_errors.py` - Detailed error analysis and categorization
+- `fix_documentation_codes.py` - Automatic code fixes for common patterns
+- Complete documentation in `docs/ja/internal/documentation_testing_guide.md`
+
+### Changed
+- **Documentation Code Examples**: Fixed all API usage patterns
+  - Greeks access: `greeks.delta` → `greeks['delta']` (dictionary access)
+  - Standardized parameter passing (removed unnecessary keywords)
+  - Improved code formatting and comments for better readability
+  - Extended test coverage from 10 to 77+ code blocks
+- **Test Configuration**: All Japanese API documentation now included in default testing
+
+### Technical Details
+- 10 new files in `tests/doc_tests/` directory
+- 35 documentation files updated for API consistency
+- Support for wildcard patterns in pytest command line
+- Zero false positives in automated documentation testing
+
 ## [0.1.0] - 2025-01-30
 
 ### Added

@@ -550,7 +550,8 @@ print(f"板の偏り: {imbalance}")
 :caption: エラー処理の例
 
 import math
-from quantforge.market_utils import mid_price
+import numpy as np
+from quantforge.market_utils import mid_price, mid_price_batch
 
 # エラーを発生させない
 result = mid_price(-100.0, 100.0)  # 負の価格
@@ -565,6 +566,7 @@ results = mid_price_batch(
     np.array([101.0, 100.0, 201.0])
 )
 # [100.5, NaN, 200.5]  # 処理は継続
+print(f"Results with NaN: {results}")
 ```
 
 (market-utils-notes)=
@@ -600,11 +602,19 @@ if math.isnan(price):
 :name: market-utils-code-memory-efficiency
 :caption: メモリ効率的な使用例
 
+import numpy as np
+from quantforge.market_utils import mid_price_batch
+
+# サンプルデータ
+bids = np.array([99.5, 100.0, 100.5, 101.0])
+asks = np.array([99.6, 100.1, 100.6, 101.1])
+mask = np.array([True, False, True, False])
+
 # 効率的：ビューを使用
 mids = mid_price_batch(bids[mask], asks[mask])
 
 # 非効率：コピーを作成
-mids = mid_price_batch(bids.copy(), asks.copy())
+mids_copy = mid_price_batch(bids.copy(), asks.copy())
 ```
 
 (market-utils-related-items)=

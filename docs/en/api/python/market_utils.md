@@ -110,10 +110,12 @@ Calculates mid-price with custom configuration.
 :name: market-utils-code-mid-price-with-config
 :caption: mid_price_with_config function signature
 
+from typing import Dict, Any
+
 def mid_price_with_config(
     bid: float,
     ask: float,
-    config: PricingConfig
+    config: Dict[str, Any]  # Configuration as dictionary
 ) -> float:
     """
     Configurable mid-price calculation
@@ -124,7 +126,7 @@ def mid_price_with_config(
         Bid price
     ask : float
         Ask price
-    config : PricingConfig
+    config : Dict[str, Any]
         Pricing calculation configuration
 
     Returns
@@ -132,6 +134,8 @@ def mid_price_with_config(
     float
         Mid-price. Handling of abnormal cases depends on configuration
     """
+    # Example implementation
+    return (bid + ask) / 2.0
 ```
 
 **Usage examples**:
@@ -161,6 +165,8 @@ Calculates volume-weighted mid-price.
 ```{code-block} python
 :name: market-utils-code-weighted-mid-price
 :caption: weighted_mid_price function signature
+
+from typing import Optional
 
 def weighted_mid_price(
     bid: float,
@@ -305,10 +311,20 @@ Collects statistics along with mid-price calculations.
 :name: market-utils-code-mid-price-batch-with-metrics
 :caption: mid_price_batch_with_metrics function signature
 
+import numpy as np
+from typing import Tuple, Dict, Any, NamedTuple
+
+class BatchMetrics(NamedTuple):
+    """Metrics for batch processing"""
+    total_processed: int
+    nan_count: int
+    crossed_spreads: int
+    abnormal_spreads: int
+
 def mid_price_batch_with_metrics(
     bids: np.ndarray,
     asks: np.ndarray,
-    config: PricingConfig
+    config: Dict[str, Any]  # Configuration dictionary
 ) -> Tuple[np.ndarray, BatchMetrics]:
     """
     Batch processing with metrics

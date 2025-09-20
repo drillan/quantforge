@@ -20,7 +20,7 @@ prices = black_scholes.call_price_batch(
     strike=100.0,
     time=1.0,
     rate=0.05,
-    sigma=0.2
+    sigmas=0.2
 )
 
 # prices is also returned as a NumPy array
@@ -320,7 +320,7 @@ def process_batch(args):
         strike=strike,
         time=time,
         rate=rate,
-        sigma=sigma
+        sigmas=sigma
     )
 
 # Split data
@@ -389,7 +389,7 @@ prices = black_scholes.call_price_batch(
     strike=100.0,
     time=1.0,
     rate=0.05,
-    sigma=0.2
+    sigmas=0.2
 )
 
 # Memory usage

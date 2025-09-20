@@ -30,7 +30,7 @@ from quantforge.models import black_scholes
 
 # Black-Scholesモデルでコールオプション価格を計算
 price = black_scholes.call_price(
-    s=100.0,      # 現在価格
+    s=100.0,      # スポット価格
     k=110.0,      # 権利行使価格
     t=1.0,        # 満期（年）
     r=0.05,       # 無リスク金利
@@ -56,11 +56,11 @@ greeks = black_scholes.greeks(
     is_call=True
 )
 
-print(f"Delta: {greeks.delta:.4f}")
-print(f"Gamma: {greeks.gamma:.4f}")
-print(f"Vega: {greeks.vega:.4f}")
-print(f"Theta: {greeks.theta:.4f}")
-print(f"Rho: {greeks.rho:.4f}")
+print(f"Delta: {greeks['delta']:.4f}")
+print(f"Gamma: {greeks['gamma']:.4f}")
+print(f"Vega: {greeks['vega']:.4f}")
+print(f"Theta: {greeks['theta']:.4f}")
+print(f"Rho: {greeks['rho']:.4f}")
 ```
 
 ## バッチ処理
@@ -83,10 +83,10 @@ spots = pa.array(np.random.uniform(90, 110, n))
 start = time.perf_counter()
 prices = black_scholes.call_price_batch(
     spots=spots,  # Arrow配列
-    k=100.0,
-    t=1.0,
-    r=0.05,
-    sigma=0.2
+    strikes=100.0,
+    times=1.0,
+    rates=0.05,
+    sigmas=0.2
 )  # 返り値: arro3.core.Array
 elapsed = (time.perf_counter() - start) * 1000
 
@@ -97,10 +97,10 @@ print(f"1オプションあたり: {elapsed/n*1000:.1f}ns")
 spots_np = np.random.uniform(90, 110, n)
 prices_np_input = black_scholes.call_price_batch(
     spots=spots_np,  # NumPy配列も受け付け可能
-    k=100.0,
-    t=1.0,
-    r=0.05,
-    sigma=0.2
+    strikes=100.0,
+    times=1.0,
+    rates=0.05,
+    sigmas=0.2
 )  # 返り値は同じArrow配列
 ```
 
@@ -142,7 +142,7 @@ for pos in positions:
     greeks = black_scholes.greeks(
         s=pos["spot"], k=pos["strike"], t=1.0, r=0.05, sigma=0.2, is_call=True
     )
-    total_delta += pos["contracts"] * greeks.delta * 100
+    total_delta += pos["contracts"] * greeks['delta'] * 100
 
 print(f"Portfolio Delta: {total_delta:.2f} shares")
 ```

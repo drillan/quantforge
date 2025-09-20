@@ -799,9 +799,11 @@ docs = [
 
 [package.dev-dependencies]
 dev = [
+    { name = "docutils" },
     { name = "hypothesis" },
     { name = "maturin" },
     { name = "mypy" },
+    { name = "myst-parser" },
     { name = "pandas-stubs" },
     { name = "pytest" },
     { name = "pytest-benchmark" },
@@ -837,9 +839,11 @@ provides-extras = ["docs"]
 
 [package.metadata.requires-dev]
 dev = [
+    { name = "docutils", specifier = ">=0.18" },
     { name = "hypothesis", specifier = ">=6.100.0" },
     { name = "maturin", specifier = ">=1.9.3" },
     { name = "mypy", specifier = ">=1.17.1" },
+    { name = "myst-parser", specifier = ">=4.0.1" },
     { name = "pandas-stubs", specifier = ">=2.3.2.250827" },
     { name = "pytest", specifier = ">=8.4.1" },
     { name = "pytest-benchmark", specifier = ">=5.1.0" },

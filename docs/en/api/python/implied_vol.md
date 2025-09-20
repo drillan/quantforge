@@ -118,10 +118,13 @@ ivs = black_scholes.implied_volatility_batch(
 
 # Fast calculation of volatility smile
 strikes = np.linspace(80, 120, 41)
-market_prices = get_market_prices(strikes)  # Get market data
+# Example market prices (simulated using Black-Scholes)
+market_prices = black_scholes.call_price_batch(
+    100.0, strikes, 0.25, 0.05, 0.2 + 0.002 * np.abs(strikes - 100.0)
+)
 
 ivs = black_scholes.implied_volatility_batch(
-    market_prices, 100.0, strikes, 0.25, 0.05, strikes >= 100.0
+    market_prices, 100.0, strikes, 0.25, 0.05, True
 )
 ```
 
@@ -180,6 +183,8 @@ The following error occurs under the following conditions:
 - Volatility outside reasonable range (0.001 to 10.0)
 
 ```python
+from quantforge.models import black_scholes
+
 try:
     # Invalid market price (below intrinsic value)
     iv = black_scholes.implied_volatility(
@@ -190,8 +195,10 @@ try:
         0.05,     # Risk-free rate
         True      # Call
     )
-except RuntimeError as e:
-    print(f"Convergence error: {e}")
+except Exception as e:  # Catch RuntimeError or ValueError
+    print(f"Error: {e}")
+    # Expected error message
+    print("As expected, error occurred with invalid market price")
 ```
 
 ## Examples

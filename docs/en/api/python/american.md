@@ -26,27 +26,37 @@ put_price = american.put_price(100.0, 105.0, 1.0, 0.05, 0.03, 0.2)
 ### Batch Processing
 
 ```python
-import numpy as np
+import pyarrow as pa
+import numpy as np  # NumPy compatibility
 
 # Full array support with Broadcasting
-spots = np.array([95, 100, 105, 110])
-strikes = 100.0  # Scalar automatically broadcasts
-times = np.array([0.5, 1.0, 1.5, 2.0])
-rates = 0.05
-dividend_yields = 0.03
-sigmas = np.array([0.18, 0.20, 0.22, 0.24])
+# PyArrow usage (recommended - Arrow-native)
+spots = pa.array([95, 100, 105, 110])
+times = pa.array([0.5, 1.0, 1.5, 2.0])
+sigmas = pa.array([0.18, 0.20, 0.22, 0.24])
+
+# NumPy arrays also supported (compatibility)
+# spots = np.array([95, 100, 105, 110])
 
 # Parameters: spots, strikes, times, rates, dividend_yields, sigmas
-call_prices = american.call_price_batch(spots, strikes, times, rates, dividend_yields, sigmas)
-put_prices = american.put_price_batch(spots, strikes, times, rates, dividend_yields, sigmas)
+call_prices = american.call_price_batch(
+    spots,
+    100.0,    # strikes - scalar automatically broadcasts
+    times,
+    0.05,     # rates
+    0.03,     # dividend_yields
+    sigmas
+)  # Return: arro3.core.Array
+
+put_prices = american.put_price_batch(spots, 100.0, times, 0.05, 0.03, sigmas)
 
 # Greeks batch calculation (dictionary format)
-greeks = american.greeks_batch(spots, strikes, times, rates, dividend_yields, sigmas, is_calls=False)
-print(greeks['delta'])  # NumPy array
-print(greeks['gamma'])  # NumPy array
+greeks = american.greeks_batch(spots, 100.0, times, 0.05, 0.03, sigmas, False)
+print(greeks['delta'])  # Arrow array
+print(greeks['gamma'])  # Arrow array
 
 # Early exercise boundary batch calculation
-boundaries = american.exercise_boundary_batch(spots, strikes, times, rates, dividend_yields, sigmas, is_calls=False)
+boundaries = american.exercise_boundary_batch(100.0, times, 0.05, 0.03, sigmas, False)
 ```
 
 For details, refer to the [Batch Processing API](batch_processing.md).
@@ -63,11 +73,11 @@ For details, refer to the [Batch Processing API](batch_processing.md).
 greeks = american.greeks(100.0, 100.0, 1.0, 0.05, 0.03, 0.2, True)
 
 # Access individual Greeks
-print(f"Delta: {greeks.delta:.4f}")  # Spot price sensitivity
-print(f"Gamma: {greeks.gamma:.4f}")  # Rate of change of delta
-print(f"Vega: {greeks.vega:.4f}")    # Volatility sensitivity
-print(f"Theta: {greeks.theta:.4f}")  # Time decay
-print(f"Rho: {greeks.rho:.4f}")      # Interest rate sensitivity
+print(f"Delta: {greeks['delta']:.4f}")  # Spot price sensitivity
+print(f"Gamma: {greeks['gamma']:.4f}")  # Rate of change of delta
+print(f"Vega: {greeks['vega']:.4f}")    # Volatility sensitivity
+print(f"Theta: {greeks['theta']:.4f}")  # Time decay
+print(f"Rho: {greeks['rho']:.4f}")      # Interest rate sensitivity
 ```
 
 ### implied volatility
@@ -90,8 +100,8 @@ print(f"Implied Volatility: {iv:.4f}")
 :linenos:
 
 # Early exercise boundary calculation
-# Parameters: s, k, t, r, q, sigma, is_call
-boundary = american.exercise_boundary(100.0, 100.0, 1.0, 0.05, 0.03, 0.2, True)
+# Parameters: k, t, r, q, sigma, is_call
+boundary = american.exercise_boundary(100.0, 1.0, 0.05, 0.03, 0.2, True)
 print(f"Exercise boundary: {boundary:.2f}")
 ```
 
@@ -190,9 +200,9 @@ print(f"Put Price: ${put_price:.2f}")
 
 # Greeks calculation
 greeks = american.greeks(s, k, t, r, q, sigma, False)
-print(f"Delta: {greeks.delta:.4f}")
-print(f"Gamma: {greeks.gamma:.4f}")
-print(f"Vega: {greeks.vega:.4f}")
+print(f"Delta: {greeks['delta']:.4f}")
+print(f"Gamma: {greeks['gamma']:.4f}")
+print(f"Vega: {greeks['vega']:.4f}")
 ```
 
 ### Early Exercise Determinations
@@ -209,8 +219,8 @@ q = 0.03     # Dividend yield
 sigma = 0.2  # Volatility
 
 # Early exercise boundary calculation
-boundary_call = american.exercise_boundary(100.0, k, t, r, q, sigma, True)
-boundary_put = american.exercise_boundary(100.0, k, t, r, q, sigma, False)
+boundary_call = american.exercise_boundary(k, t, r, q, sigma, True)
+boundary_put = american.exercise_boundary(k, t, r, q, sigma, False)
 
 print(f"Call exercise boundary: ${boundary_call:.2f}")
 print(f"Put exercise boundary: ${boundary_put:.2f}")

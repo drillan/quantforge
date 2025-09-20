@@ -265,12 +265,23 @@ prices = black_scholes.call_price_batch(spots, strikes, times, rate, sigmas)
 :caption: Calculate all Greeks for the portfolio
 
 # Calculate all Greeks for the portfolio
-greeks = black_scholes.greeks_batch(spots, strikes, times, rate, sigmas, is_calls=True)
+import numpy as np
+from quantforge.models import black_scholes
 
-# Extract individual Greeks as arrays
-portfolio_delta = greeks['delta'].sum()
-portfolio_vega = greeks['vega'].sum()
-portfolio_gamma = greeks['gamma'].sum()
+# Portfolio definition (same as previous code block)
+n = 1000
+spots = np.random.uniform(90, 110, n)
+strikes = np.random.uniform(95, 105, n)
+times = np.random.uniform(0.1, 2.0, n)
+sigmas = np.random.uniform(0.15, 0.35, n)
+rate = 0.05
+
+greeks = black_scholes.greeks_batch(spots, strikes, times, rate, sigmas, True)
+
+# Extract individual Greeks as arrays (convert Arrow arrays to NumPy)
+portfolio_delta = np.array(greeks['delta']).sum()
+portfolio_vega = np.array(greeks['vega']).sum()
+portfolio_gamma = np.array(greeks['gamma']).sum()
 ```
 
 ### implied volatility surface
@@ -280,6 +291,9 @@ portfolio_gamma = greeks['gamma'].sum()
 :caption: Create volatility surface from market prices
 
 # Create volatility surface from market prices
+import numpy as np
+from quantforge.models import black_scholes
+
 spots = 100.0  # Current spot
 strikes = np.linspace(80, 120, 41)
 times = np.array([0.25, 0.5, 1.0, 2.0])
@@ -294,16 +308,16 @@ market_prices = np.random.uniform(5, 25, len(strikes_flat))
 
 # Calculate implied volatility
 ivs = black_scholes.implied_volatility_batch(
-    prices=market_prices,
-    spots=spots,
-    strikes=strikes_flat,
-    times=times_flat,
-    rates=0.05,
-    is_calls=True
+    market_prices,
+    spots,
+    strikes_flat,
+    times_flat,
+    0.05,
+    True
 )
 
-# Reshape for surface plot
-iv_surface = ivs.reshape(K.shape)
+# Reshape for surface plot (convert Arrow array to NumPy)
+iv_surface = np.array(ivs).reshape(K.shape)
 ```
 
 ### Sensitivity Analysis
@@ -311,6 +325,7 @@ iv_surface = ivs.reshape(K.shape)
 ```{code-block} python
 :name: batch-processing-sensitivity-analysis
 :caption: Analyze option sensitivity to spot price changes
+:class: no-test
 
 # Analyze option sensitivity to spot price changes
 base_spot = 100.0
@@ -365,15 +380,18 @@ The batch API automatically optimizes based on input size:
 :caption: This will raise an error - incompatible array lengths
 
 # This will raise an error - incompatible array lengths
+import numpy as np
+from quantforge.models import black_scholes
+
 try:
     prices = black_scholes.call_price_batch(
-        spots=np.array([100, 101, 102]),  # Length 3
-        strikes=np.array([95, 100]),      # Length 2 - Error!
-        times=1.0,
-        rates=0.05,
-        sigmas=0.2
+        np.array([100, 101, 102]),  # Length 3
+        np.array([95, 100]),         # Length 2 - Error!
+        1.0,
+        0.05,
+        0.2
     )
-except ValueError as e:
+except Exception as e:
     print(f"Broadcasting error: {e}")
 ```
 
@@ -405,12 +423,15 @@ Old API (Single Parameter Change):
 :caption: Old - Only spots can be an array
 
 # Old - Only spots can be an array
+import numpy as np
+from quantforge.models import black_scholes
+
 prices = black_scholes.call_price_batch(
-    spots=[95, 100, 105],  # Array
-    k=100.0,                # Scalar only
-    t=1.0,                  # Scalar only
-    r=0.05,                 # Scalar only
-    sigma=0.2               # Scalar only
+    np.array([95, 100, 105]),  # Array
+    100.0,                      # Scalar only (strike)
+    1.0,                        # Scalar only (time)
+    0.05,                       # Scalar only (rate)
+    0.2                         # Scalar only (sigma)
 )
 ```
 
@@ -420,12 +441,15 @@ New API (Full Array Support):
 :caption: New - All parameters can be arrays
 
 # New - All parameters can be arrays
+import numpy as np
+from quantforge.models import black_scholes
+
 prices = black_scholes.call_price_batch(
-    spots=[95, 100, 105],   # Array
-    strikes=100.0,          # Scalar or array
-    times=1.0,              # Scalar or array
-    rates=0.05,             # Scalar or array
-    sigmas=0.2              # Scalar or array
+    np.array([95, 100, 105]),  # Array
+    100.0,                      # Scalar or array (strikes)
+    1.0,                        # Scalar or array (times)
+    0.05,                       # Scalar or array (rates)
+    0.2                         # Scalar or array (sigmas)
 )
 ```
 

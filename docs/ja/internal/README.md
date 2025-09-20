@@ -11,6 +11,7 @@
 
 - `naming_conventions.md` - プロジェクト全体の命名規則カタログ
 - `model_documentation_guidelines.md` - モデル追加時のドキュメント作成ガイドライン
+- `documentation_testing_guide.md` - ドキュメントコードテストシステムの使用方法
 - その他、今後追加予定：
   - `architecture.md` - 内部アーキテクチャ設計
   - `coding_standards.md` - コーディング規約

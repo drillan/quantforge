@@ -26,23 +26,34 @@ put_price = black76.put_price(75.50, 80.00, 0.25, 0.05, 0.3)
 ### Batch Processing
 
 ```python
-import numpy as np
+import pyarrow as pa
+import numpy as np  # NumPy compatibility
 
 # Full array support with Broadcasting
-forwards = np.array([70, 75, 80, 85])
-strikes = np.array([65, 70, 75, 80])  # Arrays also possible
-times = 0.5  # Scalars are automatically expanded
-rates = 0.05
-sigmas = np.array([0.20, 0.25, 0.30, 0.35])
+# PyArrow usage (recommended - Arrow-native)
+forwards = pa.array([70, 75, 80, 85])
+strikes = pa.array([65, 70, 75, 80])  # Arrays also possible
+sigmas = pa.array([0.20, 0.25, 0.30, 0.35])
+
+# NumPy arrays also supported (compatibility)
+# forwards = np.array([70, 75, 80, 85])
 
 # Parameters: forwards, strikes, times, rates, sigmas
-call_prices = black76.call_price_batch(forwards, strikes, times, rates, sigmas)
-put_prices = black76.put_price_batch(forwards, strikes, times, rates, sigmas)
+call_prices = black76.call_price_batch(
+    forwards,
+    strikes,
+    0.5,      # times - scalars are automatically expanded
+    0.05,     # rates
+    sigmas
+)  # Return: arro3.core.Array
+
+put_prices = black76.put_price_batch(forwards, strikes, 0.5, 0.05, sigmas)
 
 # Greeks batch calculation (dictionary format)
-greeks = black76.greeks_batch(forwards, strikes, times, rates, sigmas, is_calls=True)
-print(greeks['delta'])  # NumPy array
-print(greeks['vega'])   # NumPy array
+greeks = black76.greeks_batch(forwards, strikes, 0.5, 0.05, sigmas, True)
+# greeks['delta'] and greeks['vega'] are arro3.core.Array
+print(greeks['delta'])  # Arrow array
+print(greeks['vega'])   # Arrow array
 ```
 
 For details, refer to the [Batch Processing API](batch_processing.md).
@@ -59,11 +70,11 @@ For details, refer to the [Batch Processing API](batch_processing.md).
 greeks = black76.greeks(75.50, 75.00, 0.5, 0.05, 0.3, True)
 
 # Access individual Greeks
-print(f"Delta: {greeks.delta:.4f}")  # Forward price sensitivity
-print(f"Gamma: {greeks.gamma:.4f}")  # Rate of change of delta
-print(f"Vega: {greeks.vega:.4f}")    # Volatility sensitivity
-print(f"Theta: {greeks.theta:.4f}")  # Time decay
-print(f"Rho: {greeks.rho:.4f}")      # Interest rate sensitivity
+print(f"Delta: {greeks['delta']:.4f}")  # Forward price sensitivity
+print(f"Gamma: {greeks['gamma']:.4f}")  # Rate of change of delta
+print(f"Vega: {greeks['vega']:.4f}")    # Volatility sensitivity
+print(f"Theta: {greeks['theta']:.4f}")  # Time decay
+print(f"Rho: {greeks['rho']:.4f}")      # Interest rate sensitivity
 ```
 
 ### implied volatility
@@ -168,9 +179,9 @@ print(f"Put Price: ${put_price:.2f}")
 
 # Greeks calculation
 greeks = black76.greeks(f, k, t, r, sigma, is_call=True)
-print(f"Delta: {greeks.delta:.4f}")
-print(f"Gamma: {greeks.gamma:.4f}")
-print(f"Vega: {greeks.vega:.4f}")
+print(f"Delta: {greeks['delta']:.4f}")
+print(f"Gamma: {greeks['gamma']:.4f}")
+print(f"Vega: {greeks['vega']:.4f}")
 ```
 
 ### Volatility Smile Analysis

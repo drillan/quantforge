@@ -50,7 +50,7 @@ call_prices = black76.call_price_batch(
 put_prices = black76.put_price_batch(forwards, strikes, 0.5, 0.05, sigmas)
 
 # Greeksバッチ計算（辞書形式）
-greeks = black76.greeks_batch(forwards, strikes, 0.5, 0.05, sigmas, is_calls=True)
+greeks = black76.greeks_batch(forwards, strikes, 0.5, 0.05, sigmas, True)
 # greeks['delta']とgreeks['vega']はarro3.core.Array
 
 # NumPy操作が必要な場合は変換
@@ -72,11 +72,11 @@ print(np.array(greeks['vega']))   # NumPy配列に変換
 greeks = black76.greeks(75.50, 75.00, 0.5, 0.05, 0.3, True)
 
 # 個別のグリークスへアクセス
-print(f"Delta: {greeks.delta:.4f}")  # フォワード価格感応度
-print(f"Gamma: {greeks.gamma:.4f}")  # デルタの変化率
-print(f"Vega: {greeks.vega:.4f}")    # ボラティリティ感応度
-print(f"Theta: {greeks.theta:.4f}")  # 時間価値減衰
-print(f"Rho: {greeks.rho:.4f}")      # 金利感応度
+print(f"Delta: {greeks['delta']:.4f}")  # フォワード価格感応度
+print(f"Gamma: {greeks['gamma']:.4f}")  # デルタの変化率
+print(f"Vega: {greeks['vega']:.4f}")    # ボラティリティ感応度
+print(f"Theta: {greeks['theta']:.4f}")  # 時間価値減衰
+print(f"Rho: {greeks['rho']:.4f}")      # 金利感応度
 ```
 
 ### インプライドボラティリティ
@@ -180,9 +180,9 @@ print(f"Put Price: ${put_price:.2f}")
 
 # グリークス計算
 greeks = black76.greeks(f, k, t, r, sigma, is_call=True)
-print(f"Delta: {greeks.delta:.4f}")
-print(f"Gamma: {greeks.gamma:.4f}")
-print(f"Vega: {greeks.vega:.4f}")
+print(f"Delta: {greeks['delta']:.4f}")
+print(f"Gamma: {greeks['gamma']:.4f}")
+print(f"Vega: {greeks['vega']:.4f}")
 ```
 
 ### ボラティリティスマイル分析

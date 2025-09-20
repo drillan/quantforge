@@ -47,6 +47,12 @@ max_price = np.max(result)      # ✅ 動作
 ### 方法1: `np.array()`を使用
 
 ```python
+import numpy as np
+from quantforge.models import black_scholes
+
+# サンプルデータ
+spots = np.array([95, 100, 105, 110])
+
 result = black_scholes.call_price_batch(spots, 100.0, 1.0, 0.05, 0.2)
 np_result = np.array(result)  # NumPy配列に変換
 
@@ -59,8 +65,14 @@ doubled = np_result * 2          # 要素ごとの演算
 ### 方法2: `.to_numpy()`メソッド
 
 ```python
+import numpy as np
+from quantforge.models import black_scholes
+
+# サンプルデータ
+spots = np.array([95, 100, 105, 110])
+
 result = black_scholes.call_price_batch(spots, 100.0, 1.0, 0.05, 0.2)
-np_result = result.to_numpy()  # より明示的な変換
+np_result = np.array(result)  # NumPy配列に変換（to_numpy()は使用不可）
 
 # 以降はNumPyとして扱う
 ```

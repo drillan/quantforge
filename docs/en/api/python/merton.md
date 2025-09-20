@@ -30,23 +30,33 @@ put_price = merton.put_price(100.0, 105.0, 1.0, 0.05, 0.03, 0.2)
 Full array support and efficient calculations via broadcasting:
 
 ```python
-import numpy as np
+import pyarrow as pa
+import numpy as np  # NumPy compatibility
 
 # All parameters accept arrays (Broadcasting supported)
-spots = np.array([95, 100, 105, 110])
-strikes = 100.0  # Scalars are automatically expanded
-times = 1.0
-rates = 0.05
-dividend_yields = np.array([0.01, 0.02, 0.03, 0.04])
-sigmas = np.array([0.18, 0.20, 0.22, 0.24])
+# PyArrow usage (recommended - Arrow-native)
+spots = pa.array([95, 100, 105, 110])
+dividend_yields = pa.array([0.01, 0.02, 0.03, 0.04])
+sigmas = pa.array([0.18, 0.20, 0.22, 0.24])
+
+# NumPy arrays also supported (compatibility)
+# spots = np.array([95, 100, 105, 110])
 
 # Parameters: spots, strikes, times, rates, dividend_yields, sigmas
-call_prices = merton.call_price_batch(spots, strikes, times, rates, dividend_yields, sigmas)
-put_prices = merton.put_price_batch(spots, strikes, times, rates, dividend_yields, sigmas)
+call_prices = merton.call_price_batch(
+    spots,
+    100.0,    # strikes - scalars are automatically expanded
+    1.0,      # times
+    0.05,     # rates
+    dividend_yields,
+    sigmas
+)  # Return: arro3.core.Array
+
+put_prices = merton.put_price_batch(spots, 100.0, 1.0, 0.05, dividend_yields, sigmas)
 
 # Greeks batch calculation (returned in dictionary format)
-greeks = merton.greeks_batch(spots, strikes, times, rates, dividend_yields, sigmas, is_calls=True)
-print(greeks['delta'])         # NumPy array
+greeks = merton.greeks_batch(spots, 100.0, 1.0, 0.05, dividend_yields, sigmas, True)
+print(greeks['delta'])         # Arrow array
 print(greeks['dividend_rho'])  # Dividend yield sensitivity
 ```
 
@@ -66,12 +76,12 @@ Bulk calculation of option sensitivities (Greeks) considering dividends:
 greeks = merton.greeks(100.0, 100.0, 1.0, 0.05, 0.03, 0.2, True)
 
 # Access individual Greeks
-print(f"Delta: {greeks.delta:.4f}")          # Spot price sensitivity (dividend-adjusted)
-print(f"Gamma: {greeks.gamma:.4f}")          # Rate of change of delta
-print(f"Vega: {greeks.vega:.4f}")            # Volatility sensitivity
-print(f"Theta: {greeks.theta:.4f}")          # Time decay (including dividend effect)
-print(f"Rho: {greeks.rho:.4f}")              # Interest rate sensitivity
-print(f"Dividend Rho: {greeks.dividend_rho:.4f}")  # Dividend yield sensitivity (Merton-specific)
+print(f"Delta: {greeks['delta']:.4f}")          # Spot price sensitivity (dividend-adjusted)
+print(f"Gamma: {greeks['gamma']:.4f}")          # Rate of change of delta
+print(f"Vega: {greeks['vega']:.4f}")            # Volatility sensitivity
+print(f"Theta: {greeks['theta']:.4f}")          # Time decay (including dividend effect)
+print(f"Rho: {greeks['rho']:.4f}")              # Interest rate sensitivity
+print(f"Dividend Rho: {greeks['dividend_rho']:.4f}")  # Dividend yield sensitivity (Merton-specific)
 ```
 
 ### implied volatility
@@ -183,8 +193,8 @@ print(f"Put Price: ${put_price:.2f}")
 
 # Greeks calculation
 greeks = merton.greeks(s, k, t, r, q, sigma, is_call=True)
-print(f"Delta: {greeks.delta:.4f}")
-print(f"Dividend Rho: {greeks.dividend_rho:.4f}")  # Dividend sensitivity
+print(f"Delta: {greeks['delta']:.4f}")
+print(f"Dividend Rho: {greeks['dividend_rho']:.4f}")  # Dividend sensitivity
 ```
 
 ### Stock Index Options (S&P 500)

@@ -183,10 +183,10 @@ spots = np.random.uniform(90, 110, n)
 start = time.perf_counter()
 prices = black_scholes.call_price_batch(
     spots=spots,
-    k=100.0,
-    t=1.0,
-    r=0.05,
-    sigma=0.2
+    strikes=100.0,
+    times=1.0,
+    rates=0.05,
+    sigmas=0.2
 )
 elapsed = (time.perf_counter() - start) * 1000
 

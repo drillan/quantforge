@@ -65,7 +65,7 @@ call_prices = black_scholes.call_price_batch(
 put_prices = black_scholes.put_price_batch(spots, 100.0, times, 0.05, sigmas)
 
 # Greeksバッチ計算（辞書形式で返却）
-greeks = black_scholes.greeks_batch(spots, 100.0, times, 0.05, sigmas, is_calls=True)
+greeks = black_scholes.greeks_batch(spots, 100.0, times, 0.05, sigmas, True)
 # greeks['delta']はarro3.core.Array
 
 # NumPy操作が必要な場合は変換
@@ -90,11 +90,11 @@ portfolio_vega = np.sum(np.array(greeks['vega']))
 greeks = black_scholes.greeks(100.0, 100.0, 1.0, 0.05, 0.2, True)
 
 # 個別のグリークスへアクセス
-print(f"Delta: {greeks.delta:.4f}")  # スポット価格に対する感応度
-print(f"Gamma: {greeks.gamma:.4f}")  # デルタの変化率
-print(f"Vega: {greeks.vega:.4f}")    # ボラティリティ感応度
-print(f"Theta: {greeks.theta:.4f}")  # 時間価値減衰
-print(f"Rho: {greeks.rho:.4f}")      # 金利感応度
+print(f"Delta: {greeks['delta']:.4f}")  # スポット価格に対する感応度
+print(f"Gamma: {greeks['gamma']:.4f}")  # デルタの変化率
+print(f"Vega: {greeks['vega']:.4f}")    # ボラティリティ感応度
+print(f"Theta: {greeks['theta']:.4f}")  # 時間価値減衰
+print(f"Rho: {greeks['rho']:.4f}")      # 金利感応度
 ```
 
 (api-black-scholes-implied-volatility)=
@@ -284,9 +284,9 @@ print(f"Put Price: ${put_price:.2f}")
 
 # グリークス計算
 greeks = black_scholes.greeks(s, k, t, r, sigma, is_call=True)
-print(f"Delta: {greeks.delta:.4f}")
-print(f"Gamma: {greeks.gamma:.4f}")
-print(f"Vega: {greeks.vega:.4f}")
+print(f"Delta: {greeks['delta']:.4f}")
+print(f"Gamma: {greeks['gamma']:.4f}")
+print(f"Vega: {greeks['vega']:.4f}")
 ```
 
 ### ボラティリティスマイル分析

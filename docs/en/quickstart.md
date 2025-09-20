@@ -58,11 +58,11 @@ greeks = black_scholes.greeks(
     is_call=True
 )
 
-print(f"Delta: {greeks.delta:.4f}")
-print(f"Gamma: {greeks.gamma:.4f}")
-print(f"Vega: {greeks.vega:.4f}")
-print(f"Theta: {greeks.theta:.4f}")
-print(f"Rho: {greeks.rho:.4f}")
+print(f"Delta: {greeks['delta']:.4f}")
+print(f"Gamma: {greeks['gamma']:.4f}")
+print(f"Vega: {greeks['vega']:.4f}")
+print(f"Theta: {greeks['theta']:.4f}")
+print(f"Rho: {greeks['rho']:.4f}")
 ```
 
 ## Batch Processing
@@ -85,10 +85,10 @@ spots = pa.array(np.random.uniform(90, 110, n))
 start = time.perf_counter()
 prices = black_scholes.call_price_batch(
     spots=spots,  # Arrow array
-    k=100.0,
-    t=1.0,
-    r=0.05,
-    sigma=0.2
+    strikes=100.0,
+    times=1.0,
+    rates=0.05,
+    sigmas=0.2
 )  # Returns: arro3.core.Array
 elapsed = (time.perf_counter() - start) * 1000
 
@@ -99,10 +99,10 @@ print(f"Per option: {elapsed/n*1000:.1f}ns")
 spots_np = np.random.uniform(90, 110, n)
 prices_np_input = black_scholes.call_price_batch(
     spots=spots_np,  # NumPy arrays accepted
-    k=100.0,
-    t=1.0,
-    r=0.05,
-    sigma=0.2
+    strikes=100.0,
+    times=1.0,
+    rates=0.05,
+    sigmas=0.2
 )  # Returns the same Arrow array
 ```
 
@@ -145,7 +145,7 @@ for pos in positions:
     greeks = black_scholes.greeks(
         s=pos["spot"], k=pos["strike"], t=1.0, r=0.05, sigma=0.2, is_call=True
     )
-    total_delta += pos["contracts"] * greeks.delta * 100
+    total_delta += pos["contracts"] * greeks['delta'] * 100
 
 print(f"Portfolio Delta: {total_delta:.2f} shares")
 ```

@@ -245,3 +245,38 @@ examples/      # 公式サンプル（品質チェック必須）
 3. **代替案の提示**：他のディレクトリで代用可能か検討
 
 詳細ルールは @.claude/critical-rules.xml 参照。
+
+## 📖 ドキュメントコードテストシステム
+
+### 概要
+
+ドキュメント内のPythonコードサンプルの実行可能性を自動テストするシステムを導入。
+APIの変更時にドキュメントとの不整合を即座に検知し、品質を保証。
+
+### 使用方法
+
+```bash
+# すべてのドキュメントコードをテスト
+pytest tests/doc_tests/ -v
+
+# 統計情報を確認
+uv run python tests/doc_tests/check_doc_codes.py
+
+# 自動修正（dry-run推奨）
+python tests/doc_tests/fix_documentation_codes.py docs/ --dry-run
+```
+
+### 主な機能
+
+- **自動抽出**: Markdownから2種類のコードブロック形式を抽出
+- **自動修正**: APIパラメータ名の不一致やGreeks辞書アクセスを自動修正
+- **スキップ機能**: 未定義関数やmatplotlib表示を自動でスキップ
+- **詳細分析**: エラーの種類と原因を分類して報告
+
+### 実績
+
+- 修正前: 成功率41.5% (107/258)
+- 修正後: 成功率48.1% (124/258)
+- 自動修正: 70件の問題を解決
+
+詳細は @docs/ja/internal/documentation_testing_guide.md を参照。

@@ -59,10 +59,10 @@ def calculate_portfolio_metrics(df, rate=0.05):
         
         # ポジション調整
         position_value = price * row['volume']
-        position_delta = greeks.delta * row['volume']
-        position_gamma = greeks.gamma * row['volume']
-        position_vega = greeks.vega * row['volume']
-        position_theta = greeks.theta * row['volume']
+        position_delta = greeks['delta'] * row['volume']
+        position_gamma = greeks['gamma'] * row['volume']
+        position_vega = greeks['vega'] * row['volume']
+        position_theta = greeks['theta'] * row['volume']
         
         results.append({
             'instrument_id': row['instrument_id'],
@@ -105,12 +105,15 @@ def delta_hedge_portfolio(portfolio_delta, spot_price, shares_per_contract=100):
     """デルタニュートラルにするためのヘッジ量計算"""
     hedge_shares = -portfolio_delta * shares_per_contract
     hedge_value = hedge_shares * spot_price
-    
+
     return {
         'hedge_shares': hedge_shares,
         'hedge_value': hedge_value,
         'direction': 'buy' if hedge_shares > 0 else 'sell'
     }
+
+# サンプルのポートフォリオデルタ（前の計算結果から）
+total_delta = 25.5  # 例: ポートフォリオ全体のデルタ
 
 # デルタヘッジ計算
 hedge = delta_hedge_portfolio(total_delta, 100)
@@ -338,43 +341,33 @@ for opp in arb_opps:
 ### オプションマーケットメイキング
 
 ```python
+from quantforge.models import black_scholes
+
 class OptionMarketMaker:
     def __init__(self, base_vol, spread_bps=50):
         self.base_vol = base_vol
         self.spread_bps = spread_bps / 10000
-        
+
     def quote_option(self, spot, strike, rate, time, option_type='call'):
         """ビッド・アスク価格を生成"""
         # 中間価格
         if option_type == 'call':
-            mid = black_scholes.call_price(
-                spot=spot, strike=strike, time=time, rate=rate, sigma=self.base_vol
-            )
+            mid = black_scholes.call_price(spot, strike, time, rate, self.base_vol)
         else:
-            mid = black_scholes.put_price(
-                spot=spot, strike=strike, time=time, rate=rate, sigma=self.base_vol
-            )
-        
+            mid = black_scholes.put_price(spot, strike, time, rate, self.base_vol)
+
         # ボラティリティスプレッド
         bid_vol = self.base_vol * (1 - self.spread_bps)
         ask_vol = self.base_vol * (1 + self.spread_bps)
-        
+
         # ビッド・アスク価格
         if option_type == 'call':
-            bid = black_scholes.call_price(
-                spot=spot, strike=strike, time=time, rate=rate, sigma=bid_vol
-            )
-            ask = black_scholes.call_price(
-                spot=spot, strike=strike, time=time, rate=rate, sigma=ask_vol
-            )
+            bid = black_scholes.call_price(spot, strike, time, rate, bid_vol)
+            ask = black_scholes.call_price(spot, strike, time, rate, ask_vol)
         else:
-            bid = black_scholes.put_price(
-                spot=spot, strike=strike, time=time, rate=rate, sigma=bid_vol
-            )
-            ask = black_scholes.put_price(
-                spot=spot, strike=strike, time=time, rate=rate, sigma=ask_vol
-            )
-        
+            bid = black_scholes.put_price(spot, strike, time, rate, bid_vol)
+            ask = black_scholes.put_price(spot, strike, time, rate, ask_vol)
+
         return {
             'bid': bid,
             'ask': ask,
@@ -415,19 +408,20 @@ print(f"Spread: ${adjusted_quote['spread']:.3f} ({adjusted_quote['spread_pct']:.
 ```{code-block} python
 :name: examples-code-backtest_covered_call
 :caption: backtest_covered_call
+from quantforge.models import black_scholes
+import numpy as np
+import pandas as pd
 
 def backtest_covered_call(price_path, strike, sigma, rate, dt=1/252):
     """カバードコール戦略のバックテスト"""
     results = []
-    
+
     for i in range(len(price_path) - 21):  # 21営業日 = 1ヶ月
         spot = price_path[i]
         time_to_expiry = 21 * dt
-        
+
         # オプション売却
-        premium = black_scholes.call_price(
-            spot=spot, strike=strike, time=time_to_expiry, rate=rate, sigma=sigma
-        )
+        premium = black_scholes.call_price(spot, strike, time_to_expiry, rate, sigma)
         
         # 満期時の損益
         final_spot = price_path[i + 21]
