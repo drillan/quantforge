@@ -1,23 +1,22 @@
 """Unit tests for market pricing utilities"""
 
 import math
+
 import numpy as np
 import pytest
 from quantforge.market_utils import (
+    PricingConfig,
     mid_price,
-    mid_price_with_config,
-    weighted_mid_price,
-    weighted_mid_price_with_config,
-    spread,
-    spread_pct,
     mid_price_batch,
     mid_price_batch_with_config,
     mid_price_batch_with_metrics,
-    weighted_mid_price_batch,
-    weighted_mid_price_batch_with_config,
+    mid_price_with_config,
+    spread,
     spread_batch,
+    spread_pct,
     spread_pct_batch,
-    PricingConfig,
+    weighted_mid_price,
+    weighted_mid_price_batch,
 )
 
 
@@ -45,13 +44,13 @@ class TestMidPrice:
 
     def test_mid_price_with_nan(self):
         """Test mid price with NaN inputs"""
-        assert math.isnan(mid_price(float('nan'), 100.0))
-        assert math.isnan(mid_price(100.0, float('nan')))
+        assert math.isnan(mid_price(float("nan"), 100.0))
+        assert math.isnan(mid_price(100.0, float("nan")))
 
     def test_mid_price_with_inf(self):
         """Test mid price with infinite values"""
-        assert math.isnan(mid_price(float('inf'), 100.0))
-        assert math.isnan(mid_price(100.0, float('inf')))
+        assert math.isnan(mid_price(float("inf"), 100.0))
+        assert math.isnan(mid_price(100.0, float("inf")))
 
     def test_crossed_spread(self):
         """Test mid price with crossed spread (bid > ask)"""
@@ -77,22 +76,19 @@ class TestMidPriceWithConfig:
         """Test different abnormal spread handling strategies"""
         config_nan = PricingConfig.with_config(
             max_spread_pct=0.1,  # 10% threshold
-            abnormal_handling='return_nan'
+            abnormal_handling="return_nan",
         )
         assert math.isnan(mid_price_with_config(100.0, 120.0, config_nan))
 
-        config_continue = PricingConfig.with_config(
-            max_spread_pct=0.1,
-            abnormal_handling='log_and_continue'
-        )
+        config_continue = PricingConfig.with_config(max_spread_pct=0.1, abnormal_handling="log_and_continue")
         assert mid_price_with_config(100.0, 120.0, config_continue) == pytest.approx(110.0)
 
     def test_crossed_spread_handling(self):
         """Test different crossed spread handling strategies"""
-        config_nan = PricingConfig.with_config(crossed_handling='return_nan')
+        config_nan = PricingConfig.with_config(crossed_handling="return_nan")
         assert math.isnan(mid_price_with_config(105.0, 100.0, config_nan))
 
-        config_swap = PricingConfig.with_config(crossed_handling='swap_and_continue')
+        config_swap = PricingConfig.with_config(crossed_handling="swap_and_continue")
         assert mid_price_with_config(105.0, 100.0, config_swap) == pytest.approx(102.5)
 
 
@@ -160,7 +156,7 @@ class TestBatchProcessing:
 
     def test_batch_with_nan_values(self):
         """Test batch processing with NaN values"""
-        bids = np.array([100.0, float('nan'), 102.0])
+        bids = np.array([100.0, float("nan"), 102.0])
         asks = np.array([100.2, 101.3, 102.4])
         result = mid_price_batch(bids, asks)
         assert not math.isnan(result[0])
@@ -264,7 +260,7 @@ class TestWeightedBatch:
         result = weighted_mid_price_batch(bids, asks, bid_qtys, ask_qtys)
         # Simple mid should be used for zero quantities
         assert result[1] == pytest.approx(101.15)  # Simple mid
-        assert result[2] == pytest.approx(102.2)   # Simple mid
+        assert result[2] == pytest.approx(102.2)  # Simple mid
 
 
 class TestSpreadBatch:
