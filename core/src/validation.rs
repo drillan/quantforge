@@ -7,6 +7,9 @@ use crate::constants::{
     MAX_PRICE, MAX_RATE, MAX_TIME, MAX_VOLATILITY, MIN_PRICE, MIN_RATE, MIN_TIME, MIN_VOLATILITY,
 };
 
+#[cfg(test)]
+use crate::constants::{TEST_RATE, TEST_SPOT, TEST_STRIKE, TEST_TIME, TEST_VOLATILITY};
+
 /// Validates that a value is positive
 ///
 /// # Arguments
@@ -172,23 +175,58 @@ mod tests {
 
     #[test]
     fn test_validate_option_inputs() {
-        assert!(validate_option_inputs(100.0, 100.0, 1.0, 0.2).is_ok());
-        assert!(validate_option_inputs(0.0, 100.0, 1.0, 0.2).is_err());
-        assert!(validate_option_inputs(100.0, 0.0, 1.0, 0.2).is_err());
-        assert!(validate_option_inputs(100.0, 100.0, 0.0, 0.2).is_err());
-        assert!(validate_option_inputs(100.0, 100.0, 1.0, 0.0).is_err());
+        assert!(validate_option_inputs(TEST_SPOT, TEST_STRIKE, TEST_TIME, TEST_VOLATILITY).is_ok());
+        assert!(validate_option_inputs(0.0, TEST_STRIKE, TEST_TIME, TEST_VOLATILITY).is_err());
+        assert!(validate_option_inputs(TEST_SPOT, 0.0, TEST_TIME, TEST_VOLATILITY).is_err());
+        assert!(validate_option_inputs(TEST_SPOT, TEST_STRIKE, 0.0, TEST_VOLATILITY).is_err());
+        assert!(validate_option_inputs(TEST_SPOT, TEST_STRIKE, TEST_TIME, 0.0).is_err());
     }
 
     #[test]
     fn test_validate_option_inputs_with_ranges() {
         // Valid inputs
-        assert!(validate_option_inputs_with_ranges(100.0, 100.0, 1.0, 0.05, 0.2).is_ok());
+        assert!(validate_option_inputs_with_ranges(
+            TEST_SPOT,
+            TEST_STRIKE,
+            TEST_TIME,
+            TEST_RATE,
+            TEST_VOLATILITY
+        )
+        .is_ok());
 
         // Out of range tests
-        assert!(validate_option_inputs_with_ranges(0.001, 100.0, 1.0, 0.05, 0.2).is_err()); // s < MIN_PRICE
-        assert!(validate_option_inputs_with_ranges(100.0, 100.0, 0.0001, 0.05, 0.2).is_err()); // t < MIN_TIME
-        assert!(validate_option_inputs_with_ranges(100.0, 100.0, 1.0, -2.0, 0.2).is_err()); // r < MIN_RATE
-        assert!(validate_option_inputs_with_ranges(100.0, 100.0, 1.0, 0.05, 0.0001).is_err());
+        assert!(validate_option_inputs_with_ranges(
+            0.001,
+            TEST_STRIKE,
+            TEST_TIME,
+            TEST_RATE,
+            TEST_VOLATILITY
+        )
+        .is_err()); // s < MIN_PRICE
+        assert!(validate_option_inputs_with_ranges(
+            TEST_SPOT,
+            TEST_STRIKE,
+            0.0001,
+            TEST_RATE,
+            TEST_VOLATILITY
+        )
+        .is_err()); // t < MIN_TIME
+        assert!(validate_option_inputs_with_ranges(
+            TEST_SPOT,
+            TEST_STRIKE,
+            TEST_TIME,
+            -2.0,
+            TEST_VOLATILITY
+        )
+        .is_err()); // r < MIN_RATE
+        assert!(validate_option_inputs_with_ranges(
+            TEST_SPOT,
+            TEST_STRIKE,
+            TEST_TIME,
+            TEST_RATE,
+            0.0001
+        )
+        .is_err());
         // sigma < MIN_VOLATILITY
     }
 }

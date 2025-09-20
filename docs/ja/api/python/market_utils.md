@@ -540,36 +540,6 @@ imbalance = (bid_qtys - ask_qtys) / (bid_qtys + ask_qtys)
 print(f"板の偏り: {imbalance}")
 ```
 
-(market-utils-performance)=
-## パフォーマンス特性
-
-```{list-table} パフォーマンス特性
-:name: market-utils-table-performance
-:header-rows: 1
-:widths: 25 25 25 25
-
-* - データサイズ
-  - 処理方式
-  - 速度（vs NumPy）
-  - メモリ使用
-* - 1-1,000
-  - シーケンシャル
-  - 10倍高速
-  - 最小
-* - 1,000-10,000
-  - マイクロバッチ
-  - 2-5倍高速
-  - 低
-* - 10,000+
-  - 並列処理（Rayon）
-  - 1-2倍高速
-  - 中
-* - 100,000+
-  - Arrow配列
-  - 同等
-  - 効率的
-```
-
 (market-utils-error-handling)=
 ## エラー処理
 
@@ -603,7 +573,7 @@ results = mid_price_batch(
 (market-utils-option-market-usage)=
 ### オプション市場での使用
 
-深いOTMオプションでは極端なスプレッドが一般的です：
+深いITMオプションでは極端なスプレッドが一般的です：
 
 ```{code-block} python
 :name: market-utils-code-option-market-usage

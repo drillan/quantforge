@@ -14,7 +14,9 @@ use crate::constants::get_parallel_threshold;
 use crate::market_utils::pricing::{
     mid_price_with_config, weighted_mid_price_with_config, MarketPricingConfig,
 };
-use crate::market_utils::validation::{calculate_spread_pct, is_abnormal_spread, is_crossed_spread};
+use crate::market_utils::validation::{
+    calculate_spread_pct, is_abnormal_spread, is_crossed_spread,
+};
 
 /// Metrics collected during batch processing
 #[derive(Debug, Clone, Default)]
@@ -401,13 +403,8 @@ mod tests {
         let asks = Float64Array::from(vec![100.2, 101.3]);
         let ask_qtys = Float64Array::from(vec![1500.0, 1000.0]);
 
-        let result = weighted_mid_price_batch(
-            &bids,
-            Some(&bid_qtys),
-            &asks,
-            Some(&ask_qtys),
-        )
-        .unwrap();
+        let result =
+            weighted_mid_price_batch(&bids, Some(&bid_qtys), &asks, Some(&ask_qtys)).unwrap();
 
         let result_array = result.as_any().downcast_ref::<Float64Array>().unwrap();
         assert_eq!(result_array.len(), 2);

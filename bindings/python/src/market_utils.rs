@@ -219,10 +219,9 @@ use quantforge_core::market_utils::{
     mid_price_batch as core_mid_price_batch,
     mid_price_batch_with_config as core_mid_price_batch_with_config,
     mid_price_batch_with_metrics as core_mid_price_batch_with_metrics,
+    spread_batch as core_spread_batch, spread_pct_batch as core_spread_pct_batch,
     weighted_mid_price_batch as core_weighted_mid_price_batch,
     weighted_mid_price_batch_with_config as core_weighted_mid_price_batch_with_config,
-    spread_batch as core_spread_batch,
-    spread_pct_batch as core_spread_pct_batch,
     BatchMetrics as CoreBatchMetrics,
 };
 
@@ -307,7 +306,8 @@ pub fn py_mid_price_batch<'py>(
     let result = core_mid_price_batch(&bids_array, &asks_array)
         .map_err(|e| PyErr::new::<pyo3::exceptions::PyValueError, _>(e.to_string()))?;
 
-    let result_array = result.as_any()
+    let result_array = result
+        .as_any()
         .downcast_ref::<Float64Array>()
         .ok_or_else(|| PyErr::new::<pyo3::exceptions::PyTypeError, _>("Expected Float64Array"))?;
 
@@ -340,7 +340,8 @@ pub fn py_mid_price_batch_with_config<'py>(
     let result = core_mid_price_batch_with_config(&bids_array, &asks_array, &config.inner)
         .map_err(|e| PyErr::new::<pyo3::exceptions::PyValueError, _>(e.to_string()))?;
 
-    let result_array = result.as_any()
+    let result_array = result
+        .as_any()
         .downcast_ref::<Float64Array>()
         .ok_or_else(|| PyErr::new::<pyo3::exceptions::PyTypeError, _>("Expected Float64Array"))?;
 
@@ -370,10 +371,12 @@ pub fn py_mid_price_batch_with_metrics<'py>(
     let bids_array = Float64Array::from(bids_vec);
     let asks_array = Float64Array::from(asks_vec);
 
-    let (result, metrics) = core_mid_price_batch_with_metrics(&bids_array, &asks_array, &config.inner)
-        .map_err(|e| PyErr::new::<pyo3::exceptions::PyValueError, _>(e.to_string()))?;
+    let (result, metrics) =
+        core_mid_price_batch_with_metrics(&bids_array, &asks_array, &config.inner)
+            .map_err(|e| PyErr::new::<pyo3::exceptions::PyValueError, _>(e.to_string()))?;
 
-    let result_array = result.as_any()
+    let result_array = result
+        .as_any()
         .downcast_ref::<Float64Array>()
         .ok_or_else(|| PyErr::new::<pyo3::exceptions::PyTypeError, _>("Expected Float64Array"))?;
 
@@ -416,9 +419,11 @@ pub fn py_weighted_mid_price_batch<'py>(
         bid_qtys_array.as_ref(),
         &asks_array,
         ask_qtys_array.as_ref(),
-    ).map_err(|e| PyErr::new::<pyo3::exceptions::PyValueError, _>(e.to_string()))?;
+    )
+    .map_err(|e| PyErr::new::<pyo3::exceptions::PyValueError, _>(e.to_string()))?;
 
-    let result_array = result.as_any()
+    let result_array = result
+        .as_any()
         .downcast_ref::<Float64Array>()
         .ok_or_else(|| PyErr::new::<pyo3::exceptions::PyTypeError, _>("Expected Float64Array"))?;
 
@@ -462,9 +467,11 @@ pub fn py_weighted_mid_price_batch_with_config<'py>(
         &asks_array,
         ask_qtys_array.as_ref(),
         &config.inner,
-    ).map_err(|e| PyErr::new::<pyo3::exceptions::PyValueError, _>(e.to_string()))?;
+    )
+    .map_err(|e| PyErr::new::<pyo3::exceptions::PyValueError, _>(e.to_string()))?;
 
-    let result_array = result.as_any()
+    let result_array = result
+        .as_any()
         .downcast_ref::<Float64Array>()
         .ok_or_else(|| PyErr::new::<pyo3::exceptions::PyTypeError, _>("Expected Float64Array"))?;
 
@@ -495,7 +502,8 @@ pub fn py_spread_batch<'py>(
     let result = core_spread_batch(&bids_array, &asks_array)
         .map_err(|e| PyErr::new::<pyo3::exceptions::PyValueError, _>(e.to_string()))?;
 
-    let result_array = result.as_any()
+    let result_array = result
+        .as_any()
         .downcast_ref::<Float64Array>()
         .ok_or_else(|| PyErr::new::<pyo3::exceptions::PyTypeError, _>("Expected Float64Array"))?;
 
@@ -526,7 +534,8 @@ pub fn py_spread_pct_batch<'py>(
     let result = core_spread_pct_batch(&bids_array, &asks_array)
         .map_err(|e| PyErr::new::<pyo3::exceptions::PyValueError, _>(e.to_string()))?;
 
-    let result_array = result.as_any()
+    let result_array = result
+        .as_any()
         .downcast_ref::<Float64Array>()
         .ok_or_else(|| PyErr::new::<pyo3::exceptions::PyTypeError, _>("Expected Float64Array"))?;
 
@@ -560,7 +569,8 @@ pub fn register_module(parent_module: &Bound<'_, PyModule>) -> PyResult<()> {
     market_utils_module.add_function(wrap_pyfunction!(py_spread_pct, &market_utils_module)?)?;
 
     // Add batch processing functions
-    market_utils_module.add_function(wrap_pyfunction!(py_mid_price_batch, &market_utils_module)?)?;
+    market_utils_module
+        .add_function(wrap_pyfunction!(py_mid_price_batch, &market_utils_module)?)?;
     market_utils_module.add_function(wrap_pyfunction!(
         py_mid_price_batch_with_config,
         &market_utils_module
@@ -578,7 +588,8 @@ pub fn register_module(parent_module: &Bound<'_, PyModule>) -> PyResult<()> {
         &market_utils_module
     )?)?;
     market_utils_module.add_function(wrap_pyfunction!(py_spread_batch, &market_utils_module)?)?;
-    market_utils_module.add_function(wrap_pyfunction!(py_spread_pct_batch, &market_utils_module)?)?;
+    market_utils_module
+        .add_function(wrap_pyfunction!(py_spread_pct_batch, &market_utils_module)?)?;
 
     parent_module.add_submodule(&market_utils_module)?;
     Ok(())

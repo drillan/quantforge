@@ -7,10 +7,81 @@ use std::sync::Arc;
 
 use super::formulas::{black_scholes_call_scalar, black_scholes_d1_d2, black_scholes_put_scalar};
 use super::{get_scalar_or_array_value, validate_broadcast_compatibility};
-use crate::constants::{get_parallel_threshold, PUT_DELTA_ADJUSTMENT, THETA_DENOMINATOR_FACTOR};
+use crate::constants::{
+    get_parallel_threshold, INV_SQRT_2PI, IV_INITIAL_SIGMA, IV_NEWTON_MAX_ITERATIONS,
+    IV_NEWTON_TOLERANCE, PUT_DELTA_ADJUSTMENT, THETA_DENOMINATOR_FACTOR,
+};
 
 /// Black-Scholes model implementation using Arrow arrays
 pub struct BlackScholes;
+
+/// Helper function to process arrays with parallel/sequential logic
+///
+/// This function abstracts the common pattern of:
+/// 1. Creating a builder with the right capacity
+/// 2. Choosing between parallel and sequential processing
+/// 3. Applying a computation function to each element
+/// 4. Returning the result as ArrayRef
+fn process_black_scholes_arrays<F>(
+    _arrays: &[&Float64Array],
+    len: usize,
+    compute_fn: F,
+) -> Result<ArrayRef, ArrowError>
+where
+    F: Fn(usize) -> f64 + Sync + Send,
+{
+    let mut builder = Float64Builder::with_capacity(len);
+
+    if len >= get_parallel_threshold() {
+        // Parallel processing for large arrays
+        use rayon::prelude::*;
+
+        let results: Vec<f64> = (0..len).into_par_iter().map(compute_fn).collect();
+
+        builder.append_slice(&results);
+        Ok(Arc::new(builder.finish()))
+    } else {
+        // Sequential processing for small arrays (avoid parallel overhead)
+        for i in 0..len {
+            let result = compute_fn(i);
+            builder.append_value(result);
+        }
+
+        Ok(Arc::new(builder.finish()))
+    }
+}
+
+/// Helper function to process arrays without validation (unchecked version)
+///
+/// Similar to process_black_scholes_arrays but skips validation for performance.
+/// Used by the unchecked versions of pricing functions.
+fn process_black_scholes_arrays_unchecked<F>(
+    len: usize,
+    compute_fn: F,
+) -> Result<ArrayRef, ArrowError>
+where
+    F: Fn(usize) -> f64 + Sync + Send,
+{
+    let mut builder = Float64Builder::with_capacity(len);
+
+    if len >= get_parallel_threshold() {
+        // Parallel processing for large arrays
+        use rayon::prelude::*;
+
+        let results: Vec<f64> = (0..len).into_par_iter().map(compute_fn).collect();
+
+        builder.append_slice(&results);
+        Ok(Arc::new(builder.finish()))
+    } else {
+        // Sequential processing for small arrays (avoid parallel overhead)
+        for i in 0..len {
+            let result = compute_fn(i);
+            builder.append_value(result);
+        }
+
+        Ok(Arc::new(builder.finish()))
+    }
+}
 
 impl BlackScholes {
     /// Calculate call option price using Black-Scholes formula
@@ -39,42 +110,15 @@ impl BlackScholes {
             return Ok(Arc::new(Float64Builder::new().finish()));
         }
 
-        let mut builder = Float64Builder::with_capacity(len);
+        process_black_scholes_arrays(&[spots, strikes, times, rates, sigmas], len, |i| {
+            let s = get_scalar_or_array_value(spots, i);
+            let k = get_scalar_or_array_value(strikes, i);
+            let t = get_scalar_or_array_value(times, i);
+            let r = get_scalar_or_array_value(rates, i);
+            let sigma = get_scalar_or_array_value(sigmas, i);
 
-        if len >= get_parallel_threshold() {
-            // Parallel processing for large arrays
-            use rayon::prelude::*;
-
-            let results: Vec<f64> = (0..len)
-                .into_par_iter()
-                .map(|i| {
-                    let s = get_scalar_or_array_value(spots, i);
-                    let k = get_scalar_or_array_value(strikes, i);
-                    let t = get_scalar_or_array_value(times, i);
-                    let r = get_scalar_or_array_value(rates, i);
-                    let sigma = get_scalar_or_array_value(sigmas, i);
-
-                    black_scholes_call_scalar(s, k, t, r, sigma)
-                })
-                .collect();
-
-            builder.append_slice(&results);
-            Ok(Arc::new(builder.finish()))
-        } else {
-            // Sequential processing for small arrays (avoid parallel overhead)
-            for i in 0..len {
-                let s = get_scalar_or_array_value(spots, i);
-                let k = get_scalar_or_array_value(strikes, i);
-                let t = get_scalar_or_array_value(times, i);
-                let r = get_scalar_or_array_value(rates, i);
-                let sigma = get_scalar_or_array_value(sigmas, i);
-
-                let call_price = black_scholes_call_scalar(s, k, t, r, sigma);
-                builder.append_value(call_price);
-            }
-
-            Ok(Arc::new(builder.finish()))
-        }
+            black_scholes_call_scalar(s, k, t, r, sigma)
+        })
     }
 
     /// Calculate put option price using Black-Scholes formula
@@ -95,42 +139,15 @@ impl BlackScholes {
             return Ok(Arc::new(Float64Builder::new().finish()));
         }
 
-        let mut builder = Float64Builder::with_capacity(len);
+        process_black_scholes_arrays(&[spots, strikes, times, rates, sigmas], len, |i| {
+            let s = get_scalar_or_array_value(spots, i);
+            let k = get_scalar_or_array_value(strikes, i);
+            let t = get_scalar_or_array_value(times, i);
+            let r = get_scalar_or_array_value(rates, i);
+            let sigma = get_scalar_or_array_value(sigmas, i);
 
-        if len >= get_parallel_threshold() {
-            // Parallel processing for large arrays
-            use rayon::prelude::*;
-
-            let results: Vec<f64> = (0..len)
-                .into_par_iter()
-                .map(|i| {
-                    let s = get_scalar_or_array_value(spots, i);
-                    let k = get_scalar_or_array_value(strikes, i);
-                    let t = get_scalar_or_array_value(times, i);
-                    let r = get_scalar_or_array_value(rates, i);
-                    let sigma = get_scalar_or_array_value(sigmas, i);
-
-                    black_scholes_put_scalar(s, k, t, r, sigma)
-                })
-                .collect();
-
-            builder.append_slice(&results);
-            Ok(Arc::new(builder.finish()))
-        } else {
-            // Sequential processing for small arrays
-            for i in 0..len {
-                let s = get_scalar_or_array_value(spots, i);
-                let k = get_scalar_or_array_value(strikes, i);
-                let t = get_scalar_or_array_value(times, i);
-                let r = get_scalar_or_array_value(rates, i);
-                let sigma = get_scalar_or_array_value(sigmas, i);
-
-                let put_price = black_scholes_put_scalar(s, k, t, r, sigma);
-                builder.append_value(put_price);
-            }
-
-            Ok(Arc::new(builder.finish()))
-        }
+            black_scholes_put_scalar(s, k, t, r, sigma)
+        })
     }
 
     /// Calculate call option price WITHOUT validation (unsafe version)
@@ -156,42 +173,16 @@ impl BlackScholes {
     ) -> Result<ArrayRef, ArrowError> {
         // Skip validation for performance
         let len = spots.len();
-        let mut builder = Float64Builder::with_capacity(len);
 
-        if len >= get_parallel_threshold() {
-            // Parallel processing for large arrays
-            use rayon::prelude::*;
+        process_black_scholes_arrays_unchecked(len, |i| {
+            let s = spots.value(i);
+            let k = strikes.value(i);
+            let t = times.value(i);
+            let r = rates.value(i);
+            let sigma = sigmas.value(i);
 
-            let results: Vec<f64> = (0..len)
-                .into_par_iter()
-                .map(|i| {
-                    let s = spots.value(i);
-                    let k = strikes.value(i);
-                    let t = times.value(i);
-                    let r = rates.value(i);
-                    let sigma = sigmas.value(i);
-
-                    black_scholes_call_scalar(s, k, t, r, sigma)
-                })
-                .collect();
-
-            builder.append_slice(&results);
-            Ok(Arc::new(builder.finish()))
-        } else {
-            // Sequential processing for small arrays (avoid parallel overhead)
-            for i in 0..len {
-                let s = spots.value(i);
-                let k = strikes.value(i);
-                let t = times.value(i);
-                let r = rates.value(i);
-                let sigma = sigmas.value(i);
-
-                let call_price = black_scholes_call_scalar(s, k, t, r, sigma);
-                builder.append_value(call_price);
-            }
-
-            Ok(Arc::new(builder.finish()))
-        }
+            black_scholes_call_scalar(s, k, t, r, sigma)
+        })
     }
 
     /// Calculate put option price WITHOUT validation (unsafe version)
@@ -209,42 +200,16 @@ impl BlackScholes {
     ) -> Result<ArrayRef, ArrowError> {
         // Skip validation for performance
         let len = spots.len();
-        let mut builder = Float64Builder::with_capacity(len);
 
-        if len >= get_parallel_threshold() {
-            // Parallel processing for large arrays
-            use rayon::prelude::*;
+        process_black_scholes_arrays_unchecked(len, |i| {
+            let s = spots.value(i);
+            let k = strikes.value(i);
+            let t = times.value(i);
+            let r = rates.value(i);
+            let sigma = sigmas.value(i);
 
-            let results: Vec<f64> = (0..len)
-                .into_par_iter()
-                .map(|i| {
-                    let s = spots.value(i);
-                    let k = strikes.value(i);
-                    let t = times.value(i);
-                    let r = rates.value(i);
-                    let sigma = sigmas.value(i);
-
-                    black_scholes_put_scalar(s, k, t, r, sigma)
-                })
-                .collect();
-
-            builder.append_slice(&results);
-            Ok(Arc::new(builder.finish()))
-        } else {
-            // Sequential processing for small arrays
-            for i in 0..len {
-                let s = spots.value(i);
-                let k = strikes.value(i);
-                let t = times.value(i);
-                let r = rates.value(i);
-                let sigma = sigmas.value(i);
-
-                let put_price = black_scholes_put_scalar(s, k, t, r, sigma);
-                builder.append_value(put_price);
-            }
-
-            Ok(Arc::new(builder.finish()))
-        }
+            black_scholes_put_scalar(s, k, t, r, sigma)
+        })
     }
 
     /// Calculate d1 and d2 parameters with broadcasting support
@@ -480,9 +445,6 @@ impl BlackScholes {
 
         // Newton-Raphson parameters
         use crate::constants::{MAX_VOLATILITY, MIN_VOLATILITY, VEGA_MIN_THRESHOLD};
-        const INITIAL_SIGMA: f64 = 0.2;
-        const MAX_ITERATIONS: i32 = 100;
-        const TOLERANCE: f64 = 1e-8;
         const MIN_VEGA: f64 = VEGA_MIN_THRESHOLD;
 
         if len >= get_parallel_threshold() {
@@ -520,9 +482,9 @@ impl BlackScholes {
                     }
 
                     // Newton-Raphson iteration
-                    let mut sigma = INITIAL_SIGMA;
+                    let mut sigma = IV_INITIAL_SIGMA;
 
-                    for _ in 0..MAX_ITERATIONS {
+                    for _ in 0..IV_NEWTON_MAX_ITERATIONS {
                         let calc_price = if is_call {
                             black_scholes_call_scalar(s, k, t, r, sigma)
                         } else {
@@ -530,16 +492,13 @@ impl BlackScholes {
                         };
 
                         let diff = calc_price - price;
-                        if diff.abs() < TOLERANCE {
+                        if diff.abs() < IV_NEWTON_TOLERANCE {
                             return sigma;
                         }
 
                         // Calculate vega
                         let (d1, _) = black_scholes_d1_d2(s, k, t, r, sigma);
-                        let vega = s
-                            * (t.sqrt())
-                            * (1.0 / (2.0 * std::f64::consts::PI).sqrt())
-                            * (-d1 * d1 / 2.0).exp();
+                        let vega = s * (t.sqrt()) * INV_SQRT_2PI * (-d1 * d1 / 2.0).exp();
 
                         if vega < MIN_VEGA {
                             return f64::NAN;
@@ -591,10 +550,10 @@ impl BlackScholes {
                 }
 
                 // Newton-Raphson iteration
-                let mut sigma = INITIAL_SIGMA;
+                let mut sigma = IV_INITIAL_SIGMA;
                 let mut converged = false;
 
-                for _ in 0..MAX_ITERATIONS {
+                for _ in 0..IV_NEWTON_MAX_ITERATIONS {
                     let calc_price = if is_call {
                         black_scholes_call_scalar(s, k, t, r, sigma)
                     } else {
@@ -602,17 +561,14 @@ impl BlackScholes {
                     };
 
                     let diff = calc_price - price;
-                    if diff.abs() < TOLERANCE {
+                    if diff.abs() < IV_NEWTON_TOLERANCE {
                         converged = true;
                         break;
                     }
 
                     // Calculate vega
                     let (d1, _) = black_scholes_d1_d2(s, k, t, r, sigma);
-                    let vega = s
-                        * (t.sqrt())
-                        * (1.0 / (2.0 * std::f64::consts::PI).sqrt())
-                        * (-d1 * d1 / 2.0).exp();
+                    let vega = s * (t.sqrt()) * INV_SQRT_2PI * (-d1 * d1 / 2.0).exp();
 
                     if vega < MIN_VEGA {
                         break;

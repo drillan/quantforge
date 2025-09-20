@@ -3,6 +3,8 @@
 use std::error::Error;
 use std::fmt;
 
+use crate::constants::PERCENTAGE_MULTIPLIER;
+
 /// Errors that can occur during market data processing
 #[derive(Debug, Clone, PartialEq)]
 pub enum MarketDataError {
@@ -49,8 +51,8 @@ impl fmt::Display for MarketDataError {
                 write!(
                     f,
                     "Abnormal spread: {:.1}% exceeds threshold {:.1}%",
-                    spread * 100.0,
-                    threshold * 100.0
+                    spread * PERCENTAGE_MULTIPLIER,
+                    threshold * PERCENTAGE_MULTIPLIER
                 )
             }
             MarketDataError::CrossedSpread { bid, ask } => {
@@ -58,7 +60,10 @@ impl fmt::Display for MarketDataError {
             }
             MarketDataError::InvalidConfig(msg) => write!(f, "Invalid configuration: {msg}"),
             MarketDataError::ArrayLengthMismatch { expected, actual } => {
-                write!(f, "Array length mismatch: expected {expected}, got {actual}")
+                write!(
+                    f,
+                    "Array length mismatch: expected {expected}, got {actual}"
+                )
             }
         }
     }

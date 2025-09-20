@@ -13,9 +13,8 @@ pub mod validation;
 
 // Re-export main types
 pub use batch::{
-    mid_price_batch, mid_price_batch_with_config, mid_price_batch_with_metrics,
-    spread_batch, spread_pct_batch, weighted_mid_price_batch,
-    weighted_mid_price_batch_with_config, BatchMetrics,
+    mid_price_batch, mid_price_batch_with_config, mid_price_batch_with_metrics, spread_batch,
+    spread_pct_batch, weighted_mid_price_batch, weighted_mid_price_batch_with_config, BatchMetrics,
 };
 pub use error::{MarketDataError, MarketDataResult};
 pub use pricing::{
