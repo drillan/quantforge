@@ -468,3 +468,23 @@ pub const TEST_BS_FORMULAS_PRICE_UPPER: f64 = 10.0;
 /// Black76テスト期待値範囲（formulas.rs用）
 pub const TEST_BLACK76_FORMULAS_PRICE_LOWER: f64 = 7.0;
 pub const TEST_BLACK76_FORMULAS_PRICE_UPPER: f64 = 11.0;
+
+// ============================================================================
+// Market Data定数
+// ============================================================================
+
+/// Market utilities用定数モジュール
+pub mod market {
+    /// デフォルトの異常スプレッド閾値（仲値に対する比率）
+    /// オプション市場を考慮して50%に設定
+    pub const DEFAULT_ABNORMAL_SPREAD_THRESHOLD_PCT: f64 = 0.50; // 50%
+
+    /// クロススプレッドの許容誤差（数値誤差を考慮）
+    pub const CROSS_SPREAD_TOLERANCE: f64 = 1e-10;
+
+    /// 最小有効価格（負値チェック用、ゼロは有効）
+    pub const MIN_VALID_PRICE: f64 = 0.0;
+
+    /// 最小有効数量（負値チェック用、ゼロは有効）
+    pub const MIN_VALID_QUANTITY: f64 = 0.0;
+}
