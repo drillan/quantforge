@@ -70,7 +70,9 @@ def main():
     blocks = extractor.extract_from_directory(doc_dir)
 
     # 統計情報
-    stats: defaultdict[str, dict[str, int]] = defaultdict(lambda: {"total": 0, "test": 0, "skip": 0, "pass": 0, "fail": 0})
+    stats: defaultdict[str, dict[str, int]] = defaultdict(
+        lambda: {"total": 0, "test": 0, "skip": 0, "pass": 0, "fail": 0}
+    )
     errors = []
 
     # 実行環境をセットアップ

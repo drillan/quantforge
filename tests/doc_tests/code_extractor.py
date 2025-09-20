@@ -459,7 +459,7 @@ class MystDocumentCodeExtractor:
                     for target in node.targets:
                         if isinstance(target, ast.Name):
                             provides.add(target.id)
-                elif isinstance(node, (ast.FunctionDef, ast.ClassDef)):
+                elif isinstance(node, ast.FunctionDef | ast.ClassDef):
                     provides.add(node.name)
 
         except (SyntaxError, ValueError):

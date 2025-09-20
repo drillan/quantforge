@@ -10,11 +10,10 @@ import pytest
 
 # tests/conftest.pyから直接import（名前空間衝突を回避）
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from tests.conftest import (
-    PRACTICAL_TOLERANCE,
-    THEORETICAL_TOLERANCE,
-)
+
 from quantforge.models import black_scholes
+
+from tests.conftest import PRACTICAL_TOLERANCE, THEORETICAL_TOLERANCE
 
 
 class TestImpliedVolatility:
