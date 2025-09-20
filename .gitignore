@@ -266,6 +266,12 @@ benchmark_results/
 benchmark_results_*.json
 perf_*.log
 
+# Test execution artifacts (generated during testing)
+large_spots.dat
+profile_stats*
+*.prof
+*.pstats
+
 # Local baseline (CI uses ci_baseline.json)
 tests/performance/baseline.json
 tests/performance/baseline.local.backup

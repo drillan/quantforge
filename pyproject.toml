@@ -132,6 +132,7 @@ addopts = [
     "-v",
     "--tb=short",
     "--strict-markers",
+    "--benchmark-storage=file://benchmark_results",
 ]
 markers = [
     "slow: marks tests as slow (deselect with '-m \"not slow\"')",
@@ -141,6 +142,15 @@ markers = [
     "property: marks tests as property-based tests",
     "golden: marks tests as golden master tests",
 ]
+
+[tool.pytest-benchmark]
+storage = "file://benchmark_results"
+only_compare = true
+disable_gc = false
+min_rounds = 5
+max_time = 1.0
+calibration_precision = 10
+save_as = "benchmark"
 
 # Coverage configuration removed - not applicable to Rust extensions
 
