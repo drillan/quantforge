@@ -4,11 +4,12 @@
 import sys
 from collections import Counter
 from pathlib import Path
+from typing import Any
 
 sys.path.insert(0, str(Path(__file__).parent))
 
-from check_doc_codes import SimpleCodeExecutor
-from code_extractor import DocCodeExtractor
+from tests.doc_tests.check_doc_codes import SimpleCodeExecutor
+from tests.doc_tests.code_extractor import DocCodeExtractor
 
 
 def main():
@@ -21,7 +22,7 @@ def main():
     # エラーを収集
     error_types: Counter[str] = Counter()
     file_errors: Counter[str] = Counter()
-    specific_errors: list[str] = []
+    specific_errors: list[tuple[str, Any, str]] = []
 
     blocks = extractor.extract_from_directory(doc_dir)
 

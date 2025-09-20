@@ -156,14 +156,14 @@ class MystDocumentCodeExtractor:
 
     def _analyze_document_structure(self, doc) -> dict[str, Any]:
         """文書構造の完全解析。"""
-        structure = {
+        structure: dict[str, Any] = {
             "sections": [],  # セクション階層情報
             "references": {},  # 参照関係
             "labels": {},  # ラベル定義
             "metadata": {},  # ドキュメントメタデータ
         }
 
-        current_section_path = []
+        current_section_path: list[str] = []
 
         for node in doc.findall():
             if isinstance(node, getattr(nodes, "section", type(None))):
@@ -173,7 +173,9 @@ class MystDocumentCodeExtractor:
                     section_level = self._get_section_level(node)
                     current_section_path = current_section_path[: section_level - 1] + [title]
 
-                    structure["sections"].append(
+                    sections_list = structure["sections"]
+                    assert isinstance(sections_list, list)
+                    sections_list.append(
                         {
                             "path": current_section_path.copy(),
                             "node": node,
@@ -182,7 +184,9 @@ class MystDocumentCodeExtractor:
                     )
             elif isinstance(node, getattr(nodes, "target", type(None))) and node.get("ids"):
                 # ラベル・参照の解析
-                structure["labels"][node["ids"][0]] = current_section_path.copy()
+                labels_dict = structure["labels"]
+                assert isinstance(labels_dict, dict)
+                labels_dict[node["ids"][0]] = current_section_path.copy()
 
         return structure
 
@@ -190,7 +194,8 @@ class MystDocumentCodeExtractor:
         """セクションのタイトルを抽出。"""
         for node in section_node.findall():
             if isinstance(node, getattr(nodes, "title", type(None))):
-                return node.astext().strip()
+                text = node.astext().strip()
+                return str(text) if text else None
         return None
 
     def _get_section_level(self, section_node) -> int:
@@ -266,7 +271,7 @@ class MystDocumentCodeExtractor:
         classes = node.get("classes", [])
         for cls in classes:
             if cls.startswith("language-"):
-                return cls[9:]  # 'language-'を除去
+                return str(cls[9:])  # 'language-'を除去
             elif cls in [
                 "python",
                 "bash",
@@ -284,7 +289,7 @@ class MystDocumentCodeExtractor:
                 "dockerfile",
                 "makefile",
             ]:
-                return cls
+                return str(cls)
 
         # 言語が不明な場合は明示的にunknownとして返す
         return "unknown"
@@ -334,7 +339,8 @@ class MystDocumentCodeExtractor:
                     # セクション階層から該当するパスを見つける
                     for section_info in document_structure["sections"]:
                         if section_info["path"] and section_info["path"][-1] == title:
-                            return section_info["path"]
+                            path = section_info["path"]
+                            return list(path) if path else []
             current = current.parent
 
         return []
@@ -408,7 +414,7 @@ class MystDocumentCodeExtractor:
 
     def _analyze_dependencies(self, code: str, options: dict[str, str]) -> set[str]:
         """依存関係を解析。"""
-        dependencies = set()
+        dependencies: set[str] = set()
 
         # 明示的な依存関係指定
         if "depends" in options:
@@ -471,13 +477,13 @@ class MystDocumentCodeExtractor:
         """ノードの行番号を取得。"""
         # source属性から行番号を抽出
         if hasattr(node, "source") and hasattr(node, "line"):
-            return node.line
+            return int(node.line)
 
         # 親ノードを辿って行番号を探す
         current = node
         while current:
             if hasattr(current, "line") and current.line:
-                return current.line
+                return int(current.line)
             current = current.parent
 
         # 見つからない場合は0を返す

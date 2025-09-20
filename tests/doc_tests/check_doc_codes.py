@@ -5,7 +5,7 @@ import sys
 from collections import defaultdict
 from pathlib import Path
 
-from code_extractor import DocCodeExtractor
+from tests.doc_tests.code_extractor import DocCodeExtractor
 
 
 class SimpleCodeExecutor:

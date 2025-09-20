@@ -11,7 +11,7 @@ from pathlib import Path
 # パスを追加
 sys.path.insert(0, str(Path(__file__).parent))
 
-from code_extractor import CodeBlock, DocCodeExtractor
+from tests.doc_tests.code_extractor import CodeBlock, DocCodeExtractor
 
 
 @dataclass
@@ -86,9 +86,9 @@ class DocumentCodeComparator:
 
         # 共通するファイルのペアを作成
         pairs: dict[str, tuple[Path, Path]] = {}
-        for rel_path in ja_files:
-            if rel_path in en_files:
-                pairs[rel_path] = (ja_files[rel_path], en_files[rel_path])
+        for rel_path_str in ja_files:
+            if rel_path_str in en_files:
+                pairs[rel_path_str] = (ja_files[rel_path_str], en_files[rel_path_str])
 
         return pairs
 
@@ -251,10 +251,12 @@ def main():
             for i, comp in enumerate(comparisons, 1):
                 if comp.difference_type == "missing_ja":
                     print(f"  {i}. 日本語版にコードブロックが不足")
-                    print(f"     英語版: line {comp.en_block.line_number}")
+                    if comp.en_block:
+                        print(f"     英語版: line {comp.en_block.line_number}")
                 elif comp.difference_type == "missing_en":
                     print(f"  {i}. 英語版にコードブロックが不足")
-                    print(f"     日本語版: line {comp.ja_block.line_number}")
+                    if comp.ja_block:
+                        print(f"     日本語版: line {comp.ja_block.line_number}")
                 elif comp.difference_type == "code_diff":
                     ja_line = comp.ja_block.line_number if comp.ja_block else "N/A"
                     en_line = comp.en_block.line_number if comp.en_block else "N/A"

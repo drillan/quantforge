@@ -187,3 +187,12 @@ ignore_missing_imports = true  # Temporary: ignore missing imports for Rust modu
 [[tool.mypy.overrides]]
 module = "quantforge.quantforge"
 ignore_errors = true  # Native extension module
+
+[[tool.mypy.overrides]]
+module = [
+    "matplotlib",
+    "matplotlib.*",
+    "docutils",
+    "docutils.*",
+]
+ignore_missing_imports = true  # External libraries without type stubs
