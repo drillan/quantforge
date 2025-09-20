@@ -67,7 +67,7 @@ Black-Scholes コールオプション価格計算の単一実行パフォーマ
 最新のベンチマーク結果を反映するには、以下のコマンドを実行してください：
 ```bash
 pytest tests/performance/ -m benchmark
-python .internal/benchmark_automation/generate_benchmark_report.py
+python tests/performance/generate_benchmark_report.py
 ```
 :::
 

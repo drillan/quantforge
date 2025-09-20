@@ -1,0 +1,4 @@
+実装方式,実行時間,スループット (K ops/sec),vs QuantForge
+QuantForge,19.53 μs,5121.4,-
+Pure Python,183.01 μs,546.4,9.4x遅い
+NumPy+SciPy,84.48 μs,1183.7,4.3x遅い

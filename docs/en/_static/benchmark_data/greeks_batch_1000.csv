@@ -1,0 +1,5 @@
+計算項目,実行時間,スループット,vs Pure Python
+Greeks全て,250μs,4.0M ops/sec,15.2x
+Delta単体,45μs,22.2M ops/sec,12.8x
+Gamma単体,48μs,20.8M ops/sec,11.5x
+Vega単体,52μs,19.2M ops/sec,13.1x
