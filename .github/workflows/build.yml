@@ -70,7 +70,7 @@ jobs:
           Get-ChildItem dist/*.whl | ForEach-Object {
             python -m pip install $_.FullName
           }
-          python -m pip install pytest pytest-benchmark numpy scipy pyarrow
+          python -m pip install pytest numpy scipy pyarrow
       
       - name: Test installed package
         shell: pwsh
