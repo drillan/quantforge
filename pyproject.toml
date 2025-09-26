@@ -132,7 +132,6 @@ addopts = [
     "-v",
     "--tb=short",
     "--strict-markers",
-    "--benchmark-storage=file://benchmark_results",
 ]
 markers = [
     "slow: marks tests as slow (deselect with '-m \"not slow\"')",

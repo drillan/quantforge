@@ -61,7 +61,7 @@ jobs:
       run: |
         # CI環境では並列処理を制限
         export RAYON_NUM_THREADS=2
-        uv run pytest tests/performance/test_all_benchmarks.py -v --benchmark-only
+        uv run pytest tests/performance/test_all_benchmarks.py -v --benchmark-only --benchmark-storage=file://benchmark_results
     
     - name: Check for performance regressions (CI baseline)
       if: steps.download-baseline.outputs.baseline_type == 'ci'
