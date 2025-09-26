@@ -68,12 +68,13 @@ price = black_scholes.call_price(
 ### Batch Processing
 
 ```python
-import numpy as np
+import pyarrow as pa
+import numpy as np  # for random number generation
 from quantforge.models import black_scholes
 
-# Batch calculate 1 million options  
+# Batch calculate 1 million options (Arrow-native)
 # ~56ms on AMD Ryzen 5 5600G (CUI mode)
-spots = np.random.uniform(90, 110, 1_000_000)
+spots = pa.array(np.random.uniform(90, 110, 1_000_000))
 prices = black_scholes.call_price_batch(
     spots=spots,
     strikes=100.0,

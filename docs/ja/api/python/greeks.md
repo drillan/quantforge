@@ -27,20 +27,21 @@ QuantForgeのすべてのグリークス関数は、一貫性と使いやすさ�
 バッチ計算の場合、グリークスは `Dict[str, arro3.core.Array]` として返され、各グリークスはArrow配列になります：
 
 ```python
-{
-    'delta': arro3.core.Array,    # デルタ値の配列
-    'gamma': arro3.core.Array,    # ガンマ値の配列
-    'theta': arro3.core.Array,    # シータ値の配列
-    'vega': arro3.core.Array,     # ベガ値の配列
-    'rho': arro3.core.Array       # ロー値の配列
-}
+# バッチ計算の戻り値例:
+# {
+#     'delta': arro3.core.Array,    # デルタ値の配列
+#     'gamma': arro3.core.Array,    # ガンマ値の配列
+#     'theta': arro3.core.Array,    # シータ値の配列
+#     'vega': arro3.core.Array,     # ベガ値の配列
+#     'rho': arro3.core.Array       # ロー値の配列
+# }
 ```
 
 この形式はすべてのモデルで一貫しています：
-- Black-Scholes (`quantforge.black_scholes_greeks_batch`)
-- Black76 (`quantforge.black76_greeks_batch`)
-- Merton Jump Diffusion (`quantforge.merton_greeks_batch`)
-- アメリカンオプション (`quantforge.american_greeks_batch`)
+- Black-Scholes (`black_scholes.greeks_batch`)
+- Black76 (`black76.greeks_batch`)
+- Merton (`merton.greeks_batch`)
+- アメリカンオプション (`american.greeks_batch`)
 
 ## メモリ効率
 
@@ -74,16 +75,16 @@ greeks_dict = {
 :caption: 単一オプションのグリークス計算
 :linenos:
 
-import quantforge as qf
+from quantforge.models import black_scholes
 
 # Black-Scholesモデル
-greeks = qf.black_scholes_greeks(
-    s=100.0,      # スポット価格
-    k=110.0,      # 権利行使価格
-    t=0.25,       # 満期までの時間
-    r=0.05,       # 無リスク金利
-    sigma=0.2,    # ボラティリティ
-    is_call=True  # コールオプション
+greeks = black_scholes.greeks(
+    100.0,      # s: スポット価格
+    110.0,      # k: 権利行使価格
+    0.25,       # t: 満期までの時間
+    0.05,       # r: 無リスク金利
+    0.2,        # sigma: ボラティリティ
+    True        # is_call: コールオプション
 )
 
 print(f"Delta: {greeks['delta']:.4f}")
@@ -102,7 +103,7 @@ print(f"Rho: {greeks['rho']:.4f}")
 
 import pyarrow as pa
 import numpy as np  # 乱数生成用
-import quantforge as qf
+from quantforge.models import black_scholes
 
 # バッチ入力の準備 - PyArrowを使用（推奨）
 n = 1000
@@ -114,13 +115,13 @@ volatilities = pa.array(np.random.uniform(0.15, 0.35, n))
 is_calls = pa.array([True] * n)
 
 # すべてのオプションのグリークスを一度に計算
-greeks_batch = qf.black_scholes_greeks_batch(
-    s=spots,
-    k=strikes,
-    t=times,
-    r=rates,
-    sigma=volatilities,
-    is_call=is_calls
+greeks_batch = black_scholes.greeks_batch(
+    spots,
+    strikes,
+    times,
+    rates,
+    volatilities,
+    True  # is_call - all call options
 )
 
 # 個々のグリークス配列へのアクセス
@@ -143,30 +144,31 @@ print(f"最大ガンマ: {np.max(gammas_np):.4f}")
 :caption: アメリカンオプションのグリークス
 :linenos:
 
-import quantforge as qf
+from quantforge.models import american
 import numpy as np
 
 # 単一アメリカンオプションのグリークス
-greeks = qf.american_greeks(
-    s=100.0,
-    k=110.0,
-    t=0.25,
-    r=0.05,
-    sigma=0.2,
-    is_call=True,
-    steps=100  # 二項ツリーのステップ数
+greeks = american.greeks(
+    100.0,      # s: スポット価格
+    110.0,      # k: 権利行使価格
+    0.25,       # t: 満期までの時間
+    0.05,       # r: 無リスク金利
+    0.03,       # q: 配当利回り
+    0.2,        # sigma: ボラティリティ
+    True        # is_call: コールオプション
 )
 
 # バッチアメリカングリークス（統一形式）
 n = 100
-greeks_batch = qf.american_greeks_batch(
-    s=np.random.uniform(90, 110, n),
-    k=np.full(n, 100.0),
-    t=np.random.uniform(0.1, 1.0, n),
-    r=np.full(n, 0.05),
-    sigma=np.random.uniform(0.15, 0.35, n),
-    is_call=np.ones(n, dtype=bool),
-    steps=100
+spots = np.random.uniform(90, 110, n)
+greeks_batch = american.greeks_batch(
+    spots,
+    np.full(n, 100.0),
+    np.random.uniform(0.1, 1.0, n),
+    np.full(n, 0.05),
+    np.full(n, 0.03),  # 配当利回り
+    np.random.uniform(0.15, 0.35, n),
+    np.ones(n, dtype=bool)
 )
 
 # Dict[str, arro3.core.Array]を返す - 他のモデルと同じ
@@ -192,16 +194,16 @@ Black-Scholes仮定下でのヨーロピアンオプションの標準的なグ�
 :caption: Merton Jump Diffusionグリークス
 :linenos:
 
-greeks = qf.merton_greeks(
-    s=100.0,
-    k=110.0,
-    t=0.25,
-    r=0.05,
-    sigma=0.2,
-    lambda_=0.1,  # ジャンプ強度
-    mu_j=-0.05,   # 平均ジャンプサイズ
-    sigma_j=0.1,  # ジャンプボラティリティ
-    is_call=True
+from quantforge.models import merton
+
+greeks = merton.greeks(
+    100.0,      # s: スポット価格
+    110.0,      # k: 権利行使価格
+    0.25,       # t: 満期までの時間
+    0.05,       # r: 無リスク金利
+    0.03,       # q: 配当利回り
+    0.2,        # sigma: ボラティリティ
+    True        # is_call: コールオプション
 )
 ```
 
@@ -229,14 +231,16 @@ greeks = qf.merton_greeks(
 :caption: エラーハンドリングの例
 :linenos:
 
+from quantforge.models import black_scholes
+
 try:
-    greeks = qf.black_scholes_greeks(
-        s=-100.0,  # 無効: 負のスポット
-        k=110.0,
-        t=0.25,
-        r=0.05,
-        sigma=0.2,
-        is_call=True
+    greeks = black_scholes.greeks(
+        -100.0,  # 無効: 負のスポット
+        110.0,
+        0.25,
+        0.05,
+        0.2,
+        True
     )
 except ValueError as e:
     print(f"エラー: {e}")  # "s must be positive"

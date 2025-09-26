@@ -86,33 +86,34 @@ print(f"  Rho:   {greeks.rho:.4f}")
 ## Simultaneous Calculation of Multiple Options
 
 (basic-usage-batch-arrow)=
-### Batch Processing (NumPy Arrays)
+### Batch Processing (PyArrow Recommended)
 
 ```{code-block} python
 :name: basic-usage-code-batch-processing
 :caption: Batch processing implementation
 :linenos:
-import numpy as np
+import pyarrow as pa
+import numpy as np  # for array creation
 from quantforge.models import black_scholes
 
-# Multiple spot prices
-spots = np.array([95, 100, 105, 110])
+# Multiple spot prices (PyArrow recommended - Arrow-native)
+spots = pa.array([95, 100, 105, 110])
 
 # Batch calculation (fast)
 call_prices = black_scholes.call_price_batch(
     spots=spots,
-    k=100.0,
-    t=1.0,
-    r=0.05,
-    sigma=0.2
+    strikes=100.0,
+    times=1.0,
+    rates=0.05,
+    sigmas=0.2
 )
 
 put_prices = black_scholes.put_price_batch(
     spots=spots,
-    k=100.0,
-    t=1.0,
-    r=0.05,
-    sigma=0.2
+    strikes=100.0,
+    times=1.0,
+    rates=0.05,
+    sigmas=0.2
 )
 
 for i, (spot, call, put) in enumerate(zip(spots, call_prices, put_prices)):
@@ -205,7 +206,7 @@ sigma = 0.25
 
 # Calculate option delta
 greeks = black_scholes.greeks(s=spot, k=strike, t=time, r=rate, sigma=sigma, is_call=True)
-delta = greeks.delta
+delta = greeks['delta']
 
 # Number of shares needed for delta hedge
 option_contracts = 100  # 100 contracts
@@ -261,7 +262,7 @@ n = 1_000_000
 spots = np.random.uniform(90, 110, n)
 
 start = time.perf_counter()
-prices = black_scholes.call_price_batch(spots=spots, k=100, t=1.0, r=0.05, sigma=0.2)
+prices = black_scholes.call_price_batch(spots=spots, strikes=100, times=1.0, rates=0.05, sigmas=0.2)
 elapsed = (time.perf_counter() - start) * 1000
 
 print(f"Processed {n:,} options in {elapsed:.1f}ms")

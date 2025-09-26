@@ -1,0 +1,4 @@
+実装方式,実行時間 (μs),vs QuantForge,vs Pure Python
+QuantForge (Rust),1.40,-,1.7x
+Pure Python (math),2.37,0.6x,-
+NumPy+SciPy,86.8,0.02x,0.03x

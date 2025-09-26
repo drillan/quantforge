@@ -8,11 +8,14 @@ use arrow::array::Float64Array;
 use rayon::prelude::*;
 
 // Use centralized configuration from constants
-use crate::constants::get_parallel_threshold;
+use crate::constants::{get_parallel_threshold, THETA_DENOMINATOR_FACTOR};
 
 // Use existing math functions
 use crate::math::calculate_d1_d2 as calculate_d1_d2_common;
-use crate::math::distributions::norm_cdf;
+use crate::math::distributions::{norm_cdf, norm_pdf};
+
+// Use validation utilities
+use crate::validation::validate_option_inputs;
 
 /// Calculate call option prices using Arrow arrays (zero-copy)
 ///
@@ -47,7 +50,7 @@ pub fn arrow_call_price(
                 let r = rates.value(i);
                 let sigma = sigmas.value(i);
 
-                if t <= 0.0 || sigma <= 0.0 || s <= 0.0 || k <= 0.0 {
+                if validate_option_inputs(s, k, t, sigma).is_err() {
                     f64::NAN
                 } else {
                     let (d1, d2) = calculate_d1_d2_common(s, k, t, r, 0.0, sigma);
@@ -68,7 +71,7 @@ pub fn arrow_call_price(
             let r = rates.value(i);
             let sigma = sigmas.value(i);
 
-            let price = if t <= 0.0 || sigma <= 0.0 || s <= 0.0 || k <= 0.0 {
+            let price = if validate_option_inputs(s, k, t, sigma).is_err() {
                 f64::NAN
             } else {
                 let (d1, d2) = calculate_d1_d2_common(s, k, t, r, 0.0, sigma);
@@ -115,7 +118,7 @@ pub fn arrow_put_price(
                 let r = rates.value(i);
                 let sigma = sigmas.value(i);
 
-                if t <= 0.0 || sigma <= 0.0 || s <= 0.0 || k <= 0.0 {
+                if validate_option_inputs(s, k, t, sigma).is_err() {
                     f64::NAN
                 } else {
                     let (d1, d2) = calculate_d1_d2_common(s, k, t, r, 0.0, sigma);
@@ -136,7 +139,7 @@ pub fn arrow_put_price(
             let r = rates.value(i);
             let sigma = sigmas.value(i);
 
-            let price = if t <= 0.0 || sigma <= 0.0 || s <= 0.0 || k <= 0.0 {
+            let price = if validate_option_inputs(s, k, t, sigma).is_err() {
                 f64::NAN
             } else {
                 let (d1, d2) = calculate_d1_d2_common(s, k, t, r, 0.0, sigma);
@@ -264,8 +267,8 @@ fn calculate_greeks_single(
     let exp_rt = (-r * t).exp();
 
     // Standard normal PDF
-    let phi_d1 = (-d1 * d1 / 2.0).exp() / (2.0 * std::f64::consts::PI).sqrt();
-    let _phi_d2 = (-d2 * d2 / 2.0).exp() / (2.0 * std::f64::consts::PI).sqrt();
+    let phi_d1 = norm_pdf(d1);
+    // Note: phi_d2 is not used in current calculations
 
     // Delta
     let delta = if is_call {
@@ -282,9 +285,9 @@ fn calculate_greeks_single(
 
     // Theta
     let theta = if is_call {
-        -(s * phi_d1 * sigma) / (2.0 * sqrt_t) - r * k * exp_rt * norm_cdf(d2)
+        -(s * phi_d1 * sigma) / (THETA_DENOMINATOR_FACTOR * sqrt_t) - r * k * exp_rt * norm_cdf(d2)
     } else {
-        -(s * phi_d1 * sigma) / (2.0 * sqrt_t) + r * k * exp_rt * norm_cdf(-d2)
+        -(s * phi_d1 * sigma) / (THETA_DENOMINATOR_FACTOR * sqrt_t) + r * k * exp_rt * norm_cdf(-d2)
     };
 
     // Rho

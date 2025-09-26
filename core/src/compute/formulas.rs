@@ -346,11 +346,11 @@ mod tests {
 
     #[test]
     fn test_black76_call_scalar() {
-        let f = 100.0;
-        let k = 100.0;
-        let t = 1.0;
-        let r = 0.05;
-        let sigma = 0.2;
+        let f = TEST_SPOT; // Forward price = spot price for ATM case
+        let k = TEST_STRIKE;
+        let t = TEST_TIME;
+        let r = TEST_RATE;
+        let sigma = TEST_VOLATILITY;
 
         let price = black76_call_scalar(f, k, t, r, sigma);
 
@@ -363,12 +363,12 @@ mod tests {
 
     #[test]
     fn test_merton_call_scalar() {
-        let s = 100.0;
-        let k = 100.0;
-        let t = 1.0;
-        let r = 0.05;
+        let s = TEST_SPOT;
+        let k = TEST_STRIKE;
+        let t = TEST_TIME;
+        let r = TEST_RATE;
         let q = TEST_DIVIDEND_YIELD;
-        let sigma = 0.2;
+        let sigma = TEST_VOLATILITY;
 
         let price = merton_call_scalar(s, k, t, r, q, sigma);
 

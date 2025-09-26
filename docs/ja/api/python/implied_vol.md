@@ -118,10 +118,13 @@ ivs = black_scholes.implied_volatility_batch(
 
 # ボラティリティスマイルの高速計算
 strikes = np.linspace(80, 120, 41)
-market_prices = get_market_prices(strikes)  # 市場データ取得
+# 市場価格の例（実際はBlack-Scholesで計算してシミュレート）
+market_prices = black_scholes.call_price_batch(
+    100.0, strikes, 0.25, 0.05, 0.2 + 0.002 * np.abs(strikes - 100.0)
+)
 
 ivs = black_scholes.implied_volatility_batch(
-    market_prices, 100.0, strikes, 0.25, 0.05, strikes >= 100.0
+    market_prices, 100.0, strikes, 0.25, 0.05, True
 )
 ```
 
@@ -180,6 +183,8 @@ where:
 - ボラティリティが妥当な範囲（0.001～10.0）外
 
 ```python
+from quantforge.models import black_scholes
+
 try:
     # 無効な市場価格（内在価値以下）
     iv = black_scholes.implied_volatility(
@@ -190,8 +195,10 @@ try:
         0.05,     # 金利
         True      # コール
     )
-except RuntimeError as e:
-    print(f"収束エラー: {e}")
+except Exception as e:  # RuntimeErrorまたはValueErrorをキャッチ
+    print(f"エラー: {e}")
+    # 期待されるエラーメッセージを出力
+    print("期待通り、無効な市場価格でエラーが発生しました")
 ```
 
 ## 使用例

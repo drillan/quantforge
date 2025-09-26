@@ -93,7 +93,7 @@ for batch in data_batches:
         strike=100.0,
         time=1.0,
         rate=0.05,
-        sigma=0.2
+        sigmas=0.2
     )
 ```
 
@@ -240,7 +240,7 @@ spec:
 # Warm up cache and JIT
 for _ in range(10):
     _ = black_scholes.call_price(
-        spot=100.0, strike=100.0, time=1.0, rate=0.05, sigma=0.2
+        spot=100.0, strike=100.0, time=1.0, rate=0.05, sigmas=0.2
     )
 
 # Actual measurement

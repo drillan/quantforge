@@ -59,10 +59,10 @@ def calculate_portfolio_metrics(df, rate=0.05):
         
         # Position adjustment
         position_value = price * row['volume']
-        position_delta = greeks.delta * row['volume']
-        position_gamma = greeks.gamma * row['volume']
-        position_vega = greeks.vega * row['volume']
-        position_theta = greeks.theta * row['volume']
+        position_delta = greeks['delta'] * row['volume']
+        position_gamma = greeks['gamma'] * row['volume']
+        position_vega = greeks['vega'] * row['volume']
+        position_theta = greeks['theta'] * row['volume']
         
         results.append({
             'instrument_id': row['instrument_id'],

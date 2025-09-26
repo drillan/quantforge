@@ -6,6 +6,7 @@ use pyo3::prelude::*;
 
 mod arrow_common;
 mod error;
+mod market_utils;
 mod models;
 mod utils;
 
@@ -153,6 +154,12 @@ fn quantforge(m: &Bound<'_, PyModule>) -> PyResult<()> {
 
     m.add_submodule(&american_module)?;
     sys_modules.set_item("quantforge.american", &american_module)?;
+
+    // ========================================================================
+    // Market Utils Module
+    // ========================================================================
+    market_utils::register_module(m)?;
+    sys_modules.set_item("quantforge.market_utils", m.getattr("market_utils")?)?;
 
     // ========================================================================
     // Arrow Native Module (Zero-Copy FFI functions from unified models.rs)

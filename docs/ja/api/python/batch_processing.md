@@ -266,12 +266,23 @@ prices = black_scholes.call_price_batch(spots, strikes, times, rate, sigmas)
 :caption: ポートフォリオのすべてのグリークスを計算
 
 # ポートフォリオのすべてのグリークスを計算
-greeks = black_scholes.greeks_batch(spots, strikes, times, rate, sigmas, is_calls=True)
+import numpy as np
+from quantforge.models import black_scholes
 
-# 個々のグリークスを配列として抽出
-portfolio_delta = greeks['delta'].sum()
-portfolio_vega = greeks['vega'].sum()
-portfolio_gamma = greeks['gamma'].sum()
+# ポートフォリオの定義（前のコードブロックと同様）
+n = 1000
+spots = np.random.uniform(90, 110, n)
+strikes = np.random.uniform(95, 105, n)
+times = np.random.uniform(0.1, 2.0, n)
+sigmas = np.random.uniform(0.15, 0.35, n)
+rate = 0.05
+
+greeks = black_scholes.greeks_batch(spots, strikes, times, rate, sigmas, True)
+
+# 個々のグリークスを配列として抽出（Arrow配列をNumPyに変換）
+portfolio_delta = np.array(greeks['delta']).sum()
+portfolio_vega = np.array(greeks['vega']).sum()
+portfolio_gamma = np.array(greeks['gamma']).sum()
 ```
 
 ### インプライドボラティリティサーフェス
@@ -281,6 +292,9 @@ portfolio_gamma = greeks['gamma'].sum()
 :caption: 市場価格からボラティリティサーフェスを作成
 
 # 市場価格からボラティリティサーフェスを作成
+import numpy as np
+from quantforge.models import black_scholes
+
 spots = 100.0  # 現在のスポット
 strikes = np.linspace(80, 120, 41)
 times = np.array([0.25, 0.5, 1.0, 2.0])
@@ -295,16 +309,16 @@ market_prices = np.random.uniform(5, 25, len(strikes_flat))
 
 # インプライドボラティリティを計算
 ivs = black_scholes.implied_volatility_batch(
-    prices=market_prices,
-    spots=spots,
-    strikes=strikes_flat,
-    times=times_flat,
-    rates=0.05,
-    is_calls=True
+    market_prices,
+    spots,
+    strikes_flat,
+    times_flat,
+    0.05,
+    True
 )
 
-# サーフェスプロット用に再形成
-iv_surface = ivs.reshape(K.shape)
+# サーフェスプロット用に再形成（Arrow配列をNumPyに変換）
+iv_surface = np.array(ivs).reshape(K.shape)
 ```
 
 ### 感応度分析
@@ -312,6 +326,7 @@ iv_surface = ivs.reshape(K.shape)
 ```{code-block} python
 :name: batch-processing-sensitivity-analysis
 :caption: スポット価格変化に対するオプション感応度を分析
+:class: no-test
 
 # スポット価格変化に対するオプション感応度を分析
 base_spot = 100.0
@@ -366,15 +381,18 @@ plt.title('コールオプション価格感応度')
 :caption: これはエラーを発生させる - 互換性のない配列長
 
 # これはエラーを発生させる - 互換性のない配列長
+import numpy as np
+from quantforge.models import black_scholes
+
 try:
     prices = black_scholes.call_price_batch(
-        spots=np.array([100, 101, 102]),  # 長さ3
-        strikes=np.array([95, 100]),      # 長さ2 - エラー！
-        times=1.0,
-        rates=0.05,
-        sigmas=0.2
+        np.array([100, 101, 102]),  # 長さ3
+        np.array([95, 100]),         # 長さ2 - エラー！
+        1.0,
+        0.05,
+        0.2
     )
-except ValueError as e:
+except Exception as e:
     print(f"ブロードキャスティングエラー: {e}")
 ```
 

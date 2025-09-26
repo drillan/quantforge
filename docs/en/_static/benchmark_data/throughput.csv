@@ -1,0 +1,5 @@
+データサイズ,QuantForge,Pure Python,NumPy+SciPy,単位
+単一,700K,400K,12K,ops/sec
+100件,5.0M,1.5M,4.0M,ops/sec
+1000件,7.9M,0.8M,5.9M,ops/sec
+10000件,8.8M,0.08M,14.9M,ops/sec

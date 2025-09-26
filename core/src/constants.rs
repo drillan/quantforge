@@ -59,6 +59,33 @@ pub const PUT_DELTA_ADJUSTMENT: f64 = 1.0;
 pub const THETA_DENOMINATOR_FACTOR: f64 = 2.0;
 
 // ============================================================================
+// 数学関数係数定数
+// ============================================================================
+
+/// Abramowitz & Stegun (1964)の誤差関数近似係数 a1
+///
+/// Handbook of Mathematical Functions, Formula 7.1.26
+/// 高速誤差関数近似で使用される標準係数。
+pub const ABRAMOWITZ_A1: f64 = 0.254829592;
+
+/// Abramowitz & Stegun (1964)の誤差関数近似係数 a2
+pub const ABRAMOWITZ_A2: f64 = -0.284496736;
+
+/// Abramowitz & Stegun (1964)の誤差関数近似係数 a3
+pub const ABRAMOWITZ_A3: f64 = 1.421413741;
+
+/// Abramowitz & Stegun (1964)の誤差関数近似係数 a4
+pub const ABRAMOWITZ_A4: f64 = -1.453152027;
+
+/// Abramowitz & Stegun (1964)の誤差関数近似係数 a5
+pub const ABRAMOWITZ_A5: f64 = 1.061405429;
+
+/// Abramowitz & Stegun (1964)の誤差関数近似係数 p
+///
+/// 近似式で使用される定数係数。
+pub const ABRAMOWITZ_P: f64 = 0.3275911;
+
+// ============================================================================
 // 入力パラメータ制約定数
 // ============================================================================
 
@@ -154,6 +181,24 @@ pub const VEGA_MIN_THRESHOLD: f64 = 1e-10;
 /// Brent法での初期探索範囲の幅。
 /// 初期推定値の周辺をこの幅で探索。
 pub const IV_INITIAL_BRACKET_WIDTH: f64 = 0.5;
+
+/// IV計算: Newton-Raphson法の初期ボラティリティ推定値
+///
+/// 市場で一般的な20%のボラティリティを初期値として使用。
+/// Newton-Raphson法の収束性能に影響する重要なパラメータ。
+pub const IV_INITIAL_SIGMA: f64 = 0.2;
+
+/// IV計算: Newton-Raphson法の最大反復回数
+///
+/// 通常3-5回で収束するが、エッジケースを考慮して100回に設定。
+/// この回数を超えた場合は収束失敗とみなす。
+pub const IV_NEWTON_MAX_ITERATIONS: i32 = 100;
+
+/// IV計算: Newton-Raphson法の収束判定閾値
+///
+/// 計算価格と市場価格の差がこの値以下なら収束とみなす。
+/// 金融実務での価格精度を考慮した高精度閾値。
+pub const IV_NEWTON_TOLERANCE: f64 = 1e-8;
 
 /// Newton法: 最大試行回数
 ///
@@ -441,3 +486,33 @@ pub const TEST_BS_FORMULAS_PRICE_UPPER: f64 = 10.0;
 /// Black76テスト期待値範囲（formulas.rs用）
 pub const TEST_BLACK76_FORMULAS_PRICE_LOWER: f64 = 7.0;
 pub const TEST_BLACK76_FORMULAS_PRICE_UPPER: f64 = 11.0;
+
+// ============================================================================
+// 一般的な数値変換定数
+// ============================================================================
+
+/// パーセンテージ変換乗数
+///
+/// 小数値（0.05）をパーセンテージ表示（5%）に変換する際の乗数。
+/// エラーメッセージやレポート生成で使用。
+pub const PERCENTAGE_MULTIPLIER: f64 = 100.0;
+
+// ============================================================================
+// Market Data定数
+// ============================================================================
+
+/// Market utilities用定数モジュール
+pub mod market {
+    /// デフォルトの異常スプレッド閾値（仲値に対する比率）
+    /// オプション市場を考慮して50%に設定
+    pub const DEFAULT_ABNORMAL_SPREAD_THRESHOLD_PCT: f64 = 0.50; // 50%
+
+    /// クロススプレッドの許容誤差（数値誤差を考慮）
+    pub const CROSS_SPREAD_TOLERANCE: f64 = 1e-10;
+
+    /// 最小有効価格（負値チェック用、ゼロは有効）
+    pub const MIN_VALID_PRICE: f64 = 0.0;
+
+    /// 最小有効数量（負値チェック用、ゼロは有効）
+    pub const MIN_VALID_QUANTITY: f64 = 0.0;
+}

@@ -26,7 +26,7 @@ from quantforge.models import black_scholes
 
 # コールオプション価格
 call_price = black_scholes.call_price(
-    s=100.0,      # 現在価格
+    s=100.0,      # スポット価格
     k=110.0,      # 権利行使価格
     t=1.0,        # 満期までの時間（年）
     r=0.05,       # 無リスク金利（年率）
@@ -75,11 +75,11 @@ greeks = black_scholes.greeks(
 )
 
 print("Call Option Greeks:")
-print(f"  Delta: {greeks.delta:.4f}")
-print(f"  Gamma: {greeks.gamma:.4f}")
-print(f"  Vega:  {greeks.vega:.4f}")
-print(f"  Theta: {greeks.theta:.4f}")
-print(f"  Rho:   {greeks.rho:.4f}")
+print(f"  Delta: {greeks['delta']:.4f}")
+print(f"  Gamma: {greeks['gamma']:.4f}")
+print(f"  Vega:  {greeks['vega']:.4f}")
+print(f"  Theta: {greeks['theta']:.4f}")
+print(f"  Rho:   {greeks['rho']:.4f}")
 ```
 
 (basic-usage-batch)=
@@ -101,24 +101,30 @@ spots = pa.array([95, 100, 105, 110])
 
 # バッチ計算（高速、ゼロコピーFFI）
 call_prices = black_scholes.call_price_batch(
-    spots=spots,
-    k=100.0,
-    t=1.0,
-    r=0.05,
-    sigma=0.2
+    spots,      # spots
+    100.0,      # strikes
+    1.0,        # times
+    0.05,       # rates
+    0.2         # sigmas
 )  # 返り値: arro3.core.Array
 
 # NumPyも使用可能（互換性のため）
 spots_np = np.array([95, 100, 105, 110])
 put_prices = black_scholes.put_price_batch(
-    spots=spots_np,  # NumPy配列も受け付け可能
-    k=100.0,
-    t=1.0,
-    r=0.05,
-    sigma=0.2
+    spots_np,   # NumPy配列も受け付け可能
+    100.0,      # strikes
+    1.0,        # times
+    0.05,       # rates
+    0.2         # sigmas
 )  # 返り値: arro3.core.Array（同じ）
 
-for i, (spot, call, put) in enumerate(zip(spots, call_prices, put_prices)):
+# 結果表示（Arrow配列をNumPy配列に変換して表示）
+import numpy as np
+spots_array = np.array(spots)
+call_array = np.array(call_prices)
+put_array = np.array(put_prices)
+
+for i, (spot, call, put) in enumerate(zip(spots_array, call_array, put_array)):
     print(f"Spot {spot}: Call=${call:.2f}, Put=${put:.2f}")
 ```
 
@@ -128,6 +134,7 @@ for i, (spot, call, put) in enumerate(zip(spots, call_prices, put_prices)):
 :name: basic-usage-code-different-maturities
 :caption: 異なる満期のオプション
 :linenos:
+from quantforge.models import black_scholes
 
 # 異なる満期のオプション
 times = [0.25, 0.5, 1.0, 2.0]
@@ -139,7 +146,7 @@ for time_val in times:
         r=0.05,
         sigma=0.2
     )
-    print(f"Maturity {t} years: ${price:.2f}")
+    print(f"Maturity {time_val} years: ${price:.2f}")
 ```
 
 (basic-usage-implied-volatility)=
@@ -198,7 +205,7 @@ for strike, price in zip(strikes, market_prices):
     iv = black_scholes.implied_volatility(
         price=price, s=spot, k=strike, t=1.0, r=0.05, is_call=True
     )
-    print(f"Strike {k}: IV={iv:.1%}")
+    print(f"Strike {strike}: IV={iv:.1%}")
 ```
 
 (basic-usage-risk-management)=
@@ -222,7 +229,7 @@ sigma = 0.25
 
 # オプションのデルタ計算
 greeks = black_scholes.greeks(s=spot, k=strike, t=time, r=rate, sigma=sigma, is_call=True)
-delta = greeks.delta
+delta = greeks['delta']
 
 # デルタヘッジに必要な株式数
 option_contracts = 100  # 100契約
@@ -256,9 +263,9 @@ for pos in positions:
         s=pos["spot"], k=pos["strike"], t=pos["time"], 
         r=0.05, sigma=0.2, is_call=pos["is_call"]
     )
-    total_delta += pos["contracts"] * greeks.delta * 100
-    total_gamma += pos["contracts"] * greeks.gamma * 100
-    total_vega += pos["contracts"] * greeks.vega * 100
+    total_delta += pos["contracts"] * greeks['delta'] * 100
+    total_gamma += pos["contracts"] * greeks['gamma'] * 100
+    total_vega += pos["contracts"] * greeks['vega'] * 100
 
 print(f"Portfolio Greeks:")
 print(f"  Total Delta: {total_delta:.2f}")
@@ -278,7 +285,7 @@ n = 1_000_000
 spots = np.random.uniform(90, 110, n)
 
 start = time.perf_counter()
-prices = black_scholes.call_price_batch(spots=spots, k=100, t=1.0, r=0.05, sigma=0.2)
+prices = black_scholes.call_price_batch(spots=spots, strikes=100, times=1.0, rates=0.05, sigmas=0.2)
 elapsed = (time.perf_counter() - start) * 1000
 
 print(f"Processed {n:,} options in {elapsed:.1f}ms")

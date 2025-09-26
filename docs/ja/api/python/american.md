@@ -51,7 +51,7 @@ call_prices = american.call_price_batch(
 put_prices = american.put_price_batch(spots, 100.0, times, 0.05, 0.03, sigmas)
 
 # Greeksバッチ計算（辞書形式）
-greeks = american.greeks_batch(spots, 100.0, times, 0.05, 0.03, sigmas, is_calls=False)
+greeks = american.greeks_batch(spots, 100.0, times, 0.05, 0.03, sigmas, False)
 # greeks['delta']とgreeks['gamma']はarro3.core.Array
 
 # NumPy操作が必要な場合は変換
@@ -59,7 +59,7 @@ print(np.array(greeks['delta']))  # NumPy配列に変換
 print(np.array(greeks['gamma']))  # NumPy配列に変換
 
 # 早期行使境界のバッチ計算
-boundaries = american.exercise_boundary_batch(spots, 100.0, times, 0.05, 0.03, sigmas, is_calls=False)
+boundaries = american.exercise_boundary_batch(100.0, times, 0.05, 0.03, sigmas, False)
 # boundariesもarro3.core.Arrayを返す
 ```
 
@@ -76,11 +76,11 @@ boundaries = american.exercise_boundary_batch(spots, 100.0, times, 0.05, 0.03, s
 greeks = american.greeks(100.0, 100.0, 1.0, 0.05, 0.03, 0.2, True)
 
 # 個別のグリークスへアクセス
-print(f"Delta: {greeks.delta:.4f}")  # スポット価格感応度
-print(f"Gamma: {greeks.gamma:.4f}")  # デルタの変化率
-print(f"Vega: {greeks.vega:.4f}")    # ボラティリティ感応度
-print(f"Theta: {greeks.theta:.4f}")  # 時間価値減衰
-print(f"Rho: {greeks.rho:.4f}")      # 金利感応度
+print(f"Delta: {greeks['delta']:.4f}")  # スポット価格感応度
+print(f"Gamma: {greeks['gamma']:.4f}")  # デルタの変化率
+print(f"Vega: {greeks['vega']:.4f}")    # ボラティリティ感応度
+print(f"Theta: {greeks['theta']:.4f}")  # 時間価値減衰
+print(f"Rho: {greeks['rho']:.4f}")      # 金利感応度
 ```
 
 ### インプライドボラティリティ
@@ -219,9 +219,9 @@ print(f"Put Price: ${put_price:.2f}")
 
 # グリークス計算
 greeks = american.greeks(s, k, t, r, q, sigma, False)
-print(f"Delta: {greeks.delta:.4f}")
-print(f"Gamma: {greeks.gamma:.4f}")
-print(f"Vega: {greeks.vega:.4f}")
+print(f"Delta: {greeks['delta']:.4f}")
+print(f"Gamma: {greeks['gamma']:.4f}")
+print(f"Vega: {greeks['vega']:.4f}")
 ```
 
 ### 早期行使判定

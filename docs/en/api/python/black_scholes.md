@@ -53,9 +53,9 @@ call_prices = black_scholes.call_price_batch(spots, strikes, times, rates, sigma
 put_prices = black_scholes.put_price_batch(spots, strikes, times, rates, sigmas)
 
 # Greeks batch calculation (returned in dictionary format)
-greeks = black_scholes.greeks_batch(spots, strikes, times, rates, sigmas, is_calls=True)
-portfolio_delta = greeks['delta'].sum()  # NumPy array operations
-portfolio_vega = greeks['vega'].sum()
+greeks = black_scholes.greeks_batch(spots, strikes, times, rates, sigmas, True)
+portfolio_delta = np.array(greeks['delta']).sum()  # Convert to NumPy for operations
+portfolio_vega = np.array(greeks['vega']).sum()
 ```
 
 For details, refer to the [Batch Processing API](batch_processing.md).
@@ -74,11 +74,11 @@ Bulk calculate optional sensitivities (Greeks):
 greeks = black_scholes.greeks(100.0, 100.0, 1.0, 0.05, 0.2, True)
 
 # Access individual Greeks
-print(f"Delta: {greeks.delta:.4f}")  # Sensitivity to spot price
-print(f"Gamma: {greeks.gamma:.4f}")  # Rate of change of delta
-print(f"Vega: {greeks.vega:.4f}")    # Volatility sensitivity
-print(f"Theta: {greeks.theta:.4f}")  # Time decay
-print(f"Rho: {greeks.rho:.4f}")      # Interest rate sensitivity
+print(f"Delta: {greeks['delta']:.4f}")  # Sensitivity to spot price
+print(f"Gamma: {greeks['gamma']:.4f}")  # Rate of change of delta
+print(f"Vega: {greeks['vega']:.4f}")    # Volatility sensitivity
+print(f"Theta: {greeks['theta']:.4f}")  # Time decay
+print(f"Rho: {greeks['rho']:.4f}")      # Interest rate sensitivity
 ```
 
 (api-black-scholes-implied-volatility)=
@@ -267,9 +267,9 @@ print(f"Put Price: ${put_price:.2f}")
 
 # Greeks calculation
 greeks = black_scholes.greeks(s, k, t, r, sigma, is_call=True)
-print(f"Delta: {greeks.delta:.4f}")
-print(f"Gamma: {greeks.gamma:.4f}")
-print(f"Vega: {greeks.vega:.4f}")
+print(f"Delta: {greeks['delta']:.4f}")
+print(f"Gamma: {greeks['gamma']:.4f}")
+print(f"Vega: {greeks['vega']:.4f}")
 ```
 
 ### Volatility Smile Analysis

@@ -27,20 +27,21 @@ For single-option calculations, the Greeks are returned as a `dict` with the fol
 For batch computations, the Greeks are returned as a `Dict[str, arro3.core.Array]`, where each Greek is an Arrow array:
 
 ```python
-{
-    'delta': arro3.core.Array,    # Array of delta values
-    'gamma': arro3.core.Array,    # Array of gamma values
-    'theta': arro3.core.Array,    # Array of theta values
-    'vega': arro3.core.Array,     # Array of vega values
-    'rho': arro3.core.Array       # Array of rho values
-}
+# バッチ計算の戻り値例:
+# {
+#     'delta': arro3.core.Array,    # Array of delta values
+#     'gamma': arro3.core.Array,    # Array of gamma values
+#     'theta': arro3.core.Array,    # Array of theta values
+#     'vega': arro3.core.Array,     # Array of vega values
+#     'rho': arro3.core.Array       # Array of rho values
+# }
 ```
 
 This format is consistent across all models:
-- Black-Scholes (`quantforge.black_scholes_greeks_batch`)
-- Black76 (`quantforge.black76_greeks_batch`)
-- Merton Jump Diffusion (`quantforge.merton_greeks_batch`)
-- American Option (`quantforge.american_greeks_batch`)
+- Black-Scholes (`black_scholes.greeks_batch`)
+- Black76 (`black76.greeks_batch`)
+- Merton (`merton.greeks_batch`)
+- American Option (`american.greeks_batch`)
 
 ## Memory Efficiency
 
@@ -73,16 +74,16 @@ greeks_dict = {
 :caption: Single option Greeks calculation
 :linenos:
 
-import quantforge as qf
+from quantforge.models import black_scholes
 
 # Black-Scholes model
-greeks = qf.black_scholes_greeks(
-    s=100.0,      # Spot price
-    k=110.0,      # Strike price
-    t=0.25,       # Time to maturity
-    r=0.05,       # Risk-free rate
-    sigma=0.2,    # Volatility
-    is_call=True  # Call option
+greeks = black_scholes.greeks(
+    100.0,      # s: Spot price
+    110.0,      # k: Strike price
+    0.25,       # t: Time to maturity
+    0.05,       # r: Risk-free rate
+    0.2,        # sigma: Volatility
+    True        # is_call: Call option
 )
 
 print(f"Delta: {greeks['delta']:.4f}")
@@ -100,7 +101,7 @@ print(f"Rho: {greeks['rho']:.4f}")
 :linenos:
 
 import numpy as np
-import quantforge as qf
+from quantforge.models import black_scholes
 
 # Prepare batch inputs
 n = 1000
@@ -112,13 +113,13 @@ volatilities = np.random.uniform(0.15, 0.35, n)
 is_calls = np.ones(n, dtype=bool)
 
 # Calculate Greeks for all options at once
-greeks_batch = qf.black_scholes_greeks_batch(
-    s=spots,
-    k=strikes,
-    t=times,
-    r=rates,
-    sigma=volatilities,
-    is_call=is_calls
+greeks_batch = black_scholes.greeks_batch(
+    spots,
+    strikes,
+    times,
+    rates,
+    volatilities,
+    True  # is_call - all call options
 )
 
 # Access individual Greeks arrays
@@ -126,8 +127,8 @@ deltas = greeks_batch['delta']  # arro3.core.Array with shape (n,)
 gammas = greeks_batch['gamma']  # arro3.core.Array with shape (n,)
 
 # Statistical analysis
-print(f"Average delta: {np.mean(deltas):.4f}")
-print(f"Maximum gamma: {np.max(gammas):.4f}")
+print(f"Average delta: {np.mean(np.array(deltas)):.4f}")
+print(f"Maximum gamma: {np.max(np.array(gammas)):.4f}")
 ```
 
 ### American Option Greeks
@@ -139,30 +140,31 @@ American options also follow this unified format:
 :caption: American option Greeks
 :linenos:
 
-import quantforge as qf
+from quantforge.models import american
 import numpy as np
 
 # Single American option Greeks
-greeks = qf.american_greeks(
-    s=100.0,
-    k=110.0,
-    t=0.25,
-    r=0.05,
-    sigma=0.2,
-    is_call=True,
-    steps=100  # Number of binomial tree steps
+greeks = american.greeks(
+    100.0,      # s: Spot price
+    110.0,      # k: Strike price
+    0.25,       # t: Time to maturity
+    0.05,       # r: Risk-free rate
+    0.03,       # q: Dividend yield
+    0.2,        # sigma: Volatility
+    True        # is_call: Call option
 )
 
 # Batch American Greeks (unified format)
 n = 100
-greeks_batch = qf.american_greeks_batch(
-    s=np.random.uniform(90, 110, n),
-    k=np.full(n, 100.0),
-    t=np.random.uniform(0.1, 1.0, n),
-    r=np.full(n, 0.05),
-    sigma=np.random.uniform(0.15, 0.35, n),
-    is_call=np.ones(n, dtype=bool),
-    steps=100
+spots = np.random.uniform(90, 110, n)
+greeks_batch = american.greeks_batch(
+    spots,
+    np.full(n, 100.0),
+    np.random.uniform(0.1, 1.0, n),
+    np.full(n, 0.05),
+    np.full(n, 0.03),  # Dividend yield
+    np.random.uniform(0.15, 0.35, n),
+    True  # is_call - all call options
 )
 
 # Returns Dict[str, arro3.core.Array] - same as other models
@@ -188,16 +190,16 @@ Jump-Risk-Adjusted Greeks:
 :caption: Merton Jump Diffusion Greeks
 :linenos:
 
-greeks = qf.merton_greeks(
-    s=100.0,
-    k=110.0,
-    t=0.25,
-    r=0.05,
-    sigma=0.2,
-    lambda_=0.1,  # Jump intensity
-    mu_j=-0.05,   # Mean jump size
-    sigma_j=0.1,  # Jump volatility
-    is_call=True
+from quantforge.models import merton
+
+greeks = merton.greeks(
+    100.0,      # s: Spot price
+    110.0,      # k: Strike price
+    0.25,       # t: Time to maturity
+    0.05,       # r: Risk-free rate
+    0.03,       # q: Dividend yield
+    0.2,        # sigma: Volatility
+    True        # is_call: Call option
 )
 ```
 
@@ -225,14 +227,16 @@ All Greek functions validate their inputs and raise appropriate errors:
 :caption: Error handling example
 :linenos:
 
+from quantforge.models import black_scholes
+
 try:
-    greeks = qf.black_scholes_greeks(
-        s=-100.0,  # Invalid: negative spot
-        k=110.0,
-        t=0.25,
-        r=0.05,
-        sigma=0.2,
-        is_call=True
+    greeks = black_scholes.greeks(
+        -100.0,  # Invalid: negative spot
+        110.0,
+        0.25,
+        0.05,
+        0.2,
+        True
     )
 except ValueError as e:
     print(f"Error: {e}")  # "s must be positive"

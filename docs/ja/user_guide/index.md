@@ -57,7 +57,11 @@ from quantforge.models import black_scholes
 
 # 単一のオプション価格
 price = black_scholes.call_price(
-    s=100.0, k=110.0, t=1.0, r=0.05, sigma=0.2
+    s=100.0,   # スポット価格
+    k=110.0,   # 権利行使価格
+    t=1.0,     # 満期までの時間
+    r=0.05,    # 無リスク金利
+    sigma=0.2  # ボラティリティ
 )
 ```
 
@@ -70,7 +74,7 @@ import numpy as np  # 乱数生成用
 # 100万件のオプションを一括計算（Arrow-native）
 spots = pa.array(np.random.uniform(90, 110, 1_000_000))
 prices = black_scholes.call_price_batch(
-    spots=spots, k=100.0, t=1.0, r=0.05, sigma=0.2
+    spots=spots, strikes=100.0, times=1.0, rates=0.05, sigmas=0.2
 )
 ```
 

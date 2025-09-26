@@ -43,27 +43,46 @@ iv_b76 = black76.implied_volatility(5.5, 75, 75, 0.5, 0.05, True)
 ### バッチ計算
 
 ```python
-import numpy as np
+import pyarrow as pa
+import numpy as np  # NumPyとの互換性
 from quantforge.models import black_scholes, black76
 
 # Black-Scholesバッチ計算（完全配列サポート + Broadcasting）
-spots = np.array([95, 100, 105, 110])
-strikes = 100.0  # スカラーは自動的に配列サイズに拡張
-times = 1.0
-rates = 0.05
-sigmas = np.array([0.18, 0.20, 0.22, 0.24])
+# PyArrow使用（推奨 - Arrow-native）
+spots = pa.array([95, 100, 105, 110])
+sigmas = pa.array([0.18, 0.20, 0.22, 0.24])
+
+# NumPy配列も使用可能（互換性）
+# spots = np.array([95, 100, 105, 110])
 
 # すべてのパラメータが配列を受け付ける
-prices_bs = black_scholes.call_price_batch(spots, strikes, times, rates, sigmas)
+prices_bs = black_scholes.call_price_batch(
+    spots,
+    100.0,    # strikes - スカラーは自動的に配列サイズに拡張
+    1.0,      # times
+    0.05,     # rates
+    sigmas
+)  # 返り値: arro3.core.Array
 
 # Greeksはディクショナリで返される
-greeks_bs = black_scholes.greeks_batch(spots, strikes, times, rates, sigmas, is_calls=True)
-print(greeks_bs['delta'])  # NumPy配列
-print(greeks_bs['gamma'])  # NumPy配列
+greeks_bs = black_scholes.greeks_batch(
+    spots,
+    100.0,    # strikes
+    1.0,      # times
+    0.05,     # rates
+    sigmas,
+    True      # is_call
+)
+# 各要素はarro3.core.Array
+
+# 必要ならNumPy操作のため変換
+print(np.array(greeks_bs['delta']))  # NumPy配列に変換
+print(np.array(greeks_bs['gamma']))  # NumPy配列に変換
 
 # Black76バッチ計算
-forwards = np.array([70, 75, 80, 85])
+forwards = pa.array([70, 75, 80, 85])
 prices_b76 = black76.call_price_batch(forwards, 75.0, 0.5, 0.05, 0.25)
+# prices_b76もarro3.core.Arrayで返る
 ```
 
 詳細は[Batch Processing API](batch_processing.md)を参照してください。
@@ -74,12 +93,14 @@ prices_b76 = black76.call_price_batch(forwards, 75.0, 0.5, 0.05, 0.25)
 :name: index-code-black-scholes
 :caption: Black-Scholesグリークス
 
+from quantforge.models import black_scholes
+
 # Black-Scholesグリークス
 # パラメータ: s(spot), k, t, r, sigma, is_call
 greeks = black_scholes.greeks(100, 100, 1.0, 0.05, 0.2, True)
-print(f"Delta: {greeks.delta:.4f}")
-print(f"Gamma: {greeks.gamma:.4f}")
-print(f"Vega: {greeks.vega:.4f}")
+print(f"Delta: {greeks['delta']:.4f}")
+print(f"Gamma: {greeks['gamma']:.4f}")
+print(f"Vega: {greeks['vega']:.4f}")
 ```
 
 ## 関数パラメータ仕様
@@ -212,15 +233,20 @@ QuantForgeの関数は**スレッドセーフ**です：
 
 ```python
 from concurrent.futures import ThreadPoolExecutor
+import numpy as np
+from quantforge.models import black_scholes
 
 def price_batch(spots):
-    return qf.calculate(spots, 100, 0.05, 0.2, 1.0)
+    return black_scholes.call_price_batch(spots, 100, 1.0, 0.05, 0.2)
+
+# サンプルデータを準備
+large_spots_array = np.random.uniform(90, 110, 10000)
 
 # マルチスレッド実行
 with ThreadPoolExecutor(max_workers=4) as executor:
     batches = np.array_split(large_spots_array, 4)
     results = list(executor.map(price_batch, batches))
-    final_results = np.concatenate(results)
+    final_results = np.concatenate([np.array(r) for r in results])
 ```
 
 ## 次のステップ

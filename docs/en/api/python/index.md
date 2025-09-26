@@ -65,7 +65,14 @@ prices_bs = black_scholes.call_price_batch(
 )  # Returns: arro3.core.Array
 
 # Greeks are returned as a dictionary
-greeks_bs = black_scholes.greeks_batch(spots, 100.0, 1.0, 0.05, sigmas, is_calls=True)
+greeks_bs = black_scholes.greeks_batch(
+    spots,
+    100.0,    # strikes
+    1.0,      # times
+    0.05,     # rates
+    sigmas,
+    True      # is_call
+)
 # Each element is arro3.core.Array
 
 # NumPy operations if needed, convert
@@ -86,9 +93,9 @@ For details, refer to the [Batch Processing API](batch_processing.md).
 # Black-Scholes Greeks
 # Parameters: s(spot), k, t, r, sigma, is_call
 greeks = black_scholes.greeks(100, 100, 1.0, 0.05, 0.2, True)
-print(f"Delta: {greeks.delta:.4f}")
-print(f"Gamma: {greeks.gamma:.4f}")
-print(f"Vega: {greeks.vega:.4f}")
+print(f"Delta: {greeks['delta']:.4f}")
+print(f"Gamma: {greeks['gamma']:.4f}")
+print(f"Vega: {greeks['vega']:.4f}")
 ```
 
 ## Function Parameter Specifications
@@ -211,7 +218,7 @@ def benchmark(func, *args, n_iter=100):
 
 # Execute benchmark
 spots = np.random.uniform(90, 110, 100000)
-stats = benchmark(qf.calculate, spots, 100, 0.05, 0.2, 1.0)
+stats = benchmark(black_scholes.call_price_batch, spots, 100, 1.0, 0.05, 0.2)
 print(f"Mean: {stats['mean']:.2f}ms ± {stats['std']:.2f}ms")
 ```
 
@@ -221,15 +228,20 @@ QuantForge functions are **thread-safe**:
 
 ```python
 from concurrent.futures import ThreadPoolExecutor
+import numpy as np
+from quantforge.models import black_scholes
 
 def price_batch(spots):
-    return qf.calculate(spots, 100, 0.05, 0.2, 1.0)
+    return black_scholes.call_price_batch(spots, 100, 1.0, 0.05, 0.2)
+
+# Prepare sample data
+large_spots_array = np.random.uniform(90, 110, 10000)
 
 # Multi-threaded execution
 with ThreadPoolExecutor(max_workers=4) as executor:
     batches = np.array_split(large_spots_array, 4)
     results = list(executor.map(price_batch, batches))
-    final_results = np.concatenate(results)
+    final_results = np.concatenate([np.array(r) for r in results])
 ```
 
 ## Next Step

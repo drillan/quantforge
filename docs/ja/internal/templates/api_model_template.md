@@ -154,9 +154,9 @@ print(f"Put Price: ${put_price:.2f}")
 
 # グリークス計算
 greeks = {module_name}.greeks({usecase1_greeks_params})
-print(f"Delta: {greeks.delta:.4f}")
-print(f"Gamma: {greeks.gamma:.4f}")
-print(f"Vega: {greeks.vega:.4f}")
+print(f"Delta: {greeks['delta']:.4f}")
+print(f"Gamma: {greeks['gamma']:.4f}")
+print(f"Vega: {greeks['vega']:.4f}")
 ```
 
 ### {UseCase2_Title}

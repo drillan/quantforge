@@ -1,4 +1,4 @@
-Algorithm,Implementation,Single,100 items,"1,000 items","10,000 items",Features
-Newton-Raphson,QuantForge (Rust),3.94 μs,34.40 μs,184.11 μs,599.53 μs,"High-speed, Parallel"
-Newton-Raphson,NumPy Vectorized,180.86 μs,937.50 μs,1.33 ms,4.28 ms,Vectorized
-Newton-Raphson,Pure Python,3.18 μs,1.03 ms,10.45 ms,102.07 ms,Simple
+アルゴリズム,実装,単一計算,100件,"1,000件","10,000件",特徴
+Newton-Raphson,QuantForge (Rust),3.94 μs,34.40 μs,184.11 μs,599.53 μs,高速・並列化
+Newton-Raphson,NumPy Vectorized,180.86 μs,937.50 μs,1.33 ms,4.28 ms,ベクトル化
+Newton-Raphson,Pure Python,3.18 μs,1.03 ms,10.45 ms,102.07 ms,シンプル
